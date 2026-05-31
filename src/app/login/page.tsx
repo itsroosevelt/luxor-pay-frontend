@@ -9,14 +9,17 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, firebaseConfig } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/firestore-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { SolanaParticles } from '@/components/login/SolanaParticles';
 
-function friendlyAuthError(code: string): string {
-  const map: Record<string, string> = {
+function resolveLoginError(error: unknown): string {
+  const err = error as { code?: string; message?: string };
+  const code = err?.code ?? '';
+
+  const authMessages: Record<string, string> = {
     'auth/email-already-in-use': 'This email is already registered. Try signing in.',
     'auth/invalid-email': 'Invalid email address.',
     'auth/weak-password': 'Password must be at least 6 characters.',
@@ -24,9 +27,24 @@ function friendlyAuthError(code: string): string {
     'auth/wrong-password': 'Incorrect password.',
     'auth/invalid-credential': 'Invalid email or password.',
     'auth/popup-closed-by-user': 'Sign-in popup was closed.',
-    'auth/unauthorized-domain': 'This domain is not authorized in Firebase. Add it in Firebase Console → Authentication → Authorized domains.',
+    'auth/unauthorized-domain':
+      'Domain not authorized. Firebase Console → Authentication → Authorized domains → add your Vercel URL.',
+    'auth/operation-not-allowed':
+      'Sign-in method disabled. Firebase Console → Authentication → Sign-in method → enable Email/Password or Google.',
+    'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
+      'Invalid Firebase API key. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vercel.',
+    'auth/invalid-api-key': 'Invalid Firebase API key. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vercel.',
+    'permission-denied':
+      'Firestore denied access. Enable Firestore in Firebase Console and deploy security rules.',
   };
-  return map[code] ?? 'Authentication failed. Please try again.';
+
+  if (authMessages[code]) return authMessages[code];
+  if (code.startsWith('auth/')) return err.message ?? code;
+  if (err.message?.includes('Firebase is not configured')) {
+    return 'Firebase is not configured. Missing NEXT_PUBLIC_FIREBASE_* variables in Vercel.';
+  }
+  if (err.message) return err.message;
+  return 'Something went wrong. Open browser DevTools → Console for details.';
 }
 
 function LoginContent() {
@@ -42,6 +60,12 @@ function LoginContent() {
   const router = useRouter();
 
   useEffect(() => {
+    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+      toast.error('Firebase env vars missing in Vercel. Redeploy after adding NEXT_PUBLIC_FIREBASE_*.');
+    }
+  }, []);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         router.push('/dashboard');
@@ -51,7 +75,12 @@ function LoginContent() {
   }, [router]);
 
   const completeAuth = async (userEmail: string, uid: string) => {
-    await ensureMerchantProfile(uid, userEmail);
+    try {
+      await ensureMerchantProfile(uid, userEmail);
+    } catch (error) {
+      console.error('Merchant profile error:', error);
+      toast.warning('Signed in, but merchant profile could not be saved. Check Firestore rules.');
+    }
     router.push('/dashboard');
   };
 
@@ -69,8 +98,8 @@ function LoginContent() {
         await completeAuth(cred.user.email ?? email, cred.user.uid);
       }
     } catch (error: unknown) {
-      const code = (error as { code?: string })?.code ?? '';
-      toast.error(friendlyAuthError(code));
+      console.error('Login error:', error);
+      toast.error(resolveLoginError(error));
     } finally {
       setLoading(false);
     }
@@ -84,8 +113,8 @@ function LoginContent() {
       toast.success('Signed in with Google');
       await completeAuth(cred.user.email ?? '', cred.user.uid);
     } catch (error: unknown) {
-      const code = (error as { code?: string })?.code ?? '';
-      toast.error(friendlyAuthError(code));
+      console.error('Login error:', error);
+      toast.error(resolveLoginError(error));
     } finally {
       setLoading(false);
     }
