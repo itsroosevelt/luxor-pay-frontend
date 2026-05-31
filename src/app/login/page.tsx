@@ -9,7 +9,7 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
 } from 'firebase/auth';
-import { auth, firebaseConfig } from '@/lib/firebase';
+import { auth, getMissingFirebaseEnvKeys, isFirebaseConfigured } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/firestore-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
@@ -58,12 +58,16 @@ function LoginContent() {
   const [showForm, setShowForm] = useState(isRegisterParam || isLoginParam);
   const [isRegistering, setIsRegistering] = useState(isRegisterParam);
   const router = useRouter();
+  const missingFirebaseEnv = getMissingFirebaseEnvKeys();
 
   useEffect(() => {
-    if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-      toast.error('Firebase env vars missing in Vercel. Redeploy after adding NEXT_PUBLIC_FIREBASE_*.');
+    if (!isFirebaseConfigured) {
+      toast.error(
+        `Missing in Vercel (Production env + Redeploy): ${missingFirebaseEnv.join(', ')}`,
+        { duration: 12000 }
+      );
     }
-  }, []);
+  }, [missingFirebaseEnv]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -86,6 +90,10 @@ function LoginContent() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isFirebaseConfigured) {
+      toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
+      return;
+    }
     setLoading(true);
     try {
       if (isRegistering) {
@@ -106,6 +114,10 @@ function LoginContent() {
   };
 
   const handleGoogleLogin = async () => {
+    if (!isFirebaseConfigured) {
+      toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
+      return;
+    }
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
@@ -132,6 +144,19 @@ function LoginContent() {
       <SolanaParticles />
 
       <div className="relative z-[20] w-full flex flex-col items-center justify-center px-6 pb-24 min-h-screen">
+        {!isFirebaseConfigured && (
+          <div className="mb-6 max-w-lg w-full rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-xs text-amber-100/90">
+            <p className="font-semibold mb-1">Firebase not loaded — variables missing at build time</p>
+            <p className="mb-2 opacity-90">
+              Vercel → Settings → Environment Variables → mark <strong>Production</strong> → Redeploy.
+            </p>
+            <ul className="list-disc pl-4 space-y-0.5 font-mono text-[10px]">
+              {missingFirebaseEnv.map((key) => (
+                <li key={key}>{key}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {!showForm ? (
             <motion.div
