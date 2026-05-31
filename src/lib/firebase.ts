@@ -20,12 +20,36 @@ export const firebaseConfig = {
   measurementId: env('NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID'),
 };
 
+const REQUIRED_ENV_KEYS = [
+  'NEXT_PUBLIC_FIREBASE_API_KEY',
+  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
+  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
+  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
+  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
+  'NEXT_PUBLIC_FIREBASE_APP_ID',
+] as const;
+
+/** Which NEXT_PUBLIC_FIREBASE_* vars were absent at build time (names only, safe to show in UI). */
+export function getMissingFirebaseEnvKeys(): string[] {
+  const values: Record<(typeof REQUIRED_ENV_KEYS)[number], string | undefined> = {
+    NEXT_PUBLIC_FIREBASE_API_KEY: firebaseConfig.apiKey,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: firebaseConfig.authDomain,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: firebaseConfig.projectId,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: firebaseConfig.storageBucket,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: firebaseConfig.messagingSenderId,
+    NEXT_PUBLIC_FIREBASE_APP_ID: firebaseConfig.appId,
+  };
+  return REQUIRED_ENV_KEYS.filter((key) => !values[key]);
+}
+
+export const isFirebaseConfigured = getMissingFirebaseEnvKeys().length === 0;
+
 // Initialize Firebase App
 let app: any;
 let db: any;
 let auth: any;
 
-if (firebaseConfig.apiKey) {
+if (isFirebaseConfigured) {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   db = getFirestore(app);
   auth = getAuth(app);
