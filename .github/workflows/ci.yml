@@ -1,0 +1,29 @@
+name: Frontend CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_LUXOR_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+          NEXT_PUBLIC_API_URL: https://placeholder.example.com
+          NEXT_PUBLIC_SOLANA_NETWORK: mainnet-beta
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: luxor-pay-gateway-dev
+          NEXT_PUBLIC_FIREBASE_API_KEY: ci-placeholder
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: luxor-pay-gateway-dev.firebaseapp.com
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: luxor-pay-gateway-dev.firebasestorage.app
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: '0'
+          NEXT_PUBLIC_FIREBASE_APP_ID: '0'

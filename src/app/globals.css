@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --primary: #14f195; /* Solana Green */
+  --secondary: #9945ff; /* Solana Purple */
+  --accent: #00ffd1;
+}
+
+@layer base {
+  body {
+    background: radial-gradient(circle at top left, #1a1a1a, #0a0a0a);
+    color: var(--foreground);
+    min-height: 100vh;
+  }
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+}
+
+.solana-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
