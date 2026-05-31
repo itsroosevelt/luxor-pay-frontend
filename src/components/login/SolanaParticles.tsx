@@ -16,7 +16,7 @@ interface Particle {
 export function SolanaParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particles = useRef<Particle[]>([]);
-  const animationFrame = useRef<number>();
+  const animationFrame = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const canvas = canvasRef.current;
