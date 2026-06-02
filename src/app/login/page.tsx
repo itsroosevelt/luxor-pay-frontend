@@ -10,7 +10,6 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { auth, getMissingFirebaseEnvKeys, isFirebaseConfigured } from '@/lib/firebase';
-import { ensureMerchantProfile } from '@/lib/firestore-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { SolanaParticles } from '@/components/login/SolanaParticles';
@@ -78,13 +77,8 @@ function LoginContent() {
     return () => unsubscribe();
   }, [router]);
 
-  const completeAuth = async (userEmail: string, uid: string) => {
-    try {
-      await ensureMerchantProfile(uid, userEmail);
-    } catch (error) {
-      console.error('Merchant profile error:', error);
-      toast.warning('Signed in, but merchant profile could not be saved. Check Firestore rules.');
-    }
+  const completeAuth = async (user: any) => {
+    // Merchant profile creation/fetching is handled by DashboardShell upon redirect
     router.push('/dashboard');
   };
 
@@ -99,11 +93,11 @@ function LoginContent() {
       if (isRegistering) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         toast.success('Merchant account created');
-        await completeAuth(cred.user.email ?? email, cred.user.uid);
+        await completeAuth(cred.user);
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         toast.success('Welcome back');
-        await completeAuth(cred.user.email ?? email, cred.user.uid);
+        await completeAuth(cred.user);
       }
     } catch (error: unknown) {
       console.error('Login error:', error);
@@ -123,7 +117,7 @@ function LoginContent() {
       const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
       toast.success('Signed in with Google');
-      await completeAuth(cred.user.email ?? '', cred.user.uid);
+      await completeAuth(cred.user);
     } catch (error: unknown) {
       console.error('Login error:', error);
       toast.error(resolveLoginError(error));
