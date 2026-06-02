@@ -12,7 +12,6 @@ import {
   getMissingFirebaseEnvKeys,
   isFirebaseConfigured,
 } from '@/lib/firebase';
-import { ensureMerchantProfile } from '@/lib/firestore-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { SolanaParticles } from '@/components/login/SolanaParticles';
@@ -78,13 +77,8 @@ function LoginContent() {
     return () => unsubscribe();
   }, [router]);
 
-  const completeAuth = async (userEmail: string, uid: string) => {
-    try {
-      await ensureMerchantProfile(uid, userEmail);
-    } catch (error) {
-      console.error('Merchant profile error:', error);
-      toast.warning('Signed in, but merchant profile could not be saved.');
-    }
+  const completeAuth = async () => {
+    // Merchant profile creation/fetching is handled by DashboardShell upon redirect
     router.push('/dashboard');
   };
 

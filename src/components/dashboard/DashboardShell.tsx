@@ -6,7 +6,7 @@ import type { User } from 'firebase/auth';
 import { auth, onAuthStateChanged, signOut } from '@/lib/firebase';
 import { useEffect, useRef, useState } from 'react';
 import { Search, Bell, HelpCircle, Plus, Menu, X, LayoutGrid, Settings } from 'lucide-react';
-import { ensureMerchantProfile, getMerchantProfile } from '@/lib/firestore-data';
+import { ensureMerchantProfile } from '@/lib/merchants-api';
 import { getErrorMessage } from '@/lib/firestore-errors';
 import { SidebarNav } from '@/components/dashboard/SidebarNav';
 import { cn } from '@/lib/cn';
@@ -43,9 +43,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       }
       setUser(currentUser);
       try {
-        await ensureMerchantProfile(currentUser.uid, currentUser.email ?? '');
-        const profile = await getMerchantProfile(currentUser.uid);
-        setBusinessName(profile?.businessName);
+        const token = await currentUser.getIdToken();
+        await ensureMerchantProfile(token, currentUser.email ?? '');
       } catch (e) {
         console.error(e);
         toast.error(getErrorMessage(e, 'Could not load merchant profile'));
