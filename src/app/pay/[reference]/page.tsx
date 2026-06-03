@@ -6,7 +6,12 @@ import { usePaymentStatus } from '@/features/checkout/hooks/usePaymentStatus';
 import { QRCodePayment } from '@/features/checkout/components/QRCodePayment';
 import { PaymentButton } from '@/features/checkout/components/PaymentButton';
 import { TransactionStatus } from '@/features/checkout/components/TransactionStatus';
-import { ShieldCheck } from 'lucide-react';
+import {
+  CheckoutShell,
+  CheckoutLoading,
+  CheckoutError,
+} from '@/features/checkout/components/CheckoutShell';
+import { cn } from '@/lib/cn';
 
 export default function PayByReferencePage() {
   const params = useParams();
@@ -22,21 +27,11 @@ export default function PayByReferencePage() {
   }, [reference, router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <CheckoutLoading message="Loading secure checkout…" />;
   }
 
   if (error || !order) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <div className="glass-panel p-8 max-w-md text-center text-red-400">
-          {error ?? 'Payment not found'}
-        </div>
-      </div>
-    );
+    return <CheckoutError message={error ?? 'Payment not found'} />;
   }
 
   const displayAmount = order.amount.toFixed(order.currency === 'SOL' ? 4 : 2);
@@ -44,65 +39,58 @@ export default function PayByReferencePage() {
   const isConfirmed = order.status === 'confirmed';
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-6">
-      <div className="max-w-md w-full glass-panel p-8 shadow-2xl">
-        <header className="mb-6 text-center">
-          <h1 className="text-2xl font-bold mb-1">
-            Luxor <span className="text-primary">Pay</span>
-          </h1>
-          <p className="text-gray-400 text-sm">{order.label ?? 'Checkout'}</p>
-        </header>
-
-        <div className="bg-white/5 rounded-2xl p-5 mb-6 border border-white/10">
-          <div className="flex justify-between items-center mb-3">
-            <span className="text-gray-400">Total</span>
-            <span className="text-2xl font-bold">
-              {displayAmount} {order.currency}
-            </span>
+    <CheckoutShell
+      merchantName="Luxor Pay"
+      productName={order.label ?? 'Checkout'}
+      amount={displayAmount}
+      currency={order.currency}
+      statusSlot={<TransactionStatus order={order} />}
+    >
+      {isConfirmed ? (
+        <p className="text-center text-[#14f195] font-semibold text-lg">
+          Thank you for your payment.
+        </p>
+      ) : (
+        <>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setMethod('qr')}
+              className={cn(
+                'flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors',
+                method === 'qr'
+                  ? 'border-white bg-white text-black'
+                  : 'border-white/15 text-gray-400 hover:border-white/30'
+              )}
+            >
+              QR (Solana Pay)
+            </button>
+            <button
+              type="button"
+              onClick={() => setMethod('wallet')}
+              className={cn(
+                'flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors',
+                method === 'wallet'
+                  ? 'border-white bg-white text-black'
+                  : 'border-white/15 text-gray-400 hover:border-white/30'
+              )}
+            >
+              Wallet
+            </button>
           </div>
-          <div className="flex items-center gap-2 text-xs text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">
-            <ShieldCheck size={14} />
-            Solana {process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet'}
-          </div>
-        </div>
 
-        <TransactionStatus order={order} />
-
-        {!isConfirmed && (
-          <>
-            <div className="flex gap-2 my-6">
-              <button
-                type="button"
-                onClick={() => setMethod('qr')}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
-                  method === 'qr' ? 'border-primary bg-primary/10' : 'border-white/10'
-                }`}
-              >
-                QR (Solana Pay)
-              </button>
-              <button
-                type="button"
-                onClick={() => setMethod('wallet')}
-                className={`flex-1 py-2 rounded-lg text-sm font-medium border ${
-                  method === 'wallet' ? 'border-primary bg-primary/10' : 'border-white/10'
-                }`}
-              >
-                Wallet
-              </button>
+          {method === 'qr' && payUrl ? (
+            <QRCodePayment url={payUrl} size={240} />
+          ) : (
+            <div className="space-y-3">
+              <PaymentButton variant="white" onPay={() => window.open(payUrl, '_blank')} />
+              <p className="text-xs text-center text-gray-500">
+                Connect Phantom, Solflare, or another Solana wallet
+              </p>
             </div>
-
-            {method === 'qr' && payUrl ? (
-              <QRCodePayment url={payUrl} />
-            ) : (
-              <PaymentButton onPay={() => window.open(payUrl, '_blank')} />
-            )}
-          </>
-        )}
-
-        {isConfirmed && (
-          <p className="text-center text-primary font-semibold mt-6">Thank you for your payment.</p>
-        )}
-      </div>
-    </div>
+          )}
+        </>
+      )}
+    </CheckoutShell>
   );
 }

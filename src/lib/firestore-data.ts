@@ -1,129 +1,127 @@
 import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  query,
-  where,
-  orderBy,
-  type DocumentData,
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { Currency, MerchantProfile, PaymentLink, PosDevice } from '@luxor/contracts';
-import { generateId } from '@luxor/contracts';
+  ensureLocalMerchantProfile,
+  getLocalMerchantProfile,
+  updateLocalMerchantProfile,
+} from '@/lib/local-merchant-store';
+import {
+  createLocalPaymentLink,
+  getLocalPaymentLink,
+  getLocalPaymentLinkById,
+  listLocalPaymentLinks,
+  updateLocalPaymentLink,
+  type PaymentLinkInput,
+} from '@/lib/local-links-store';
+import {
+  createLocalProduct,
+  getLocalProduct,
+  listLocalProducts,
+  updateLocalProduct,
+} from '@/lib/local-products-store';
+import {
+  createLocalCustomer,
+  getLocalCustomer,
+  listLocalCustomers,
+  updateLocalCustomer,
+} from '@/lib/local-customers-store';
+import {
+  createLocalPosDevice,
+  listLocalPosDevices,
+} from '@/lib/local-pos-store';
 
-function assertDb() {
-  if (!db) throw new Error('Firebase is not configured');
-  return db;
-}
+export type { PaymentLinkInput };
 
-export async function ensureMerchantProfile(
-  merchantId: string,
-  email: string
-): Promise<MerchantProfile> {
-  const firestore = assertDb();
-  const ref = doc(firestore, 'merchants', merchantId);
-  const snap = await getDoc(ref);
-
-  if (snap.exists()) {
-    return snap.data() as MerchantProfile;
-  }
-
-  const now = new Date().toISOString();
-  const profile: MerchantProfile = { email, createdAt: now, updatedAt: now };
-  await setDoc(ref, profile);
-  return profile;
+export async function ensureMerchantProfile(merchantId: string, email: string) {
+  return ensureLocalMerchantProfile(merchantId, email);
 }
 
 export async function updateMerchantProfile(
   merchantId: string,
-  data: Partial<Pick<MerchantProfile, 'businessName' | 'merchantWallet'>>
+  data: Parameters<typeof updateLocalMerchantProfile>[1]
 ) {
-  const firestore = assertDb();
-  const ref = doc(firestore, 'merchants', merchantId);
-  await updateDoc(ref, { ...data, updatedAt: new Date().toISOString() });
+  updateLocalMerchantProfile(merchantId, data);
 }
 
-export async function getMerchantProfile(merchantId: string): Promise<MerchantProfile | null> {
-  const firestore = assertDb();
-  const snap = await getDoc(doc(firestore, 'merchants', merchantId));
-  return snap.exists() ? (snap.data() as MerchantProfile) : null;
+export async function getMerchantProfile(merchantId: string) {
+  return getLocalMerchantProfile(merchantId);
 }
 
-export async function listPaymentLinks(merchantId: string): Promise<PaymentLink[]> {
-  const firestore = assertDb();
-  const q = query(
-    collection(firestore, 'paymentLinks'),
-    where('merchantId', '==', merchantId),
-    orderBy('createdAt', 'desc')
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PaymentLink, 'id'>) }));
+export async function listPaymentLinks(merchantId: string) {
+  return listLocalPaymentLinks(merchantId);
 }
 
-export async function createPaymentLink(
+export async function createPaymentLink(merchantId: string, input: PaymentLinkInput) {
+  return createLocalPaymentLink(merchantId, input);
+}
+
+export async function updatePaymentLink(
   merchantId: string,
-  input: { name: string; amount: number; currency: Currency }
-): Promise<PaymentLink> {
-  const firestore = assertDb();
-  const profile = await getMerchantProfile(merchantId);
-  if (!profile?.merchantWallet) {
-    throw new Error('MERCHANT_WALLET_REQUIRED');
-  }
-
-  const id = generateId('lx_');
-  const createdAt = new Date().toISOString();
-  const link: PaymentLink = {
-    id,
-    merchantId,
-    name: input.name,
-    amount: input.amount,
-    currency: input.currency,
-    merchantWallet: profile.merchantWallet,
-    active: true,
-    createdAt,
-  };
-  await setDoc(doc(firestore, 'paymentLinks', id), link);
-  return link;
+  linkId: string,
+  input: Partial<PaymentLinkInput>
+) {
+  return updateLocalPaymentLink(merchantId, linkId, input);
 }
 
-export async function getPaymentLinkById(linkId: string): Promise<PaymentLink | null> {
-  const firestore = assertDb();
-  const snap = await getDoc(doc(firestore, 'paymentLinks', linkId));
-  if (!snap.exists()) return null;
-  const data = snap.data() as DocumentData;
-  if (!data.active) return null;
-  return { id: snap.id, ...(data as Omit<PaymentLink, 'id'>) };
+export async function getPaymentLinkById(linkId: string) {
+  return getLocalPaymentLinkById(linkId);
 }
 
-export async function listPosDevices(merchantId: string): Promise<PosDevice[]> {
-  const firestore = assertDb();
-  const q = query(
-    collection(firestore, 'posDevices'),
-    where('merchantId', '==', merchantId),
-    orderBy('createdAt', 'desc')
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PosDevice, 'id'>) }));
+export async function getPaymentLink(merchantId: string, linkId: string) {
+  return getLocalPaymentLink(merchantId, linkId);
+}
+
+export async function getProduct(merchantId: string, productId: string) {
+  return getLocalProduct(merchantId, productId);
+}
+
+export async function updateProduct(
+  merchantId: string,
+  productId: string,
+  data: Parameters<typeof updateLocalProduct>[2]
+) {
+  return updateLocalProduct(merchantId, productId, data);
+}
+
+export async function listPosDevices(merchantId: string) {
+  return listLocalPosDevices(merchantId);
 }
 
 export async function createPosDevice(
   merchantId: string,
-  input: { name: string; posId: string }
-): Promise<PosDevice> {
-  const firestore = assertDb();
-  const id = generateId('pos_');
-  const createdAt = new Date().toISOString();
-  const device: PosDevice = {
-    id,
-    merchantId,
-    name: input.name,
-    posId: input.posId,
-    active: true,
-    createdAt,
-  };
-  await setDoc(doc(firestore, 'posDevices', id), device);
-  return device;
+  input: Parameters<typeof createLocalPosDevice>[1]
+) {
+  return createLocalPosDevice(merchantId, input);
+}
+
+export async function listCustomers(merchantId: string) {
+  return listLocalCustomers(merchantId);
+}
+
+export async function getCustomer(merchantId: string, customerId: string) {
+  return getLocalCustomer(merchantId, customerId);
+}
+
+export async function updateCustomer(
+  merchantId: string,
+  customerId: string,
+  data: Parameters<typeof updateLocalCustomer>[2]
+) {
+  return updateLocalCustomer(merchantId, customerId, data);
+}
+
+export async function createCustomer(
+  merchantId: string,
+  input: Parameters<typeof createLocalCustomer>[1]
+) {
+  return createLocalCustomer(merchantId, input);
+}
+
+export async function listProducts(merchantId: string) {
+  return listLocalProducts(merchantId);
+}
+
+export async function createProduct(
+  merchantId: string,
+  input: Parameters<typeof createLocalProduct>[1]
+) {
+  return createLocalProduct(merchantId, input);
 }

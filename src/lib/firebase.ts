@@ -1,6 +1,14 @@
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, getApp, type FirebaseApp } from 'firebase/app';
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  type Auth,
+} from 'firebase/auth';
 
 /** Strip accidental whitespace from Vercel copy-paste (tabs/newlines break Firebase iframe URLs). */
 function trimEnv(raw: string | undefined): string | undefined {
@@ -44,24 +52,27 @@ export function getMissingFirebaseEnvKeys(): string[] {
 
 export const isFirebaseConfigured = getMissingFirebaseEnvKeys().length === 0;
 
-// Initialize Firebase App
-let app: any;
-let db: any;
-let auth: any;
+let app: FirebaseApp | null = null;
+let auth: Auth;
 
 if (isFirebaseConfigured) {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-  db = getFirestore(app);
   auth = getAuth(app);
 } else {
-  // Mock for SSR build step when no ENV variables are present
-  app = null;
-  db = null;
   auth = {
     onAuthStateChanged: () => () => {},
     signOut: async () => {},
-    currentUser: null
-  };
+    currentUser: null,
+  } as unknown as Auth;
 }
 
-export { app, db, auth };
+export { app, auth };
+
+export {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+};

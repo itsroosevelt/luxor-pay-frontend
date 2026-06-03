@@ -1,22 +1,23 @@
-import { apiUrl } from '@/lib/api-client';
+import { getPaymentLinkById } from '@/lib/firestore-data';
+import { getCurrentMerchantId } from '@/lib/frontend-only';
+import {
+  createLocalPaymentFromLink,
+  getLocalPayment,
+  listLocalPayments,
+  verifyLocalPayment,
+} from '@/lib/local-payments-store';
 import type { PaymentOrder } from '@luxor/contracts';
 
 export async function createPaymentFromLink(linkId: string): Promise<PaymentOrder> {
-  const res = await fetch(apiUrl('/api/payments/create'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ linkId }),
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? 'Failed to create payment');
-  return json.data as PaymentOrder;
+  const link = await getPaymentLinkById(linkId);
+  if (!link) throw new Error('Payment link not found or inactive');
+  return createLocalPaymentFromLink(link);
 }
 
 export async function fetchPayment(reference: string): Promise<PaymentOrder> {
-  const res = await fetch(apiUrl(`/api/payments/${reference}`));
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? 'Payment not found');
-  return json.data as PaymentOrder;
+  const order = getLocalPayment(reference);
+  if (!order) throw new Error('Payment not found');
+  return order;
 }
 
 export async function verifyPayment(reference: string): Promise<{
@@ -24,21 +25,11 @@ export async function verifyPayment(reference: string): Promise<{
   confirmed: boolean;
   signature?: string;
 }> {
-  const res = await fetch(apiUrl('/api/payments/verify'), {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reference }),
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? 'Verification failed');
-  return json;
+  return verifyLocalPayment(reference);
 }
 
-export async function listPayments(token: string): Promise<PaymentOrder[]> {
-  const res = await fetch(apiUrl('/api/payments'), {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? 'Failed to load payments');
-  return json.data as PaymentOrder[];
+export async function listPayments(_token: string): Promise<PaymentOrder[]> {
+  const merchantId = getCurrentMerchantId();
+  if (!merchantId) return [];
+  return listLocalPayments(merchantId);
 }

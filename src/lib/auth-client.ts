@@ -1,7 +1,7 @@
 import { auth } from '@/lib/firebase';
 
 export async function getIdToken(): Promise<string | null> {
-  const user = auth?.currentUser;
+  const user = auth.currentUser;
   if (!user) return null;
   return user.getIdToken();
 }
