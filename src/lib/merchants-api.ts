@@ -58,3 +58,25 @@ export async function ensureMerchantProfile(token: string, email: string): Promi
   
   return profile;
 }
+
+export interface UpdateMerchantDto {
+  email?: string;
+  businessName?: string;
+  merchantWallet?: string;
+  solanaToken?: string;
+}
+
+export async function updateMerchantProfile(token: string, data: UpdateMerchantDto): Promise<MerchantProfile> {
+  const res = await fetch(apiUrl('/merchants/me'), {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  const json = await res.json();
+  if (!res.ok) {
+    throw new Error(json.message ?? 'Failed to update merchant profile');
+  }
+
+  return (json.data ?? json) as MerchantProfile;
+}
