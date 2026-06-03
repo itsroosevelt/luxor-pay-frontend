@@ -14,7 +14,13 @@ export const createPaymentLinkSchema = z.object({
   name: z.string().min(1).max(120),
   amount: z.number().positive(),
   currency: currencySchema.default('USDC'),
+  active: z.boolean().optional(),
+  collectEmail: z.boolean().optional(),
+  successMessage: z.string().max(500).optional(),
+  redirectUrl: z.string().url().max(500).optional().or(z.literal('')),
 });
+
+export const updatePaymentLinkSchema = createPaymentLinkSchema.partial();
 
 export const createApiKeySchema = z.object({
   name: z.string().min(1).max(80),

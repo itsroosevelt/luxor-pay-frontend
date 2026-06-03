@@ -3,12 +3,31 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createPaymentFromLink } from '@/lib/payments-api';
+import { getPaymentLinkById } from '@/lib/firestore-data';
+import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
+import type { PaymentLink } from '@luxor/contracts';
+import {
+  CheckoutShell,
+  CheckoutLoading,
+  CheckoutError,
+} from '@/features/checkout/components/CheckoutShell';
 
 /** Payment link entry: creates an on-chain payment session then redirects to /pay/[reference]. */
 export default function PayLinkPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [link, setLink] = useState<PaymentLink | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+    getPaymentLinkById(id)
+      .then(setLink)
+      .catch((e) => {
+        setLink(null);
+        setError(getFirestoreErrorMessage(e, 'Payment link not found or unavailable'));
+      });
+  }, [id]);
 
   useEffect(() => {
     if (!id) return;
@@ -18,17 +37,25 @@ export default function PayLinkPage() {
   }, [id, router]);
 
   if (error) {
+    return <CheckoutError message={error} />;
+  }
+
+  if (link) {
+    const displayAmount = link.amount.toFixed(link.currency === 'SOL' ? 4 : 2);
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <div className="glass-panel p-8 max-w-md text-center text-red-400">{error}</div>
-      </div>
+      <CheckoutShell
+        merchantName="Luxor Pay"
+        productName={link.name}
+        amount={displayAmount}
+        currency={link.currency}
+      >
+        <div className="flex flex-col items-center gap-4 py-8">
+          <div className="w-10 h-10 border-2 border-[#14f195] border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm text-center">Preparing secure checkout…</p>
+        </div>
+      </CheckoutShell>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-      <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      <p className="text-gray-400 text-sm">Preparing secure checkout…</p>
-    </div>
-  );
+  return <CheckoutLoading message="Preparing secure checkout…" />;
 }

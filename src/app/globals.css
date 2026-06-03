@@ -37,3 +37,236 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
+
+/* Dashboard shell — dark theme aligned with landing page */
+.dashboard-shell {
+  --dash-bg: #0a0a0a;
+  --dash-bg-elevated: #1a1a1a;
+  --dash-surface: rgba(255, 255, 255, 0.03);
+  --dash-surface-elevated: rgba(255, 255, 255, 0.06);
+  --dash-border: rgba(255, 255, 255, 0.1);
+  --dash-text: #ededed;
+  --dash-muted: #9ca3af;
+  --dash-accent: #9945ff;
+  --dash-accent-soft: rgba(153, 69, 255, 0.15);
+  --dash-accent-hover: #b366ff;
+  --dash-primary: #14f195;
+  --dash-sidebar-width: 240px;
+  background: radial-gradient(circle at top left, var(--dash-bg-elevated), var(--dash-bg));
+  color: var(--dash-text);
+  min-height: 100vh;
+}
+
+/* Dashboard app layout: viewport-height shell, independent scroll regions */
+.dashboard-shell-layout {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+@supports not (height: 100dvh) {
+  .dashboard-shell-layout {
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+.dashboard-sidebar {
+  height: 100%;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+@supports not (max-height: 100dvh) {
+  .dashboard-sidebar {
+    max-height: 100vh;
+  }
+}
+
+/* Sidebar nav: scrollable but no visible scrollbar */
+.dashboard-sidebar .sidebar-nav-scroll,
+.dashboard-sidebar nav.sidebar-nav-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard-sidebar .sidebar-nav-scroll::-webkit-scrollbar,
+.dashboard-sidebar nav.sidebar-nav-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.dash-header {
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.dash-card {
+  background: var(--dash-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--dash-border);
+  border-radius: 12px;
+}
+
+.dash-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--dash-border);
+  border-radius: 8px;
+  color: var(--dash-text);
+}
+
+.dash-input::placeholder {
+  color: var(--dash-muted);
+}
+
+.dash-input:focus {
+  outline: none;
+  border-color: var(--dash-accent);
+  box-shadow: 0 0 0 3px var(--dash-accent-soft);
+}
+
+.dash-btn-primary {
+  background: #ffffff;
+  color: #0a0a0a;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.dash-btn-primary:hover:not(:disabled) {
+  background: #e5e5e5;
+  transform: scale(1.02);
+}
+
+.dash-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dash-btn-secondary {
+  background: transparent;
+  color: var(--dash-text);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dash-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.dash-badge-success {
+  background: rgba(20, 241, 149, 0.12);
+  color: #6ee7b7;
+  border-color: rgba(20, 241, 149, 0.35);
+}
+
+.dash-badge-warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.dash-badge-error {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.dash-badge-neutral {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--dash-muted);
+  border-color: var(--dash-border);
+}
+
+.dash-banner-success {
+  background: rgba(20, 241, 149, 0.08);
+  border-color: rgba(20, 241, 149, 0.25);
+}
+
+.dash-banner-warning {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.dash-banner-info {
+  background: rgba(153, 69, 255, 0.08);
+  border-color: rgba(153, 69, 255, 0.25);
+}
+
+/* Wallet adapter overrides inside dashboard */
+.dashboard-shell .wallet-adapter-button {
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  font-family: inherit !important;
+  font-weight: 600 !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  font-size: 14px !important;
+}
+
+.dashboard-shell .wallet-adapter-button-trigger .wallet-adapter-button:not([disabled]):hover {
+  background: #e5e5e5 !important;
+  opacity: 1 !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-wrapper {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
+
+.dashboard-shell .wallet-adapter-modal {
+  background: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  font-family: inherit !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-title {
+  color: #ededed !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-list {
+  margin: 0 !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-list .wallet-adapter-button {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ededed !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-list .wallet-adapter-button:hover:not([disabled]) {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-button-close {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dashboard-shell select option {
+  background: #141414;
+  color: var(--dash-text);
+}
+
+.dashboard-shell input[type='checkbox'] {
+  accent-color: var(--dash-accent);
+}

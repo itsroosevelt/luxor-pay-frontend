@@ -3,13 +3,15 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
+  auth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
   onAuthStateChanged,
-} from 'firebase/auth';
-import { auth, getMissingFirebaseEnvKeys, isFirebaseConfigured } from '@/lib/firebase';
+  getMissingFirebaseEnvKeys,
+  isFirebaseConfigured,
+} from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/firestore-data';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
@@ -34,8 +36,6 @@ function resolveLoginError(error: unknown): string {
     'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
       'Invalid Firebase API key. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vercel.',
     'auth/invalid-api-key': 'Invalid Firebase API key. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vercel.',
-    'permission-denied':
-      'Firestore denied access. Enable Firestore in Firebase Console and deploy security rules.',
   };
 
   if (authMessages[code]) return authMessages[code];
@@ -83,7 +83,7 @@ function LoginContent() {
       await ensureMerchantProfile(uid, userEmail);
     } catch (error) {
       console.error('Merchant profile error:', error);
-      toast.warning('Signed in, but merchant profile could not be saved. Check Firestore rules.');
+      toast.warning('Signed in, but merchant profile could not be saved.');
     }
     router.push('/dashboard');
   };
