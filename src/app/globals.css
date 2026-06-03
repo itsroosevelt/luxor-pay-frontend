@@ -103,6 +103,49 @@
   border-bottom: 1px solid var(--dash-border);
 }
 
+.dash-header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  color: var(--dash-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.dash-header-icon-btn:hover {
+  background: var(--dash-surface-elevated);
+  color: var(--dash-text);
+}
+
+.dash-header-icon-btn-active {
+  background: var(--dash-accent-soft);
+  color: var(--dash-accent);
+}
+
+.dash-header-icon-btn-active:hover {
+  background: var(--dash-accent-soft);
+  color: var(--dash-accent-hover);
+}
+
+.dash-header-create-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: #3b82f6;
+  color: #ffffff;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.dash-header-create-btn:hover {
+  background: #2563eb;
+  transform: scale(1.04);
+}
+
 .dash-card {
   background: var(--dash-surface);
   backdrop-filter: blur(12px);

@@ -33,6 +33,7 @@ import {
   paymentStatusLabels,
 } from '@/lib/transaction-utils';
 import { cn } from '@/lib/cn';
+import { downloadPaymentsCsv } from '@/lib/dashboard/payment-export';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
 import {
   Receipt,
@@ -602,7 +603,24 @@ export default function TransactionsPage() {
             <button
               type="button"
               className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-              onClick={() => toast.info('Export — coming soon')}
+              disabled={loading || (activeTab === 'payments' ? tablePayments.length === 0 : orders.length === 0)}
+              onClick={() => {
+                const rows =
+                  activeTab === 'payments'
+                    ? tablePayments
+                    : [...orders]
+                        .filter((o) => currencyFilter === 'all' || o.currency === currencyFilter)
+                        .sort(
+                          (a, b) =>
+                            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                        );
+                if (rows.length === 0) {
+                  toast.info('No payments to export');
+                  return;
+                }
+                downloadPaymentsCsv(rows);
+                toast.success(`Exported ${rows.length} payment${rows.length === 1 ? '' : 's'}`);
+              }}
             >
               <Download size={14} />
               Export

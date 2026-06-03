@@ -1,24 +1,39 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import type { User } from 'firebase/auth';
 import { auth, onAuthStateChanged, signOut } from '@/lib/firebase';
-import { useEffect, useState } from 'react';
-import { Search, Bell, HelpCircle, Plus, LogOut, Menu, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Search, Bell, HelpCircle, Plus, Menu, X, LayoutGrid, Settings } from 'lucide-react';
 import { ensureMerchantProfile, getMerchantProfile } from '@/lib/firestore-data';
 import { getErrorMessage } from '@/lib/firestore-errors';
 import { SidebarNav } from '@/components/dashboard/SidebarNav';
 import { cn } from '@/lib/cn';
 import { toast } from 'sonner';
 
+const APP_LAUNCHER_LINKS = [
+  { href: '/dashboard', label: 'Inicio' },
+  { href: '/dashboard/balances', label: 'Saldos' },
+  { href: '/dashboard/links', label: 'Enlaces de pago' },
+  { href: '/dashboard/billing', label: 'Billing' },
+  { href: '/dashboard/developers', label: 'Desarrolladores' },
+  { href: '/dashboard/settings', label: 'Configuración' },
+] as const;
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [businessName, setBusinessName] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [appLauncherOpen, setAppLauncherOpen] = useState(false);
+  const appLauncherRef = useRef<HTMLDivElement>(null);
+
+  const settingsActive =
+    pathname === '/dashboard/settings' || pathname.startsWith('/dashboard/settings/');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -39,6 +54,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     });
     return () => unsubscribe();
   }, [router]);
+
+  useEffect(() => {
+    if (!appLauncherOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (appLauncherRef.current && !appLauncherRef.current.contains(e.target as Node)) {
+        setAppLauncherOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [appLauncherOpen]);
 
   const handleSignOut = async () => {
     await signOut(auth);
@@ -137,39 +163,69 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </div>
             </form>
 
-            <div className="flex items-center gap-1 shrink-0">
-              <Link
-                href="/dashboard/links"
-                className="hidden sm:flex dash-btn-primary items-center gap-1.5 px-3 py-2 text-sm"
-              >
-                <Plus size={16} />
-                Create
-              </Link>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <div className="relative" ref={appLauncherRef}>
+                <button
+                  type="button"
+                  onClick={() => setAppLauncherOpen((open) => !open)}
+                  className="dash-header-icon-btn"
+                  aria-label="Aplicaciones"
+                  aria-expanded={appLauncherOpen}
+                >
+                  <LayoutGrid size={18} />
+                </button>
+                {appLauncherOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-52 py-2 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg-elevated)] shadow-xl z-50">
+                    <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
+                      Productos
+                    </p>
+                    {APP_LAUNCHER_LINKS.map(({ href, label }) => (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={() => setAppLauncherOpen(false)}
+                        className="block px-3 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]"
+                      >
+                        {label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="button"
-                className="p-2 rounded-md text-[var(--dash-muted)] hover:bg-[var(--dash-surface-elevated)] hover:text-[var(--dash-text)]"
-                aria-label="Help"
+                className="dash-header-icon-btn"
+                aria-label="Ayuda"
+                onClick={() => toast.info('Centro de ayuda — próximamente')}
               >
                 <HelpCircle size={18} />
               </button>
               <button
                 type="button"
-                className="p-2 rounded-md text-[var(--dash-muted)] hover:bg-[var(--dash-surface-elevated)] hover:text-[var(--dash-text)]"
-                aria-label="Notifications"
+                className="dash-header-icon-btn"
+                aria-label="Notificaciones"
+                onClick={() => toast.info('Notificaciones — próximamente')}
               >
                 <Bell size={18} />
               </button>
-              <button
-                type="button"
-                onClick={handleSignOut}
+              <Link
+                href="/dashboard/settings"
                 className={cn(
-                  'p-2 rounded-md text-[var(--dash-muted)] hover:bg-red-500/10 hover:text-red-400',
-                  'hidden sm:block'
+                  'dash-header-icon-btn',
+                  settingsActive && 'dash-header-icon-btn-active'
                 )}
-                aria-label="Sign out"
+                aria-label="Configuración"
+                aria-current={settingsActive ? 'page' : undefined}
               >
-                <LogOut size={18} />
-              </button>
+                <Settings size={18} />
+              </Link>
+              <Link
+                href="/dashboard/links/new"
+                className="dash-header-create-btn ml-1"
+                aria-label="Crear"
+              >
+                <Plus size={18} strokeWidth={2.5} />
+              </Link>
             </div>
           </div>
         </header>
