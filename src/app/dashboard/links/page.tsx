@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { listPaymentLinks } from '@/lib/firestore-data';
+import { listPaymentLinks } from '@/lib/payments-api';
 import type { PaymentLink } from '@luxor/contracts';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
 import { cn } from '@/lib/cn';
@@ -104,7 +104,8 @@ export default function PaymentLinksPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const data = await listPaymentLinks(user.uid);
+        const token = await user.getIdToken();
+        const data = await listPaymentLinks(token);
         setLinks(data);
       } catch (err) {
         toast.error(getFirestoreErrorMessage(err, 'Could not load payment links'));

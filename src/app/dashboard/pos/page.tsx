@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { createPosDevice, listPosDevices } from '@/lib/firestore-data';
+import { createPosDevice, listPosDevices } from '@/lib/payments-api';
 import type { PosDevice } from '@luxor/contracts';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
 import { Terminal, Plus } from 'lucide-react';
@@ -28,7 +28,8 @@ export default function PosDevicesPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        setDevices(await listPosDevices(user.uid));
+        const token = await user.getIdToken();
+        setDevices(await listPosDevices(token));
       } catch {
         toast.error('Could not load POS devices');
       } finally {
@@ -54,7 +55,8 @@ export default function PosDevicesPage() {
 
     setCreating(true);
     try {
-      const device = await createPosDevice(user.uid, {
+      const token = await user.getIdToken();
+      const device = await createPosDevice(token, {
         name: name.trim(),
         posId: posId.trim(),
       });
