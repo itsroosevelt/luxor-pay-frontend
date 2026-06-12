@@ -1,22 +1,31 @@
-import { apiGet } from '@/lib/api/http';
-import type { BillingInvoice, BillingSubscription } from '@luxor/contracts';
+import { notImplementedApi, type ApiResult } from '@/lib/api/http';
+import type { BillingInvoice, BillingSubscription, Currency } from '@luxor/contracts';
 
-export async function fetchBillingOverviewApi() {
-  return apiGet<{ mrr: number; currency: string; activeSubscriptions: number }>(
-    '/api/v1/billing/overview'
-  );
+export interface BillingOverview {
+  mrr: number;
+  activeSubscriptions: number;
+  currency: Currency;
 }
 
-export async function fetchSubscriptionsApi() {
-  return apiGet<BillingSubscription[]>('/api/v1/billing/subscriptions');
+export interface BillingUsageRow {
+  id: string;
+  metric: string;
+  quantity: number;
+  period: string;
 }
 
-export async function fetchInvoicesApi() {
-  return apiGet<BillingInvoice[]>('/api/v1/billing/invoices');
+export async function fetchBillingOverviewApi(): Promise<ApiResult<BillingOverview>> {
+  return notImplementedApi('Billing');
 }
 
-export async function fetchUsageRecordsApi() {
-  return apiGet<{ id: string; metric: string; quantity: number; period: string }[]>(
-    '/api/v1/billing/usage'
-  );
+export async function fetchSubscriptionsApi(): Promise<ApiResult<BillingSubscription[]>> {
+  return notImplementedApi('Billing subscriptions');
+}
+
+export async function fetchInvoicesApi(): Promise<ApiResult<BillingInvoice[]>> {
+  return notImplementedApi('Billing invoices');
+}
+
+export async function fetchUsageApi(): Promise<ApiResult<BillingUsageRow[]>> {
+  return notImplementedApi('Billing usage');
 }

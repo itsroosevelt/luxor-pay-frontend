@@ -2,7 +2,7 @@ import { apiGet, apiPost } from '@/lib/api/http';
 import type { Currency, PaymentLink } from '@luxor/contracts';
 
 export async function fetchPaymentLinksApi() {
-  return apiGet<PaymentLink[]>('/api/v1/payment-links');
+  return apiGet<PaymentLink[]>('/payment-links');
 }
 
 export async function createPaymentLinkApi(input: {
@@ -10,5 +10,5 @@ export async function createPaymentLinkApi(input: {
   amount: number;
   currency: Currency;
 }) {
-  return apiPost<PaymentLink>('/api/v1/payment-links', input);
+  return apiPost<PaymentLink>('/payment-links', input);
 }

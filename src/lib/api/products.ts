@@ -1,15 +1,12 @@
-import { apiGet, apiPost } from '@/lib/api/http';
-import type { Currency, ProductCatalogItem } from '@luxor/contracts';
+import { notImplementedApi, type ApiResult } from '@/lib/api/http';
+import type { ProductCatalogItem } from '@luxor/contracts';
 
-export async function fetchProductsApi() {
-  return apiGet<ProductCatalogItem[]>('/api/v1/products');
+export async function fetchProductsApi(): Promise<ApiResult<ProductCatalogItem[]>> {
+  return notImplementedApi('Products');
 }
 
-export async function createProductApi(input: {
-  name: string;
-  description?: string;
-  price: number;
-  currency: Currency;
-}) {
-  return apiPost<ProductCatalogItem>('/api/v1/products', input);
+export async function createProductApi(
+  _input: Omit<ProductCatalogItem, 'id' | 'merchantId' | 'createdAt'>
+): Promise<ApiResult<ProductCatalogItem>> {
+  return notImplementedApi('Products');
 }

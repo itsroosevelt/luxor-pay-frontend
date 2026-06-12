@@ -1,15 +1,12 @@
-import { apiGet, apiPost } from '@/lib/api/http';
-import type { Currency, Customer } from '@luxor/contracts';
+import { notImplementedApi, type ApiResult } from '@/lib/api/http';
+import type { Customer } from '@luxor/contracts';
 
-export async function fetchCustomersApi() {
-  return apiGet<Customer[]>('/api/v1/customers');
+export async function fetchCustomersApi(): Promise<ApiResult<Customer[]>> {
+  return notImplementedApi('Customers');
 }
 
-export async function createCustomerApi(input: {
-  name: string;
-  email?: string;
-  walletAddress?: string;
-  preferredToken?: Currency;
-}) {
-  return apiPost<Customer>('/api/v1/customers', input);
+export async function createCustomerApi(
+  _input: Omit<Customer, 'id' | 'merchantId' | 'createdAt'>
+): Promise<ApiResult<Customer>> {
+  return notImplementedApi('Customers');
 }

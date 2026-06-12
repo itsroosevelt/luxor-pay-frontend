@@ -1,8 +1,8 @@
 import { auth } from '@/lib/firebase';
 
-/** Default: frontend-only (no Node API at NEXT_PUBLIC_API_URL). Set to "false" to enable backend fetch. */
+/** When true, merchant profile reads/writes use localStorage instead of luxor-pay-be-solana. */
 export function isFrontendOnly(): boolean {
-  return process.env.NEXT_PUBLIC_FRONTEND_ONLY !== 'false';
+  return process.env.NEXT_PUBLIC_FRONTEND_ONLY === 'true';
 }
 
 export function getCurrentMerchantId(): string | null {
