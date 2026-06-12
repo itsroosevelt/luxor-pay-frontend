@@ -17,9 +17,10 @@ import {
   DetailSection,
   DetailSidebar,
   DetailRow,
+  TaxConfigNotice,
 } from '@/components/dashboard';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, Link as LinkIcon, Pencil, Package, Plus } from 'lucide-react';
+import { ArrowLeft, Link as LinkIcon, Pencil, Package, Plus, Percent } from 'lucide-react';
 import { toast } from 'sonner';
 
 function formatDate(iso: string): string {
@@ -190,6 +191,7 @@ export default function ProductDetailPage() {
                   <Pencil size={18} className="text-[var(--dash-accent)]" />
                   Edit product
                 </h2>
+                <TaxConfigNotice />
                 <div className="grid md:grid-cols-2 gap-3">
                   <input
                     value={editName}
@@ -258,6 +260,7 @@ export default function ProductDetailPage() {
                   <tr className="text-xs uppercase text-[var(--dash-muted)] border-b border-[var(--dash-border)]">
                     <th className="text-left py-2 font-semibold">Price</th>
                     <th className="text-left py-2 font-semibold">Currency</th>
+                    <th className="text-left py-2 font-semibold">Tax</th>
                     <th className="text-left py-2 font-semibold">Status</th>
                   </tr>
                 </thead>
@@ -265,6 +268,15 @@ export default function ProductDetailPage() {
                   <tr>
                     <td className="py-3 tabular-nums font-medium">{product.price}</td>
                     <td className="py-3">{product.currency}</td>
+                    <td className="py-3">
+                      <Link
+                        href="/dashboard/tax"
+                        className="inline-flex items-center gap-1.5 text-[var(--dash-muted)] hover:text-[var(--dash-accent)] transition-colors"
+                      >
+                        <Percent size={14} />
+                        <span className="text-xs">Configured in Tax</span>
+                      </Link>
+                    </td>
                     <td className="py-3">
                       <span
                         className={cn(

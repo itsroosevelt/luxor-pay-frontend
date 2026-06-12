@@ -1,202 +1,299 @@
 'use client';
 
-import { useState } from 'react';
-import { EmptyState } from '@/components/dashboard';
-import { FilterChip, FilterRow } from '@/components/dashboard/FilterRow';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useSearchParams } from 'next/navigation';
+import {
+  DataTable,
+  EmptyState,
+  FilterChip,
+  FilterRow,
+  type DataTableColumn,
+} from '@/components/dashboard';
 import {
   SettingsPageHeader,
   SettingsTabBar,
-  SettingsTable,
-  type SettingsTableColumn,
 } from '@/components/dashboard/settings';
 import { cn } from '@/lib/cn';
+import { dashStatusBadges } from '@/lib/dashboard/dashboard-styles';
 import {
-  Download,
-  Fingerprint,
-  History,
-  KeyRound,
-  Plus,
-  Shield,
-  UserCog,
-  Users,
-  UsersRound,
-} from 'lucide-react';
+  TEAM_MORE_TABS,
+  TEAM_PRIMARY_TABS,
+  countMembersByStatus,
+  filterMembersBySummary,
+  formatLastSignIn,
+  getTeamMembersServerSnapshot,
+  getTeamMembersSnapshot,
+  isTeamMoreTab,
+  type MemberSummaryFilter,
+  type TeamMember,
+  type TeamTabId,
+} from '@/lib/dashboard/team-members';
+import { ChevronDown, Download, Plus, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
-const EQUIPO_TABS = [
-  { id: 'equipo', label: 'Equipo' },
-  { id: 'grupos', label: 'Grupos' },
-  { id: 'sso', label: 'Inicio de sesión único' },
-  { id: 'scim', label: 'SCIM' },
-  { id: '2fa', label: 'Autenticación en dos pasos' },
-  { id: 'historial', label: 'Historial de seguridad' },
-  { id: 'acceso', label: 'Solicitudes de acceso' },
-  { id: 'mcp', label: 'Acceso MCP' },
-] as const;
+const ALL_TEAM_TAB_IDS = new Set<string>([
+  ...TEAM_PRIMARY_TABS.map((t) => t.id),
+  ...TEAM_MORE_TABS.map((t) => t.id),
+]);
 
-type EquipoTabId = (typeof EQUIPO_TABS)[number]['id'];
-
-type MemberFilter = 'todos' | 'activos' | 'pendientes' | 'inactivos';
-
-const MEMBER_FILTERS: { id: MemberFilter; label: string; count: number }[] = [
-  { id: 'todos', label: 'Todos', count: 0 },
-  { id: 'activos', label: 'Activos', count: 0 },
-  { id: 'pendientes', label: 'Pendientes', count: 0 },
-  { id: 'inactivos', label: 'Inactivos', count: 0 },
-];
-
-interface TeamMember {
-  id: string;
+function parseTeamTabFromQuery(value: string | null): TeamTabId | null {
+  if (!value || !ALL_TEAM_TAB_IDS.has(value)) return null;
+  return value as TeamTabId;
 }
 
-const MEMBER_COLUMNS: SettingsTableColumn<TeamMember>[] = [
-  { key: 'name', header: 'Nombre', render: () => null },
-  { key: 'email', header: 'Email', render: () => null },
-  { key: 'roles', header: 'Funciones', render: () => null },
-  { key: 'lastLogin', header: 'Último inicio de sesión', render: () => null },
+const TEAM_MEMBERS_CHANGE_EVENT = 'luxor-team-members-change';
+
+const MEMBER_SUMMARY_FILTERS: { id: MemberSummaryFilter; label: string }[] = [
+  { id: 'all', label: 'All members' },
+  { id: 'active', label: 'Active members' },
+  { id: 'pending', label: 'Pending invitations' },
+  { id: 'inactive', label: 'Inactive members' },
 ];
 
-const EMPTY_TAB_CONFIG: Partial<
-  Record<EquipoTabId, { icon: typeof Users; title: string; description: string }>
-> = {
-  grupos: {
-    icon: UsersRound,
-    title: 'Sin grupos configurados',
-    description: 'Organiza miembros del equipo en grupos para gestionar permisos de forma conjunta.',
-  },
-  sso: {
-    icon: KeyRound,
-    title: 'Inicio de sesión único no configurado',
-    description: 'Permite que tu equipo acceda con el proveedor de identidad de tu organización.',
-  },
-  scim: {
-    icon: UserCog,
-    title: 'SCIM no habilitado',
-    description: 'Sincroniza usuarios y grupos automáticamente desde tu directorio corporativo.',
-  },
-  '2fa': {
-    icon: Shield,
-    title: 'Autenticación en dos pasos',
-    description: 'Configura políticas de 2FA para proteger el acceso a tu cuenta de comercio.',
-  },
-  historial: {
-    icon: History,
-    title: 'Sin eventos de seguridad',
-    description: 'Los inicios de sesión, cambios de permisos y actividad de API aparecerán aquí.',
-  },
-  acceso: {
-    icon: Fingerprint,
-    title: 'Sin solicitudes de acceso',
-    description: 'Las solicitudes pendientes de nuevos miembros se mostrarán en esta sección.',
-  },
-  mcp: {
-    icon: KeyRound,
-    title: 'Acceso MCP no configurado',
-    description: 'Gestiona tokens de acceso para integraciones MCP con Luxor Pay.',
-  },
-};
+function subscribeToTeamMembers(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const handler = () => onStoreChange();
+  window.addEventListener(TEAM_MEMBERS_CHANGE_EVENT, handler);
+  window.addEventListener('storage', handler);
+  return () => {
+    window.removeEventListener(TEAM_MEMBERS_CHANGE_EVENT, handler);
+    window.removeEventListener('storage', handler);
+  };
+}
 
-function EquipoTabPanel() {
-  const [memberFilter, setMemberFilter] = useState<MemberFilter>('todos');
+function TeamTabPlaceholder() {
+  return (
+    <EmptyState
+      icon={Settings}
+      title="Coming soon"
+      description="This section will be available in a future release."
+    />
+  );
+}
+
+function TeamTabPanel({ members }: { members: TeamMember[] }) {
+  const [memberFilter, setMemberFilter] = useState<MemberSummaryFilter>('all');
+
+  const counts = useMemo(() => countMembersByStatus(members), [members]);
+  const filtered = useMemo(
+    () => filterMembersBySummary(members, memberFilter),
+    [members, memberFilter]
+  );
+
+  const columns: DataTableColumn<TeamMember>[] = [
+    {
+      key: 'name',
+      header: 'Name',
+      render: (member) => (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-medium text-[var(--dash-text)]">{member.name}</span>
+          {member.isCurrentUser && (
+            <span className={dashStatusBadges.neutral}>You</span>
+          )}
+          {member.isAccountHolder && (
+            <span className={dashStatusBadges.neutral}>Account holder</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Email',
+      render: (member) => (
+        <span className="text-[var(--dash-muted)]">{member.email}</span>
+      ),
+    },
+    {
+      key: 'roles',
+      header: 'Roles',
+      render: (member) => (
+        <span className="text-[var(--dash-text)]">{member.roles.join(', ')}</span>
+      ),
+    },
+    {
+      key: 'lastSignIn',
+      header: 'Last sign-in',
+      render: (member) => (
+        <span className="text-[var(--dash-muted)]">{formatLastSignIn(member.lastSignIn)}</span>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex flex-wrap gap-2">
-          {MEMBER_FILTERS.map((filter) => (
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {MEMBER_SUMMARY_FILTERS.map(({ id, label }) => {
+          const count = counts[id];
+          const active = memberFilter === id;
+          return (
             <button
-              key={filter.id}
+              key={id}
               type="button"
-              onClick={() => setMemberFilter(filter.id)}
+              onClick={() => setMemberFilter(id)}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full border transition-colors',
-                memberFilter === filter.id
-                  ? 'border-[var(--dash-accent)] bg-[var(--dash-accent-soft)] text-[var(--dash-accent)]'
-                  : 'border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] text-[var(--dash-text)] hover:bg-[rgba(255,255,255,0.06)]'
+                'shrink-0 dash-card px-4 py-3 min-w-[140px] text-left transition-colors',
+                active && 'ring-2 ring-[var(--dash-accent)] border-[var(--dash-accent)]'
               )}
             >
-              {filter.label}
-              <span className="text-[var(--dash-muted)]">{filter.count}</span>
+              <p className="text-xs text-[var(--dash-muted)]">{label}</p>
+              <p className="text-xl font-semibold tabular-nums mt-1 text-[var(--dash-text)]">
+                {count}
+              </p>
             </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <FilterRow>
-            <FilterChip label="Función" onClick={() => toast.message('Filtro — próximamente')} />
-            <FilterChip label="Estado" onClick={() => toast.message('Filtro — próximamente')} />
-          </FilterRow>
+          );
+        })}
+      </div>
+
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <FilterRow>
+          <FilterChip label="Roles" onClick={() => toast.message('Filter — coming soon')} />
+          <FilterChip label="Status" onClick={() => toast.message('Filter — coming soon')} />
+          <FilterChip label="Name" onClick={() => toast.message('Filter — coming soon')} />
+          <FilterChip label="Email" onClick={() => toast.message('Filter — coming soon')} />
+        </FilterRow>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => toast.message('Exportar — próximamente')}
+            onClick={() => toast.message('Export — coming soon')}
             className="dash-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm"
           >
             <Download size={16} />
-            Exportar
+            Export
           </button>
           <button
             type="button"
-            onClick={() => toast.message('Agregar miembro — próximamente')}
+            onClick={() => toast.message('Add member — coming soon')}
             className="dash-btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm"
           >
             <Plus size={16} />
-            Agregar miembro
+            Add member
           </button>
         </div>
       </div>
 
-      <section className="dash-card overflow-hidden">
-        <SettingsTable
-          columns={MEMBER_COLUMNS}
-          data={[]}
-          rowKey={(row) => row.id}
-          showHeadersWhenEmpty
-          emptyMessage="No hay miembros en el equipo."
-          footer={
-            <p className="px-5 py-3 text-xs text-[var(--dash-muted)] border-t border-[var(--dash-border)]">
-              Viendo 0 de 0 resultados
-            </p>
-          }
-        />
-      </section>
+      <DataTable
+        columns={columns}
+        data={filtered}
+        rowKey={(row) => row.id}
+        footer={
+          <p className="px-4 py-3 text-xs text-[var(--dash-muted)] border-t border-[var(--dash-border)]">
+            Viewing {filtered.length} of {members.length} results
+          </p>
+        }
+      />
     </div>
   );
 }
 
-export default function EquipoSettingsPage() {
-  const [activeTab, setActiveTab] = useState<EquipoTabId>('equipo');
+export default function TeamSettingsPage() {
+  const searchParams = useSearchParams();
+  const tabFromQuery = useMemo(
+    () => parseTeamTabFromQuery(searchParams.get('tab')),
+    [searchParams]
+  );
+  const [activeTab, setActiveTab] = useState<TeamTabId>(() => tabFromQuery ?? 'equipo');
+  const [tabFromQuerySnapshot, setTabFromQuerySnapshot] = useState(tabFromQuery);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
 
-  const emptyConfig = EMPTY_TAB_CONFIG[activeTab];
+  if (tabFromQuery !== tabFromQuerySnapshot) {
+    setTabFromQuerySnapshot(tabFromQuery);
+    if (tabFromQuery) setActiveTab(tabFromQuery);
+  }
+
+  const members = useSyncExternalStore(
+    subscribeToTeamMembers,
+    getTeamMembersSnapshot,
+    getTeamMembersServerSnapshot
+  );
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
+
+  const moreActive = isTeamMoreTab(activeTab);
+  const moreLabel = TEAM_MORE_TABS.find((t) => t.id === activeTab)?.label ?? 'More';
 
   return (
     <>
       <SettingsPageHeader
-        title="Equipo y seguridad"
-        description="Invita colaboradores, asigna roles y revisa la actividad de inicio de sesión y API."
+        title="Team & security"
+        description="Invite collaborators, assign roles, and review sign-in and API activity."
       />
 
-      <div className="px-6 md:px-8 border-b border-[var(--dash-border)] overflow-x-auto">
-        <SettingsTabBar
-          tabs={EQUIPO_TABS}
-          activeTab={activeTab}
-          onTabChange={(tabId) => setActiveTab(tabId as EquipoTabId)}
-          className="min-w-max border-b-0"
-        />
+      <div className="px-6 md:px-8 border-b border-[var(--dash-border)]">
+        <div className="flex flex-wrap items-end gap-1">
+          <SettingsTabBar
+            tabs={TEAM_PRIMARY_TABS}
+            activeTab={moreActive ? '' : activeTab}
+            onTabChange={(tabId) => {
+              setMoreOpen(false);
+              setActiveTab(tabId as TeamTabId);
+            }}
+            className="flex-1 min-w-0 border-b-0 overflow-x-auto"
+          />
+          <div ref={moreRef} className="relative -mb-px pb-px shrink-0">
+            <button
+              type="button"
+              onClick={() => setMoreOpen((o) => !o)}
+              aria-expanded={moreOpen}
+              aria-haspopup="menu"
+              className={cn(
+                'inline-flex items-center gap-1 px-3 py-2.5 text-sm font-medium transition-colors border-b-2',
+                moreActive
+                  ? 'border-[var(--dash-accent)] text-[var(--dash-text)]'
+                  : 'border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-text)] hover:border-[var(--dash-border)]'
+              )}
+            >
+              {moreActive ? moreLabel : 'More'}
+              <ChevronDown size={14} className={cn('transition-transform', moreOpen && 'rotate-180')} />
+            </button>
+            {moreOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full z-20 mt-1 min-w-[200px] dash-card py-1 shadow-lg"
+              >
+                {TEAM_MORE_TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setMoreOpen(false);
+                    }}
+                    className={cn(
+                      'w-full text-left px-4 py-2 text-sm transition-colors',
+                      activeTab === tab.id
+                        ? 'text-[var(--dash-accent)] bg-[var(--dash-accent-soft)]'
+                        : 'text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]'
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="p-6 md:p-8 max-w-5xl mx-auto pb-12">
+      <div className="p-6 md:p-8 max-w-6xl mx-auto pb-12">
         {activeTab === 'equipo' ? (
           <div role="tabpanel" id="comm-panel-equipo" aria-labelledby="comm-tab-equipo">
-            <EquipoTabPanel />
+            <TeamTabPanel members={members} />
           </div>
-        ) : emptyConfig ? (
+        ) : (
           <div role="tabpanel" id={`comm-panel-${activeTab}`} aria-labelledby={`comm-tab-${activeTab}`}>
-            <EmptyState
-              icon={emptyConfig.icon}
-              title={emptyConfig.title}
-              description={emptyConfig.description}
-            />
+            <TeamTabPlaceholder />
           </div>
-        ) : null}
+        )}
       </div>
     </>
   );

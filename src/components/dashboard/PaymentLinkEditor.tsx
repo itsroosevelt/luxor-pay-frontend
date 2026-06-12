@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import {
   ChevronDown,
@@ -126,6 +127,7 @@ export function PaymentLinkEditor({
   initialValues,
   merchantName = 'Luxor Pay',
   saving = false,
+  submitDisabled = false,
   onSave,
   onCancel,
 }: {
@@ -133,6 +135,7 @@ export function PaymentLinkEditor({
   initialValues: PaymentLinkEditorValues;
   merchantName?: string;
   saving?: boolean;
+  submitDisabled?: boolean;
   onSave: (values: PaymentLinkEditorValues) => void | Promise<void>;
   onCancel: () => void;
 }) {
@@ -169,7 +172,7 @@ export function PaymentLinkEditor({
         </div>
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || submitDisabled}
           className="dash-btn-primary px-5 py-2 text-sm shrink-0 disabled:opacity-50"
         >
           {saving ? 'Saving…' : submitLabel}
@@ -288,7 +291,11 @@ export function PaymentLinkEditor({
                     <span>
                       <span className="font-medium">Collect taxes</span>
                       <span className="block text-[var(--dash-muted)] text-xs mt-0.5">
-                        Automatic tax calculation — coming soon
+                        Uses default rates from{' '}
+                        <Link href="/dashboard/tax" className="text-[var(--dash-accent)] hover:underline">
+                          Tax settings
+                        </Link>
+                        {' '}— automatic calculation coming soon
                       </span>
                     </span>
                   </label>

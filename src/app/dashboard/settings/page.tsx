@@ -7,8 +7,8 @@ export default function SettingsPage() {
   return (
     <>
       <PageHeader
-        title="Configuración"
-        description="Administra tu cuenta, equipo, seguridad, productos y preferencias de Luxor Pay."
+        title="Settings"
+        description="Manage your account, team, security, products, and Luxor Pay preferences."
       />
 
       <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-10 pb-12">

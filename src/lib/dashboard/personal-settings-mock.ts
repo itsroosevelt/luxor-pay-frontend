@@ -33,7 +33,7 @@ export const MOCK_PASSKEYS: PasskeyRow[] = [
     id: 'pk-1',
     name: 'MacBook Pro',
     addedAt: '12 mar 2025',
-    lastUsed: 'Hace 2 horas',
+    lastUsed: '2 hours ago',
   },
 ];
 
@@ -48,14 +48,14 @@ export const MOCK_TWO_FACTOR: TwoFactorMethod[] = [
   {
     id: '2fa-app',
     type: 'authenticator',
-    label: 'App de autenticación',
+    label: 'Authenticator app',
     detail: 'Google Authenticator',
     badge: 'default',
   },
   {
     id: '2fa-key',
     type: 'security-key',
-    label: 'Clave de seguridad',
+    label: 'Security key',
     detail: 'YubiKey 5 NFC',
   },
 ];
@@ -63,26 +63,26 @@ export const MOCK_TWO_FACTOR: TwoFactorMethod[] = [
 export const MOCK_SESSIONS: SessionRow[] = [
   {
     id: 'sess-1',
-    location: 'Madrid, España',
-    device: 'Chrome en macOS',
+    location: 'Madrid, Spain',
+    device: 'Chrome on macOS',
     ip: '185.•••.••.42',
-    lastActive: 'Ahora',
+    lastActive: 'Now',
     isCurrent: true,
   },
   {
     id: 'sess-2',
-    location: 'Barcelona, España',
-    device: 'Safari en iPhone',
+    location: 'Barcelona, Spain',
+    device: 'Safari on iPhone',
     ip: '92.•••.••.17',
-    lastActive: 'Hace 3 días',
+    lastActive: '3 days ago',
     isCurrent: false,
   },
   {
     id: 'sess-3',
-    location: 'Valencia, España',
-    device: 'Firefox en Windows',
+    location: 'Valencia, Spain',
+    device: 'Firefox on Windows',
     ip: '81.•••.••.91',
-    lastActive: 'Hace 1 semana',
+    lastActive: '1 week ago',
     isCurrent: false,
   },
 ];
@@ -90,19 +90,19 @@ export const MOCK_SESSIONS: SessionRow[] = [
 export const MOCK_ACCOUNTS: AccountRow[] = [
   {
     id: 'acct-1',
-    name: 'Luxor Pay — Comercio principal',
+    name: 'Luxor Pay — Main merchant',
     accountId: 'acct_1NqK8xLuxorPayDemo',
   },
   {
     id: 'acct-2',
-    name: 'Tienda online',
+    name: 'Online store',
     accountId: 'acct_1NqK8xTiendaOnline',
   },
 ];
 
 export const LANGUAGE_OPTIONS = [
-  { value: 'auto', label: 'Detección automática' },
-  { value: 'es', label: 'Español' },
+  { value: 'auto', label: 'Automatic detection' },
+  { value: 'es', label: 'Spanish' },
   { value: 'en', label: 'English' },
-  { value: 'ca', label: 'Català' },
+  { value: 'ca', label: 'Catalan' },
 ] as const;

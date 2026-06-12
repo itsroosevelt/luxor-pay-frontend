@@ -18,7 +18,7 @@ export function EmptyState({ icon: Icon, title, description, action, children, c
   return (
     <div
       className={cn(
-        'dash-card flex flex-col items-center justify-center text-center px-6 py-16',
+        'dash-card w-full flex flex-col items-center justify-center text-center px-6 py-16',
         className
       )}
     >

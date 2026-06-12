@@ -38,7 +38,7 @@ export default function CommunicationPreferencesPage() {
     getCommunicationPrefsSnapshot,
     getCommunicationPrefsServerSnapshot
   );
-  const businessName = 'tu cuenta';
+  const businessName = 'your account';
 
   const handleToggle = useCallback(
     (rowId: string, channel: NotificationChannel, enabled: boolean) => {
@@ -55,8 +55,8 @@ export default function CommunicationPreferencesPage() {
   return (
     <>
       <SettingsPageHeader
-        title="Preferencias de comunicación"
-        description={`Tus preferencias de comunicación solo se aplicarán a ${businessName}.`}
+        title="Communication preferences"
+        description={`Your communication preferences will only apply to ${businessName}.`}
       />
 
       <div className="px-6 md:px-8 border-b border-[var(--dash-border)]">
@@ -86,8 +86,8 @@ export default function CommunicationPreferencesPage() {
           >
             <EmptyState
               icon={Bell}
-              title="Próximamente"
-              description="Las preferencias de esta categoría estarán disponibles en una próxima versión."
+              title="Coming soon"
+              description="Preferences for this category will be available in a future release."
             />
           </div>
         )}

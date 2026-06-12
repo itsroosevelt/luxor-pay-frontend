@@ -1,28 +1,23 @@
 'use client';
 
-import {
-  PageHeader,
-  EmptyState,
-  ReportingSectionNav,
-  BackendNotice,
-} from '@/components/dashboard';
-import { LineChart } from 'lucide-react';
+import { FileText } from 'lucide-react';
+import { PageHeader, EmptyState, BackendNotice, ReportingSectionNav } from '@/components/dashboard';
 
 export default function RevenueRecognitionPage() {
   return (
     <>
       <PageHeader
         title="Revenue recognition"
-        description="Map on-chain settlement timing to accounting periods for SOL and USDC."
+        description="Map confirmed Solana settlements to accounting periods."
       />
-      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+      <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-6">
         <ReportingSectionNav />
         <BackendNotice notImplemented />
         <EmptyState
-          icon={LineChart}
-          title="No recognition schedules"
-          description="Deferred revenue and multi-period plans will appear when your finance API is connected."
-          action={{ label: 'Billing overview', href: '/dashboard/billing' }}
+          icon={FileText}
+          title="Revenue recognition"
+          description="Available when billing and backend reporting are connected."
+          action={{ label: 'Back to reports', href: '/dashboard/reporting' }}
         />
       </div>
     </>

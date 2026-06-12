@@ -6,12 +6,12 @@ import { fetchBillingOverviewApi } from '@/lib/api/billing';
 import { formatCurrencyAmount } from '@/lib/format-currency';
 import type { Currency } from '@luxor/contracts';
 import {
-  PageHeader,
   EmptyState,
   BillingSectionNav,
   BackendNotice,
   DashboardMetricCard,
 } from '@/components/dashboard';
+import { SettingsPageHeader } from '@/components/dashboard/settings';
 import { FileText, Repeat } from 'lucide-react';
 
 export default function BillingOverviewPage() {
@@ -45,7 +45,7 @@ export default function BillingOverviewPage() {
 
   return (
     <>
-      <PageHeader
+      <SettingsPageHeader
         title="Billing"
         description="Recurring SOL and USDC subscriptions settled to your Solana merchant wallet."
       />

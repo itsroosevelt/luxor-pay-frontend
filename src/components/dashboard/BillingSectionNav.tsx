@@ -6,14 +6,18 @@ import { cn } from '@/lib/cn';
 
 const TABS = [
   { href: '/dashboard/billing', label: 'Overview' },
-  { href: '/dashboard/billing/subscriptions', label: 'Subscriptions' },
   { href: '/dashboard/billing/invoices', label: 'Invoices' },
-  { href: '/dashboard/billing/usage', label: 'Usage-based' },
-  { href: '/dashboard/billing/revenue-recovery', label: 'Revenue recovery' },
+  { href: '/dashboard/customers', label: 'Customers' },
+  { href: '/dashboard/billing/subscriptions', label: 'Subscriptions' },
+  { href: '/dashboard/billing/quotes', label: 'Quotes' },
+  { href: '/dashboard/billing/pending', label: 'Revenue recovery' },
 ] as const;
 
 function isTabActive(pathname: string, href: string) {
   if (href === '/dashboard/billing') return pathname === href;
+  if (href === '/dashboard/customers') {
+    return pathname === href || pathname.startsWith(`${href}/`);
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 

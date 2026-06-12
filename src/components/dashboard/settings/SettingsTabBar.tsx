@@ -18,7 +18,7 @@ export function SettingsTabBar({ tabs, activeTab, onTabChange, className }: Sett
   return (
     <div
       role="tablist"
-      aria-label="Secciones de preferencias"
+      aria-label="Preference sections"
       className={cn('flex flex-wrap gap-1 border-b border-[var(--dash-border)]', className)}
     >
       {tabs.map((tab) => {

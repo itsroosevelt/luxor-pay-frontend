@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-outfit), sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
   --background: #0a0a0a;
   --foreground: #ededed;
-  --primary: #14f195; /* Solana Green */
-  --secondary: #9945ff; /* Solana Purple */
-  --accent: #00ffd1;
+  /* Luxor palette (primary tokens) */
+  --luxor-accent-light: #60a5fa;
+  --luxor-accent-dark: #2563eb;
+  --primary: #60a5fa;
+  --secondary: #2563eb;
+  --accent: #60a5fa;
+  /* Legacy Solana aliases — mapped to Luxor blues for gradual migration */
+  --solana-green: #14f195;
+  --solana-purple: #9945ff;
 }
 
 @layer base {
@@ -22,20 +28,26 @@
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 40px;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
 }
 
 .solana-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(to right, var(--luxor-accent-light), var(--luxor-accent-dark));
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(to right, var(--luxor-accent-light), var(--luxor-accent-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--luxor-accent-light);
+  outline-offset: 2px;
 }
 
 /* Dashboard shell — dark theme aligned with landing page */
@@ -47,10 +59,10 @@
   --dash-border: rgba(255, 255, 255, 0.1);
   --dash-text: #ededed;
   --dash-muted: #9ca3af;
-  --dash-accent: #9945ff;
-  --dash-accent-soft: rgba(153, 69, 255, 0.15);
-  --dash-accent-hover: #b366ff;
-  --dash-primary: #14f195;
+  --dash-accent: #60a5fa;
+  --dash-accent-soft: rgba(96, 165, 250, 0.15);
+  --dash-accent-hover: #2563eb;
+  --dash-primary: #60a5fa;
   --dash-sidebar-width: 240px;
   background: radial-gradient(circle at top left, var(--dash-bg-elevated), var(--dash-bg));
   color: var(--dash-text);
@@ -95,6 +107,23 @@
   display: none;
   width: 0;
   height: 0;
+}
+
+/* Mobile drawer: solid opaque panel (not glass/transparent surface) */
+.dashboard-mobile-drawer {
+  background: var(--dash-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dashboard-sidebar.dashboard-sidebar-mobile {
+  background: var(--dash-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dashboard-sidebar-mobile .sidebar-nav-scroll {
+  background: var(--dash-bg);
 }
 
 .dash-header {

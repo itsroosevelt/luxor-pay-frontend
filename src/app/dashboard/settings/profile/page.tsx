@@ -29,7 +29,7 @@ function SettingsLinkButton({
   return (
     <button
       type="button"
-      onClick={onClick ?? (() => toast.message('Disponible próximamente'))}
+      onClick={onClick ?? (() => toast.message('Available soon'))}
       className="text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
     >
       {children}
@@ -47,7 +47,7 @@ function SettingsOutlineButton({
   return (
     <button
       type="button"
-      onClick={onClick ?? (() => toast.message('Disponible próximamente'))}
+      onClick={onClick ?? (() => toast.message('Available soon'))}
       className="dash-btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm"
     >
       {children}
@@ -62,7 +62,7 @@ export default function SettingsProfilePage() {
   const handleSaveLanguage = async () => {
     setSavingLanguage(true);
     await new Promise((r) => setTimeout(r, 400));
-    toast.success('Preferencia de idioma guardada');
+    toast.success('Language preference saved');
     setSavingLanguage(false);
   };
 
@@ -71,89 +71,89 @@ export default function SettingsProfilePage() {
       <SettingsPageHeader
         title={
           <span className="inline-flex flex-wrap items-center gap-2.5">
-            Datos personales
-            <span className={dashStatusBadges.neutral}>Entorno global</span>
+            Personal details
+            <span className={dashStatusBadges.neutral}>Global environment</span>
           </span>
         }
-        description="Información de contacto, contraseña, métodos de autenticación y sesiones activas."
+        description="Contact information, password, authentication methods, and active sessions."
       />
 
       <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-6 pb-12">
         <SettingsSection
-          title="Usuario"
-          action={<SettingsOutlineButton>Editar</SettingsOutlineButton>}
+          title="User"
+          action={<SettingsOutlineButton>Edit</SettingsOutlineButton>}
         >
-          <SettingsRow label="Nombre">
-            <span className="text-[var(--dash-muted)]">Sin configurar</span>
+          <SettingsRow label="Name">
+            <span className="text-[var(--dash-muted)]">Not configured</span>
           </SettingsRow>
-          <SettingsRow label="Contraseña">
-            <span className="text-[var(--dash-muted)]">No configurada</span>
+          <SettingsRow label="Password">
+            <span className="text-[var(--dash-muted)]">Not set</span>
           </SettingsRow>
-          <SettingsRow label="Correo electrónico">
-            <span className="text-[var(--dash-muted)]">Sin configurar</span>
-          </SettingsRow>
-          <SettingsRow
-            label="Correo de respaldo"
-            action={<SettingsLinkButton>Agregar</SettingsLinkButton>}
-          >
-            <span className="text-[var(--dash-muted)]">No configurado</span>
+          <SettingsRow label="Email">
+            <span className="text-[var(--dash-muted)]">Not configured</span>
           </SettingsRow>
           <SettingsRow
-            label="Teléfono de contacto"
-            action={<SettingsLinkButton>Agregar</SettingsLinkButton>}
+            label="Backup email"
+            action={<SettingsLinkButton>Add</SettingsLinkButton>}
           >
-            <span className="text-[var(--dash-muted)]">No configurado</span>
+            <span className="text-[var(--dash-muted)]">Not set</span>
+          </SettingsRow>
+          <SettingsRow
+            label="Contact phone"
+            action={<SettingsLinkButton>Add</SettingsLinkButton>}
+          >
+            <span className="text-[var(--dash-muted)]">Not set</span>
           </SettingsRow>
         </SettingsSection>
 
-        <SettingsSection title="Cuenta de Google">
+        <SettingsSection title="Google account">
           <div className="px-5 py-4">
-            <p className="text-sm text-[var(--dash-muted)] mb-3">No conectada</p>
-            <SettingsOutlineButton>Conectar cuenta de Google</SettingsOutlineButton>
+            <p className="text-sm text-[var(--dash-muted)] mb-3">Not connected</p>
+            <SettingsOutlineButton>Connect Google account</SettingsOutlineButton>
           </div>
         </SettingsSection>
 
         <SettingsSection
-          title="Claves de acceso"
-          description="Las claves de acceso te permiten iniciar sesión de forma segura con huella dactilar, reconocimiento facial o PIN del dispositivo."
+          title="Passkeys"
+          description="Passkeys let you sign in securely with fingerprint, face recognition, or device PIN."
           footer={
             <button
               type="button"
-              onClick={() => toast.message('Disponible próximamente')}
+              onClick={() => toast.message('Available soon')}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
             >
               <Plus size={16} />
-              Agrega una clave de acceso
+              Add a passkey
             </button>
           }
         >
           <SettingsTable
             columns={[
-              { key: 'name', header: 'Nombre', render: (row) => row.name },
-              { key: 'added', header: 'Fecha de adición', render: (row) => row.addedAt },
+              { key: 'name', header: 'Name', render: (row) => row.name },
+              { key: 'added', header: 'Date added', render: (row) => row.addedAt },
               {
                 key: 'lastUsed',
-                header: 'Última vez que se usó',
+                header: 'Last used',
                 render: (row) => row.lastUsed,
               },
             ]}
             data={[] as PasskeyRow[]}
             rowKey={(row) => row.id}
-            emptyMessage="No tienes claves de acceso registradas."
+            emptyMessage="You have no passkeys registered."
           />
         </SettingsSection>
 
         <SettingsSection
-          title="Autenticación en dos pasos"
-          description="Protege tu cuenta con un segundo factor además de la contraseña."
+          title="Two-step authentication"
+          description="Protect your account with a second factor in addition to your password."
           footer={
             <button
               type="button"
-              onClick={() => toast.message('Disponible próximamente')}
+              onClick={() => toast.message('Available soon')}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
             >
               <Plus size={16} />
-              Agregar un método de autenticación
+              Add an authentication method
             </button>
           }
         >
@@ -161,12 +161,12 @@ export default function SettingsProfilePage() {
             columns={[
               {
                 key: 'method',
-                header: 'Método',
+                header: 'Method',
                 render: (row) => row.label,
               },
               {
                 key: 'detail',
-                header: 'Detalle',
+                header: 'Detail',
                 render: (row) => (
                   <span className="text-[var(--dash-muted)]">{row.detail}</span>
                 ),
@@ -174,27 +174,27 @@ export default function SettingsProfilePage() {
             ]}
             data={[] as TwoFactorMethod[]}
             rowKey={(row) => row.id}
-            emptyMessage="No hay métodos de autenticación configurados."
+            emptyMessage="No authentication methods configured."
           />
           <div className="px-5 py-4 border-t border-[var(--dash-border)] flex items-start gap-3">
             <KeyRound size={16} className="text-[var(--dash-muted)] mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm text-[var(--dash-text)]">Códigos de respaldo</p>
+              <p className="text-sm text-[var(--dash-text)]">Backup codes</p>
               <p className="text-sm text-[var(--dash-muted)] mt-0.5">
-                No hay códigos de respaldo generados.
+                No backup codes generated.
               </p>
             </div>
           </div>
         </SettingsSection>
 
-        <SettingsSection title="Idioma">
+        <SettingsSection title="Language">
           <div className="px-5 py-4 space-y-4">
             <div>
               <label
                 htmlFor="language-select"
                 className="text-sm font-medium text-[var(--dash-text)] block mb-1.5"
               >
-                Idioma del panel
+                Dashboard language
               </label>
               <select
                 id="language-select"
@@ -211,7 +211,7 @@ export default function SettingsProfilePage() {
             </div>
             <p className="text-sm text-[var(--dash-muted)] inline-flex items-center gap-1.5">
               <Globe size={14} aria-hidden />
-              Idioma detectado: Español (España)
+              Detected language: English (US)
             </p>
             <button
               type="button"
@@ -219,48 +219,48 @@ export default function SettingsProfilePage() {
               disabled={savingLanguage}
               className="dash-btn-primary px-5 py-2 text-sm disabled:opacity-50"
             >
-              {savingLanguage ? 'Guardando…' : 'Guardar'}
+              {savingLanguage ? 'Saving…' : 'Save'}
             </button>
           </div>
         </SettingsSection>
 
         <SettingsSection
-          title="Sesiones"
-          description="Dispositivos donde has iniciado sesión recientemente."
+          title="Sessions"
+          description="Devices where you have recently signed in."
           action={
-            <SettingsOutlineButton>Cerrar el resto de las sesiones</SettingsOutlineButton>
+            <SettingsOutlineButton>Sign out of other sessions</SettingsOutlineButton>
           }
         >
           <SettingsTable
             columns={[
-              { key: 'location', header: 'Ubicación', render: (row) => row.location },
-              { key: 'device', header: 'Dispositivo', render: (row) => row.device },
+              { key: 'location', header: 'Location', render: (row) => row.location },
+              { key: 'device', header: 'Device', render: (row) => row.device },
               {
                 key: 'ip',
-                header: 'Dirección IP',
+                header: 'IP address',
                 render: (row) => (
                   <span className="font-mono text-xs text-[var(--dash-muted)]">{row.ip}</span>
                 ),
               },
               {
                 key: 'lastActive',
-                header: 'Última actividad',
+                header: 'Last activity',
                 render: (row) => row.lastActive,
               },
             ]}
             data={[] as SessionRow[]}
             rowKey={(row) => row.id}
-            emptyMessage="No hay sesiones activas registradas."
+            emptyMessage="No active sessions recorded."
           />
         </SettingsSection>
 
-        <SettingsSection title="Cuentas">
+        <SettingsSection title="Accounts">
           <SettingsTable
             columns={[
-              { key: 'name', header: 'Nombre', render: (row) => row.name },
+              { key: 'name', header: 'Name', render: (row) => row.name },
               {
                 key: 'accountId',
-                header: 'Identificación',
+                header: 'ID',
                 render: (row) => (
                   <span className="font-mono text-xs text-[var(--dash-muted)]">
                     {row.accountId}
@@ -270,7 +270,7 @@ export default function SettingsProfilePage() {
             ]}
             data={[] as AccountRow[]}
             rowKey={(row) => row.id}
-            emptyMessage="No hay cuentas vinculadas."
+            emptyMessage="No linked accounts."
           />
         </SettingsSection>
 

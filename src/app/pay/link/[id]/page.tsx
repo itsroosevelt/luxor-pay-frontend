@@ -23,9 +23,8 @@ export default function PayLinkPage() {
     if (!id) return;
     getPaymentLinkById(id)
       .then(setLink)
-      .catch((e) => {
-        setLink(null);
-        setError(getFirestoreErrorMessage(e, 'Payment link not found or unavailable'));
+      .catch(() => {
+        // Public checkout may not load link preview; payment creation still proceeds below.
       });
   }, [id]);
 

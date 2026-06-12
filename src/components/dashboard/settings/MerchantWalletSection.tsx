@@ -45,7 +45,7 @@ export function MerchantWalletSection() {
 
     const wallet = merchantWallet.trim();
     if (wallet && wallet.length < 32) {
-      toast.error('Introduce una dirección de wallet Solana válida');
+      toast.error('Enter a valid Solana wallet address');
       return;
     }
 
@@ -56,9 +56,9 @@ export function MerchantWalletSection() {
         businessName: businessName.trim() || undefined,
         merchantWallet: wallet || undefined,
       });
-      toast.success('Perfil del comercio guardado');
+      toast.success('Merchant profile saved');
     } catch (err) {
-      toast.error(getFirestoreErrorMessage(err, 'No se pudo guardar el perfil'));
+      toast.error(getFirestoreErrorMessage(err, 'Could not save profile'));
     } finally {
       setSaving(false);
     }
@@ -66,12 +66,12 @@ export function MerchantWalletSection() {
 
   return (
     <SettingsSection
-      title="Comercio y wallet Solana"
-      description="Perfil del negocio y dirección para recibir pagos en SOL y USDC."
+      title="Merchant and Solana wallet"
+      description="Business profile and address to receive SOL and USDC payments."
     >
       {!hydrated ? (
         <div className="px-5 py-4">
-          <p className="text-sm text-[var(--dash-muted)]">Cargando perfil…</p>
+          <p className="text-sm text-[var(--dash-muted)]">Loading profile…</p>
         </div>
       ) : (
         <>
@@ -88,13 +88,12 @@ export function MerchantWalletSection() {
               <h3 className="text-sm font-semibold text-[var(--dash-text)]">Wallet Solana</h3>
             </div>
             <p className="text-sm text-[var(--dash-muted)]">
-              Conecta una wallet o pega tu clave pública manualmente. Esta dirección recibe
-              liquidaciones de enlaces de pago, checkout QR y cargos POS.
+              Connect a wallet or paste your public key manually. This address receives settlements from payment links, QR checkout, and POS charges.
             </p>
             <SolanaWalletConnect onAddressChange={handleWalletConnect} />
             <div>
               <label className="text-sm font-medium text-[var(--dash-text)] block mb-1.5">
-                Dirección de wallet del comercio
+                Merchant wallet address
               </label>
               <input
                 value={merchantWallet}
@@ -108,11 +107,11 @@ export function MerchantWalletSection() {
           <form onSubmit={handleSave} className="px-5 py-4 space-y-4">
             <div className="flex items-center gap-2">
               <Building2 size={16} className="text-[var(--dash-accent)]" />
-              <h3 className="text-sm font-semibold text-[var(--dash-text)]">Perfil del negocio</h3>
+              <h3 className="text-sm font-semibold text-[var(--dash-text)]">Business profile</h3>
             </div>
             <div>
               <label className="text-sm font-medium text-[var(--dash-text)] block mb-1.5">
-                Nombre del negocio
+                Business name
               </label>
               <input
                 value={businessName}
@@ -121,7 +120,7 @@ export function MerchantWalletSection() {
                 placeholder="Mi tienda"
               />
               <p className="text-xs text-[var(--dash-muted)] mt-1">
-                Se muestra en la barra lateral del panel y en las páginas de checkout.
+                Shown in the dashboard sidebar and on checkout pages.
               </p>
             </div>
             <button
@@ -129,7 +128,7 @@ export function MerchantWalletSection() {
               disabled={saving}
               className="dash-btn-primary px-5 py-2.5 text-sm disabled:opacity-50"
             >
-              {saving ? 'Guardando…' : 'Guardar cambios'}
+              {saving ? 'Saving…' : 'Save changes'}
             </button>
           </form>
         </>

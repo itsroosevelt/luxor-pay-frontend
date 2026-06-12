@@ -1,190 +1,198 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { createApiKeyApi, fetchApiKeysApi, revokeApiKeyApi } from '@/lib/api/api-keys';
-import { Key, Plus, Trash2, Copy, Code2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { PageHeader, EmptyState, DataTable, type DataTableColumn } from '@/components/dashboard';
-import type { ApiKeyRecord } from '@luxor/contracts';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  ApiKeysPanel,
+  PreferenceToggleGroup,
+  SettingsPageHeader,
+  SettingsSection,
+  SettingsSectionRow,
+} from '@/components/dashboard/settings';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
+import { getMerchantProfile } from '@/lib/firestore-data';
+import {
+  getDeveloperPrefsServerSnapshot,
+  getDeveloperPrefsSnapshot,
+  saveSdkLanguage,
+  saveWorkbenchTheme,
+  SDK_LANGUAGE_OPTIONS,
+  WORKBENCH_THEME_OPTIONS,
+  type SdkLanguageId,
+  type WorkbenchTheme,
+} from '@/lib/dashboard/developer-prefs';
+import { cn } from '@/lib/cn';
+import { Check, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+
+const DEVELOPER_PREFS_CHANGE_EVENT = 'luxor-developer-prefs-change';
+
+function subscribeToDeveloperPrefs(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const handler = () => onStoreChange();
+  window.addEventListener(DEVELOPER_PREFS_CHANGE_EVENT, handler);
+  window.addEventListener('storage', handler);
+  return () => {
+    window.removeEventListener(DEVELOPER_PREFS_CHANGE_EVENT, handler);
+    window.removeEventListener('storage', handler);
+  };
+}
+
+function scrollToApiKeys() {
+  document.getElementById('api-keys')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 export default function DevelopersPage() {
-  const [keys, setKeys] = useState<ApiKeyRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [name, setName] = useState('');
-  const [newSecret, setNewSecret] = useState<string | null>(null);
-
-  const loadKeys = async () => {
-    try {
-      const result = await fetchApiKeysApi();
-      if (result.ok) {
-        setKeys(result.data);
-      } else {
-        toast.error(result.error);
-      }
-    } catch {
-      toast.error('Could not load API keys');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [businessName, setBusinessName] = useState('your business');
+  const prefs = useSyncExternalStore(
+    subscribeToDeveloperPrefs,
+    getDeveloperPrefsSnapshot,
+    getDeveloperPrefsServerSnapshot
+  );
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
-      void loadKeys();
+      try {
+        const profile = await getMerchantProfile(user.uid);
+        if (profile?.businessName?.trim()) {
+          setBusinessName(profile.businessName.trim());
+        }
+      } catch {
+        /* keep fallback label */
+      }
     });
     return () => unsubscribe();
   }, []);
 
-  const createKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    const result = await createApiKeyApi(name.trim());
-    if (result.ok) {
-      setNewSecret(result.data.secret ?? null);
-      setName('');
-      await loadKeys();
-      toast.success('API key created — copy it now');
-    } else {
-      toast.error(result.error);
-    }
+  const dispatchPrefsChange = useCallback(() => {
+    window.dispatchEvent(new Event(DEVELOPER_PREFS_CHANGE_EVENT));
+  }, []);
+
+  const handleThemeChange = (theme: WorkbenchTheme) => {
+    saveWorkbenchTheme(theme);
+    dispatchPrefsChange();
+    toast.success('Workbench appearance saved');
   };
 
-  const revokeKey = async (id: string) => {
-    const result = await revokeApiKeyApi(id);
-    if (result.ok) {
-      setKeys((prev) => prev.filter((k) => k.id !== id));
-      toast.success('API key revoked');
-    } else {
-      toast.error(result.error);
-    }
+  const handleSdkChange = (language: SdkLanguageId) => {
+    saveSdkLanguage(language);
+    dispatchPrefsChange();
+    toast.success('SDK language saved');
   };
-
-  const columns: DataTableColumn<ApiKeyRecord>[] = [
-    {
-      key: 'name',
-      header: 'Name',
-      render: (k) => (
-        <div className="flex items-center gap-3">
-          <Key size={16} className="text-[var(--dash-accent)]" />
-          <span className="font-medium">{k.name}</span>
-        </div>
-      ),
-    },
-    {
-      key: 'prefix',
-      header: 'Token',
-      render: (k) => (
-        <code className="text-xs font-mono text-[var(--dash-muted)]">{k.keyPrefix}…</code>
-      ),
-    },
-    {
-      key: 'created',
-      header: 'Created',
-      render: (k) => (
-        <span className="text-[var(--dash-muted)] text-sm">
-          {new Date(k.createdAt).toLocaleDateString()}
-        </span>
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      className: 'text-right',
-      render: (k) => (
-        <button
-          type="button"
-          onClick={() => revokeKey(k.id)}
-          className="p-2 text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
-          aria-label="Revoke key"
-        >
-          <Trash2 size={16} />
-        </button>
-      ),
-    },
-  ];
 
   return (
     <>
-      <PageHeader
+      <SettingsPageHeader
         title="Developers"
-        description="API keys stored locally in demo mode — no backend server required."
+        description="Manage API keys, Workbench preferences, and SDK settings for your Luxor Pay integration."
       />
 
-      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
-        <div className="dash-card p-4 text-sm text-[var(--dash-muted)]">
-          <strong className="text-[var(--dash-text)]">Frontend demo mode.</strong> Keys are saved in
-          your browser. Payment links are stored locally in your browser.
-        </div>
-
-        {newSecret && (
-          <div className="dash-card p-4 border-[var(--dash-accent)]/30 bg-[var(--dash-accent-soft)] space-y-2">
-            <p className="text-sm font-semibold text-[var(--dash-accent)]">
-              New secret key (shown once)
-            </p>
-            <code className="block text-xs break-all bg-[var(--dash-surface)] p-3 rounded-md border border-[var(--dash-border)] font-mono">
-              {newSecret}
-            </code>
+      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-6 pb-12">
+        <SettingsSection
+          title="API keys"
+          description="API keys can be managed from the Developers area."
+        >
+          <div className="px-5 py-4">
             <button
               type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(newSecret);
-                toast.success('Copied');
-              }}
-              className="text-sm flex items-center gap-2 text-[var(--dash-accent)] font-medium"
+              onClick={scrollToApiKeys}
+              className="dash-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-sm"
             >
-              <Copy size={14} /> Copy key
+              Manage API keys
             </button>
           </div>
-        )}
+        </SettingsSection>
 
-        <form onSubmit={createKey} className="dash-card p-6 flex flex-col sm:flex-row gap-3">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Key name (e.g. Production POS)"
-            className="dash-input flex-1 px-4 py-2.5 text-sm"
-          />
-          <button
-            type="submit"
-            className="dash-btn-primary px-5 py-2.5 text-sm flex items-center justify-center gap-2"
+        <SettingsSection
+          title="Workbench"
+          description="Debug, manage, and grow your Solana payment integration with Luxor Pay Workbench."
+        >
+          <SettingsSectionRow label="Status">
+            <p className="text-[var(--dash-text)]">
+              Workbench is enabled for{' '}
+              <span className="font-medium">{businessName}</span>
+            </p>
+          </SettingsSectionRow>
+
+          <div className="px-5 md:px-6 py-6 border-b border-[var(--dash-border)] flex flex-wrap gap-4">
+            <a
+              href="https://docs.luxorpay.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
+            >
+              Read documentation
+              <ExternalLink size={14} aria-hidden />
+            </a>
+            <button
+              type="button"
+              onClick={() => toast.message('Legacy Workbench is not available yet')}
+              className="text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
+            >
+              Return to legacy version
+            </button>
+          </div>
+
+          <SettingsSectionRow
+            label="Appearance"
+            description="Choose how Workbench looks for you."
           >
-            <Plus size={16} /> Create key
-          </button>
-        </form>
+            <PreferenceToggleGroup
+              ariaLabel="Workbench appearance"
+              options={WORKBENCH_THEME_OPTIONS}
+              value={prefs.theme}
+              onChange={handleThemeChange}
+            />
+          </SettingsSectionRow>
+        </SettingsSection>
 
-        <div className="dash-card p-6 space-y-3">
-          <div className="flex items-center gap-2">
-            <Code2 size={18} className="text-[var(--dash-accent)]" />
-            <p className="font-semibold text-[var(--dash-text)]">POS charge (demo)</p>
+        <SettingsSection
+          title="SDK language"
+          description="Choose the language for Luxor Pay code samples and documentation snippets."
+        >
+          <div className="px-5 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SDK_LANGUAGE_OPTIONS.map((opt) => {
+                const selected = prefs.sdk === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleSdkChange(opt.id)}
+                    aria-pressed={selected}
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
+                      selected
+                        ? 'border-[var(--dash-accent)] bg-[var(--dash-accent-soft)]'
+                        : 'border-[var(--dash-border)] hover:border-[var(--dash-muted)]'
+                    )}
+                  >
+                    <span
+                      className="w-9 h-9 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 text-white"
+                      style={{
+                        backgroundColor:
+                          opt.id === 'none' ? 'var(--dash-border)' : opt.accent,
+                        color: opt.id === 'none' ? 'var(--dash-muted)' : '#fff',
+                      }}
+                    >
+                      {opt.initials}
+                    </span>
+                    <span className="text-sm font-medium text-[var(--dash-text)] flex-1 min-w-0">
+                      {opt.label}
+                    </span>
+                    {selected && (
+                      <Check size={16} className="text-[var(--dash-accent)] shrink-0" aria-hidden />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="text-sm text-[var(--dash-muted)] font-mono space-y-1 bg-[var(--dash-surface-elevated)] p-4 rounded-md">
-            <p>POST /api/v1/pos/charge (local demo — not live)</p>
-            <p>Header X-Api-Key: sk_demo_…</p>
-          </div>
-          <pre className="text-xs font-mono text-[var(--dash-muted)] bg-[var(--dash-surface-elevated)] p-4 rounded-md overflow-x-auto">
-{`curl -X POST /api/v1/pos/charge \\
-  -H "X-Api-Key: sk_demo_..." \\
-  -d '{"posId": "terminal-1", "amount": 1.5, "currency": "USDC"}'`}
-          </pre>
+        </SettingsSection>
+
+        <div id="api-keys" className="scroll-mt-6">
+          <ApiKeysPanel />
         </div>
-
-        {!loading && keys.length === 0 ? (
-          <EmptyState
-            icon={Key}
-            title="No API keys yet"
-            description="Create a demo key to explore the developers UI — stored in localStorage."
-          />
-        ) : (
-          <DataTable
-            columns={columns}
-            data={keys}
-            rowKey={(k) => k.id}
-            loading={loading}
-            loadingMessage="Loading API keys…"
-          />
-        )}
       </div>
     </>
   );

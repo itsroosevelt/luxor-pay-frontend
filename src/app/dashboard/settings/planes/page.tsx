@@ -18,9 +18,9 @@ import {
 import { toast } from 'sonner';
 
 const PLANES_TABS = [
-  { id: 'planes', label: 'Planes' },
-  { id: 'facturas', label: 'Historial de facturas' },
-  { id: 'comisiones', label: 'Comisiones' },
+  { id: 'planes', label: 'Plans' },
+  { id: 'facturas', label: 'Invoice history' },
+  { id: 'comisiones', label: 'Fees' },
 ] as const;
 
 type PlanesTabId = (typeof PLANES_TABS)[number]['id'];
@@ -39,44 +39,44 @@ const PLAN_SERVICES: PlanService[] = [
     id: 'payments',
     name: 'Payments',
     description:
-      'Acepta pagos en SOL y USDC en Solana con confirmación on-chain y liquidación directa a tu wallet.',
+      'Accept SOL and USDC payments on Solana with on-chain confirmation and direct settlement to your wallet.',
     pricing: '1,4 % + 0,05 USDC',
-    pricingNote: 'por transacción exitosa',
+    pricingNote: 'per successful transaction',
     icon: CreditCard,
   },
   {
     id: 'billing',
     name: 'Billing',
     description:
-      'Suscripciones recurrentes, facturación medida y recuperación de ingresos para tu comercio.',
+      'Recurring subscriptions, metered billing, and revenue recovery for your merchant.',
     pricing: '0,5 %',
-    pricingNote: 'sobre volumen facturado',
+    pricingNote: 'on billed volume',
     icon: Receipt,
   },
   {
     id: 'invoicing',
     name: 'Invoicing',
-    description: 'Facturas con enlaces de pago Solana Pay y seguimiento de cobros pendientes.',
+    description: 'Invoices with Solana Pay payment links and pending charge tracking.',
     pricing: '0,4 %',
-    pricingNote: 'por factura pagada',
+    pricingNote: 'per paid invoice',
     icon: FileText,
   },
   {
     id: 'tax',
     name: 'Tax',
     description:
-      'Cálculo automático de impuestos según jurisdicción e integración con reportes fiscales.',
+      'Automatic tax calculation by jurisdiction and integration with tax reports.',
     pricing: '0,5 %',
-    pricingNote: 'por transacción con impuesto',
+    pricingNote: 'per taxed transaction',
     icon: Percent,
   },
   {
     id: 'workflows',
     name: 'Workflows',
     description:
-      'Automatiza flujos de pago, webhooks y acciones post-transacción en la red Solana.',
-    pricing: 'Incluido',
-    pricingNote: 'en plan estándar',
+      'Automate payment flows, webhooks, and post-transaction actions on the Solana network.',
+    pricing: 'Included',
+    pricingNote: 'on standard plan',
     icon: GitBranch,
   },
 ];
@@ -86,10 +86,10 @@ interface InvoiceRow {
 }
 
 const INVOICE_COLUMNS: SettingsTableColumn<InvoiceRow>[] = [
-  { key: 'date', header: 'Fecha', render: () => null },
-  { key: 'amount', header: 'Importe', render: () => null },
-  { key: 'status', header: 'Estado', render: () => null },
-  { key: 'invoice', header: 'Factura', render: () => null },
+  { key: 'date', header: 'Date', render: () => null },
+  { key: 'amount', header: 'Amount', render: () => null },
+  { key: 'status', header: 'Status', render: () => null },
+  { key: 'invoice', header: 'Invoice', render: () => null },
 ];
 
 interface CommissionRow {
@@ -98,8 +98,8 @@ interface CommissionRow {
 
 const COMMISSION_COLUMNS: SettingsTableColumn<CommissionRow>[] = [
   { key: 'product', header: 'Producto', render: () => null },
-  { key: 'rate', header: 'Tarifa', render: () => null },
-  { key: 'effective', header: 'Vigente desde', render: () => null },
+  { key: 'rate', header: 'Rate', render: () => null },
+  { key: 'effective', header: 'Effective from', render: () => null },
 ];
 
 function PlanServiceRow({ service }: { service: PlanService }) {
@@ -125,10 +125,10 @@ function PlanServiceRow({ service }: { service: PlanService }) {
         </div>
         <button
           type="button"
-          onClick={() => toast.message('Detalles del plan — próximamente')}
+          onClick={() => toast.message('Details del plan — coming soon')}
           className="dash-btn-secondary px-3 py-1.5 text-sm whitespace-nowrap"
         >
-          Ver datos del plan
+          View plan details
         </button>
       </div>
     </div>
@@ -141,8 +141,8 @@ export default function PlanesSettingsPage() {
   return (
     <>
       <SettingsPageHeader
-        title="Planes y comisiones"
-        description="Consulta los productos activos, tarifas de procesamiento y facturación de Luxor Pay."
+        title="Plans and fees"
+        description="View active products, processing rates, and Luxor Pay billing."
       />
 
       <div className="px-6 md:px-8 border-b border-[var(--dash-border)]">
@@ -172,10 +172,10 @@ export default function PlanesSettingsPage() {
                 data={[]}
                 rowKey={(row) => row.id}
                 showHeadersWhenEmpty
-                emptyMessage="Sin facturas"
+                emptyMessage="No invoices"
                 footer={
                   <p className="px-5 py-3 text-xs text-[var(--dash-muted)] border-t border-[var(--dash-border)]">
-                    Viendo 0 de 0 resultados
+                    Showing 0 of 0 results
                   </p>
                 }
               />
@@ -191,10 +191,10 @@ export default function PlanesSettingsPage() {
                 data={[]}
                 rowKey={(row) => row.id}
                 showHeadersWhenEmpty
-                emptyMessage="No hay comisiones personalizadas configuradas."
+                emptyMessage="No custom fees configured."
                 footer={
                   <p className="px-5 py-3 text-xs text-[var(--dash-muted)] border-t border-[var(--dash-border)]">
-                    Viendo 0 de 0 resultados
+                    Showing 0 of 0 results
                   </p>
                 }
               />

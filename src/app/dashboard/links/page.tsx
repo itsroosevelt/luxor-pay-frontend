@@ -25,6 +25,8 @@ import {
   DataTable,
   FilterRow,
   FilterChip,
+  CatalogFlowSectionNav,
+  CatalogFlowCrossLinks,
   type DataTableColumn,
 } from '@/components/dashboard';
 
@@ -259,22 +261,21 @@ export default function PaymentLinksPage() {
     <>
       <PageHeader
         title="Payment Links"
-        description="Share Solana Pay links for SOL or USDC — customers scan a QR or open /pay/link/[id] to pay on-chain."
+        description="History of checkout links for SOL or USDC. Create links from the product catalog or start from scratch."
         actions={
           <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href="/dashboard/products"
+              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
+            >
+              Product catalog
+            </Link>
             <Link
               href="/dashboard/links/new"
               className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
             >
               <Plus size={16} />
               Create payment link
-            </Link>
-            <Link
-              href="/dashboard/analytics"
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-            >
-              <BarChart3 size={16} />
-              Analyze
             </Link>
             <button
               type="button"
@@ -289,6 +290,7 @@ export default function PaymentLinksPage() {
       />
 
       <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-6">
+        <CatalogFlowSectionNav />
         <FilterRow className="justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
             <FilterChip
@@ -359,6 +361,7 @@ export default function PaymentLinksPage() {
             }
           />
         )}
+        <CatalogFlowCrossLinks excludeHref="/dashboard/links" />
       </div>
     </>
   );

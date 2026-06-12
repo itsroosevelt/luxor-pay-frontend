@@ -9,9 +9,9 @@ import { isChannelMandatory } from '@/lib/dashboard/communication-prefs';
 import { NotificationCheckbox } from './NotificationCheckbox';
 
 const CHANNEL_HEADERS: { key: NotificationChannel; label: string }[] = [
-  { key: 'email', label: 'Correo electrónico' },
+  { key: 'email', label: 'Email' },
   { key: 'sms', label: 'SMS' },
-  { key: 'push', label: 'Envío (push)' },
+  { key: 'push', label: 'Push' },
 ];
 
 interface CommunicationPrefsTableProps {

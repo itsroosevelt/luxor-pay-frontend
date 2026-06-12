@@ -25,11 +25,11 @@ export type CommunicationPrefsState = Record<
 export const COMMUNICATION_PREFS_STORAGE_KEY = 'luxor-communication-prefs';
 
 export const COMMUNICATION_TABS = [
-  { id: 'cuenta', label: 'Cuenta' },
-  { id: 'transacciones', label: 'Transacciones y saldos' },
+  { id: 'cuenta', label: 'Account' },
+  { id: 'transacciones', label: 'Transactions and balances' },
   { id: 'api', label: 'API' },
-  { id: 'cuentas-conectadas', label: 'Cuentas conectadas' },
-  { id: 'actualizaciones', label: 'Actualizaciones de Luxor Pay' },
+  { id: 'cuentas-conectadas', label: 'Connected accounts' },
+  { id: 'actualizaciones', label: 'Luxor Pay updates' },
 ] as const;
 
 export type CommunicationTabId = (typeof COMMUNICATION_TABS)[number]['id'];
@@ -37,11 +37,11 @@ export type CommunicationTabId = (typeof COMMUNICATION_TABS)[number]['id'];
 export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
   {
     id: 'risk-compliance',
-    title: 'Riesgo de la cuenta y cumplimiento de la normativa',
+    title: 'Account risk and regulatory compliance',
     rows: [
       {
         id: 'security-alerts',
-        label: 'Actividad sospechosa y alertas de seguridad',
+        label: 'Suspicious activity and security alerts',
         channels: {
           email: { enabled: true, mandatory: true },
           sms: { enabled: false },
@@ -50,7 +50,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'regulatory-requirements',
-        label: 'Requisitos de cumplimiento normativo',
+        label: 'Regulatory compliance requirements',
         channels: {
           email: { enabled: true, mandatory: true },
           sms: { enabled: false },
@@ -59,7 +59,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'identity-verification',
-        label: 'Verificación de identidad',
+        label: 'Identity verification',
         channels: {
           email: { enabled: true, mandatory: true },
           sms: { enabled: false },
@@ -68,7 +68,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'compliance-info-requests',
-        label: 'Información solicitada para cumplimiento',
+        label: 'Information requested for compliance',
         channels: {
           email: { enabled: true, mandatory: true },
           sms: { enabled: false },
@@ -79,11 +79,11 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
   },
   {
     id: 'account-updates',
-    title: 'Actualizaciones de la cuenta',
+    title: 'Account updates',
     rows: [
       {
         id: 'company-info',
-        label: 'Información de la empresa',
+        label: 'Company information',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -92,7 +92,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'service-providers',
-        label: 'Proveedores de servicios',
+        label: 'Service providers',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -101,7 +101,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'integrations',
-        label: 'Integraciones',
+        label: 'Integrations',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -110,7 +110,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'app-install-uninstall',
-        label: 'Instalación y desinstalación de aplicaciones',
+        label: 'App installation and uninstallation',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -119,7 +119,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'data-migrations',
-        label: 'Migraciones de datos',
+        label: 'Data migrations',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -128,7 +128,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'activity-summary',
-        label: 'Resumen de actividad de la cuenta',
+        label: 'Account activity summary',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -137,7 +137,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'domain-verification',
-        label: 'Verificación de dominio',
+        label: 'Domain verification',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -148,11 +148,11 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
   },
   {
     id: 'team-management',
-    title: 'Gestión de equipos',
+    title: 'Team management',
     rows: [
       {
         id: 'team-changes',
-        label: 'Cambios en el equipo',
+        label: 'Team changes',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -161,7 +161,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'sso',
-        label: 'Inicio de sesión único (SSO)',
+        label: 'Single sign-on (SSO)',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -170,7 +170,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'team-settings',
-        label: 'Configuración del equipo',
+        label: 'Team settings',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },
@@ -179,7 +179,7 @@ export const ACCOUNT_NOTIFICATION_SECTIONS: NotificationPrefSection[] = [
       },
       {
         id: 'mentions',
-        label: 'Menciones',
+        label: 'Mentions',
         channels: {
           email: { enabled: false },
           sms: { enabled: false },

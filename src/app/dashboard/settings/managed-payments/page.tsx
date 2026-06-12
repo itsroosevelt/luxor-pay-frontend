@@ -7,21 +7,21 @@ import { toast } from 'sonner';
 const MANAGED_FEATURES = [
   {
     icon: Wallet,
-    title: 'Liquidación en Solana',
+    title: 'Solana settlement',
     description:
-      'Recibe SOL y USDC directamente en tu wallet de comercio con confirmación on-chain y trazabilidad completa.',
+      'Receive SOL and USDC directly in your merchant wallet with on-chain confirmation and full traceability.',
   },
   {
     icon: ShieldCheck,
-    title: 'Cumplimiento integrado',
+    title: 'Built-in compliance',
     description:
-      'Verificación KYC, límites de riesgo y herramientas de disputas alineadas con las políticas de Luxor Pay.',
+      'KYC verification, risk limits, and dispute tools aligned with Luxor Pay policies.',
   },
   {
     icon: Zap,
-    title: 'Checkout optimizado',
+    title: 'Optimized checkout',
     description:
-      'Enlaces de pago, widgets embebibles y Solana Pay listos para integrar con tu stack existente.',
+      'Payment links, widgets embebibles y Solana Pay listos para integrar con tu stack existente.',
   },
 ] as const;
 
@@ -30,7 +30,7 @@ export default function ManagedPaymentsSettingsPage() {
     <>
       <SettingsPageHeader
         title="Managed Payments"
-        description="Pagos gestionados por Luxor Pay para plataformas y marketplaces en Solana."
+        description="Payments managed by Luxor Pay for platforms and marketplaces on Solana."
       />
 
       <div className="p-6 md:p-8 max-w-4xl mx-auto pb-12 space-y-8">
@@ -44,18 +44,16 @@ export default function ManagedPaymentsSettingsPage() {
                 Managed Payments
               </h2>
               <p className="text-sm md:text-base text-[var(--dash-muted)] leading-relaxed max-w-2xl">
-                Deja que Luxor Pay gestione pagos, cumplimiento y experiencia de checkout en Solana.
-                Ideal para plataformas y marketplaces que necesitan procesar pagos en nombre de
-                terceros con liquidación transparente.
+                Let Luxor Pay handle payments, compliance, and checkout on Solana. Ideal for platforms and marketplaces that need to process payments on behalf of third parties with transparent settlement.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={() => toast.message('Primeros pasos — próximamente')}
+                onClick={() => toast.message('Getting started — coming soon')}
                 className="dash-btn-primary px-5 py-2.5 text-sm"
               >
-                Primeros pasos
+                Getting started
               </button>
               <a
                 href="https://docs.luxor.tech/pay"
@@ -63,7 +61,7 @@ export default function ManagedPaymentsSettingsPage() {
                 rel="noopener noreferrer"
                 className="dash-btn-secondary inline-flex items-center gap-1.5 px-5 py-2.5 text-sm"
               >
-                Ver documentación
+                View documentation
                 <ExternalLink size={14} aria-hidden />
               </a>
             </div>

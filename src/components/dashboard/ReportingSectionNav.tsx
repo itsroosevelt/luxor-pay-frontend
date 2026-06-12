@@ -6,8 +6,10 @@ import { cn } from '@/lib/cn';
 
 const TABS = [
   { href: '/dashboard/reporting', label: 'Reports' },
+  { href: '/dashboard/reporting/custom-metrics', label: 'Custom metrics' },
   { href: '/dashboard/reporting/sigma', label: 'Sigma' },
   { href: '/dashboard/reporting/revenue-recognition', label: 'Revenue recognition' },
+  { href: '/dashboard/reporting/data-management', label: 'Data management' },
 ] as const;
 
 function isTabActive(pathname: string, href: string) {

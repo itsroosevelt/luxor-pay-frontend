@@ -13,12 +13,12 @@ export function SettingsPlaceholderContent({ title, description }: SettingsPlace
   return (
     <>
       <SettingsPageHeader title={title} description={description} />
-      <div className="p-6 md:p-8 max-w-3xl mx-auto">
+      <div className="p-6 md:px-8 md:pb-8 w-full pb-12">
         <EmptyState
           icon={Settings}
-          title="Próximamente"
-          description="Esta sección estará disponible en una próxima versión. Mientras tanto, usa las áreas ya activas del panel."
-          action={{ label: 'Volver a configuración', href: '/dashboard/settings' }}
+          title="Coming soon"
+          description="This section will be available in a future release. In the meantime, use the active areas of the dashboard."
+          action={{ label: 'Back to settings', href: '/dashboard/settings' }}
         />
       </div>
     </>

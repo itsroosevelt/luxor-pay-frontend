@@ -10,7 +10,7 @@ export function SettingsBackLink() {
       className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
     >
       <ArrowLeft size={16} aria-hidden />
-      Configuración
+      Settings
     </Link>
   );
 }

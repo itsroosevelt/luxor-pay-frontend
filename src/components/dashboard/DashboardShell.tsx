@@ -6,19 +6,19 @@ import type { User } from 'firebase/auth';
 import { auth, onAuthStateChanged, signOut } from '@/lib/firebase';
 import { useEffect, useRef, useState } from 'react';
 import { Search, Bell, HelpCircle, Plus, Menu, X, LayoutGrid, Settings } from 'lucide-react';
-import { ensureMerchantProfile } from '@/lib/merchants-api';
+import { ensureMerchantProfile } from '@/lib/merchant-data';
 import { getErrorMessage } from '@/lib/firestore-errors';
 import { SidebarNav } from '@/components/dashboard/SidebarNav';
 import { cn } from '@/lib/cn';
 import { toast } from 'sonner';
 
 const APP_LAUNCHER_LINKS = [
-  { href: '/dashboard', label: 'Inicio' },
-  { href: '/dashboard/balances', label: 'Saldos' },
-  { href: '/dashboard/links', label: 'Enlaces de pago' },
+  { href: '/dashboard', label: 'Home' },
+  { href: '/dashboard/balances', label: 'Balances' },
+  { href: '/dashboard/links', label: 'Payment links' },
   { href: '/dashboard/billing', label: 'Billing' },
-  { href: '/dashboard/developers', label: 'Desarrolladores' },
-  { href: '/dashboard/settings', label: 'Configuración' },
+  { href: '/dashboard/developers', label: 'Developers' },
+  { href: '/dashboard/settings', label: 'Settings' },
 ] as const;
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -43,8 +43,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       }
       setUser(currentUser);
       try {
-        const token = await currentUser.getIdToken();
-        await ensureMerchantProfile(token, currentUser.email ?? '');
+        const profile = await ensureMerchantProfile(
+          currentUser.uid,
+          currentUser.email ?? ''
+        );
+        setBusinessName(profile?.businessName);
       } catch (e) {
         console.error(e);
         toast.error(getErrorMessage(e, 'Could not load merchant profile'));
@@ -110,15 +113,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       />
 
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <button
             type="button"
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 z-0 bg-black/60"
             onClick={() => setMobileNavOpen(false)}
             aria-label="Close menu"
           />
-          <div className="absolute left-0 top-0 h-dvh max-h-dvh w-[var(--dash-sidebar-width)] bg-[var(--dash-surface)] shadow-xl flex flex-col overflow-hidden">
-            <div className="shrink-0 flex items-center justify-between p-4 border-b border-[var(--dash-border)]">
+          <div className="dashboard-mobile-drawer absolute left-0 top-0 z-10 h-dvh max-h-dvh w-[var(--dash-sidebar-width)] shadow-xl flex flex-col overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between p-4 border-b border-[var(--dash-border)] bg-[var(--dash-bg)]">
               <span className="font-semibold text-[var(--dash-text)]">Luxor Pay</span>
               <button type="button" onClick={() => setMobileNavOpen(false)} className="p-1">
                 <X size={20} />
@@ -128,7 +131,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               businessName={businessName}
               email={user.email ?? undefined}
               onSignOut={handleSignOut}
-              className="dashboard-sidebar flex-1 min-h-0 border-r-0"
+              onNavigate={() => setMobileNavOpen(false)}
+              className="dashboard-sidebar dashboard-sidebar-mobile flex-1 min-h-0 border-r-0 !bg-[var(--dash-bg)]"
             />
           </div>
         </div>
@@ -168,7 +172,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   type="button"
                   onClick={() => setAppLauncherOpen((open) => !open)}
                   className="dash-header-icon-btn"
-                  aria-label="Aplicaciones"
+                  aria-label="Apps"
                   aria-expanded={appLauncherOpen}
                 >
                   <LayoutGrid size={18} />
@@ -176,7 +180,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 {appLauncherOpen && (
                   <div className="absolute right-0 top-full mt-2 w-52 py-2 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg-elevated)] shadow-xl z-50">
                     <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-                      Productos
+                      Products
                     </p>
                     {APP_LAUNCHER_LINKS.map(({ href, label }) => (
                       <Link
@@ -194,16 +198,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <button
                 type="button"
                 className="dash-header-icon-btn"
-                aria-label="Ayuda"
-                onClick={() => toast.info('Centro de ayuda — próximamente')}
+                aria-label="Help"
+                onClick={() => toast.info('Help center — coming soon')}
               >
                 <HelpCircle size={18} />
               </button>
               <button
                 type="button"
                 className="dash-header-icon-btn"
-                aria-label="Notificaciones"
-                onClick={() => toast.info('Notificaciones — próximamente')}
+                aria-label="Notifications"
+                onClick={() => toast.info('Notifications — coming soon')}
               >
                 <Bell size={18} />
               </button>
@@ -213,7 +217,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   'dash-header-icon-btn',
                   settingsActive && 'dash-header-icon-btn-active'
                 )}
-                aria-label="Configuración"
+                aria-label="Settings"
                 aria-current={settingsActive ? 'page' : undefined}
               >
                 <Settings size={18} />
@@ -221,7 +225,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <Link
                 href="/dashboard/links/new"
                 className="dash-header-create-btn ml-1"
-                aria-label="Crear"
+                aria-label="Create"
               >
                 <Plus size={18} strokeWidth={2.5} />
               </Link>

@@ -93,11 +93,11 @@ function LoginContent() {
       if (isRegistering) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         toast.success('Merchant account created');
-        await completeAuth(cred.user.email ?? email, cred.user.uid);
+        await completeAuth();
       } else {
         const cred = await signInWithEmailAndPassword(auth, email, password);
         toast.success('Welcome back');
-        await completeAuth(cred.user.email ?? email, cred.user.uid);
+        await completeAuth();
       }
     } catch (error: unknown) {
       console.error('Login error:', error);
@@ -117,7 +117,7 @@ function LoginContent() {
       const provider = new GoogleAuthProvider();
       const cred = await signInWithPopup(auth, provider);
       toast.success('Signed in with Google');
-      await completeAuth(cred.user.email ?? '', cred.user.uid);
+      await completeAuth();
     } catch (error: unknown) {
       console.error('Login error:', error);
       toast.error(resolveLoginError(error));

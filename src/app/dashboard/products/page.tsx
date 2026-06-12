@@ -12,6 +12,9 @@ import {
   PageHeader,
   EmptyState,
   DataTable,
+  CatalogFlowSectionNav,
+  CatalogFlowCrossLinks,
+  TaxConfigNotice,
   type DataTableColumn,
 } from '@/components/dashboard';
 
@@ -133,7 +136,7 @@ export default function ProductsPage() {
     <>
       <PageHeader
         title="Product catalog"
-        description="Manage products and open detail pages to create matching payment links."
+        description="Manage products with name, price, and status. Tax defaults come from Tax settings; open a product to create payment links."
         actions={
           <button
             type="button"
@@ -147,6 +150,8 @@ export default function ProductsPage() {
       />
 
       <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+        <CatalogFlowSectionNav />
+        <TaxConfigNotice />
         {showForm && (
           <form onSubmit={handleCreate} className="dash-card p-6 space-y-4">
             <h2 className="font-semibold text-[var(--dash-text)] flex items-center gap-2">
@@ -210,6 +215,7 @@ export default function ProductsPage() {
             onRowClick={(p) => router.push(`/dashboard/products/${p.id}`)}
           />
         )}
+        <CatalogFlowCrossLinks excludeHref="/dashboard/products" />
       </div>
     </>
   );

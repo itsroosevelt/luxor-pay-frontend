@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { listCustomers } from '@/lib/firestore-data';
+import { listCustomers } from '@/lib/merchant-data';
 import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
 import { listPayments } from '@/lib/payments-api';
 import { computeBalanceSummary } from '@/lib/balance-utils';

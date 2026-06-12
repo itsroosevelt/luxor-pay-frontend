@@ -15,8 +15,7 @@ import {
   CreditCard,
   FileText,
   BarChart3,
-  LayoutGrid,
-  MoreHorizontal,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -55,10 +54,8 @@ const mainNav: NavItem[] = [
 
 const shortcuts: ShortcutItem[] = [
   { href: '/dashboard/pos', label: 'Terminal' },
-  { href: '/dashboard/radar', label: 'Radar' },
-  { href: '/dashboard/disputes', label: 'Disputes' },
-  { href: '/dashboard/analytics', label: 'Payment analytics' },
-  { href: '/dashboard/links', label: 'Payment Links' },
+  { href: '/dashboard/links', label: 'Payment links' },
+  { href: '/dashboard/reporting', label: 'Reports' },
 ];
 
 const productsGroups: NavGroup[] = [
@@ -67,10 +64,13 @@ const productsGroups: NavGroup[] = [
     label: 'Payments',
     icon: CreditCard,
     children: [
-      { href: '/dashboard/links', label: 'Payment Links' },
+      { href: '/dashboard/tax', label: 'Tax' },
+      { href: '/dashboard/products', label: 'Product catalog' },
+      { href: '/dashboard/links', label: 'Payment links' },
+      { href: '/dashboard/payments/sell', label: 'Sell' },
       { href: '/dashboard/pos', label: 'Terminal' },
-      { href: '/dashboard/payments/checkout', label: 'Checkout' },
-      { href: '/dashboard/payments/methods', label: 'Payment methods' },
+      { href: '/dashboard/payments/plans', label: 'Payment plans' },
+      { href: '/dashboard/payments/checkout', label: 'Payment settings' },
     ],
   },
   {
@@ -78,11 +78,22 @@ const productsGroups: NavGroup[] = [
     label: 'Billing',
     icon: FileText,
     children: [
-      { href: '/dashboard/billing', label: 'Overview' },
-      { href: '/dashboard/billing/subscriptions', label: 'Subscriptions' },
       { href: '/dashboard/billing/invoices', label: 'Invoices' },
-      { href: '/dashboard/billing/usage', label: 'Usage-based' },
-      { href: '/dashboard/billing/revenue-recovery', label: 'Revenue recovery' },
+      { href: '/dashboard/customers', label: 'Customers' },
+      { href: '/dashboard/billing/subscriptions', label: 'Subscriptions' },
+      { href: '/dashboard/billing/quotes', label: 'Quotes' },
+      { href: '/dashboard/billing/pending', label: 'Revenue recovery' },
+    ],
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    icon: Settings,
+    children: [
+      { href: '/dashboard/settings', label: 'Personal and business' },
+      { href: '/dashboard/settings/profile', label: 'Personal details' },
+      { href: '/dashboard/settings/empresa', label: 'Business profile' },
+      { href: '/dashboard/settings/planes', label: 'Plans and subscription' },
     ],
   },
   {
@@ -91,29 +102,10 @@ const productsGroups: NavGroup[] = [
     icon: BarChart3,
     children: [
       { href: '/dashboard/reporting', label: 'Reports' },
+      { href: '/dashboard/reporting/custom-metrics', label: 'Custom metrics' },
       { href: '/dashboard/reporting/sigma', label: 'Sigma' },
       { href: '/dashboard/reporting/revenue-recognition', label: 'Revenue recognition' },
-    ],
-  },
-  {
-    id: 'apps',
-    label: 'Apps',
-    icon: LayoutGrid,
-    children: [
-      { href: '/dashboard/developers', label: 'Developers' },
-      { href: '/dashboard/webhooks', label: 'Webhooks' },
-      { href: '/dashboard/developers', label: 'App marketplace' },
-    ],
-  },
-  {
-    id: 'more',
-    label: 'More',
-    icon: MoreHorizontal,
-    children: [
-      { href: '/dashboard/settings', label: 'Settings' },
-      { href: '/dashboard/tax', label: 'Tax' },
-      { href: '/dashboard/identity', label: 'Identity' },
-      { href: '/dashboard/connect', label: 'Connect' },
+      { href: '/dashboard/reporting/data-management', label: 'Data management' },
     ],
   },
 ];
@@ -121,7 +113,6 @@ const productsGroups: NavGroup[] = [
 function isNavActive(pathname: string, href: string) {
   if (href === '/dashboard') return pathname === '/dashboard';
   if (href === '/dashboard/billing') return pathname === href;
-  if (href === '/dashboard/reporting') return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -131,6 +122,12 @@ function getExpandedForPath(pathname: string): Record<string, boolean> {
     const hasActive = group.children.some((child) => isNavActive(pathname, child.href));
     if (hasActive) expanded[group.id] = true;
   }
+  if (pathname.startsWith('/dashboard/settings')) {
+    expanded.settings = true;
+  }
+  if (pathname.startsWith('/dashboard/reporting')) {
+    expanded.reporting = true;
+  }
   return expanded;
 }
 
@@ -138,16 +135,16 @@ interface SidebarNavProps {
   businessName?: string;
   email?: string;
   onSignOut?: () => void;
+  onNavigate?: () => void;
   className?: string;
 }
 
-export function SidebarNav({ businessName, email, onSignOut, className }: SidebarNavProps) {
+export function SidebarNav({ businessName, email, onSignOut, onNavigate, className }: SidebarNavProps) {
   const pathname = usePathname();
   const [userExpanded, setUserExpanded] = useState<Record<string, boolean>>({});
 
   const expandedGroups = useMemo(() => {
     const fromPath = getExpandedForPath(pathname);
-    // Path defaults open groups with an active child; userExpanded wins so toggles stick.
     return { ...fromPath, ...userExpanded };
   }, [userExpanded, pathname]);
 
@@ -170,6 +167,9 @@ export function SidebarNav({ businessName, email, onSignOut, className }: Sideba
           className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] transition-colors text-left"
         >
           <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dash-muted)] mb-0.5">
+              Business unit
+            </p>
             <p className="text-sm font-semibold truncate text-[var(--dash-text)]">
               {businessName || 'Luxor Pay'}
             </p>
@@ -182,16 +182,22 @@ export function SidebarNav({ businessName, email, onSignOut, className }: Sideba
       </div>
 
       <nav className="sidebar-nav-scroll flex-1 min-h-0 p-3 space-y-6 overflow-y-auto overscroll-contain">
-        <div className="space-y-0.5">
-          {mainNav.map(({ href, label, icon: Icon }) => (
-            <NavLink
-              key={href}
-              href={href}
-              label={label}
-              icon={Icon}
-              active={isNavActive(pathname, href)}
-            />
-          ))}
+        <div>
+          <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
+            Main pages
+          </p>
+          <div className="space-y-0.5">
+            {mainNav.map(({ href, label, icon: Icon }) => (
+              <NavLink
+                key={href}
+                href={href}
+                label={label}
+                icon={Icon}
+                active={isNavActive(pathname, href)}
+                onNavigate={onNavigate}
+              />
+            ))}
+          </div>
         </div>
 
         <div>
@@ -205,6 +211,7 @@ export function SidebarNav({ businessName, email, onSignOut, className }: Sideba
                 href={item.href}
                 label={item.label}
                 active={isNavActive(pathname, item.href)}
+                onNavigate={onNavigate}
               />
             ))}
           </div>
@@ -222,6 +229,7 @@ export function SidebarNav({ businessName, email, onSignOut, className }: Sideba
                 pathname={pathname}
                 expanded={!!expandedGroups[group.id]}
                 onToggle={() => toggleGroup(group.id)}
+                onNavigate={onNavigate}
               />
             ))}
           </div>
@@ -253,11 +261,13 @@ function ProductsGroup({
   pathname,
   expanded,
   onToggle,
+  onNavigate,
 }: {
   group: NavGroup;
   pathname: string;
   expanded: boolean;
   onToggle: () => void;
+  onNavigate?: () => void;
 }) {
   const { icon: Icon, label, children } = group;
   const groupActive = children.some((child) => isNavActive(pathname, child.href));
@@ -291,6 +301,7 @@ function ProductsGroup({
               href={child.href}
               label={child.label}
               active={isNavActive(pathname, child.href)}
+              onNavigate={onNavigate}
             />
           ))}
         </div>
@@ -303,14 +314,17 @@ function ShortcutLink({
   href,
   label,
   active,
+  onNavigate,
 }: {
   href: string;
   label: string;
   active: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={cn(
         'block px-3 py-1.5 text-xs transition-colors truncate',
         active
@@ -327,14 +341,17 @@ function NavChildLink({
   href,
   label,
   active,
+  onNavigate,
 }: {
   href: string;
   label: string;
   active: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={cn(
         'block px-3 py-1.5 rounded-md text-xs transition-colors truncate',
         active
@@ -352,15 +369,18 @@ function NavLink({
   label,
   icon: Icon,
   active,
+  onNavigate,
 }: {
   href: string;
   label: string;
   icon: LucideIcon;
   active: boolean;
+  onNavigate?: () => void;
 }) {
   return (
     <Link
       href={href}
+      onClick={onNavigate}
       className={cn(
         'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
         active
