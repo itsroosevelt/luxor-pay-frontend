@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { getMerchantProfile, getPaymentLink } from '@/lib/firestore-data';
+import { getMerchantProfile, getPaymentLink } from '@/lib/merchant-data';
 import { listPayments } from '@/lib/payments-api';
 import type { PaymentLink, PaymentOrder } from '@luxor/contracts';
 import { dashStatusBadges } from '@/lib/dashboard-styles';

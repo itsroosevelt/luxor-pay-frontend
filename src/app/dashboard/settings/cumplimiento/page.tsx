@@ -16,7 +16,7 @@ import { cn } from '@/lib/cn';
 import { ChevronDown, ExternalLink, X } from 'lucide-react';
 
 const COMPLIANCE_TABS = [
-  { id: 'pci', label: 'My PCI compliance' },
+  { id: 'wallet-security', label: 'Wallet security' },
   { id: 'my-documents', label: 'My documents' },
   { id: 'luxor-documents', label: 'Luxor documents' },
   { id: 'legacy-exports', label: 'Legacy exports' },
@@ -62,9 +62,9 @@ const MY_DOCUMENT_COLUMNS: SettingsTableColumn<MyDocumentRow>[] = [
 
 const LUXOR_DOCUMENTS: LuxorDocumentRow[] = [
   {
-    id: 'pci-cert',
-    document: 'PCI compliance certification',
-    description: 'Attestation of Compliance (AOC) for Luxor Pay card processing.',
+    id: 'wallet-security-cert',
+    document: 'Wallet security attestation',
+    description: 'Attestation of on-chain security controls for Luxor Pay Solana settlement.',
     featured: true,
     category: 'compliance',
   },
@@ -145,7 +145,7 @@ function TaxInvoicesBanner({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div className="dash-card dash-banner-info flex items-start gap-3 px-4 py-3">
       <p className="flex-1 text-sm text-[var(--dash-text)] leading-relaxed">
-        Tax invoices moved to{' '}
+        On-chain tax receipts moved to{' '}
         <Link
           href="/dashboard/settings/planes"
           className="font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] underline-offset-2 hover:underline"
@@ -166,59 +166,57 @@ function TaxInvoicesBanner({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
-function PciComplianceTab() {
+function WalletSecurityTab() {
   return (
     <div className="grid xl:grid-cols-[1fr_320px] gap-6 items-start">
       <div className="space-y-6">
-        <SettingsSection title="My PCI compliance">
+        <SettingsSection title="Wallet security compliance">
           <div className="px-5 py-4 border-b border-[var(--dash-border)]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <p className="text-sm font-medium text-[var(--dash-text)]">
                 <span className="text-[var(--dash-muted)] mr-1">&gt;</span>
-                E-commerce (web and mobile)
+                Solana Pay checkout (web and mobile wallets)
               </p>
               <span className={dashStatusBadges.success}>No action required</span>
             </div>
           </div>
 
           <FaqBlock
-            question="What is PCI DSS compliance and why does it matter?"
-            answer="The Payment Card Industry Data Security Standard (PCI DSS) is a set of security requirements for organizations that store, process, or transmit cardholder data. Compliance helps protect your customers and reduces the risk of fraud and data breaches."
+            question="What is wallet security compliance and why does it matter?"
+            answer="Luxor Pay never stores private keys. Wallet security compliance covers how you protect merchant wallet access, team permissions, and on-chain settlement flows. Strong controls reduce fraud, unauthorized payouts, and wallet compromise."
           />
           <FaqBlock
             question="What do I need to do to stay compliant?"
-            answer="Because Luxor Pay handles most card data on your behalf, you typically need to complete an annual Self-Assessment Questionnaire (SAQ) based on how you accept payments. We will notify you if any additional documentation is required."
+            answer="Keep your merchant wallet secured with a hardware wallet or multisig where possible, review team access regularly, and confirm your on-chain transaction label matches your business. Luxor Pay handles payment signing through connected wallets — you do not store payer keys."
           />
 
           <div className="px-5 py-4 border-t border-[var(--dash-border)]">
-            <a
-              href="https://www.pcisecuritystandards.org/"
-              target="_blank"
-              rel="noopener noreferrer"
+            <Link
+              href="/dashboard/settings/managed-payments"
               className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
             >
-              More information about PCI compliance
+              Review merchant wallet settings
               <ExternalLink size={14} aria-hidden />
-            </a>
+            </Link>
           </div>
         </SettingsSection>
       </div>
 
       <aside className="dash-card overflow-hidden xl:sticky xl:top-6">
         <div className="px-5 py-4 border-b border-[var(--dash-border)]">
-          <h2 className="text-sm font-semibold text-[var(--dash-text)]">PCI compliance information</h2>
+          <h2 className="text-sm font-semibold text-[var(--dash-text)]">Security summary</h2>
         </div>
         <div className="px-5 py-4 space-y-4 text-sm">
           <div>
-            <p className="text-[var(--dash-muted)]">PCI level</p>
-            <p className="font-medium text-[var(--dash-text)] mt-0.5">Level 4</p>
+            <p className="text-[var(--dash-muted)]">Settlement network</p>
+            <p className="font-medium text-[var(--dash-text)] mt-0.5">Solana mainnet</p>
           </div>
           <div>
-            <p className="text-[var(--dash-muted)]">Recommended documentation</p>
-            <p className="font-medium text-[var(--dash-text)] mt-0.5">SAQ A</p>
+            <p className="text-[var(--dash-muted)]">Supported tokens</p>
+            <p className="font-medium text-[var(--dash-text)] mt-0.5">SOL · USDC</p>
           </div>
           <p className="text-[var(--dash-muted)] leading-relaxed pt-1">
-            Questions about PCI requirements?{' '}
+            Questions about wallet security?{' '}
             <a
               href="mailto:support@luxor.pay"
               className="text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
@@ -363,13 +361,13 @@ function LegacyExportsTab() {
 }
 
 export default function ComplianceSettingsPage() {
-  const [activeTab, setActiveTab] = useState<ComplianceTabId>('pci');
+  const [activeTab, setActiveTab] = useState<ComplianceTabId>('wallet-security');
 
   return (
     <>
       <SettingsPageHeader
         title="Compliance and documents"
-        description="Verification documents, PCI compliance, and Luxor Pay policy resources for your account."
+        description="Verification documents, wallet security compliance, and Luxor Pay policy resources for your account."
       />
 
       <div className="px-6 md:px-8 border-b border-[var(--dash-border)]">
@@ -381,9 +379,13 @@ export default function ComplianceSettingsPage() {
       </div>
 
       <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto pb-12">
-        {activeTab === 'pci' && (
-          <div role="tabpanel" id="comm-panel-pci" aria-labelledby="comm-tab-pci">
-            <PciComplianceTab />
+        {activeTab === 'wallet-security' && (
+          <div
+            role="tabpanel"
+            id="comm-panel-wallet-security"
+            aria-labelledby="comm-tab-wallet-security"
+          >
+            <WalletSecurityTab />
           </div>
         )}
 

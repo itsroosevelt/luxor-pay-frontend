@@ -9,7 +9,7 @@ import {
   SettingsSectionRow,
 } from '@/components/dashboard/settings';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { getMerchantProfile } from '@/lib/firestore-data';
+import { getMerchantProfile } from '@/lib/merchant-data';
 import {
   getDeveloperPrefsServerSnapshot,
   getDeveloperPrefsSnapshot,

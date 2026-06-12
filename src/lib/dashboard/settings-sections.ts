@@ -71,13 +71,13 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
       {
         href: '/dashboard/settings/planes',
         title: 'Plans & fees',
-        description: 'Membership, pricing, billing history, and invoices.',
+        description: 'Membership, pricing, billing history, and on-chain invoices.',
         icon: CreditCard,
       },
       {
         href: '/dashboard/settings/cumplimiento',
         title: 'Compliance & documents',
-        description: 'Verification documents, policies, and regulatory requirements.',
+        description: 'Verification documents, wallet security, and Luxor Pay policies.',
         icon: FileCheck,
       },
     ],
@@ -89,13 +89,13 @@ export const SETTINGS_SECTIONS: SettingsSectionConfig[] = [
       {
         href: '/dashboard/billing',
         title: 'Billing',
-        description: 'Invoices, subscriptions, quotes, and pending payments.',
+        description: 'On-chain invoices, subscriptions, quotes, and pending payments.',
         icon: FileText,
       },
       {
         href: '/dashboard/tax',
         title: 'Tax',
-        description: 'Tax rates, registrations, and reporting settings.',
+        description: 'Solana tax rates, jurisdictions, and on-chain reporting settings.',
         icon: Receipt,
       },
       {

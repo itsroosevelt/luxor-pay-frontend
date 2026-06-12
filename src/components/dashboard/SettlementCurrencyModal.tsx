@@ -37,7 +37,7 @@ export function SettlementCurrencyModal({ open, onClose }: SettlementCurrencyMod
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full max-w-md dash-card shadow-xl"
+        className="relative w-full max-w-md dash-modal shadow-xl"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--dash-border)]">
           <h2 id={titleId} className="font-semibold text-[var(--dash-text)] inline-flex items-center gap-2">

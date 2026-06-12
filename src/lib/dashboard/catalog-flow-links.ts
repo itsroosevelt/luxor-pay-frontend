@@ -18,26 +18,26 @@ export const CATALOG_FLOW_LINKS: CatalogFlowLink[] = [
   {
     href: '/dashboard/tax',
     icon: Percent,
-    title: 'Tax settings',
-    description: 'Default tax rates applied to catalog prices and checkout links.',
+    title: 'Solana tax settings',
+    description: 'Default tax behavior for SOL and USDC catalog prices and checkout links.',
   },
   {
     href: '/dashboard/products',
     icon: Package,
     title: 'Product catalog',
-    description: 'Products with name, price, and status — source for payment links.',
+    description: 'Products priced in USDC or SOL — source for Solana Pay links.',
   },
   {
     href: '/dashboard/links',
     icon: LinkIcon,
-    title: 'Payment links',
-    description: 'Shareable checkout URLs created from catalog products.',
+    title: 'Solana Pay links',
+    description: 'Shareable checkout URLs with wallet connect or QR payment.',
   },
   {
     href: '/dashboard/billing/pending',
     icon: Clock,
     title: 'Revenue recovery',
-    description: 'Pending charges, reminders, and delinquent payments to recover revenue.',
+    description: 'Follow up on unpaid on-chain invoices and incomplete Solana Pay checkouts.',
   },
 ];
 

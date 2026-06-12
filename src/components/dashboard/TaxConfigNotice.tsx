@@ -19,11 +19,11 @@ export function TaxConfigNotice({ className }: TaxConfigNoticeProps) {
       <div className="min-w-0">
         <p className="font-medium text-[var(--dash-text)]">Tax configuration</p>
         <p className="text-[var(--dash-muted)] mt-0.5 text-xs leading-relaxed">
-          Default tax rates for products and checkout are set in{' '}
+          Default tax rates for SOL and USDC catalog prices are set in{' '}
           <Link href="/dashboard/tax" className="text-[var(--dash-accent)] hover:underline">
-            Tax settings
+            Solana tax settings
           </Link>
-          . Per-product overrides will be available when the backend is connected.
+          . Per-product overrides and jurisdiction rules will be available when the backend is connected.
         </p>
       </div>
     </div>

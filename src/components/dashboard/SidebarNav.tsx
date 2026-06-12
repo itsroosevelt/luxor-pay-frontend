@@ -15,7 +15,6 @@ import {
   CreditCard,
   FileText,
   BarChart3,
-  Settings,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -54,6 +53,7 @@ const mainNav: NavItem[] = [
 
 const shortcuts: ShortcutItem[] = [
   { href: '/dashboard/pos', label: 'Terminal' },
+  { href: '/dashboard/qr', label: 'QR codes' },
   { href: '/dashboard/links', label: 'Payment links' },
   { href: '/dashboard/reporting', label: 'Reports' },
 ];
@@ -67,6 +67,7 @@ const productsGroups: NavGroup[] = [
       { href: '/dashboard/tax', label: 'Tax' },
       { href: '/dashboard/products', label: 'Product catalog' },
       { href: '/dashboard/links', label: 'Payment links' },
+      { href: '/dashboard/qr', label: 'QR codes' },
       { href: '/dashboard/payments/sell', label: 'Sell' },
       { href: '/dashboard/pos', label: 'Terminal' },
       { href: '/dashboard/payments/plans', label: 'Payment plans' },
@@ -78,22 +79,11 @@ const productsGroups: NavGroup[] = [
     label: 'Billing',
     icon: FileText,
     children: [
-      { href: '/dashboard/billing/invoices', label: 'Invoices' },
+      { href: '/dashboard/billing/invoices', label: 'On-chain invoices' },
       { href: '/dashboard/customers', label: 'Customers' },
       { href: '/dashboard/billing/subscriptions', label: 'Subscriptions' },
       { href: '/dashboard/billing/quotes', label: 'Quotes' },
       { href: '/dashboard/billing/pending', label: 'Revenue recovery' },
-    ],
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    icon: Settings,
-    children: [
-      { href: '/dashboard/settings', label: 'Personal and business' },
-      { href: '/dashboard/settings/profile', label: 'Personal details' },
-      { href: '/dashboard/settings/empresa', label: 'Business profile' },
-      { href: '/dashboard/settings/planes', label: 'Plans and subscription' },
     ],
   },
   {
@@ -110,23 +100,30 @@ const productsGroups: NavGroup[] = [
   },
 ];
 
-function isNavActive(pathname: string, href: string) {
+function matchesNavHref(pathname: string, href: string): boolean {
   if (href === '/dashboard') return pathname === '/dashboard';
-  if (href === '/dashboard/billing') return pathname === href;
   return pathname === href || pathname.startsWith(`${href}/`);
 }
+
+function getMostSpecificNavHref(pathname: string, hrefs: string[]): string | null {
+  const matches = hrefs.filter((href) => matchesNavHref(pathname, href));
+  if (matches.length === 0) return null;
+  return matches.reduce((best, href) => (href.length > best.length ? href : best));
+}
+
+function isNavActive(pathname: string, href: string, siblingHrefs: string[]): boolean {
+  return getMostSpecificNavHref(pathname, siblingHrefs) === href;
+}
+
+const mainNavHrefs = mainNav.map(({ href }) => href);
+const shortcutHrefs = shortcuts.map(({ href }) => href);
 
 function getExpandedForPath(pathname: string): Record<string, boolean> {
   const expanded: Record<string, boolean> = {};
   for (const group of productsGroups) {
-    const hasActive = group.children.some((child) => isNavActive(pathname, child.href));
+    const groupHrefs = group.children.map((child) => child.href);
+    const hasActive = group.children.some((child) => isNavActive(pathname, child.href, groupHrefs));
     if (hasActive) expanded[group.id] = true;
-  }
-  if (pathname.startsWith('/dashboard/settings')) {
-    expanded.settings = true;
-  }
-  if (pathname.startsWith('/dashboard/reporting')) {
-    expanded.reporting = true;
   }
   return expanded;
 }
@@ -193,7 +190,7 @@ export function SidebarNav({ businessName, email, onSignOut, onNavigate, classNa
                 href={href}
                 label={label}
                 icon={Icon}
-                active={isNavActive(pathname, href)}
+                active={isNavActive(pathname, href, mainNavHrefs)}
                 onNavigate={onNavigate}
               />
             ))}
@@ -210,7 +207,7 @@ export function SidebarNav({ businessName, email, onSignOut, onNavigate, classNa
                 key={item.label}
                 href={item.href}
                 label={item.label}
-                active={isNavActive(pathname, item.href)}
+                active={isNavActive(pathname, item.href, shortcutHrefs)}
                 onNavigate={onNavigate}
               />
             ))}
@@ -270,7 +267,8 @@ function ProductsGroup({
   onNavigate?: () => void;
 }) {
   const { icon: Icon, label, children } = group;
-  const groupActive = children.some((child) => isNavActive(pathname, child.href));
+  const groupHrefs = children.map((child) => child.href);
+  const groupActive = children.some((child) => isNavActive(pathname, child.href, groupHrefs));
 
   return (
     <div>
@@ -300,7 +298,7 @@ function ProductsGroup({
               key={`${child.href}-${child.label}`}
               href={child.href}
               label={child.label}
-              active={isNavActive(pathname, child.href)}
+              active={isNavActive(pathname, child.href, groupHrefs)}
               onNavigate={onNavigate}
             />
           ))}

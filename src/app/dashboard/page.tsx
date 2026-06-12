@@ -164,7 +164,7 @@ export default function DashboardOverviewPage() {
               <p className="text-sm text-[var(--dash-muted)]">Net volume</p>
               <div className="flex items-baseline gap-3 mt-1 flex-wrap">
                 <p className="text-3xl font-semibold tabular-nums text-[var(--dash-text)]">
-                  {loading ? '…' : `$${formatCombinedVolume(todayNetVolume)}`}
+                  {loading ? '…' : `${formatCombinedVolume(todayNetVolume)} units`}
                 </p>
                 {!loading && todayDelta && (
                   <span
@@ -282,7 +282,7 @@ export default function DashboardOverviewPage() {
 
           <SummaryMetricCard
             label="Gross volume"
-            value={loading ? '…' : `$${formatCombinedVolume(periodGross)}`}
+            value={loading ? '…' : `${formatCombinedVolume(periodGross)} units`}
             sublabel="Last 7 days · confirmed"
             empty={!loading && periodGross === 0}
           >
@@ -293,7 +293,7 @@ export default function DashboardOverviewPage() {
 
           <SummaryMetricCard
             label="Net volume"
-            value={loading ? '…' : `$${formatCombinedVolume(periodNet)}`}
+            value={loading ? '…' : `${formatCombinedVolume(periodNet)} units`}
             sublabel="Last 7 days · after fees (MVP: same as gross)"
             empty={!loading && periodNet === 0}
           >
@@ -329,7 +329,7 @@ export default function DashboardOverviewPage() {
                   >
                     <span className="text-[var(--dash-text)] truncate">{row.label}</span>
                     <span className="text-[var(--dash-muted)] tabular-nums shrink-0">
-                      ${row.total.toFixed(2)} · {row.count}
+                      {formatCombinedVolume(row.total)} units · {row.count}
                     </span>
                   </li>
                 ))}

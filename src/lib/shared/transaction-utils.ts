@@ -64,8 +64,9 @@ export function paymentRejectionReason(order: PaymentOrder): string {
 }
 
 export function paymentMethodLabel(order: PaymentOrder): string {
-  if (order.linkId) return 'Payment link';
-  return 'Solana Pay';
+  if (order.linkId) return 'Solana Pay link';
+  if (order.solanaPayUrl) return 'Solana Pay QR';
+  return 'Wallet (Phantom, Solflare)';
 }
 
 export function paymentCustomerLabel(order: PaymentOrder): string {

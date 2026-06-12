@@ -1,67 +1,122 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { createCustomer, listCustomers } from '@/lib/firestore-data';
+import { listCustomers } from '@/lib/merchant-data';
+import { listPayments } from '@/lib/payments-api';
 import {
   countryFlag,
+  customerDescription,
   filterCustomersByTab,
-  shortenWallet,
+  formatCustomerCreatedDate,
+  formatCustomerTotalSpend,
+  isStubCustomerTab,
+  matchesCustomerSearch,
   type CustomerTab,
 } from '@/lib/customer-utils';
-import type { Currency, Customer } from '@luxor/contracts';
+import type { Customer, PaymentOrder } from '@luxor/contracts';
 import {
   PageHeader,
   EmptyState,
   DataTable,
-  FilterRow,
-  FilterChip,
+  BackendNotice,
+  CustomerCreateDrawer,
   type DataTableColumn,
 } from '@/components/dashboard';
 import {
   Users,
   Plus,
-  Copy,
   Download,
-  BarChart3,
+  LayoutGrid,
   Columns3,
-  X,
+  SlidersHorizontal,
+  Search,
+  MoreHorizontal,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/cn';
 
+const PAGE_SIZE = 20;
+
 const TABS: { id: CustomerTab; label: string }[] = [
   { id: 'all', label: 'All' },
-  { id: 'top', label: 'Top' },
-  { id: 'new', label: 'New' },
-  { id: 'recurring', label: 'Recurring' },
-  { id: 'recent', label: 'Recent' },
+  { id: 'top', label: 'Top customers' },
+  { id: 'new', label: 'New customers' },
+  { id: 'high-refunds', label: 'High refunds' },
+  { id: 'high-disputes', label: 'High disputes' },
+  { id: 'remaining-balances', label: 'Remaining balances' },
 ];
+
+function RangePaginationFooter({
+  page,
+  totalPages,
+  totalItems,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalItems === 0) return null;
+  const from = (page - 1) * PAGE_SIZE + 1;
+  const to = Math.min(page * PAGE_SIZE, totalItems);
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-[var(--dash-border)] text-sm text-[var(--dash-muted)]">
+      <span className="tabular-nums">
+        {from}–{to} of {totalItems} results
+      </span>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={page <= 1}
+            className="dash-btn-secondary px-3 py-1.5 text-sm disabled:opacity-40"
+            onClick={() => onPageChange(page - 1)}
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            className="dash-btn-secondary px-3 py-1.5 text-sm disabled:opacity-40"
+            onClick={() => onPageChange(page + 1)}
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CustomersPage() {
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [payments, setPayments] = useState<PaymentOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<CustomerTab>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [showForm, setShowForm] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [walletAddress, setWalletAddress] = useState('');
-  const [preferredToken, setPreferredToken] = useState<Currency>('USDC');
-  const [countryCode, setCountryCode] = useState('');
-  const [emailFilter, setEmailFilter] = useState('');
-  const [nameFilter, setNameFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState<Customer['type'] | 'all'>('all');
+  const [showCreateDrawer, setShowCreateDrawer] = useState(false);
+  const [showMoreTabs, setShowMoreTabs] = useState(false);
+  const moreTabsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const data = await listCustomers(user.uid);
+        const token = await user.getIdToken();
+        const [data, orders] = await Promise.all([
+          listCustomers(user.uid).catch(() => [] as Customer[]),
+          listPayments(token).catch(() => [] as PaymentOrder[]),
+        ]);
         setCustomers(data);
+        setPayments(orders);
       } catch {
         toast.error('Could not load customers.');
       } finally {
@@ -71,28 +126,53 @@ export default function CustomersPage() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!showMoreTabs) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (moreTabsRef.current && !moreTabsRef.current.contains(e.target as Node)) {
+        setShowMoreTabs(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [showMoreTabs]);
+
+  const resetPagination = useCallback(() => {
+    setPage(1);
+    setSelected(new Set());
+  }, []);
+
+  const handleTabChange = useCallback(
+    (next: CustomerTab) => {
+      setTab(next);
+      resetPagination();
+    },
+    [resetPagination]
+  );
+
   const filtered = useMemo(() => {
     let list = filterCustomersByTab(customers, tab);
-    if (emailFilter.trim()) {
-      const q = emailFilter.trim().toLowerCase();
-      list = list.filter((c) => c.email?.toLowerCase().includes(q));
-    }
-    if (nameFilter.trim()) {
-      const q = nameFilter.trim().toLowerCase();
-      list = list.filter((c) => c.name.toLowerCase().includes(q));
-    }
-    if (typeFilter !== 'all') {
-      list = list.filter((c) => c.type === typeFilter);
-    }
+    list = list.filter((c) => matchesCustomerSearch(c, searchQuery));
     return list;
-  }, [customers, tab, emailFilter, nameFilter, typeFilter]);
+  }, [customers, tab, searchQuery]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
+
+  const allPageSelected =
+    paginated.length > 0 && paginated.every((c) => selected.has(c.id));
 
   const toggleAll = () => {
-    if (selected.size === filtered.length) {
-      setSelected(new Set());
+    const next = new Set(selected);
+    if (allPageSelected) {
+      paginated.forEach((c) => next.delete(c.id));
     } else {
-      setSelected(new Set(filtered.map((c) => c.id)));
+      paginated.forEach((c) => next.add(c.id));
     }
+    setSelected(next);
   };
 
   const toggleOne = (id: string) => {
@@ -104,57 +184,15 @@ export default function CustomersPage() {
     });
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    if (!user) return;
-    if (!name.trim()) {
-      toast.error('Name is required');
-      return;
-    }
-    setCreating(true);
-    try {
-      const customer = await createCustomer(user.uid, {
-        name: name.trim(),
-        email: email.trim() || undefined,
-        walletAddress: walletAddress.trim() || undefined,
-        preferredToken: walletAddress.trim() ? preferredToken : undefined,
-        countryCode: countryCode.trim() || undefined,
-      });
-      setCustomers((prev) => [customer, ...prev]);
-      setName('');
-      setEmail('');
-      setWalletAddress('');
-      setCountryCode('');
-      setShowForm(false);
-      toast.success('Customer added');
-    } catch {
-      toast.error('Could not save customer.');
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const copyEmails = () => {
-    const rows = filtered.filter((c) => selected.has(c.id) || selected.size === 0);
-    const emails = rows.map((c) => c.email).filter(Boolean).join('\n');
-    if (!emails) {
-      toast.error('No emails to copy');
-      return;
-    }
-    navigator.clipboard.writeText(emails);
-    toast.success('Emails copied');
-  };
-
   const columns: DataTableColumn<Customer>[] = [
     {
       key: 'select',
       header: (
         <input
           type="checkbox"
-          checked={filtered.length > 0 && selected.size === filtered.length}
+          checked={allPageSelected}
           onChange={toggleAll}
-          aria-label="Select all"
+          aria-label="Select all on this page"
           className="rounded border-[var(--dash-border)]"
         />
       ),
@@ -197,225 +235,239 @@ export default function CustomersPage() {
       ),
     },
     {
-      key: 'wallet',
-      header: 'Wallet / default token',
-      render: (c) =>
-        c.walletAddress ? (
-          <div className="flex items-center gap-2">
-            <span className="inline-flex px-1.5 py-0.5 text-[10px] font-semibold rounded bg-[var(--dash-surface-elevated)] border border-[var(--dash-border)]">
-              {c.preferredToken ?? 'SOL'}
-            </span>
-            <code className="text-xs font-mono text-[var(--dash-text)]">
-              {shortenWallet(c.walletAddress)}
-            </code>
-          </div>
-        ) : (
-          <span className="text-xs text-[var(--dash-muted)]" title="Wallet linking requires CRM backend">
-            No wallet — pending backend
-          </span>
-        ),
+      key: 'description',
+      header: 'Description',
+      render: (c) => (
+        <span className="text-[var(--dash-muted)]">{customerDescription(c)}</span>
+      ),
     },
     {
       key: 'country',
       header: 'Country',
       render: (c) => (
-        <span className="text-lg" title={c.countryCode ?? 'No country'}>
-          {countryFlag(c.countryCode)}
+        <span title={c.countryCode ?? 'No country'}>
+          {c.countryCode ? (
+            <>
+              <span className="text-lg">{countryFlag(c.countryCode)}</span>{' '}
+              <span className="text-xs text-[var(--dash-muted)] uppercase">{c.countryCode}</span>
+            </>
+          ) : (
+            <span className="text-[var(--dash-muted)]">—</span>
+          )}
+        </span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'Created',
+      render: (c) => (
+        <span className="text-[var(--dash-muted)] tabular-nums whitespace-nowrap">
+          {formatCustomerCreatedDate(c.createdAt)}
+        </span>
+      ),
+    },
+    {
+      key: 'totalSpend',
+      header: 'Total spend',
+      className: 'text-right',
+      render: (c) => (
+        <span className="font-medium tabular-nums">
+          {formatCustomerTotalSpend(c, payments)}
         </span>
       ),
     },
   ];
 
+  const isEmpty = !loading && filtered.length === 0;
+  const showStubNotice = isStubCustomerTab(tab);
+
+  const emptyTitle =
+    searchQuery.trim() || tab !== 'all'
+      ? 'No customers match your filters'
+      : 'No customers yet';
+
+  const emptyDescription =
+    searchQuery.trim() || tab !== 'all'
+      ? 'Try adjusting your search or filter tabs.'
+      : 'Customers appear when payers complete Solana Pay checkout or when you add them manually. Total spend is tracked in USDC or SOL from confirmed transactions.';
+
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        className="dash-btn-secondary p-2"
+        aria-label="Export customers"
+        onClick={() => toast.info('Export — coming soon')}
+      >
+        <Download size={16} />
+      </button>
+      <button
+        type="button"
+        className="dash-btn-secondary p-2"
+        aria-label="Customize layout"
+        onClick={() => toast.info('Layout — coming soon')}
+      >
+        <LayoutGrid size={16} />
+      </button>
+      <button
+        type="button"
+        onClick={() => setShowCreateDrawer(true)}
+        className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
+      >
+        <Plus size={16} />
+        Add customer
+      </button>
+    </div>
+  );
+
   return (
     <>
-      <PageHeader
-        title="Customers"
-        description="Payers on your Solana checkout. Recurring payment counts require backend sync."
-        actions={
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
-          >
-            <Plus size={16} />
-            Add customer
-          </button>
-        }
-        filters={
-          <>
-            <div className="flex flex-wrap gap-1 border-b border-[var(--dash-border)] -mx-6 md:-mx-8 px-6 md:px-8 pb-0 mb-2 w-[calc(100%+3rem)] md:w-[calc(100%+4rem)]">
-              {TABS.map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setTab(id)}
-                  className={cn(
-                    'px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-                    tab === id
-                      ? 'border-[var(--dash-accent)] text-[var(--dash-accent)]'
-                      : 'border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-text)]'
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <FilterRow>
-              <FilterChip
-                label="Email"
-                value={emailFilter || 'Any'}
-                active={Boolean(emailFilter)}
-                onClick={() => {
-                  const next = window.prompt('Filter by email (partial):', emailFilter);
-                  if (next !== null) setEmailFilter(next);
-                }}
-              />
-              <FilterChip
-                label="Name"
-                value={nameFilter || 'Any'}
-                active={Boolean(nameFilter)}
-                onClick={() => {
-                  const next = window.prompt('Filter by name (partial):', nameFilter);
-                  if (next !== null) setNameFilter(next);
-                }}
-              />
-              <FilterChip label="Created" value="Any date" />
-              <FilterChip
-                label="Type"
-                value={typeFilter === 'all' ? 'All' : typeFilter === 'guest' ? 'Guest' : 'Registered'}
-                active={typeFilter !== 'all'}
-                onClick={() => {
-                  const order: Array<Customer['type'] | 'all'> = ['all', 'guest', 'registered'];
-                  const idx = order.indexOf(typeFilter);
-                  setTypeFilter(order[(idx + 1) % order.length]);
-                }}
-              />
-            </FilterRow>
-          </>
-        }
+      <CustomerCreateDrawer
+        open={showCreateDrawer}
+        onClose={() => setShowCreateDrawer(false)}
+        onCreated={(customer) => setCustomers((prev) => [customer, ...prev])}
       />
 
-      <div className="px-6 md:px-8 py-3 flex flex-wrap items-center gap-2 border-b border-[var(--dash-border)] bg-[var(--dash-surface-elevated)]">
-        <button
-          type="button"
-          onClick={copyEmails}
-          className="dash-btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
-        >
-          <Copy size={12} /> Copy
-        </button>
-        <button
-          type="button"
-          onClick={() => toast.info('CSV export — pending backend')}
-          className="dash-btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
-        >
-          <Download size={12} /> Export
-        </button>
-        <button
-          type="button"
-          onClick={() => toast.info('Customer analytics — pending backend')}
-          className="dash-btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
-        >
-          <BarChart3 size={12} /> Analyze
-        </button>
-        <button
-          type="button"
-          onClick={() => toast.info('Customize columns — coming soon')}
-          className="dash-btn-secondary px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
-        >
-          <Columns3 size={12} /> Edit columns
-        </button>
-        {!loading && (
-          <span className="ml-auto text-xs text-[var(--dash-muted)] tabular-nums">
-            {filtered.length} {filtered.length === 1 ? 'customer' : 'customers'}
-          </span>
-        )}
-      </div>
+      <PageHeader title="Customers" actions={headerActions} />
 
-      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
-        {showForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-4">
+        <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-1">
+          {TABS.map(({ id, label }) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => handleTabChange(id)}
+              className={cn(
+                'shrink-0 px-3 py-1.5 text-sm rounded-full border transition-colors whitespace-nowrap',
+                tab === id
+                  ? 'border-[var(--dash-accent)] bg-[var(--dash-accent-soft)] text-[var(--dash-accent)] font-medium'
+                  : 'border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] text-[var(--dash-text)] hover:bg-[rgba(255,255,255,0.08)]'
+              )}
+            >
+              {label}
+            </button>
+          ))}
+          <div className="relative shrink-0" ref={moreTabsRef}>
             <button
               type="button"
-              className="absolute inset-0 bg-black/40"
-              onClick={() => setShowForm(false)}
-              aria-label="Close"
-            />
-            <form
-              onSubmit={handleCreate}
-              className="relative dash-card p-6 w-full max-w-lg space-y-4 shadow-xl"
+              aria-label="More filters"
+              onClick={() => setShowMoreTabs((v) => !v)}
+              className={cn(
+                'px-2.5 py-1.5 text-sm rounded-full border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)] hover:bg-[rgba(255,255,255,0.08)] transition-colors'
+              )}
             >
-              <div className="flex items-center justify-between">
-                <h2 className="font-semibold text-[var(--dash-text)]">Add customer</h2>
-                <button type="button" onClick={() => setShowForm(false)} className="p-1">
-                  <X size={18} />
+              <MoreHorizontal size={16} />
+            </button>
+            {showMoreTabs && (
+              <div
+                role="menu"
+                className="absolute left-0 top-full mt-1 z-20 min-w-[180px] dash-card py-1 shadow-lg"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)]"
+                  onClick={() => {
+                    toast.info('Delinquent customers — coming soon');
+                    setShowMoreTabs(false);
+                  }}
+                >
+                  Delinquent
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)]"
+                  onClick={() => {
+                    toast.info('Tax exempt — coming soon');
+                    setShowMoreTabs(false);
+                  }}
+                >
+                  Tax exempt
                 </button>
               </div>
-              <p className="text-xs text-[var(--dash-muted)]">
-                Saved locally in your browser. Payment history and verified wallet require CRM backend.
-              </p>
-              <input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Name"
-                className="dash-input w-full px-4 py-2.5 text-sm"
-                required
-              />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email (optional)"
-                className="dash-input w-full px-4 py-2.5 text-sm"
-              />
-              <input
-                value={walletAddress}
-                onChange={(e) => setWalletAddress(e.target.value)}
-                placeholder="Solana wallet (optional)"
-                className="dash-input w-full px-4 py-2.5 text-sm font-mono text-xs"
-              />
-              <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={preferredToken}
-                  onChange={(e) => setPreferredToken(e.target.value as Currency)}
-                  className="dash-input px-4 py-2.5 text-sm"
-                >
-                  <option value="USDC">USDC</option>
-                  <option value="SOL">SOL</option>
-                </select>
-                <input
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  placeholder="Country (ISO, e.g. US)"
-                  maxLength={2}
-                  className="dash-input px-4 py-2.5 text-sm uppercase"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={creating}
-                className="dash-btn-primary w-full py-2.5 text-sm disabled:opacity-50"
-              >
-                {creating ? 'Saving…' : 'Save customer'}
-              </button>
-            </form>
+            )}
           </div>
+        </div>
+
+        {showStubNotice && <BackendNotice notImplemented />}
+
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="relative flex-1 min-w-[220px]">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--dash-muted)] pointer-events-none"
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                resetPagination();
+              }}
+              placeholder="Search by name, email, wallet, etc."
+              className="dash-input w-full pl-9 pr-4 py-2 text-sm"
+            />
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              className="dash-btn-secondary px-3 py-2 text-sm inline-flex items-center gap-1.5"
+              onClick={() => toast.info('Filters — coming soon')}
+            >
+              <SlidersHorizontal size={14} />
+              Filter
+            </button>
+            <button
+              type="button"
+              className="dash-btn-secondary p-2"
+              aria-label="Column settings"
+              onClick={() => toast.info('Column settings — coming soon')}
+            >
+              <Columns3 size={16} />
+            </button>
+          </div>
+        </div>
+
+        {!loading && customers.length === 0 && (
+          <p className="text-xs text-[var(--dash-muted)]">
+            Total spend is calculated in USDC or SOL from confirmed{' '}
+            <Link href="/dashboard/transactions" className="text-[var(--dash-accent)] hover:underline">
+              transactions
+            </Link>{' '}
+            when payer wallet or contact details match a customer.
+          </p>
         )}
 
-        {!loading && filtered.length === 0 ? (
+        {isEmpty ? (
           <EmptyState
             icon={Users}
-            title="No customers yet"
-            description="Add customers manually or wait for payments via links — automatic linking requires backend."
-            action={{ label: 'Add customer', onClick: () => setShowForm(true) }}
+            title={emptyTitle}
+            description={emptyDescription}
+            action={
+              tab === 'all' && !searchQuery.trim()
+                ? { label: 'Add customer', onClick: () => setShowCreateDrawer(true) }
+                : undefined
+            }
           />
         ) : (
           <DataTable
             columns={columns}
-            data={filtered}
+            data={paginated}
             rowKey={(c) => c.id}
             loading={loading}
             loadingMessage="Loading customers…"
             onRowClick={(c) => router.push(`/dashboard/customers/${c.id}`)}
+            footer={
+              !loading ? (
+                <RangePaginationFooter
+                  page={page}
+                  totalPages={totalPages}
+                  totalItems={filtered.length}
+                  onPageChange={setPage}
+                />
+              ) : undefined
+            }
           />
         )}
       </div>

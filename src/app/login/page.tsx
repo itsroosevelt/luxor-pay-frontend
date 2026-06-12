@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   auth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  onAuthStateChanged,
   getMissingFirebaseEnvKeys,
   isFirebaseConfigured,
 } from '@/lib/firebase';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { SolanaParticles } from '@/components/login/SolanaParticles';
@@ -57,6 +57,9 @@ function LoginContent() {
   const [showForm, setShowForm] = useState(isRegisterParam || isLoginParam);
   const [isRegistering, setIsRegistering] = useState(isRegisterParam);
   const router = useRouter();
+  const pathname = usePathname();
+  const { user, authReady } = useFirebaseAuth();
+  const googleSignInInFlight = useRef(false);
   const missingFirebaseEnv = getMissingFirebaseEnvKeys();
 
   useEffect(() => {
@@ -69,17 +72,42 @@ function LoginContent() {
   }, [missingFirebaseEnv]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/dashboard');
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
+    if (!authReady || !user || googleSignInInFlight.current) return;
+    router.replace('/dashboard');
+  }, [authReady, user, router]);
+
+  useEffect(() => {
+    return () => {
+      googleSignInInFlight.current = false;
+    };
+  }, []);
 
   const completeAuth = async () => {
     // Merchant profile creation/fetching is handled by DashboardShell upon redirect
-    router.push('/dashboard');
+    router.replace('/dashboard');
+  };
+
+  const handleGoogleLogin = async () => {
+    if (pathname !== '/login') return;
+    if (googleSignInInFlight.current) return;
+    if (!isFirebaseConfigured) {
+      toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
+      return;
+    }
+    googleSignInInFlight.current = true;
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast.success('Signed in with Google');
+      await completeAuth();
+    } catch (error: unknown) {
+      console.error('Login error:', error);
+      toast.error(resolveLoginError(error));
+    } finally {
+      googleSignInInFlight.current = false;
+      setLoading(false);
+    }
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -91,33 +119,14 @@ function LoginContent() {
     setLoading(true);
     try {
       if (isRegistering) {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await createUserWithEmailAndPassword(auth, email, password);
         toast.success('Merchant account created');
         await completeAuth();
       } else {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
         toast.success('Welcome back');
         await completeAuth();
       }
-    } catch (error: unknown) {
-      console.error('Login error:', error);
-      toast.error(resolveLoginError(error));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    if (!isFirebaseConfigured) {
-      toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      const cred = await signInWithPopup(auth, provider);
-      toast.success('Signed in with Google');
-      await completeAuth();
     } catch (error: unknown) {
       console.error('Login error:', error);
       toast.error(resolveLoginError(error));

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { ensureMerchantProfile, getMerchantProfile, updateMerchantProfile } from '@/lib/firestore-data';
+import { ensureMerchantProfile, getMerchantProfile, updateMerchantProfile } from '@/lib/merchant-data';
 import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
 import { toast } from 'sonner';
 import { SolanaWalletConnect, WalletBanner } from '@/components/dashboard';

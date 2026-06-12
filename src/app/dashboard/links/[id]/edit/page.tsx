@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { getMerchantProfile, getPaymentLink } from '@/lib/firestore-data';
+import { getMerchantProfile, getPaymentLink } from '@/lib/merchant-data';
 import type { PaymentLink } from '@luxor/contracts';
 import {
   PaymentLinkEditor,

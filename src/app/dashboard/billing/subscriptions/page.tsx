@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchSubscriptionsApi } from '@/lib/api/billing';
 import { formatCurrencyAmount } from '@/lib/format-currency';
 import type { BillingSubscription } from '@luxor/contracts';
@@ -57,7 +59,14 @@ const columns: DataTableColumn<BillingSubscription>[] = [
 ];
 
 export default function BillingSubscriptionsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { items, loading, unavailable, notImplemented } = useBackendList(fetchSubscriptionsApi);
+
+  useEffect(() => {
+    if (searchParams.get('create') !== 'true') return;
+    router.replace('/dashboard/billing/subscriptions/create', { scroll: false });
+  }, [searchParams, router]);
 
   return (
     <>
@@ -68,6 +77,11 @@ export default function BillingSubscriptionsPage() {
       <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
         <BillingSectionNav />
         <BackendNotice unavailable={unavailable} notImplemented={notImplemented} />
+        {(unavailable || notImplemented) && (
+          <p className="text-xs text-[var(--dash-muted)]">
+            Subscriptions are wallet-billed in USDC or SOL with on-chain settlement — no card storage.
+          </p>
+        )}
         {!loading && items.length === 0 ? (
           <EmptyState
             icon={Repeat}

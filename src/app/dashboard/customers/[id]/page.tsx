@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { getCustomer, updateCustomer } from '@/lib/firestore-data';
+import { getCustomer, updateCustomer } from '@/lib/merchant-data';
 import { listPayments } from '@/lib/payments-api';
 import type { Currency, Customer, PaymentOrder } from '@luxor/contracts';
 import {

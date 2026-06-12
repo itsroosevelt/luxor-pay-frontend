@@ -56,6 +56,9 @@
   --dash-bg-elevated: #1a1a1a;
   --dash-surface: rgba(255, 255, 255, 0.03);
   --dash-surface-elevated: rgba(255, 255, 255, 0.06);
+  /* Opaque surfaces for slide-overs, modals, and floating panels */
+  --dash-panel: #0f0f12;
+  --dash-panel-elevated: #161619;
   --dash-border: rgba(255, 255, 255, 0.1);
   --dash-text: #ededed;
   --dash-muted: #9ca3af;
@@ -182,11 +185,22 @@
   border-radius: 12px;
 }
 
+/* Solid opaque panel for modals and slide-overs (no glass/blur) */
+.dash-modal {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+  border-radius: 12px;
+}
+
 .dash-input {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--dash-border);
   border-radius: 8px;
   color: var(--dash-text);
+}
+
+.dash-input-solid {
+  background: var(--dash-panel-elevated);
 }
 
 .dash-input::placeholder {

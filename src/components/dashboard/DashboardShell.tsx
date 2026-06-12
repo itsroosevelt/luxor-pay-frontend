@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import type { User } from 'firebase/auth';
-import { auth, onAuthStateChanged, signOut } from '@/lib/firebase';
+import { auth, signOut } from '@/lib/firebase';
 import { useEffect, useRef, useState } from 'react';
-import { Search, Bell, HelpCircle, Plus, Menu, X, LayoutGrid, Settings } from 'lucide-react';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
+import { Search, HelpCircle, Menu, X, LayoutGrid, Settings } from 'lucide-react';
+import { NotificationsDropdown } from '@/components/dashboard/NotificationsDropdown';
+import { QuickCreateMenu } from '@/components/dashboard/QuickCreateMenu';
 import { ensureMerchantProfile } from '@/lib/merchant-data';
 import { getErrorMessage } from '@/lib/firestore-errors';
 import { SidebarNav } from '@/components/dashboard/SidebarNav';
@@ -24,9 +26,9 @@ const APP_LAUNCHER_LINKS = [
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(null);
+  const { user, authReady } = useFirebaseAuth();
   const [businessName, setBusinessName] = useState<string>();
-  const [loading, setLoading] = useState(true);
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [appLauncherOpen, setAppLauncherOpen] = useState(false);
@@ -36,26 +38,40 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     pathname === '/dashboard/settings' || pathname.startsWith('/dashboard/settings/');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        router.replace('/login');
-        return;
-      }
-      setUser(currentUser);
+    if (!authReady) return;
+    if (!user) {
+      router.replace('/login');
+    }
+  }, [authReady, user, router]);
+
+  useEffect(() => {
+    if (!authReady || !user) return;
+
+    let cancelled = false;
+    const uid = user.uid;
+
+    void (async () => {
       try {
-        const profile = await ensureMerchantProfile(
-          currentUser.uid,
-          currentUser.email ?? ''
-        );
-        setBusinessName(profile?.businessName);
+        const profile = await ensureMerchantProfile(uid, user.email ?? '');
+        if (!cancelled) {
+          setBusinessName(profile?.businessName);
+          setLoadedUserId(uid);
+        }
       } catch (e) {
         console.error(e);
-        toast.error(getErrorMessage(e, 'Could not load merchant profile'));
+        if (!cancelled) {
+          toast.error(getErrorMessage(e, 'Could not load merchant profile'));
+          setLoadedUserId(uid);
+        }
       }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, [router]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, user]);
+
+  const profileReady = !user || loadedUserId === user.uid;
 
   useEffect(() => {
     if (!appLauncherOpen) return;
@@ -85,6 +101,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       router.push('/dashboard/links');
     else if (q.includes('transaction') || q.includes('order') || q.includes('transacc'))
       router.push('/dashboard/transactions');
+    else if (q.includes('qr') || q.includes('código') || q.includes('codigo'))
+      router.push('/dashboard/qr');
     else if (q.includes('pos') || q.includes('terminal')) router.push('/dashboard/pos');
     else if (q.includes('api') || q.includes('key') || q.includes('developer'))
       router.push('/dashboard/developers');
@@ -93,7 +111,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     else router.push('/dashboard');
   };
 
-  if (loading) {
+  if (!authReady || !profileReady) {
     return (
       <div className="min-h-screen dashboard-shell flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[var(--dash-accent)] border-t-transparent rounded-full animate-spin" />
@@ -203,14 +221,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               >
                 <HelpCircle size={18} />
               </button>
-              <button
-                type="button"
-                className="dash-header-icon-btn"
-                aria-label="Notifications"
-                onClick={() => toast.info('Notifications — coming soon')}
-              >
-                <Bell size={18} />
-              </button>
+              <NotificationsDropdown />
               <Link
                 href="/dashboard/settings"
                 className={cn(
@@ -222,13 +233,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               >
                 <Settings size={18} />
               </Link>
-              <Link
-                href="/dashboard/links/new"
-                className="dash-header-create-btn ml-1"
-                aria-label="Create"
-              >
-                <Plus size={18} strokeWidth={2.5} />
-              </Link>
+              <QuickCreateMenu />
             </div>
           </div>
         </header>

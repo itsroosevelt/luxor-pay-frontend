@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Link as LinkIcon, ShoppingCart, Terminal } from 'lucide-react';
+import { ArrowRight, Link as LinkIcon, QrCode, ShoppingCart, Terminal } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface EnabledProduct {
@@ -31,10 +31,18 @@ const AVAILABLE_PRODUCTS: CatalogProduct[] = [
   {
     id: 'terminal',
     label: 'Terminal',
-    description: 'Accept in-person payments with POS devices and the charges API.',
+    description: 'Accept in-person payments with registered POS devices and the charges API.',
     href: '/dashboard/pos',
     learnMoreHref: '/dashboard/pos',
     icon: Terminal,
+  },
+  {
+    id: 'qr-codes',
+    label: 'QR codes',
+    description: 'Generate Solana Pay QR codes for display, print, or POS screens.',
+    href: '/dashboard/qr',
+    learnMoreHref: '/dashboard/qr',
+    icon: QrCode,
   },
   {
     id: 'payment-links',

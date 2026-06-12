@@ -35,7 +35,7 @@ export function TransferModal({ open, onClose }: TransferModalProps) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full max-w-md dash-card shadow-xl"
+        className="relative w-full max-w-md dash-modal shadow-xl"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--dash-border)]">
           <h2 id={titleId} className="font-semibold text-[var(--dash-text)] inline-flex items-center gap-2">
@@ -54,7 +54,7 @@ export function TransferModal({ open, onClose }: TransferModalProps) {
 
         <div className="p-6 space-y-4 text-sm">
           <p className="text-[var(--dash-muted)] leading-relaxed">
-            Send funds from your Luxor Pay balance to a bank account or external wallet. This feature requires outbound payments integration.
+            Send USDC or SOL from your Luxor Pay balance to an external Solana wallet. Network fees are paid in SOL. This feature requires outbound settlement integration.
           </p>
           <p className="text-xs text-[var(--dash-muted)] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] px-3 py-2">
             Interface preview — the full flow will be available with the settlement backend.

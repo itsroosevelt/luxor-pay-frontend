@@ -59,7 +59,7 @@ export function ReceiptModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="receipt-title"
-        className="relative w-full max-w-md dash-card shadow-xl print:shadow-none print:max-w-none print:border-0"
+        className="relative w-full max-w-md dash-modal shadow-xl print:shadow-none print:max-w-none print:border-0"
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--dash-border)] print:hidden">
           <h2 id="receipt-title" className="font-semibold text-[var(--dash-text)]">

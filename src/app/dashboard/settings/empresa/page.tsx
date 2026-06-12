@@ -19,7 +19,6 @@ import {
   EMPRESA_PRIMARY_TABS,
   PAYOUT_SCHEDULE_LABELS,
   TIMEZONE_OPTIONS,
-  US_STATES,
   buildDefaultLuxorWalletBalances,
   buildEmptyBusinessAccountForm,
   buildEmptyBusinessOwner,
@@ -252,19 +251,14 @@ function AccountDataForm({
               className="dash-input flex-1 px-4 py-2.5 text-sm"
               aria-label="City"
             />
-            <select
+            <input
+              type="text"
               value={form.state}
               onChange={(e) => onChange({ state: e.target.value })}
+              placeholder="State / province / jurisdiction"
               className="dash-input sm:w-40 px-4 py-2.5 text-sm"
-              aria-label="State"
-            >
-              <option value="">State</option>
-              {US_STATES.map((state) => (
-                <option key={state} value={state}>
-                  {state}
-                </option>
-              ))}
-            </select>
+              aria-label="State or jurisdiction"
+            />
             <input
               type="text"
               value={form.zip}
@@ -1430,7 +1424,7 @@ function TaxDataTab({
   return (
     <SettingsSection
       title="Tax details"
-      description="Tax information used for billing and regulatory compliance."
+      description="Tax information used for on-chain billing and jurisdictional compliance."
     >
       <form
         className="px-5 py-4 space-y-4"

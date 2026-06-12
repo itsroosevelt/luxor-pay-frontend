@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { fetchInvoicesApi } from '@/lib/api/billing';
 import { formatCurrencyAmount } from '@/lib/format-currency';
 import type { BillingInvoice } from '@luxor/contracts';
@@ -18,7 +20,7 @@ import { FileText } from 'lucide-react';
 const columns: DataTableColumn<BillingInvoice>[] = [
   {
     key: 'id',
-    header: 'Invoice',
+    header: 'On-chain invoice',
     render: (i) => <span className="font-mono text-xs">{i.id}</span>,
   },
   {
@@ -53,22 +55,34 @@ const columns: DataTableColumn<BillingInvoice>[] = [
 ];
 
 export default function BillingInvoicesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { items, loading, unavailable, notImplemented } = useBackendList(fetchInvoicesApi);
+
+  useEffect(() => {
+    if (searchParams.get('create') !== 'true') return;
+    router.replace('/dashboard/billing/invoices/create', { scroll: false });
+  }, [searchParams, router]);
 
   return (
     <>
       <PageHeader
-        title="Invoices"
-        description="Send and track SOL/USDC invoices with optional Solana Pay settlement."
+        title="On-chain invoices"
+        description="Send and track SOL/USDC on-chain invoices with optional Solana Pay settlement."
       />
       <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
         <BillingSectionNav />
         <BackendNotice unavailable={unavailable} notImplemented={notImplemented} />
+        {(unavailable || notImplemented) && (
+          <p className="text-xs text-[var(--dash-muted)]">
+            Invoices settle on-chain in USDC or SOL to your merchant wallet — no card or bank rails.
+          </p>
+        )}
         {!loading && items.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="No invoices"
-            description="Invoices paid on-chain will list here with explorer links when the billing API is connected."
+            title="No on-chain invoices"
+            description="On-chain invoices paid via Solana Pay will list here with explorer links when the billing API is connected."
           />
         ) : (
           <DataTable
@@ -76,7 +90,7 @@ export default function BillingInvoicesPage() {
             data={items}
             rowKey={(i) => i.id}
             loading={loading}
-            loadingMessage="Loading invoices…"
+            loadingMessage="Loading on-chain invoices…"
           />
         )}
       </div>

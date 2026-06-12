@@ -6,7 +6,7 @@ import { cn } from '@/lib/cn';
 
 const TABS = [
   { href: '/dashboard/billing', label: 'Overview' },
-  { href: '/dashboard/billing/invoices', label: 'Invoices' },
+  { href: '/dashboard/billing/invoices', label: 'On-chain invoices' },
   { href: '/dashboard/customers', label: 'Customers' },
   { href: '/dashboard/billing/subscriptions', label: 'Subscriptions' },
   { href: '/dashboard/billing/quotes', label: 'Quotes' },

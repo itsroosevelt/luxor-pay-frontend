@@ -70,7 +70,7 @@ export default function InvoiceDetailPage() {
 
   if (loading) {
     return (
-      <p className="text-sm text-[var(--dash-muted)] py-16 text-center">Loading invoice…</p>
+      <p className="text-sm text-[var(--dash-muted)] py-16 text-center">Loading on-chain invoice…</p>
     );
   }
 
@@ -81,7 +81,7 @@ export default function InvoiceDetailPage() {
           invoice ? (
             <div className="space-y-1">
               <p className="text-xs font-semibold uppercase tracking-widest text-[var(--dash-muted)]">
-                Invoices
+                On-chain invoices
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <span className="tabular-nums text-xl font-semibold">
@@ -96,7 +96,7 @@ export default function InvoiceDetailPage() {
               </p>
             </div>
           ) : (
-            'Invoice'
+            'On-chain invoice'
           )
         }
         actions={
@@ -105,7 +105,7 @@ export default function InvoiceDetailPage() {
             className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
           >
             <ArrowLeft size={16} />
-            All invoices
+            All on-chain invoices
           </Link>
         }
       />
@@ -117,13 +117,13 @@ export default function InvoiceDetailPage() {
         {!invoice ? (
           <EmptyState
             icon={FileText}
-            title="Invoice not found"
+            title="On-chain invoice not found"
             description={
               unavailable || notImplemented
-                ? 'Invoice details will load from the billing API when it is connected.'
-                : `No invoice with ID ${id} was returned by the billing API.`
+                ? 'On-chain invoice details will load from the billing API when it is connected.'
+                : `No on-chain invoice with ID ${id} was returned by the billing API.`
             }
-            action={{ label: 'Back to invoices', href: '/dashboard/billing/invoices' }}
+            action={{ label: 'Back to on-chain invoices', href: '/dashboard/billing/invoices' }}
           />
         ) : (
           <div className="grid xl:grid-cols-[1fr_320px] gap-6">
@@ -168,7 +168,7 @@ export default function InvoiceDetailPage() {
             </div>
 
             <DetailSidebar>
-              <CopyField label="Invoice ID" value={invoice.id} />
+              <CopyField label="On-chain invoice ID" value={invoice.id} />
               <DetailRow label="Customer ID">{invoice.customerId}</DetailRow>
               <DetailRow label="Currency">{invoice.currency}</DetailRow>
               {invoice.paidAt && (

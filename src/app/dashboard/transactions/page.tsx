@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { listPayments } from '@/lib/payments-api';
@@ -14,6 +13,7 @@ import {
   DataTable,
   FilterRow,
   FilterChip,
+  CreatePaymentMenu,
   type DataTableColumn,
 } from '@/components/dashboard';
 import {
@@ -39,7 +39,6 @@ import { downloadPaymentsCsv } from '@/lib/dashboard/payment-export';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
 import {
   Receipt,
-  Plus,
   BarChart3,
   Info,
   MoreHorizontal,
@@ -572,15 +571,7 @@ export default function TransactionsPage() {
 
   const headerActions = (
     <div className="flex flex-wrap items-center gap-2">
-      {showPaymentsUi && (
-        <Link
-          href="/dashboard/links"
-          className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
-        >
-          <Plus size={16} />
-          Create payment
-        </Link>
-      )}
+      {showPaymentsUi && <CreatePaymentMenu />}
       {showTransfersUi && (
         <button
           type="button"

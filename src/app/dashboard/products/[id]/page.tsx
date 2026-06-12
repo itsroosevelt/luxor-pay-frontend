@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
@@ -8,27 +8,90 @@ import {
   getProduct,
   listPaymentLinks,
   updateProduct,
-} from '@/lib/firestore-data';
+} from '@/lib/merchant-data';
 import type { Currency, PaymentLink, ProductCatalogItem } from '@luxor/contracts';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
 import {
-  PageHeader,
   CopyField,
   DetailSection,
-  DetailSidebar,
   DetailRow,
   TaxConfigNotice,
 } from '@/components/dashboard';
 import { cn } from '@/lib/cn';
-import { ArrowLeft, Link as LinkIcon, Pencil, Package, Plus, Percent } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Eye,
+  Link as LinkIcon,
+  MoreHorizontal,
+  Package,
+  Pencil,
+  Plus,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', {
+  return new Date(iso).toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
   });
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function truncateId(id: string, head = 8, tail = 4): string {
+  if (id.length <= head + tail + 1) return id;
+  return `${id.slice(0, head)}…${id.slice(-tail)}`;
+}
+
+function formatPrice(amount: number, currency: string): string {
+  return `${currency} ${amount.toFixed(2)}`;
+}
+
+function DashedEmpty({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-dashed border-[var(--dash-border)] bg-[var(--dash-panel)] px-4 py-8 text-center text-sm text-[var(--dash-muted)]">
+      {children}
+    </div>
+  );
+}
+
+function SidebarCard({
+  title,
+  onEdit,
+  children,
+}: {
+  title: string;
+  onEdit?: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="dash-card overflow-hidden">
+      <div className="px-5 py-4 border-b border-[var(--dash-border)] flex items-center justify-between gap-2">
+        <h2 className="font-semibold text-[var(--dash-text)]">{title}</h2>
+        {onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="p-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)] hover:text-[var(--dash-text)]"
+            aria-label={`Edit ${title.toLowerCase()}`}
+          >
+            <Pencil size={15} />
+          </button>
+        )}
+      </div>
+      <div className="p-5 space-y-4">{children}</div>
+    </div>
+  );
 }
 
 export default function ProductDetailPage() {
@@ -44,6 +107,9 @@ export default function ProductDetailPage() {
   const [editPrice, setEditPrice] = useState('');
   const [editCurrency, setEditCurrency] = useState<Currency>('USDC');
   const [editActive, setEditActive] = useState(true);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -76,6 +142,17 @@ export default function ProductDetailPage() {
     });
     return () => unsubscribe();
   }, [id]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [menuOpen]);
 
   const openEdit = () => {
     if (!product) return;
@@ -125,6 +202,36 @@ export default function ProductDetailPage() {
     return `/dashboard/links/new?${params.toString()}`;
   }, [product]);
 
+  const mockLogs = useMemo(() => {
+    if (!product) return [];
+    const created = new Date(product.createdAt);
+    return [
+      {
+        method: 'POST',
+        path: `/v1/products/${product.id}`,
+        status: 200,
+        label: 'OK',
+        at: created,
+      },
+      {
+        method: 'GET',
+        path: `/v1/products/${product.id}/prices`,
+        status: 200,
+        label: 'OK',
+        at: new Date(created.getTime() + 45_000),
+      },
+      {
+        method: 'POST',
+        path: `/v1/products/${product.id}`,
+        status: 200,
+        label: 'OK',
+        at: new Date(created.getTime() + 120_000),
+      },
+    ];
+  }, [product]);
+
+  const stubToast = (message: string) => () => toast.info(message);
+
   if (loading) {
     return (
       <p className="text-sm text-[var(--dash-muted)] py-16 text-center">Loading product…</p>
@@ -136,55 +243,115 @@ export default function ProductDetailPage() {
       <div className="p-8 text-center space-y-4">
         <p className="text-[var(--dash-muted)]">Product not found</p>
         <Link href="/dashboard/products" className="dash-btn-secondary px-4 py-2 text-sm inline-block">
-          Back to catalog
+          Back to products
         </Link>
       </div>
     );
   }
 
+  const statusBadge = product.active ? dashStatusBadges.success : dashStatusBadges.neutral;
+  const statusLabel = product.active ? 'Active' : 'Archived';
+
   return (
-    <>
-      <PageHeader
-        title={
-          <div className="flex flex-wrap items-center gap-3">
-            <span>{product.name}</span>
-            <span className={product.active ? dashStatusBadges.success : dashStatusBadges.neutral}>
-              {product.active ? 'Active' : 'Inactive'}
-            </span>
-          </div>
-        }
-        description={`${product.price} ${product.currency}`}
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
+    <div className="min-h-full">
+      <header className="dash-header border-b border-[var(--dash-border)]">
+        <div className="px-6 md:px-8 pt-6 pb-4">
+          <nav className="flex items-center gap-1.5 text-sm text-[var(--dash-muted)] mb-4">
             <Link
               href="/dashboard/products"
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
+              className="hover:text-[var(--dash-accent)] transition-colors"
             >
-              <ArrowLeft size={16} />
-              Catalog
+              Products
             </Link>
-            <button
-              type="button"
-              onClick={openEdit}
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-            >
-              <Pencil size={16} />
-              Edit product
-            </button>
-            <Link
-              href={createLinkHref}
-              className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
-            >
-              <Plus size={16} />
-              Create payment link
-            </Link>
-          </div>
-        }
-      />
+            <ChevronRight size={14} className="opacity-60" />
+            <span className="text-[var(--dash-text)] truncate max-w-[200px]">{product.name}</span>
+          </nav>
 
-      <div className="p-6 md:p-8 max-w-6xl mx-auto">
-        <div className="grid lg:grid-cols-[1fr_280px] gap-6">
-          <div className="space-y-6">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="flex items-start gap-4 min-w-0">
+              <div className="w-14 h-14 rounded-lg bg-[var(--dash-panel-elevated)] border border-[var(--dash-border)] flex items-center justify-center text-[var(--dash-accent)] shrink-0">
+                <Package size={24} />
+              </div>
+              <div className="min-w-0 space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <h1 className="text-2xl font-semibold text-[var(--dash-text)] tracking-tight truncate">
+                    {product.name}
+                  </h1>
+                  <span className={statusBadge}>{statusLabel}</span>
+                </div>
+                <p className="text-base tabular-nums text-[var(--dash-muted)]">
+                  {formatPrice(product.price, product.currency)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={openEdit}
+                className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
+              >
+                <Pencil size={16} />
+                Edit product
+              </button>
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  className="dash-btn-secondary p-2"
+                  aria-label="More actions"
+                  onClick={() => setMenuOpen((open) => !open)}
+                >
+                  <MoreHorizontal size={18} />
+                </button>
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full mt-1 z-20 min-w-[180px] dash-card py-1 shadow-lg"
+                  >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)]"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        stubToast('Duplicate product — coming soon')();
+                      }}
+                    >
+                      Duplicate product
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)]"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        stubToast('Archive product — coming soon')();
+                      }}
+                    >
+                      {product.active ? 'Archive product' : 'Unarchive product'}
+                    </button>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] text-red-400"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        stubToast('Delete product — coming soon')();
+                      }}
+                    >
+                      Delete product
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto">
+        <div className="grid xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-6">
+          <div className="space-y-6 min-w-0">
             {editing && (
               <form onSubmit={handleSave} className="dash-card p-6 space-y-4">
                 <h2 className="font-semibold flex items-center gap-2">
@@ -254,63 +421,137 @@ export default function ProductDetailPage() {
               </form>
             )}
 
-            <DetailSection title="Pricing" description="Default price for this product">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-xs uppercase text-[var(--dash-muted)] border-b border-[var(--dash-border)]">
-                    <th className="text-left py-2 font-semibold">Price</th>
-                    <th className="text-left py-2 font-semibold">Currency</th>
-                    <th className="text-left py-2 font-semibold">Tax</th>
-                    <th className="text-left py-2 font-semibold">Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td className="py-3 tabular-nums font-medium">{product.price}</td>
-                    <td className="py-3">{product.currency}</td>
-                    <td className="py-3">
-                      <Link
-                        href="/dashboard/tax"
-                        className="inline-flex items-center gap-1.5 text-[var(--dash-muted)] hover:text-[var(--dash-accent)] transition-colors"
-                      >
-                        <Percent size={14} />
-                        <span className="text-xs">Configured in Tax</span>
-                      </Link>
-                    </td>
-                    <td className="py-3">
-                      <span
-                        className={cn(
-                          product.active ? dashStatusBadges.success : dashStatusBadges.neutral
-                        )}
-                      >
-                        {product.active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </DetailSection>
-
-            <DetailSection title="Features" description="Product capabilities and entitlements">
-              <p className="text-sm text-[var(--dash-muted)] py-4 text-center">
-                No features configured yet. Add metadata when the backend supports entitlements.
-              </p>
-            </DetailSection>
-
             <DetailSection
-              title="Cross-selling"
-              description="Recommend related products at checkout"
+              title="Pricing"
+              description="Manage prices for this product"
+              action={
+                <button
+                  type="button"
+                  onClick={stubToast('Add price — coming soon')}
+                  className="p-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)] hover:text-[var(--dash-text)]"
+                  aria-label="Add price"
+                >
+                  <Plus size={18} />
+                </button>
+              }
             >
-              <div className="flex items-center gap-3 py-2 text-sm text-[var(--dash-muted)]">
-                <Package size={18} className="shrink-0 opacity-50" />
-                <p>Search and attach cross-sell products — coming soon.</p>
+              <div className="overflow-x-auto -mx-5 px-5">
+                <table className="w-full text-sm min-w-[520px]">
+                  <thead>
+                    <tr className="text-xs uppercase text-[var(--dash-muted)] border-b border-[var(--dash-border)]">
+                      <th className="text-left py-2 font-semibold">Price</th>
+                      <th className="text-left py-2 font-semibold">Description</th>
+                      <th className="text-left py-2 font-semibold">Wallet subscriptions</th>
+                      <th className="text-left py-2 font-semibold">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-[var(--dash-border)] last:border-0">
+                      <td className="py-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium tabular-nums">
+                            {formatPrice(product.price, product.currency)}
+                          </span>
+                          <span className={cn(dashStatusBadges.neutral, 'text-[10px] px-1.5 py-0')}>
+                            Default
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 text-[var(--dash-muted)]">
+                        {product.description || product.name}
+                      </td>
+                      <td className="py-3 tabular-nums text-[var(--dash-muted)]">0</td>
+                      <td className="py-3 text-[var(--dash-muted)] tabular-nums">
+                        {formatDate(product.createdAt)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </DetailSection>
 
-            <DetailSection title="Payment links" description="Checkout links matching this product">
+            <DetailSection
+              title="Trial versions"
+              action={
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={stubToast('Add trial version — coming soon')}
+                    className="p-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)] hover:text-[var(--dash-text)]"
+                    aria-label="Add trial version"
+                  >
+                    <Plus size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={stubToast('Trial preview — coming soon')}
+                    className="text-sm text-[var(--dash-accent)] hover:underline inline-flex items-center gap-1 px-1.5 py-1"
+                  >
+                    <Eye size={14} />
+                    Preview
+                  </button>
+                </div>
+              }
+            >
+              <DashedEmpty>No trial versions</DashedEmpty>
+            </DetailSection>
+
+            <DetailSection
+              title="Cross-sells"
+              description="Suggest a related product for customers to add to their order."
+            >
+              <input
+                type="text"
+                readOnly
+                placeholder="Find a product…"
+                onFocus={stubToast('Cross-sell search — coming soon')}
+                className="dash-input w-full px-4 py-2.5 text-sm cursor-pointer"
+              />
+            </DetailSection>
+
+            <DetailSection title="Features">
+              <DashedEmpty>No features</DashedEmpty>
+            </DetailSection>
+
+            <DetailSection title="Logs" description="Recent API requests for this product (dev mock)">
+              <ul className="space-y-2 font-mono text-xs">
+                {mockLogs.map((log, i) => (
+                  <li
+                    key={i}
+                    className="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-2 border-b border-[var(--dash-border)] last:border-0"
+                  >
+                    <span className="text-[var(--dash-muted)] tabular-nums shrink-0">
+                      {formatDateTime(log.at.toISOString())}
+                    </span>
+                    <span className="text-[var(--dash-accent)]">{log.method}</span>
+                    <span className="text-[var(--dash-text)] truncate">{log.path}</span>
+                    <span className={dashStatusBadges.success}>
+                      {log.status} {log.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </DetailSection>
+
+            <DetailSection title="Events">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm py-1">
+                <span className="text-[var(--dash-muted)] tabular-nums">
+                  {formatDateTime(product.createdAt)}
+                </span>
+                <span className="text-[var(--dash-text)]">
+                  A product with ID{' '}
+                  <code className="text-xs font-mono bg-[var(--dash-panel-elevated)] px-1.5 py-0.5 rounded">
+                    {truncateId(product.id)}
+                  </code>{' '}
+                  was updated
+                </span>
+              </div>
+            </DetailSection>
+
+            <DetailSection title="Payment links" description="Solana Pay checkout links matching this product">
               {relatedLinks.length === 0 ? (
                 <p className="text-sm text-[var(--dash-muted)]">
-                  No payment links with matching name and price.{' '}
+                  No Solana Pay links with matching name and price.{' '}
                   <Link href={createLinkHref} className="text-[var(--dash-accent)] hover:underline">
                     Create one
                   </Link>
@@ -337,24 +578,58 @@ export default function ProductDetailPage() {
             </DetailSection>
           </div>
 
-          <DetailSidebar>
-            <CopyField label="Product ID" value={product.id} />
-            <DetailRow label="Currency">{product.currency}</DetailRow>
-            <DetailRow label="Description">
-              {product.description || (
-                <span className="text-[var(--dash-muted)]">No description</span>
+          <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+            <SidebarCard title="Details" onEdit={openEdit}>
+              <CopyField label="Product ID" value={product.id} />
+              <DetailRow label="Product category">
+                General — Electronically supplied services
+              </DetailRow>
+              <DetailRow label="Marketing features">
+                <span className="text-[var(--dash-muted)]">—</span>
+              </DetailRow>
+              <DetailRow label="Description">
+                {product.description || (
+                  <span className="text-[var(--dash-muted)]">No description</span>
+                )}
+              </DetailRow>
+              <DetailRow label="Attributes">
+                <span className="text-[var(--dash-muted)]">—</span>
+              </DetailRow>
+              <button
+                type="button"
+                onClick={() => setShowMoreDetails((v) => !v)}
+                className="text-sm text-[var(--dash-accent)] hover:underline inline-flex items-center gap-1"
+              >
+                View more
+                <ChevronDown
+                  size={14}
+                  className={cn('transition-transform', showMoreDetails && 'rotate-180')}
+                />
+              </button>
+              {showMoreDetails && (
+                <div className="pt-2 space-y-3 border-t border-[var(--dash-border)]">
+                  <DetailRow label="Currency">{product.currency}</DetailRow>
+                  <DetailRow label="Created">{formatDate(product.createdAt)}</DetailRow>
+                  <DetailRow label="Status">
+                    <span className={statusBadge}>{statusLabel}</span>
+                  </DetailRow>
+                </div>
               )}
-            </DetailRow>
-            <DetailRow label="Created">{formatDate(product.createdAt)}</DetailRow>
+            </SidebarCard>
+
+            <SidebarCard title="Metadata" onEdit={stubToast('Edit metadata — coming soon')}>
+              <DashedEmpty>No metadata</DashedEmpty>
+            </SidebarCard>
+
             <Link
               href={createLinkHref}
               className="dash-btn-primary w-full py-2.5 text-sm text-center inline-block"
             >
-              Create payment link
+              Create Solana Pay link
             </Link>
-          </DetailSidebar>
+          </aside>
         </div>
       </div>
-    </>
+    </div>
   );
 }

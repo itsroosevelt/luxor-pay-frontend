@@ -19,7 +19,7 @@ import { toast } from 'sonner';
 
 const PLANES_TABS = [
   { id: 'planes', label: 'Plans' },
-  { id: 'facturas', label: 'Invoice history' },
+  { id: 'facturas', label: 'On-chain invoice history' },
   { id: 'comisiones', label: 'Fees' },
 ] as const;
 

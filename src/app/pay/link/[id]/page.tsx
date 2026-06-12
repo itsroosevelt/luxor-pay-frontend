@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createPaymentFromLink } from '@/lib/payments-api';
-import { getPaymentLinkById } from '@/lib/firestore-data';
-import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
+import { getPaymentLinkById } from '@/lib/merchant-data';
 import type { PaymentLink } from '@luxor/contracts';
 import {
   CheckoutShell,

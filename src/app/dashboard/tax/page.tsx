@@ -14,15 +14,15 @@ export default function TaxPage() {
     <>
       <PageHeader
         title="Tax"
-        description="Set default tax rates for your product catalog and payment links. Catalog prices inherit these defaults until you connect per-product overrides."
+        description="Set default tax behavior for SOL and USDC charges in your product catalog and Solana Pay links."
       />
       <div className="p-6 md:px-8 md:pb-8 max-w-6xl mx-auto space-y-6 pb-12">
         <CatalogFlowSectionNav />
         <BackendNotice notImplemented />
         <EmptyState
           icon={Percent}
-          title="Tax settings"
-          description="Configure default tax behavior for SOL and USDC charges. Rates flow into the product catalog and checkout links once the backend is connected."
+          title="Solana tax settings"
+          description="Configure default tax behavior for SOL and USDC on-chain charges. Rates flow into the product catalog and Solana Pay checkout once the backend is connected."
           action={{ label: 'Product catalog', href: '/dashboard/products' }}
         />
         <CatalogFlowCrossLinks excludeHref="/dashboard/tax" title="Continue setup" />

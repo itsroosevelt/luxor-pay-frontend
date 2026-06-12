@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useState } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { formatCurrencyAmount } from '@/lib/format-currency';
 import { toast } from 'sonner';
 
 export type AddFundsSource = 'disputes';
@@ -14,8 +15,8 @@ export interface AddFundsModalProps {
   disputeBalance?: number;
 }
 
-function formatAmount(value: number, currency: string): string {
-  return `${currency} ${value.toFixed(2)}`;
+function formatAmount(value: number, currency: 'USDC' | 'SOL'): string {
+  return formatCurrencyAmount(value, currency);
 }
 
 export function AddFundsModal({
@@ -88,7 +89,7 @@ export function AddFundsModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full max-w-lg dash-card shadow-xl"
+        className="relative w-full max-w-lg dash-modal shadow-xl"
       >
         <div className="px-6 py-5 border-b border-[var(--dash-border)]">
           <h2 id={titleId} className="text-lg font-semibold text-[var(--dash-text)] pr-8">

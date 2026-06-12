@@ -124,6 +124,7 @@ function CheckoutPreview({
 
 export function PaymentLinkEditor({
   mode,
+  layout = 'page',
   initialValues,
   merchantName = 'Luxor Pay',
   saving = false,
@@ -132,6 +133,7 @@ export function PaymentLinkEditor({
   onCancel,
 }: {
   mode: 'create' | 'edit';
+  layout?: 'page' | 'drawer';
   initialValues: PaymentLinkEditorValues;
   merchantName?: string;
   saving?: boolean;
@@ -153,12 +155,24 @@ export function PaymentLinkEditor({
     void onSave(values);
   };
 
-  const title = mode === 'create' ? 'Create payment link' : 'Edit payment link';
+  const title = mode === 'create' ? 'Create Solana Pay link' : 'Edit Solana Pay link';
   const submitLabel = mode === 'create' ? 'Create link' : 'Update link';
+  const isDrawer = layout === 'drawer';
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col min-h-[calc(100vh-4rem)]">
-      <div className="sticky top-0 z-10 dash-header flex items-center justify-between gap-4 px-4 md:px-6 py-4 border-b border-[var(--dash-border)]">
+    <form
+      onSubmit={handleSubmit}
+      className={cn(
+        'flex flex-col',
+        isDrawer ? 'h-full min-h-0' : 'min-h-[calc(100vh-4rem)]'
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-center justify-between gap-4 px-4 md:px-5 py-4 border-b border-[var(--dash-border)] shrink-0',
+          isDrawer ? 'bg-[var(--dash-panel)]' : 'sticky top-0 z-10 dash-header'
+        )}
+      >
         <div className="flex items-center gap-3 min-w-0">
           <button
             type="button"
@@ -170,17 +184,32 @@ export function PaymentLinkEditor({
           </button>
           <h1 className="text-lg font-semibold text-[var(--dash-text)] truncate">{title}</h1>
         </div>
-        <button
-          type="submit"
-          disabled={saving || submitDisabled}
-          className="dash-btn-primary px-5 py-2 text-sm shrink-0 disabled:opacity-50"
-        >
-          {saving ? 'Saving…' : submitLabel}
-        </button>
+        {isDrawer ? (
+          <button
+            type="button"
+            className="text-xs text-[var(--dash-accent)] hover:underline lg:hidden shrink-0"
+            onClick={onCancel}
+          >
+            Close preview
+          </button>
+        ) : (
+          <button
+            type="submit"
+            disabled={saving || submitDisabled}
+            className="dash-btn-primary px-5 py-2 text-sm shrink-0 disabled:opacity-50"
+          >
+            {saving ? 'Saving…' : submitLabel}
+          </button>
+        )}
       </div>
 
-      <div className="flex flex-1 min-h-0 flex-col lg:flex-row">
-        <div className="lg:w-[40%] xl:w-[38%] border-b lg:border-b-0 lg:border-r border-[var(--dash-border)] overflow-y-auto">
+      <div className="flex flex-1 min-h-0 flex-col lg:flex-row overflow-hidden">
+        <div
+          className={cn(
+            'lg:w-[40%] xl:w-[38%] border-b lg:border-b-0 lg:border-r border-[var(--dash-border)] overflow-y-auto',
+            isDrawer && 'bg-[var(--dash-panel)]'
+          )}
+        >
           <div className="p-6 space-y-6 max-w-xl">
             <div>
               <label htmlFor="link-type" className="block text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)] mb-2">
@@ -293,9 +322,9 @@ export function PaymentLinkEditor({
                       <span className="block text-[var(--dash-muted)] text-xs mt-0.5">
                         Uses default rates from{' '}
                         <Link href="/dashboard/tax" className="text-[var(--dash-accent)] hover:underline">
-                          Tax settings
+                          Solana tax settings
                         </Link>
-                        {' '}— automatic calculation coming soon
+                        {' '}— jurisdiction rules coming soon
                       </span>
                     </span>
                   </label>
@@ -372,11 +401,21 @@ export function PaymentLinkEditor({
           </div>
         </div>
 
-        <div className="flex-1 bg-[#050505] overflow-y-auto p-6 lg:p-8">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
-              Preview
-            </span>
+        <div
+          className={cn(
+            'flex-1 overflow-y-auto p-6 lg:p-8',
+            isDrawer ? 'bg-[var(--dash-panel-elevated)]' : 'bg-[#050505]'
+          )}
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
+                Preview
+              </span>
+              <p className="text-xs text-[var(--dash-muted)] mt-1 max-w-md">
+                Customers opening this link can pay via QR scan or wallet.
+              </p>
+            </div>
             <div className="flex gap-1 dash-card p-1">
               <button
                 type="button"
@@ -417,6 +456,21 @@ export function PaymentLinkEditor({
           />
         </div>
       </div>
+
+      {isDrawer && (
+        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--dash-border)] shrink-0 bg-[var(--dash-panel)]">
+          <button type="button" onClick={onCancel} className="dash-btn-secondary px-5 py-2.5 text-sm">
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={saving || submitDisabled}
+            className="dash-btn-primary px-5 py-2.5 text-sm disabled:opacity-50"
+          >
+            {saving ? 'Creating…' : submitLabel}
+          </button>
+        </div>
+      )}
     </form>
   );
 }

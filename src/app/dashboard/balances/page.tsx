@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchant-data';
 import { listPayments } from '@/lib/payments-api';
@@ -83,6 +83,7 @@ function BalanceDot({ color }: { color: 'incoming' | 'available' }) {
 
 export default function BalancesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<PaymentOrder[]>([]);
   const [hasWallet, setHasWallet] = useState(false);
   const [wallet, setWallet] = useState('');
@@ -91,6 +92,7 @@ export default function BalancesPage() {
   const [transferMenuOpen, setTransferMenuOpen] = useState(false);
   const [addFundsOpen, setAddFundsOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const transferFromQuery = searchParams.get('transfer') === 'true';
   const [settlementCurrencyOpen, setSettlementCurrencyOpen] = useState(false);
   const transferMenuRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +115,12 @@ export default function BalancesPage() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (transferFromQuery) {
+      router.replace('/dashboard/balances/transfers/create');
+    }
+  }, [transferFromQuery, router]);
 
   useEffect(() => {
     if (!transferMenuOpen) return;
@@ -217,14 +225,13 @@ export default function BalancesPage() {
         }
         actions={
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
+            <Link
+              href="/dashboard/balances/transfers/create"
               className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-              onClick={() => setTransferOpen(true)}
             >
               <ArrowRightLeft size={16} />
               Transfer
-            </button>
+            </Link>
             <button
               type="button"
               className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
@@ -249,17 +256,14 @@ export default function BalancesPage() {
                   role="menu"
                   className="absolute right-0 top-full mt-1 z-20 min-w-[220px] dash-card py-1 shadow-lg"
                 >
-                  <button
-                    type="button"
+                  <Link
+                    href="/dashboard/balances/transfers/create"
                     role="menuitem"
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] transition-colors"
-                    onClick={() => {
-                      setTransferMenuOpen(false);
-                      setTransferOpen(true);
-                    }}
+                    className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] transition-colors"
+                    onClick={() => setTransferMenuOpen(false)}
                   >
                     New transfer
-                  </button>
+                  </Link>
                   <button
                     type="button"
                     role="menuitem"
@@ -426,7 +430,7 @@ export default function BalancesPage() {
             subtitle="Instant transfers available"
           >
             <p className="text-sm text-[var(--dash-muted)]">
-              Withdraw USDC and SOL to your cold wallet or linked bank account when the settlement
+              Withdraw USDC and SOL to your cold wallet or another Solana address when the settlement
               backend is active.
             </p>
             <button
@@ -493,7 +497,10 @@ export default function BalancesPage() {
         currency="USDC"
         disputeBalance={0}
       />
-      <TransferModal open={transferOpen} onClose={() => setTransferOpen(false)} />
+      <TransferModal
+        open={transferOpen}
+        onClose={() => setTransferOpen(false)}
+      />
       <SettlementCurrencyModal
         open={settlementCurrencyOpen}
         onClose={() => setSettlementCurrencyOpen(false)}

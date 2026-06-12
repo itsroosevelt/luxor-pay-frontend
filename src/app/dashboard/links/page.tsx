@@ -12,13 +12,12 @@ import {
   Link as LinkIcon,
   Plus,
   ExternalLink,
-  BarChart3,
   Download,
   MoreHorizontal,
 } from 'lucide-react';
 import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
 import { toast } from 'sonner';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   PageHeader,
   EmptyState,
@@ -95,10 +94,12 @@ function formatCreatedAt(iso: string): string {
 
 export default function PaymentLinksPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [page, setPage] = useState(1);
+  const createFromQuery = searchParams.get('create') === 'true';
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -117,6 +118,12 @@ export default function PaymentLinksPage() {
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (createFromQuery) {
+      router.replace('/dashboard/links/create', { scroll: false });
+    }
+  }, [createFromQuery, router]);
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -271,7 +278,7 @@ export default function PaymentLinksPage() {
               Product catalog
             </Link>
             <Link
-              href="/dashboard/links/new"
+              href="/dashboard/links/create"
               className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
             >
               <Plus size={16} />
@@ -338,7 +345,7 @@ export default function PaymentLinksPage() {
             }
             action={
               statusFilter === 'all'
-                ? { label: 'Create your first link', href: '/dashboard/links/new' }
+                ? { label: 'Create your first link', href: '/dashboard/links/create' }
                 : undefined
             }
           />
