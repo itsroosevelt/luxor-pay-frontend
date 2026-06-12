@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { listPayments } from '@/lib/payments-api';
 import type { Currency, PaymentOrder } from '@luxor/contracts';
@@ -17,8 +17,10 @@ import {
   type DataTableColumn,
 } from '@/components/dashboard';
 import {
-  ordersToActivity,
+  filterActivityByTab,
+  mergeBalanceActivities,
   type BalanceActivityRow,
+  type BalanceActivityStatus,
   formatBalanceAmount,
 } from '@/lib/balance-utils';
 import {
@@ -43,9 +45,10 @@ import {
   MoreHorizontal,
   Download,
   Columns3,
+  Settings2,
 } from 'lucide-react';
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const TRANSACTION_TABS: { id: TransactionTab; label: string }[] = [
   { id: 'payments', label: 'Payments' },
@@ -65,6 +68,15 @@ const SUMMARY_CARDS: { id: PaymentSummaryFilter; label: string }[] = [
 
 const CURRENCIES: Currency[] = ['USDC', 'SOL'];
 
+const VALID_TABS = new Set<TransactionTab>(['payments', 'transfers', 'topups', 'all']);
+
+function parseTabParam(value: string | null): TransactionTab {
+  if (value && VALID_TABS.has(value as TransactionTab)) {
+    return value as TransactionTab;
+  }
+  return 'payments';
+}
+
 const paymentStatusStyles: Record<PaymentOrder['status'], string> = {
   pending: dashStatusBadges.warning,
   confirmed: dashStatusBadges.success,
@@ -72,13 +84,43 @@ const paymentStatusStyles: Record<PaymentOrder['status'], string> = {
   failed: dashStatusBadges.error,
 };
 
+const activityStatusStyles: Record<BalanceActivityStatus, string> = {
+  paid: dashStatusBadges.success,
+  pending: dashStatusBadges.warning,
+  failed: dashStatusBadges.error,
+};
+
+const activityStatusLabels: Record<BalanceActivityStatus, string> = {
+  paid: 'Paid',
+  pending: 'Pending',
+  failed: 'Failed',
+};
+
+function formatTableDate(iso: string): string {
+  return new Date(iso).toLocaleString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatTableDateShort(iso: string): string {
+  return new Date(iso).toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
 function balanceTypeLabel(row: BalanceActivityRow): string {
   if (row.status === 'pending') return 'Incoming';
   if (row.status === 'paid') return 'Available';
   return '—';
 }
 
-function PaginationFooter({
+function RangePaginationFooter({
   page,
   totalPages,
   totalItems,
@@ -96,7 +138,7 @@ function PaginationFooter({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-[var(--dash-border)] text-sm text-[var(--dash-muted)]">
       <span>
-        {from}–{to} of {totalItems}
+        Showing {from}–{to} of {totalItems} items
       </span>
       <div className="flex items-center gap-2">
         <button
@@ -107,9 +149,6 @@ function PaginationFooter({
         >
           Previous
         </button>
-        <span className="tabular-nums px-2">
-          {page} / {totalPages}
-        </span>
         <button
           type="button"
           disabled={page >= totalPages}
@@ -123,11 +162,22 @@ function PaginationFooter({
   );
 }
 
+function CountFooter({ totalItems }: { totalItems: number }) {
+  if (totalItems === 0) return null;
+  return (
+    <div className="px-4 py-3 border-t border-[var(--dash-border)] text-sm text-[var(--dash-muted)]">
+      {totalItems} {totalItems === 1 ? 'item' : 'items'}
+    </div>
+  );
+}
+
 export default function TransactionsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeTab = parseTabParam(searchParams.get('tab'));
+
   const [orders, setOrders] = useState<PaymentOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<TransactionTab>('payments');
   const [summaryFilter, setSummaryFilter] = useState<PaymentSummaryFilter>('all');
   const [currencyFilter, setCurrencyFilter] = useState<Currency | 'all'>('all');
   const [page, setPage] = useState(1);
@@ -151,10 +201,20 @@ export default function TransactionsPage() {
     return unsubscribe;
   }, []);
 
-  const resetPagination = () => {
+  const resetPagination = useCallback(() => {
     setPage(1);
     setSelected(new Set());
-  };
+  }, []);
+
+  const setTab = useCallback(
+    (tab: TransactionTab) => {
+      resetPagination();
+      const params = new URLSearchParams(searchParams.toString());
+      params.set('tab', tab);
+      router.replace(`/dashboard/transactions?${params.toString()}`, { scroll: false });
+    },
+    [resetPagination, router, searchParams]
+  );
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -179,7 +239,17 @@ export default function TransactionsPage() {
     );
   }, [orders, summaryFilter, currencyFilter]);
 
-  const allActivities = useMemo(() => ordersToActivity(orders), [orders]);
+  const allActivities = useMemo(() => mergeBalanceActivities(orders), [orders]);
+
+  const transferRows = useMemo(
+    () => filterActivityByTab(allActivities, 'transfers'),
+    [allActivities]
+  );
+
+  const topupRows = useMemo(
+    () => filterActivityByTab(allActivities, 'topups'),
+    [allActivities]
+  );
 
   const filteredActivities = useMemo(() => {
     let rows = allActivities;
@@ -189,27 +259,18 @@ export default function TransactionsPage() {
     return rows;
   }, [allActivities, currencyFilter]);
 
-  const tablePayments = useMemo(
-    () => (activeTab === 'payments' ? filteredPayments : []),
-    [activeTab, filteredPayments]
-  );
-  const tableActivities = useMemo(
-    () => (activeTab === 'all' ? filteredActivities : []),
-    [activeTab, filteredActivities]
-  );
-
   const paginatedPayments = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    return tablePayments.slice(start, start + PAGE_SIZE);
-  }, [tablePayments, page]);
+    return filteredPayments.slice(start, start + PAGE_SIZE);
+  }, [filteredPayments, page]);
 
   const paginatedActivities = useMemo(() => {
     const start = (page - 1) * PAGE_SIZE;
-    return tableActivities.slice(start, start + PAGE_SIZE);
-  }, [tableActivities, page]);
+    return filteredActivities.slice(start, start + PAGE_SIZE);
+  }, [filteredActivities, page]);
 
-  const paymentTotalPages = Math.max(1, Math.ceil(tablePayments.length / PAGE_SIZE));
-  const activityTotalPages = Math.max(1, Math.ceil(tableActivities.length / PAGE_SIZE));
+  const paymentTotalPages = Math.max(1, Math.ceil(filteredPayments.length / PAGE_SIZE));
+  const activityTotalPages = Math.max(1, Math.ceil(filteredActivities.length / PAGE_SIZE));
 
   const allPageSelected =
     paginatedPayments.length > 0 &&
@@ -273,15 +334,7 @@ export default function TransactionsPage() {
       key: 'date',
       header: 'Date',
       render: (o) => (
-        <span className="text-[var(--dash-muted)] tabular-nums">
-          {new Date(o.createdAt).toLocaleString('en-US', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </span>
+        <span className="text-[var(--dash-muted)] tabular-nums">{formatTableDate(o.createdAt)}</span>
       ),
     },
     {
@@ -293,7 +346,7 @@ export default function TransactionsPage() {
     },
     {
       key: 'method',
-      header: 'Method',
+      header: 'Payment method',
       render: (o) => <span>{paymentMethodLabel(o)}</span>,
     },
     {
@@ -349,6 +402,45 @@ export default function TransactionsPage() {
     },
   ];
 
+  const transferColumns: DataTableColumn<BalanceActivityRow>[] = [
+    {
+      key: 'amount',
+      header: 'Amount',
+      render: (row) => (
+        <div className="flex flex-col gap-1 min-w-[120px]">
+          <span className="font-medium tabular-nums">
+            {formatBalanceAmount(row.amount, row.currency)}
+          </span>
+          <span className={cn('w-fit', activityStatusStyles[row.status])}>
+            {activityStatusLabels[row.status]}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'destination',
+      header: 'Destination',
+      render: (row) => (
+        <span className="text-[var(--dash-muted)] font-mono text-xs">{row.destination}</span>
+      ),
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      render: (row) => <span>{row.typeLabel}</span>,
+    },
+    {
+      key: 'availableOn',
+      header: 'Arrives on',
+      className: 'text-right',
+      render: (row) => (
+        <span className="text-[var(--dash-muted)] tabular-nums">
+          {formatTableDateShort(row.availableOn)}
+        </span>
+      ),
+    },
+  ];
+
   const activityColumns: DataTableColumn<BalanceActivityRow>[] = [
     {
       key: 'amount',
@@ -393,26 +485,51 @@ export default function TransactionsPage() {
     {
       key: 'balanceTx',
       header: 'Balance transaction',
+      render: (row) => (
+        <span className="text-[var(--dash-muted)] font-mono text-xs">{row.id}</span>
+      ),
+    },
+    {
+      key: 'createdAt',
+      header: 'Created',
+      render: (row) => (
+        <span className="text-[var(--dash-muted)] tabular-nums">
+          {formatTableDateShort(row.createdAt)}
+        </span>
+      ),
+    },
+    {
+      key: 'availableOn',
+      header: 'Available on',
       className: 'text-right',
       render: (row) => (
-        <span className="text-[var(--dash-muted)] text-xs">
-          {new Date(row.availableOn).toLocaleDateString('en-US', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-          })}
+        <span className="text-[var(--dash-muted)] tabular-nums">
+          {formatTableDateShort(row.availableOn)}
         </span>
       ),
     },
   ];
 
   const showPaymentsUi = activeTab === 'payments';
+  const showTransfersUi = activeTab === 'transfers';
+  const showTopupsUi = activeTab === 'topups';
+  const showAllUi = activeTab === 'all';
+
+  const tabRowCount =
+    activeTab === 'payments'
+      ? filteredPayments.length
+      : activeTab === 'transfers'
+        ? transferRows.length
+        : activeTab === 'topups'
+          ? topupRows.length
+          : filteredActivities.length;
+
   const isEmptyTab =
-    activeTab === 'transfers' ||
-    activeTab === 'topups' ||
-    (!loading &&
-      ((activeTab === 'payments' && tablePayments.length === 0) ||
-        (activeTab === 'all' && tableActivities.length === 0)));
+    !loading &&
+    ((activeTab === 'payments' && filteredPayments.length === 0) ||
+      (activeTab === 'transfers' && transferRows.length === 0) ||
+      (activeTab === 'topups' && topupRows.length === 0) ||
+      (activeTab === 'all' && filteredActivities.length === 0));
 
   const emptyTitle =
     activeTab === 'transfers'
@@ -434,26 +551,62 @@ export default function TransactionsPage() {
             ? 'No payments match the selected filters.'
             : 'Share a payment link or charge with POS to receive your first Solana payment.';
 
+  const handleExport = () => {
+    if (activeTab === 'transfers' || activeTab === 'topups') {
+      toast.info('Export — coming soon');
+      return;
+    }
+    const rows =
+      activeTab === 'payments'
+        ? filteredPayments
+        : [...orders]
+            .filter((o) => currencyFilter === 'all' || o.currency === currencyFilter)
+            .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    if (rows.length === 0) {
+      toast.info('No data to export');
+      return;
+    }
+    downloadPaymentsCsv(rows);
+    toast.success(`Exported ${rows.length} payment${rows.length === 1 ? '' : 's'}`);
+  };
+
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-2">
+      {showPaymentsUi && (
+        <Link
+          href="/dashboard/links"
+          className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
+        >
+          <Plus size={16} />
+          Create payment
+        </Link>
+      )}
+      {showTransfersUi && (
+        <button
+          type="button"
+          className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
+          onClick={() => toast.info('Transfer management — coming soon')}
+        >
+          <Settings2 size={16} />
+          Manage
+        </button>
+      )}
+      {(showPaymentsUi || showTransfersUi || showAllUi) && (
+        <button
+          type="button"
+          className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
+          onClick={() => toast.info('Analytics — coming soon')}
+        >
+          <BarChart3 size={16} />
+          Analyze
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <>
-      <PageHeader
-        title="Transactions"
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Link href="/dashboard/links" className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2">
-              <Plus size={16} />
-              Create payment
-            </Link>
-            <Link
-              href="/dashboard/analytics"
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-            >
-              <BarChart3 size={16} />
-              Analyze
-            </Link>
-          </div>
-        }
-      />
+      <PageHeader title="Transactions" actions={headerActions} />
 
       <div className="px-6 md:px-8 pt-4">
         <div className="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] px-4 py-3 text-sm text-[var(--dash-muted)] flex gap-3 items-start max-w-[1400px] mx-auto">
@@ -471,10 +624,7 @@ export default function TransactionsPage() {
             <button
               key={id}
               type="button"
-              onClick={() => {
-                setActiveTab(id);
-                resetPagination();
-              }}
+              onClick={() => setTab(id)}
               className={cn(
                 'px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
                 activeTab === id
@@ -517,7 +667,7 @@ export default function TransactionsPage() {
 
         <FilterRow className="justify-between gap-3">
           <div className="flex flex-wrap items-center gap-2">
-            {showPaymentsUi ? (
+            {showPaymentsUi && (
               <>
                 <FilterChip
                   label="Date & time"
@@ -542,9 +692,7 @@ export default function TransactionsPage() {
                 />
                 <FilterChip
                   label="Status"
-                  value={
-                    SUMMARY_CARDS.find((c) => c.id === summaryFilter)?.label ?? 'All'
-                  }
+                  value={SUMMARY_CARDS.find((c) => c.id === summaryFilter)?.label ?? 'All'}
                   active={summaryFilter !== 'all'}
                   onClick={() => {
                     const order = SUMMARY_CARDS.map((c) => c.id);
@@ -556,14 +704,58 @@ export default function TransactionsPage() {
                 <FilterChip
                   label="Payment method"
                   value="All"
-                  onClick={() => toast.info('Method filter — coming soon')}
+                  onClick={() => toast.info('Payment method filter — coming soon')}
                 />
                 <FilterChip
                   label="More filters"
                   onClick={() => toast.info('More filters — coming soon')}
                 />
               </>
-            ) : (
+            )}
+            {showTransfersUi && (
+              <>
+                <FilterChip
+                  label="Date"
+                  value="All"
+                  onClick={() => toast.info('Date filter — coming soon')}
+                />
+                <FilterChip
+                  label="Amount"
+                  value="All"
+                  onClick={() => toast.info('Amount filter — coming soon')}
+                />
+                <FilterChip
+                  label="Status"
+                  value="All"
+                  onClick={() => toast.info('Status filter — coming soon')}
+                />
+                <FilterChip
+                  label="Method"
+                  value="All"
+                  onClick={() => toast.info('Method filter — coming soon')}
+                />
+              </>
+            )}
+            {showTopupsUi && (
+              <>
+                <FilterChip
+                  label="Date"
+                  value="All"
+                  onClick={() => toast.info('Date filter — coming soon')}
+                />
+                <FilterChip
+                  label="Amount"
+                  value="All"
+                  onClick={() => toast.info('Amount filter — coming soon')}
+                />
+                <FilterChip
+                  label="Status"
+                  value="All"
+                  onClick={() => toast.info('Status filter — coming soon')}
+                />
+              </>
+            )}
+            {showAllUi && (
               <>
                 <FilterChip
                   label="Currency"
@@ -603,36 +795,22 @@ export default function TransactionsPage() {
             <button
               type="button"
               className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-              disabled={loading || (activeTab === 'payments' ? tablePayments.length === 0 : orders.length === 0)}
-              onClick={() => {
-                const rows =
-                  activeTab === 'payments'
-                    ? tablePayments
-                    : [...orders]
-                        .filter((o) => currencyFilter === 'all' || o.currency === currencyFilter)
-                        .sort(
-                          (a, b) =>
-                            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                        );
-                if (rows.length === 0) {
-                  toast.info('No payments to export');
-                  return;
-                }
-                downloadPaymentsCsv(rows);
-                toast.success(`Exported ${rows.length} payment${rows.length === 1 ? '' : 's'}`);
-              }}
+              disabled={loading || tabRowCount === 0}
+              onClick={handleExport}
             >
               <Download size={14} />
               Export
             </button>
-            <button
-              type="button"
-              className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-              onClick={() => toast.info('Edit columns — coming soon')}
-            >
-              <Columns3 size={14} />
-              Edit columns
-            </button>
+            {showPaymentsUi && (
+              <button
+                type="button"
+                className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
+                onClick={() => toast.info('Edit columns — coming soon')}
+              >
+                <Columns3 size={14} />
+                Edit columns
+              </button>
+            )}
           </div>
         </FilterRow>
 
@@ -657,14 +835,34 @@ export default function TransactionsPage() {
             onRowClick={(o) => router.push(`/dashboard/transactions/${o.reference}`)}
             footer={
               !loading ? (
-                <PaginationFooter
+                <RangePaginationFooter
                   page={page}
                   totalPages={paymentTotalPages}
-                  totalItems={tablePayments.length}
+                  totalItems={filteredPayments.length}
                   onPageChange={setPage}
                 />
               ) : undefined
             }
+          />
+        ) : activeTab === 'transfers' ? (
+          <DataTable
+            columns={transferColumns}
+            data={transferRows}
+            rowKey={(row) => row.id}
+            loading={loading}
+            loadingMessage="Loading transfers…"
+            onRowClick={(row) => router.push(`/dashboard/transactions/${row.id}`)}
+            footer={!loading ? <CountFooter totalItems={transferRows.length} /> : undefined}
+          />
+        ) : activeTab === 'topups' ? (
+          <DataTable
+            columns={transferColumns}
+            data={topupRows}
+            rowKey={(row) => row.id}
+            loading={loading}
+            loadingMessage="Loading top-ups…"
+            onRowClick={(row) => router.push(`/dashboard/transactions/${row.id}`)}
+            footer={!loading ? <CountFooter totalItems={topupRows.length} /> : undefined}
           />
         ) : (
           <DataTable
@@ -676,10 +874,10 @@ export default function TransactionsPage() {
             onRowClick={(row) => router.push(`/dashboard/transactions/${row.id}`)}
             footer={
               !loading ? (
-                <PaginationFooter
+                <RangePaginationFooter
                   page={page}
                   totalPages={activityTotalPages}
-                  totalItems={tableActivities.length}
+                  totalItems={filteredActivities.length}
                   onPageChange={setPage}
                 />
               ) : undefined

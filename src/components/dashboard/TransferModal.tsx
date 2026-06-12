@@ -29,7 +29,7 @@ export function TransferModal({ open, onClose }: TransferModalProps) {
         type="button"
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
-        aria-label="Cerrar"
+        aria-label="Close"
       />
       <div
         role="dialog"
@@ -40,13 +40,13 @@ export function TransferModal({ open, onClose }: TransferModalProps) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--dash-border)]">
           <h2 id={titleId} className="font-semibold text-[var(--dash-text)] inline-flex items-center gap-2">
             <ArrowRightLeft size={18} className="text-[var(--dash-accent)]" />
-            Transferencia
+            Transfer
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)]"
-            aria-label="Cerrar"
+            aria-label="Close"
           >
             <X size={18} />
           </button>
@@ -54,28 +54,26 @@ export function TransferModal({ open, onClose }: TransferModalProps) {
 
         <div className="p-6 space-y-4 text-sm">
           <p className="text-[var(--dash-muted)] leading-relaxed">
-            Envía fondos desde tu saldo de Luxor Pay a una cuenta bancaria o billetera externa.
-            Esta función requiere la integración de pagos salientes.
+            Send funds from your Luxor Pay balance to a bank account or external wallet. This feature requires outbound payments integration.
           </p>
           <p className="text-xs text-[var(--dash-muted)] rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] px-3 py-2">
-            Vista previa de la interfaz — el flujo completo estará disponible con el backend de
-            liquidación.
+            Interface preview — the full flow will be available with the settlement backend.
           </p>
         </div>
 
         <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--dash-border)]">
           <button type="button" onClick={onClose} className="dash-btn-secondary px-4 py-2 text-sm">
-            Cerrar
+            Close
           </button>
           <button
             type="button"
             className="dash-btn-primary px-4 py-2 text-sm"
             onClick={() => {
-              toast.info('Transferencias — pendiente de backend');
+              toast.info('Transfers — pending backend');
               onClose();
             }}
           >
-            Continuar
+            Continue
           </button>
         </div>
       </div>

@@ -57,17 +57,17 @@ export function AddFundsModal({
   const handleNext = () => {
     if (step === 1) {
       if (!amountValid) {
-        toast.error('Ingresa un importe válido mayor que cero.');
+        toast.error('Enter a valid amount greater than zero.');
         return;
       }
       if (exceedsBalance) {
-        toast.error('El importe supera el saldo disponible en esta fuente.');
+        toast.error('Amount exceeds the available balance for this source.');
         return;
       }
       setStep(2);
       return;
     }
-    toast.info('La recarga de saldo estará disponible cuando el backend de liquidación esté activo.');
+    toast.info('Balance top-up will be available when the settlement backend is active.');
     handleClose();
   };
 
@@ -82,7 +82,7 @@ export function AddFundsModal({
         type="button"
         className="absolute inset-0 bg-black/60"
         onClick={handleClose}
-        aria-label="Cerrar"
+        aria-label="Close"
       />
       <div
         role="dialog"
@@ -92,13 +92,13 @@ export function AddFundsModal({
       >
         <div className="px-6 py-5 border-b border-[var(--dash-border)]">
           <h2 id={titleId} className="text-lg font-semibold text-[var(--dash-text)] pr-8">
-            Agrega fondos a tu saldo de Luxor Pay
+            Add funds to your Luxor Pay balance
           </h2>
           <button
             type="button"
             onClick={handleClose}
             className="absolute top-4 right-4 p-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)]"
-            aria-label="Cerrar"
+            aria-label="Close"
           >
             <X size={18} />
           </button>
@@ -108,7 +108,7 @@ export function AddFundsModal({
           {step === 1 ? (
             <>
               <fieldset className="space-y-3">
-                <legend className="sr-only">Fuente de fondos</legend>
+                <legend className="sr-only">Funding source</legend>
                 <label
                   className={cn(
                     'flex gap-3 p-4 rounded-lg border cursor-pointer transition-colors',
@@ -127,15 +127,14 @@ export function AddFundsModal({
                   <span className="flex-1 min-w-0">
                     <span className="flex items-start justify-between gap-3">
                       <span className="font-medium text-[var(--dash-text)]">
-                        Reembolsos y saldo de disputas
+                        Refunds and dispute balance
                       </span>
                       <span className="tabular-nums text-sm text-[var(--dash-text)] shrink-0">
                         {formatAmount(disputeBalance, currency)}
                       </span>
                     </span>
                     <span className="block text-sm text-[var(--dash-muted)] mt-1.5 leading-relaxed">
-                      Transfiere fondos de reembolsos y disputas resueltas a tu saldo disponible
-                      para pagos y transferencias.
+                      Transfer funds from resolved refunds and disputes to your available balance for payments and transfers.
                     </span>
                   </span>
                 </label>
@@ -143,7 +142,7 @@ export function AddFundsModal({
 
               <div className="space-y-2">
                 <label htmlFor={amountId} className="text-sm font-medium text-[var(--dash-text)]">
-                  Importe
+                  Amount
                 </label>
                 <div className="flex rounded-lg border border-[var(--dash-border)] overflow-hidden focus-within:border-[var(--dash-accent)] focus-within:ring-[3px] focus-within:ring-[var(--dash-accent-soft)]">
                   <span className="px-3 py-2.5 text-sm text-[var(--dash-muted)] bg-[var(--dash-surface-elevated)] border-r border-[var(--dash-border)] shrink-0">
@@ -161,7 +160,7 @@ export function AddFundsModal({
                 </div>
                 {exceedsBalance && (
                   <p className="text-xs text-red-400">
-                    El importe no puede superar {formatAmount(maxTransfer, currency)}.
+                    Amount cannot exceed {formatAmount(maxTransfer, currency)}.
                   </p>
                 )}
               </div>
@@ -169,15 +168,15 @@ export function AddFundsModal({
           ) : (
             <div className="space-y-4 text-sm">
               <p className="text-[var(--dash-muted)]">
-                Revisa los detalles antes de confirmar la transferencia a tu saldo.
+                Review the details before confirming the transfer to your balance.
               </p>
               <dl className="space-y-3 rounded-lg border border-[var(--dash-border)] p-4 bg-[var(--dash-surface-elevated)]">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[var(--dash-muted)]">Fuente</dt>
-                  <dd className="text-right">Reembolsos y saldo de disputas</dd>
+                  <dt className="text-[var(--dash-muted)]">Source</dt>
+                  <dd className="text-right">Refunds and dispute balance</dd>
                 </div>
                 <div className="flex justify-between gap-4">
-                  <dt className="text-[var(--dash-muted)]">Importe</dt>
+                  <dt className="text-[var(--dash-muted)]">Amount</dt>
                   <dd className="font-medium tabular-nums text-right">
                     {formatAmount(parsedAmount, currency)}
                   </dd>
@@ -189,7 +188,7 @@ export function AddFundsModal({
 
         <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-[var(--dash-border)]">
           <button type="button" onClick={handleBack} className="dash-btn-secondary px-4 py-2 text-sm">
-            {step === 1 ? 'Cerrar' : 'Atrás'}
+            {step === 1 ? 'Close' : 'Back'}
           </button>
           <button
             type="button"
@@ -197,7 +196,7 @@ export function AddFundsModal({
             disabled={step === 1 && (!amountValid || exceedsBalance)}
             className="dash-btn-primary px-4 py-2 text-sm min-w-[100px]"
           >
-            {step === 1 ? 'Siguiente' : 'Confirmar'}
+            {step === 1 ? 'Next' : 'Confirm'}
           </button>
         </div>
       </div>

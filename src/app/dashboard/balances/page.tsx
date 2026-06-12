@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { getMerchantProfile } from '@/lib/firestore-data';
+import { getMerchantProfile } from '@/lib/merchant-data';
 import { listPayments } from '@/lib/payments-api';
 import type { Currency, PaymentOrder } from '@luxor/contracts';
 import {
@@ -26,6 +26,7 @@ import {
   mergeBalanceActivities,
 } from '@/lib/balance-utils';
 import { cn } from '@/lib/cn';
+import { formatDecimalAmount } from '@/lib/decimal-utils';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
 import {
   Info,
@@ -42,12 +43,19 @@ import {
 import { toast } from 'sonner';
 
 const ACTIVITY_TABS: { id: BalanceActivityTab; label: string }[] = [
-  { id: 'transfers', label: 'Transferencias' },
-  { id: 'topups', label: 'Recargas' },
-  { id: 'all', label: 'Toda la actividad' },
+  { id: 'transfers', label: 'Transfers' },
+  { id: 'topups', label: 'Top-ups' },
+  { id: 'all', label: 'All activity' },
 ];
 
-const CURRENCIES: Currency[] = ['USDC', 'SOL'];
+const DISPLAY_CURRENCY: Currency = 'USDC';
+const RECENT_ACTIVITY_LIMIT = 5;
+
+const ACTIVITY_TAB_TO_TRANSACTIONS: Record<BalanceActivityTab, string> = {
+  transfers: 'transfers',
+  topups: 'topups',
+  all: 'all',
+};
 
 const statusStyles: Record<BalanceActivityStatus, string> = {
   paid: dashStatusBadges.success,
@@ -56,9 +64,9 @@ const statusStyles: Record<BalanceActivityStatus, string> = {
 };
 
 const statusLabels: Record<BalanceActivityStatus, string> = {
-  paid: 'Pagado',
+  paid: 'Paid',
   pending: 'Pendiente',
-  failed: 'Fallido',
+  failed: 'Failed',
 };
 
 function BalanceDot({ color }: { color: 'incoming' | 'available' }) {
@@ -66,7 +74,7 @@ function BalanceDot({ color }: { color: 'incoming' | 'available' }) {
     <span
       className={cn(
         'inline-block w-2 h-2 rounded-full shrink-0',
-        color === 'incoming' ? 'bg-amber-400' : 'bg-emerald-500'
+        color === 'incoming' ? 'bg-amber-400' : 'bg-violet-500'
       )}
       aria-hidden
     />
@@ -98,7 +106,7 @@ export default function BalancesPage() {
         setWallet(profile?.merchantWallet ?? '');
         setOrders(payments);
       } catch {
-        toast.error('No se pudieron cargar los saldos');
+        toast.error('Could not load balances');
       } finally {
         setLoading(false);
       }
@@ -117,20 +125,26 @@ export default function BalancesPage() {
     return () => document.removeEventListener('mousedown', onPointerDown);
   }, [transferMenuOpen]);
 
-  const usdcSummary = useMemo(() => computeBalanceSummary(orders, 'USDC'), [orders]);
-  const solSummary = useMemo(() => computeBalanceSummary(orders, 'SOL'), [orders]);
-  const primaryTotal = usdcSummary.available + usdcSummary.incoming;
+  const balanceSummary = useMemo(
+    () => computeBalanceSummary(orders, DISPLAY_CURRENCY),
+    [orders]
+  );
 
   const allActivities = useMemo(() => mergeBalanceActivities(orders), [orders]);
   const filteredActivities = useMemo(
     () => filterActivityByTab(allActivities, activityTab),
     [allActivities, activityTab]
   );
+  const displayedActivities = useMemo(
+    () => filteredActivities.slice(0, RECENT_ACTIVITY_LIMIT),
+    [filteredActivities]
+  );
+  const hasMoreActivities = filteredActivities.length > RECENT_ACTIVITY_LIMIT;
 
   const activityColumns: DataTableColumn<BalanceActivityRow>[] = [
     {
       key: 'amount',
-      header: 'Importe',
+      header: 'Amount',
       render: (row) => (
         <span className="font-medium tabular-nums">
           {formatBalanceAmount(row.amount, row.currency)}
@@ -139,7 +153,7 @@ export default function BalancesPage() {
     },
     {
       key: 'status',
-      header: 'Estado',
+      header: 'Status',
       render: (row) => (
         <span
           className={cn(statusStyles[row.status])}
@@ -150,7 +164,7 @@ export default function BalancesPage() {
     },
     {
       key: 'destination',
-      header: 'Destino',
+      header: 'Destination',
       render: (row) => (
         <span className="text-[var(--dash-muted)] font-mono text-xs">{row.destination}</span>
       ),
@@ -162,7 +176,7 @@ export default function BalancesPage() {
     },
     {
       key: 'availableOn',
-      header: 'Disponible el',
+      header: 'Available on',
       className: 'text-right',
       render: (row) => (
         <span className="text-[var(--dash-muted)] tabular-nums">
@@ -181,18 +195,19 @@ export default function BalancesPage() {
       <PageHeader
         title={
           <span className="inline-flex items-center gap-2 flex-wrap">
-            <span>Saldos</span>
+            <span>Balances</span>
             <span className="tabular-nums text-[var(--dash-text)]">
-              USDC {loading ? '…' : primaryTotal.toFixed(2)}
+              {DISPLAY_CURRENCY}{' '}
+              {loading ? '…' : formatDecimalAmount(balanceSummary.available, 2)}
             </span>
             <button
               type="button"
               className="p-1 rounded-md text-[var(--dash-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)] transition-colors"
-              aria-label="Información de saldos"
-              title="El total incluye USDC entrante y disponible de pagos Luxor Pay. No refleja el saldo on-chain en tiempo real."
+              aria-label="Balance information"
+              title="Available USDC from confirmed Luxor Pay payments. Does not reflect real-time on-chain wallet balance."
               onClick={() =>
                 toast.info(
-                  'Los saldos reflejan pagos de Luxor Pay. Para fondos on-chain, consulta tu billetera Solana.'
+                  'Balances reflect Luxor Pay payments. For on-chain funds, check your Solana wallet.'
                 )
               }
             >
@@ -208,7 +223,7 @@ export default function BalancesPage() {
               onClick={() => setTransferOpen(true)}
             >
               <ArrowRightLeft size={16} />
-              Transferencia
+              Transfer
             </button>
             <button
               type="button"
@@ -216,7 +231,7 @@ export default function BalancesPage() {
               onClick={() => setAddFundsOpen(true)}
             >
               <Plus size={16} />
-              Agrega fondos
+              Add funds
             </button>
             <div className="relative" ref={transferMenuRef}>
               <button
@@ -226,7 +241,7 @@ export default function BalancesPage() {
                 aria-expanded={transferMenuOpen}
                 aria-haspopup="menu"
               >
-                Gestión de transferencias
+                Transfer management
                 <ChevronDown size={16} className={cn(transferMenuOpen && 'rotate-180', 'transition-transform')} />
               </button>
               {transferMenuOpen && (
@@ -243,7 +258,7 @@ export default function BalancesPage() {
                       setTransferOpen(true);
                     }}
                   >
-                    Nueva transferencia
+                    New transfer
                   </button>
                   <button
                     type="button"
@@ -251,10 +266,10 @@ export default function BalancesPage() {
                     className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] transition-colors"
                     onClick={() => {
                       setTransferMenuOpen(false);
-                      toast.info('Historial de transferencias — pendiente de backend');
+                      toast.info('Transfer history — pending backend');
                     }}
                   >
-                    Ver historial
+                    View history
                   </button>
                   <button
                     type="button"
@@ -262,10 +277,10 @@ export default function BalancesPage() {
                     className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] transition-colors"
                     onClick={() => {
                       setTransferMenuOpen(false);
-                      toast.info('Configuración de pagos — pendiente de backend');
+                      toast.info('Payment settingss — pending backend');
                     }}
                   >
-                    Configurar pagos
+                    Configure payments
                   </button>
                 </div>
               )}
@@ -276,7 +291,7 @@ export default function BalancesPage() {
               onClick={() => setSettlementCurrencyOpen(true)}
             >
               <Plus size={16} />
-              Agregar moneda de cobro
+              Add settlement currency
             </button>
           </div>
         }
@@ -286,10 +301,7 @@ export default function BalancesPage() {
         <div className="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] px-4 py-3 text-sm text-[var(--dash-muted)] flex gap-3 items-start max-w-[1400px] mx-auto">
           <Info size={16} className="shrink-0 mt-0.5 text-[var(--dash-accent)]" />
           <p>
-            Los cobros confirmados de Luxor Pay se acreditan en tu billetera Solana configurada.
-            El saldo <strong className="text-[var(--dash-text)]">entrante</strong> incluye pagos
-            pendientes; el saldo <strong className="text-[var(--dash-text)]">disponible</strong>{' '}
-            refleja transacciones confirmadas on-chain.
+            Confirmed Luxor Pay charges are credited to your configured Solana wallet. <strong className="text-[var(--dash-text)]">Incoming</strong> balance includes pending payments; <strong className="text-[var(--dash-text)]">available</strong> balance reflects confirmed on-chain transactions.
           </p>
         </div>
       </div>
@@ -298,48 +310,47 @@ export default function BalancesPage() {
         <main className="flex-1 min-w-0 space-y-8">
           <section className="dash-card overflow-hidden">
             <div className="px-4 py-3 border-b border-[var(--dash-border)] bg-[var(--dash-surface-elevated)]">
-              <h2 className="text-sm font-semibold text-[var(--dash-text)]">Resumen de saldos</h2>
+              <h2 className="text-sm font-semibold text-[var(--dash-text)]">Balance summary</h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-[var(--dash-border)]">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)] w-32">
-                      Moneda
-                    </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
-                      <span className="inline-flex items-center gap-2">
-                        <BalanceDot color="incoming" />
-                        Entrante
-                      </span>
+                      Payment type
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
-                      <span className="inline-flex items-center gap-2">
-                        <BalanceDot color="available" />
-                        Disponible
-                      </span>
+                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
+                      Amount
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {CURRENCIES.map((currency) => {
-                    const summary =
-                      currency === 'USDC' ? usdcSummary : solSummary;
-                    return (
-                      <tr
-                        key={currency}
-                        className="border-b border-[var(--dash-border)] last:border-0 hover:bg-[var(--dash-surface-elevated)] transition-colors"
-                      >
-                        <td className="px-4 py-3.5 font-medium">{currency}</td>
-                        <td className="px-4 py-3.5 tabular-nums">
-                          {loading ? '…' : formatBalanceAmount(summary.incoming, currency)}
-                        </td>
-                        <td className="px-4 py-3.5 tabular-nums font-medium">
-                          {loading ? '…' : formatBalanceAmount(summary.available, currency)}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  <tr className="border-b border-[var(--dash-border)] hover:bg-[var(--dash-surface-elevated)] transition-colors">
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex items-center gap-2 font-medium">
+                        <BalanceDot color="incoming" />
+                        Incoming
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 tabular-nums text-right">
+                      {loading
+                        ? '…'
+                        : formatBalanceAmount(balanceSummary.incoming, DISPLAY_CURRENCY)}
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-[var(--dash-surface-elevated)] transition-colors">
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex items-center gap-2 font-medium">
+                        <BalanceDot color="available" />
+                        Available
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 tabular-nums text-right font-medium">
+                      {loading
+                        ? '…'
+                        : formatBalanceAmount(balanceSummary.available, DISPLAY_CURRENCY)}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -347,7 +358,7 @@ export default function BalancesPage() {
 
           <section className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className="text-lg font-semibold text-[var(--dash-text)]">Actividad reciente</h2>
+              <h2 className="text-lg font-semibold text-[var(--dash-text)]">Recent activity</h2>
             </div>
 
             <div className="flex flex-wrap gap-1 border-b border-[var(--dash-border)]">
@@ -371,27 +382,39 @@ export default function BalancesPage() {
             {!loading && filteredActivities.length === 0 ? (
               <EmptyState
                 icon={Receipt}
-                title="Sin actividad en esta categoría"
+                title="No activity in this category"
                 description={
                   activityTab === 'all'
-                    ? 'Comparte un enlace de pago o cobra con POS para ver actividad aquí.'
-                    : 'Aún no hay transferencias ni recargas registradas en tu cuenta.'
+                    ? 'Share a payment link or charge with POS to see activity here.'
+                    : 'No transfers or top-ups recorded on your account yet.'
                 }
                 action={
                   activityTab === 'all'
-                    ? { label: 'Crear enlace de pago', href: '/dashboard/links' }
+                    ? { label: 'Create payment link', href: '/dashboard/links' }
                     : undefined
                 }
               />
             ) : (
-              <DataTable
-                columns={activityColumns}
-                data={filteredActivities}
-                rowKey={(row) => row.id}
-                loading={loading}
-                loadingMessage="Cargando actividad…"
-                onRowClick={(row) => router.push(`/dashboard/balances/transfers/${row.id}`)}
-              />
+              <>
+                <DataTable
+                  columns={activityColumns}
+                  data={displayedActivities}
+                  rowKey={(row) => row.id}
+                  loading={loading}
+                  loadingMessage="Loading activity…"
+                  onRowClick={(row) => router.push(`/dashboard/balances/transfers/${row.id}`)}
+                />
+                {hasMoreActivities && (
+                  <div className="flex justify-center pt-3">
+                    <Link
+                      href={`/dashboard/transactions?tab=${ACTIVITY_TAB_TO_TRANSACTIONS[activityTab]}`}
+                      className="text-sm font-medium text-[var(--dash-accent)] hover:underline"
+                    >
+                      Ver más
+                    </Link>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </main>

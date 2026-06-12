@@ -1,4 +1,5 @@
 import type { Currency, PaymentOrder } from '@luxor/contracts';
+import { formatDecimalAmount, sumAmounts } from '@/lib/decimal-utils';
 
 export type BalanceActivityTab = 'transfers' | 'topups' | 'all';
 export type BalanceActivityType = 'payment' | 'transfer' | 'topup';
@@ -12,6 +13,7 @@ export interface BalanceActivityRow {
   destination: string;
   type: BalanceActivityType;
   typeLabel: string;
+  createdAt: string;
   availableOn: string;
 }
 
@@ -30,13 +32,16 @@ export function computeBalanceSummary(
   currency: Currency
 ): BalanceSummary {
   const filtered = orders.filter((o) => o.currency === currency);
-  const incoming = filtered
-    .filter((o) => o.status === 'pending')
-    .reduce((sum, o) => sum + o.amount, 0);
-  const available = filtered
-    .filter((o) => o.status === 'confirmed')
-    .reduce((sum, o) => sum + o.amount, 0);
-  return { incoming, available };
+  const incoming = sumAmounts(
+    filtered.filter((o) => o.status === 'pending').map((o) => o.amount)
+  );
+  const available = sumAmounts(
+    filtered.filter((o) => o.status === 'confirmed').map((o) => o.amount)
+  );
+  return {
+    incoming: incoming.toNumber(),
+    available: available.toNumber(),
+  };
 }
 
 function paymentStatusToActivity(status: PaymentOrder['status']): BalanceActivityStatus {
@@ -59,6 +64,7 @@ export function ordersToActivity(orders: PaymentOrder[]): BalanceActivityRow[] {
     destination: shortenAddress(o.recipient),
     type: 'payment',
     typeLabel: paymentTypeLabel(o),
+    createdAt: o.createdAt,
     availableOn: o.confirmedAt ?? o.updatedAt ?? o.createdAt,
   }));
 }
@@ -80,5 +86,5 @@ export function mergeBalanceActivities(orders: PaymentOrder[]): BalanceActivityR
 
 export function formatBalanceAmount(amount: number, currency: Currency): string {
   const decimals = currency === 'SOL' ? 4 : 2;
-  return `${amount.toFixed(decimals)} ${currency}`;
+  return `${formatDecimalAmount(amount, decimals)} ${currency}`;
 }

@@ -31,7 +31,7 @@ export function SettlementCurrencyModal({ open, onClose }: SettlementCurrencyMod
         type="button"
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
-        aria-label="Cerrar"
+        aria-label="Close"
       />
       <div
         role="dialog"
@@ -42,13 +42,13 @@ export function SettlementCurrencyModal({ open, onClose }: SettlementCurrencyMod
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--dash-border)]">
           <h2 id={titleId} className="font-semibold text-[var(--dash-text)] inline-flex items-center gap-2">
             <Plus size={18} className="text-[var(--dash-accent)]" />
-            Agregar moneda de cobro
+            Add settlement currency
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="p-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)]"
-            aria-label="Cerrar"
+            aria-label="Close"
           >
             <X size={18} />
           </button>
@@ -56,7 +56,7 @@ export function SettlementCurrencyModal({ open, onClose }: SettlementCurrencyMod
 
         <div className="p-6 space-y-4 text-sm">
           <p className="text-[var(--dash-muted)]">
-            Monedas de cobro activas en tu cuenta:
+            Active settlement currencies on your account:
           </p>
           <ul className="space-y-2">
             {ACTIVE_CURRENCIES.map((code) => (
@@ -65,28 +65,27 @@ export function SettlementCurrencyModal({ open, onClose }: SettlementCurrencyMod
                 className="flex items-center justify-between px-3 py-2.5 rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)]"
               >
                 <span className="font-medium">{code}</span>
-                <span className="text-xs text-[var(--dash-muted)]">Activa</span>
+                <span className="text-xs text-[var(--dash-muted)]">Active</span>
               </li>
             ))}
           </ul>
           <p className="text-xs text-[var(--dash-muted)]">
-            Más divisas y stablecoins estarán disponibles cuando se habiliten en la configuración
-            del comercio.
+            More currencies and stablecoins will be available when enabled in merchant settings.
           </p>
         </div>
 
         <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-[var(--dash-border)]">
           <button type="button" onClick={onClose} className="dash-btn-secondary px-4 py-2 text-sm">
-            Cerrar
+            Close
           </button>
           <button
             type="button"
             className="dash-btn-primary px-4 py-2 text-sm opacity-50 cursor-not-allowed"
             disabled
-            title="Pendiente de backend"
-            onClick={() => toast.info('Nuevas monedas — pendiente de backend')}
+            title="Pending backend"
+            onClick={() => toast.info('Nuevas monedas — pending backend')}
           >
-            Agregar moneda
+            Add currency
           </button>
         </div>
       </div>

@@ -1,25 +1,9 @@
-import { apiGet } from '@/lib/api/http';
-import type { Currency } from '@luxor/contracts';
+import { notImplementedApi, type ApiResult } from '@/lib/api/http';
 
-export interface BalanceSummary {
-  currency: Currency;
-  available: number;
-  pending: number;
+export async function fetchBalancesApi(): Promise<ApiResult<unknown[]>> {
+  return notImplementedApi('Balances');
 }
 
-export interface PayoutRecord {
-  id: string;
-  amount: number;
-  currency: Currency;
-  status: 'pending' | 'paid' | 'failed';
-  destinationWallet: string;
-  createdAt: string;
-}
-
-export async function fetchBalanceSummaryApi() {
-  return apiGet<BalanceSummary[]>('/api/v1/balances');
-}
-
-export async function fetchPayoutsApi() {
-  return apiGet<PayoutRecord[]>('/api/v1/payouts');
+export async function fetchPayoutsApi(): Promise<ApiResult<unknown[]>> {
+  return notImplementedApi('Payouts');
 }
