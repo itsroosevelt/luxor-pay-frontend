@@ -37,7 +37,7 @@ export function SettingsTable<T>({
 
   return (
     <div className={cn('overflow-x-auto', className)}>
-      <table className="w-full text-sm">
+      <table className="w-full min-w-[480px] text-sm">
         <thead>
           <tr className="border-b border-[var(--dash-border)] bg-[var(--dash-surface-elevated)]">
             {columns.map((col) => (

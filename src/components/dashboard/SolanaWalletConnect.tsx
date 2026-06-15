@@ -8,9 +8,17 @@ import { cn } from '@/lib/cn';
 interface SolanaWalletConnectProps {
   onAddressChange?: (address: string | null) => void;
   className?: string;
+  variant?: 'dashboard' | 'default';
 }
 
-export function SolanaWalletConnect({ onAddressChange, className }: SolanaWalletConnectProps) {
+const DASHBOARD_WALLET_BTN_CLASS =
+  '!bg-transparent !border !border-[rgba(255,255,255,0.35)] !text-[var(--dash-text)] !rounded-full !h-10 !leading-10 !px-5 !text-sm !font-medium hover:!bg-[rgba(255,255,255,0.08)] hover:!border-[rgba(255,255,255,0.5)] !font-[inherit]';
+
+export function SolanaWalletConnect({
+  onAddressChange,
+  className,
+  variant = 'default',
+}: SolanaWalletConnectProps) {
   const { publicKey, connected } = useWallet();
   const address = publicKey?.toBase58() ?? null;
 
@@ -18,18 +26,29 @@ export function SolanaWalletConnect({ onAddressChange, className }: SolanaWallet
     onAddressChange?.(address);
   }, [address, onAddressChange]);
 
+  const isDashboard = variant === 'dashboard';
+
   return (
     <div className={cn('space-y-3', className)}>
-      <div className="wallet-adapter-button-trigger">
-        <WalletMultiButton />
+      <div
+        className={cn(
+          'wallet-adapter-button-trigger inline-flex',
+          isDashboard && 'wallet-adapter-button-trigger--dash'
+        )}
+      >
+        <WalletMultiButton
+          className={isDashboard ? DASHBOARD_WALLET_BTN_CLASS : undefined}
+        />
       </div>
       {connected && address && (
         <p className="text-xs text-[var(--dash-muted)] font-mono break-all">
-          Connected: {address}
+          {isDashboard ? 'Conectada:' : 'Connected:'} {address}
         </p>
       )}
       <p className="text-xs text-[var(--dash-muted)]">
-        Connect Phantom or Solflare to auto-fill your merchant wallet address below.
+        {isDashboard
+          ? 'Conecta Phantom o Solflare para autocompletar la dirección de wallet del comerciante.'
+          : 'Connect Phantom or Solflare to auto-fill your merchant wallet address below.'}
       </p>
     </div>
   );

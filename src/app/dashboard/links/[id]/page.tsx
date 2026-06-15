@@ -1,46 +1,61 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import type { MerchantProfile, PaymentLink } from '@luxor/contracts';
+import { getPaymentLinkPublicUrl, formatCheckoutAmount } from '@/lib/payment-link-utils';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { getMerchantProfile, getPaymentLink } from '@/lib/merchant-data';
-import { listPayments } from '@/lib/payments-api';
-import type { PaymentLink, PaymentOrder } from '@luxor/contracts';
+import { getMerchantProfile, getPaymentLink, updatePaymentLink } from '@/lib/merchant-data';
+import { isFrontendOnly } from '@/lib/frontend-only';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
-import {
-  PageHeader,
-  CopyField,
-  DetailSection,
-  DetailSidebar,
-  DetailRow,
-  DataTable,
-  type DataTableColumn,
-} from '@/components/dashboard';
+import { CopyField, DetailSection, DetailRow, PaymentLinkCheckoutInfo, DemoModeBanner, demoCopyLinkToastMessage } from '@/components/dashboard';
+import { CheckoutPreviewFrame } from '@/features/checkout/components/CheckoutPreviewFrame';
+import { PaymentLinkCheckoutView } from '@/features/checkout/components/PaymentLinkCheckoutView';
 import { cn } from '@/lib/cn';
 import {
-  ArrowLeft,
+  ChevronRight,
+  Code2,
+  Copy,
+  CreditCard,
   ExternalLink,
+  Link as LinkIcon,
   Monitor,
+  MoreHorizontal,
   Pencil,
-  Smartphone,
   QrCode,
+  ShoppingBag,
+  Smartphone,
+  Wallet,
 } from 'lucide-react';
 import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
 import { toast } from 'sonner';
-import { QRCodeSVG } from 'qrcode.react';
 
-type TabId = 'summary' | 'payments';
+type TabId = 'summary';
 
-const PAYMENT_METHODS = [
-  { id: 'solana-pay', label: 'Solana Pay' },
-  { id: 'phantom', label: 'Phantom' },
-  { id: 'solflare', label: 'Solflare' },
-  { id: 'qr', label: 'QR scan' },
+const TABS: { id: TabId; label: string }[] = [{ id: 'summary', label: 'Resumen' }];
+
+const ENABLED_METHODS = [
+  { id: 'wallet', label: 'Wallet', icon: Wallet },
+  { id: 'qr', label: 'QR (Solana Pay)', icon: QrCode },
+] as const;
+
+const COMING_SOON_METHODS = [
+  { id: 'card', label: 'Tarjeta', icon: CreditCard },
+  { id: 'apple-pay', label: 'Apple Pay', icon: CreditCard },
+  { id: 'google-pay', label: 'Google Pay', icon: CreditCard },
 ] as const;
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', {
+  return new Date(iso).toLocaleDateString('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('es-ES', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -49,24 +64,97 @@ function formatDate(iso: string): string {
   });
 }
 
-function formatAmount(amount: number, currency: string): string {
-  return `${amount} ${currency}`;
+function formatLinkPrice(link: PaymentLink): string {
+  const amount = formatCheckoutAmount(link.amount, link.currency);
+  return `${link.currency} ${Number(amount).toLocaleString('es-ES', {
+    minimumFractionDigits: link.currency === 'SOL' ? 4 : 2,
+    maximumFractionDigits: link.currency === 'SOL' ? 4 : 2,
+  })}`;
 }
+
+function formatHeaderTitle(link: PaymentLink): string {
+  return `${link.name} por ${formatLinkPrice(link)}`;
+}
+
+function truncateId(id: string, head = 8, tail = 4): string {
+  if (id.length <= head + tail + 1) return id;
+  return `${id.slice(0, head)}…${id.slice(-tail)}`;
+}
+
+function yesNo(value: boolean | undefined, defaultValue = false): string {
+  return value ?? defaultValue ? 'Sí' : 'No';
+}
+
+function DashedEmpty({ children }: { children: ReactNode }) {
+  return (
+    <div className="rounded-lg border border-dashed border-[var(--dash-border)] bg-[var(--dash-panel)] px-4 py-8 text-center text-sm text-[var(--dash-muted)]">
+      {children}
+    </div>
+  );
+}
+
+function SidebarCard({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="dash-card overflow-hidden">
+      <div className="px-5 py-4 border-b border-[var(--dash-border)]">
+        <h2 className="font-semibold text-[var(--dash-text)]">{title}</h2>
+      </div>
+      <div className="p-5">{children}</div>
+    </div>
+  );
+}
+
+function DetailKvRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 py-3 border-b border-[var(--dash-border)] last:border-0">
+      <span className="text-sm text-[var(--dash-muted)] shrink-0 sm:max-w-[45%]">{label}</span>
+      <span className="text-sm text-[var(--dash-text)] sm:text-right">{value}</span>
+    </div>
+  );
+}
+
+const CheckoutPreview = memo(function CheckoutPreview({
+  link,
+  merchantName,
+  merchantProfile,
+  previewMode,
+}: {
+  link: PaymentLink;
+  merchantName: string;
+  merchantProfile?: MerchantProfile | null;
+  previewMode: 'mobile' | 'desktop';
+}) {
+  return (
+    <CheckoutPreviewFrame mode={previewMode}>
+      <PaymentLinkCheckoutView
+        link={link}
+        merchantName={merchantName}
+        merchantProfile={merchantProfile}
+        compact={previewMode === 'mobile'}
+        preview
+      />
+    </CheckoutPreviewFrame>
+  );
+});
 
 export default function PaymentLinkDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [link, setLink] = useState<PaymentLink | null>(null);
-  const [merchantName, setMerchantName] = useState<string>('Luxor Pay');
-  const [payments, setPayments] = useState<PaymentOrder[]>([]);
+  const [merchantProfile, setMerchantProfile] = useState<MerchantProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [paymentsLoading, setPaymentsLoading] = useState(false);
   const [tab, setTab] = useState<TabId>('summary');
   const [previewMode, setPreviewMode] = useState<'mobile' | 'desktop'>('mobile');
+  const [togglingStatus, setTogglingStatus] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const canToggleStatus = isFrontendOnly();
+
+  const merchantName = merchantProfile?.businessName?.trim() || 'Luxor Pay';
 
   const payUrl = useMemo(() => {
-    if (!id || typeof window === 'undefined') return `/pay/link/${id ?? ''}`;
-    return `${window.location.origin}/pay/link/${id}`;
-  }, [id]);
+    if (!link) return '';
+    return getPaymentLinkPublicUrl(link);
+  }, [link]);
 
   useEffect(() => {
     if (!id) return;
@@ -81,9 +169,9 @@ export default function PaymentLinkDetailPage() {
           getMerchantProfile(user.uid),
         ]);
         setLink(l);
-        if (profile?.businessName) setMerchantName(profile.businessName);
+        if (profile) setMerchantProfile(profile);
       } catch (err) {
-        toast.error(getFirestoreErrorMessage(err, 'Could not load payment link'));
+        toast.error(getFirestoreErrorMessage(err, 'No se pudo cargar el enlace de pago'));
       } finally {
         setLoading(false);
       }
@@ -92,310 +180,482 @@ export default function PaymentLinkDetailPage() {
   }, [id]);
 
   useEffect(() => {
-    if (tab !== 'payments' || !auth.currentUser) return;
-    let cancelled = false;
-    auth.currentUser
-      .getIdToken()
-      .then((token: string) => listPayments(token))
-      .then((orders: PaymentOrder[]) => {
-        if (!cancelled && id) {
-          setPayments(orders.filter((o: PaymentOrder) => o.linkId === id));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) toast.error('Could not load payments for this link');
-      })
-      .finally(() => {
-        if (!cancelled) setPaymentsLoading(false);
-      });
-    return () => {
-      cancelled = true;
+    if (!menuOpen) return;
+    const onPointerDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
     };
-  }, [tab, id]);
+    document.addEventListener('mousedown', onPointerDown);
+    return () => document.removeEventListener('mousedown', onPointerDown);
+  }, [menuOpen]);
 
-  const paymentColumns: DataTableColumn<PaymentOrder>[] = [
-    {
-      key: 'reference',
-      header: 'Reference',
-      render: (o) => (
-        <span className="font-mono text-xs">{o.reference.slice(0, 16)}…</span>
-      ),
-    },
-    {
-      key: 'amount',
-      header: 'Amount',
-      render: (o) => (
-        <span className="tabular-nums font-medium">
-          {o.amount} {o.currency}
-        </span>
-      ),
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      render: (o) => (
-        <span
-          className={cn(
-            o.status === 'confirmed'
-              ? dashStatusBadges.success
-              : o.status === 'pending'
-                ? dashStatusBadges.warning
-                : dashStatusBadges.error
-          )}
-        >
-          {o.status}
-        </span>
-      ),
-    },
-    {
-      key: 'createdAt',
-      header: 'Created',
-      render: (o) => (
-        <span className="text-[var(--dash-muted)]">{formatDate(o.createdAt)}</span>
-      ),
-    },
-  ];
+  const mockLogs = useMemo(() => {
+    if (!link) return [];
+    const created = new Date(link.createdAt);
+    return [
+      {
+        method: 'POST',
+        path: `/v1/payment_links/${link.id}`,
+        status: 200,
+        label: 'OK',
+        at: created,
+      },
+      {
+        method: 'GET',
+        path: `/v1/payment_links/${link.slug ?? link.id}`,
+        status: 200,
+        label: 'OK',
+        at: new Date(created.getTime() + 30_000),
+      },
+      {
+        method: 'PATCH',
+        path: `/v1/payment_links/${link.id}`,
+        status: 200,
+        label: 'OK',
+        at: new Date(created.getTime() + 90_000),
+      },
+    ];
+  }, [link]);
+
+  const stubToast = (message: string) => () => toast.info(message);
+
+  const copyPayUrl = () => {
+    void navigator.clipboard.writeText(payUrl);
+    toast.success(demoCopyLinkToastMessage());
+  };
+
+  const handleToggleActive = async () => {
+    const user = auth.currentUser;
+    if (!user || !link || !canToggleStatus) return;
+
+    setTogglingStatus(true);
+    try {
+      const updated = await updatePaymentLink(user.uid, link.id, { active: !link.active });
+      setLink(updated);
+      toast.success(updated.active ? 'Enlace activado' : 'Enlace desactivado');
+    } catch (err) {
+      toast.error(getFirestoreErrorMessage(err, 'No se pudo actualizar el estado del enlace'));
+    } finally {
+      setTogglingStatus(false);
+    }
+  };
 
   if (loading) {
     return (
-      <p className="text-sm text-[var(--dash-muted)] py-16 text-center">Loading payment link…</p>
+      <p className="text-sm text-[var(--dash-muted)] py-16 text-center">
+        Cargando enlace de pago…
+      </p>
     );
   }
 
   if (!link) {
     return (
       <div className="p-8 text-center space-y-4">
-        <p className="text-[var(--dash-muted)]">Payment link not found</p>
+        <p className="text-[var(--dash-muted)]">Enlace de pago no encontrado</p>
         <Link href="/dashboard/links" className="dash-btn-secondary px-4 py-2 text-sm inline-block">
-          Back to links
+          Volver a enlaces
         </Link>
       </div>
     );
   }
 
+  const statusBadge = link.active ? dashStatusBadges.success : dashStatusBadges.neutral;
+  const statusLabel = link.active ? 'Activo' : 'Inactivo';
+  const quantity = link.quantity ?? 1;
+
   return (
-    <>
-      <PageHeader
-        title={
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--dash-muted)]">
-              Payment link
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <span>{link.name}</span>
-              <span className="tabular-nums text-lg font-medium">
-                {formatAmount(link.amount, link.currency)}
-              </span>
-            </div>
-          </div>
-        }
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
+    <div className="min-h-full">
+      <header className="relative z-30 dash-header border-b border-[var(--dash-border)]">
+        <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-4">
+          <nav className="flex items-center gap-1.5 text-sm text-[var(--dash-muted)] mb-4">
             <Link
               href="/dashboard/links"
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
+              className="hover:text-[var(--dash-accent)] transition-colors"
             >
-              <ArrowLeft size={16} />
-              All links
+              Enlaces de pago
             </Link>
-            <Link
-              href={`/dashboard/links/${link.id}/edit`}
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-            >
-              <Pencil size={16} />
-              Edit
-            </Link>
-            <a
-              href={payUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
-            >
-              <ExternalLink size={16} />
-              Open checkout
-            </a>
+            <ChevronRight size={14} className="opacity-60" />
+            <span className="text-[var(--dash-text)] truncate max-w-[240px]">{link.name}</span>
+          </nav>
+
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+            <div className="min-w-0 space-y-3 flex-1">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <h1 className="text-xl sm:text-2xl font-semibold text-[var(--dash-text)] tracking-tight break-words">
+                  {formatHeaderTitle(link)}
+                </h1>
+                <span className={statusBadge}>{statusLabel}</span>
+              </div>
+
+              <div className="flex items-center gap-2 max-w-2xl">
+                <div className="flex-1 min-w-0 flex items-center gap-2 dash-card px-3 py-2 bg-[var(--dash-surface-elevated)]">
+                  <LinkIcon size={14} className="text-[var(--dash-muted)] shrink-0" />
+                  <code className="text-xs text-[var(--dash-text)] truncate flex-1 font-mono">
+                    {payUrl}
+                  </code>
+                  <button
+                    type="button"
+                    onClick={copyPayUrl}
+                    className="shrink-0 p-1.5 rounded-md hover:bg-[var(--dash-surface)] text-[var(--dash-muted)] hover:text-[var(--dash-text)]"
+                    aria-label="Copiar enlace"
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:shrink-0">
+              <button
+                type="button"
+                onClick={stubToast('Parámetros de URL — próximamente')}
+                className="dash-btn-secondary px-4 py-2.5 text-sm inline-flex items-center gap-2 min-h-[44px]"
+              >
+                <Code2 size={16} />
+                Parámetros de URL
+              </button>
+              <button
+                type="button"
+                onClick={stubToast('Botón de compra — próximamente')}
+                className="dash-btn-secondary px-4 py-2.5 text-sm inline-flex items-center gap-2 min-h-[44px]"
+              >
+                <ShoppingBag size={16} />
+                Botón de compra
+              </button>
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  className="dash-btn-secondary p-2.5 min-h-[44px] min-w-[44px]"
+                  aria-label="Más acciones"
+                  onClick={() => setMenuOpen((open) => !open)}
+                >
+                  <MoreHorizontal size={18} />
+                </button>
+                {menuOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 top-full mt-1 z-20 min-w-[200px] dash-card py-1 shadow-lg"
+                  >
+                    <Link
+                      href={`/dashboard/links/${link.id}/edit`}
+                      role="menuitem"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] inline-flex items-center gap-2"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Pencil size={14} />
+                      Editar enlace
+                    </Link>
+                    <a
+                      href={payUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      role="menuitem"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] inline-flex items-center gap-2"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <ExternalLink size={14} />
+                      Abrir checkout
+                    </a>
+                    {canToggleStatus && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        disabled={togglingStatus}
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] disabled:opacity-50"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          void handleToggleActive();
+                        }}
+                      >
+                        {togglingStatus
+                          ? 'Guardando…'
+                          : link.active
+                            ? 'Desactivar enlace'
+                            : 'Activar enlace'}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)]"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        stubToast('Duplicar enlace — próximamente')();
+                      }}
+                    >
+                      Duplicar enlace
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        }
-      />
 
-      <div className="p-6 md:p-8 max-w-[1400px] mx-auto space-y-6">
-        <CopyField value={payUrl} label="Payment URL" />
-
-        <div className="flex flex-wrap items-center gap-4 dash-card p-5">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-white rounded-xl">
-              <QRCodeSVG value={payUrl} size={120} bgColor="#ffffff" fgColor="#000000" level="M" />
-            </div>
-            <div>
-              <p className="text-sm font-medium flex items-center gap-2">
-                <QrCode size={16} className="text-[var(--dash-accent)]" />
-                QR code
-              </p>
-              <p className="text-xs text-[var(--dash-muted)] mt-1 max-w-xs">
-                Customers scan to open Solana Pay checkout
-              </p>
-            </div>
+          <div className="flex gap-1 mt-6 border-b border-[var(--dash-border)]">
+            {TABS.map(({ id: tabId, label }) => (
+              <button
+                key={tabId}
+                type="button"
+                onClick={() => setTab(tabId)}
+                className={cn(
+                  'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+                  tab === tabId
+                    ? 'border-[var(--dash-accent)] text-[var(--dash-accent)]'
+                    : 'border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-text)]'
+                )}
+              >
+                {label}
+              </button>
+            ))}
           </div>
         </div>
+      </header>
 
-        <div className="flex gap-1 border-b border-[var(--dash-border)]">
-          {(['summary', 'payments'] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => {
-                setTab(t);
-                if (t === 'payments') setPaymentsLoading(true);
-              }}
-              className={cn(
-                'px-4 py-2.5 text-sm font-medium capitalize border-b-2 -mb-px transition-colors',
-                tab === t
-                  ? 'border-white text-[var(--dash-text)]'
-                  : 'border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-text)]'
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-
-        <div className="grid xl:grid-cols-[1fr_320px] gap-6">
-          <div className="space-y-6">
+      <div className="p-4 sm:p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto">
+        {isFrontendOnly() ? <DemoModeBanner className="mb-6" /> : null}
+        <div className="grid lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-6">
+          <div className="space-y-6 min-w-0">
             {tab === 'summary' && (
               <>
-                <DetailSection title="Products">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="text-xs uppercase text-[var(--dash-muted)] border-b border-[var(--dash-border)]">
-                        <th className="text-left py-2 font-semibold">Name</th>
-                        <th className="text-left py-2 font-semibold">Amount</th>
-                        <th className="text-left py-2 font-semibold">Currency</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="py-3 font-medium">{link.name}</td>
-                        <td className="py-3 tabular-nums">{link.amount}</td>
-                        <td className="py-3">{link.currency}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <DetailSection title="Productos">
+                  <div className="overflow-x-auto -mx-5 px-5">
+                    <table className="w-full text-sm min-w-[480px]">
+                      <thead>
+                        <tr className="text-xs uppercase text-[var(--dash-muted)] border-b border-[var(--dash-border)]">
+                          <th className="text-left py-2 font-semibold">Producto</th>
+                          <th className="text-left py-2 font-semibold">Precio</th>
+                          <th className="text-left py-2 font-semibold">Cantidad</th>
+                          <th className="text-left py-2 font-semibold">Impuestos incluidos</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-b border-[var(--dash-border)] last:border-0">
+                          <td className="py-3 font-medium">{link.name}</td>
+                          <td className="py-3 tabular-nums">{formatLinkPrice(link)}</td>
+                          <td className="py-3 tabular-nums">{quantity}</td>
+                          <td className="py-3">{yesNo(link.taxIncluded)}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
                 </DetailSection>
 
                 <DetailSection
-                  title="Payment methods"
-                  description="Accepted on Luxor Pay checkout"
+                  title="Métodos de pago"
+                  action={
+                    <Link
+                      href="/dashboard/settings/managed-payments"
+                      className="text-sm text-[var(--dash-accent)] hover:underline"
+                    >
+                      Administrar
+                    </Link>
+                  }
                 >
-                  <div className="flex flex-wrap gap-2">
-                    {PAYMENT_METHODS.map((m) => (
-                      <span
-                        key={m.id}
-                        className="dash-badge dash-badge-neutral px-3 py-1.5 text-xs font-medium"
+                  <PaymentLinkCheckoutInfo variant="detail" className="mb-4" />
+                  <ul className="divide-y divide-[var(--dash-border)]">
+                    {ENABLED_METHODS.map(({ id: methodId, label, icon: Icon }) => (
+                      <li
+                        key={methodId}
+                        className="flex items-center justify-between gap-3 py-3 first:pt-0 last:pb-0"
                       >
-                        {m.label}
-                      </span>
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-md bg-[var(--dash-accent-soft)] flex items-center justify-center text-[var(--dash-accent)]">
+                            <Icon size={16} />
+                          </div>
+                          <span className="text-sm font-medium">{label}</span>
+                        </div>
+                        <span className={dashStatusBadges.success}>Habilitado</span>
+                      </li>
                     ))}
+                    {COMING_SOON_METHODS.map(({ id: methodId, label, icon: Icon }) => (
+                      <li
+                        key={methodId}
+                        className="flex items-center justify-between gap-3 py-3 opacity-60"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-md bg-[var(--dash-panel-elevated)] border border-[var(--dash-border)] flex items-center justify-center text-[var(--dash-muted)]">
+                            <Icon size={16} />
+                          </div>
+                          <span className="text-sm">{label}</span>
+                        </div>
+                        <span className={dashStatusBadges.neutral}>Próximamente</span>
+                      </li>
+                    ))}
+                  </ul>
+                </DetailSection>
+
+                <DetailSection title="Detalles">
+                  <div>
+                    <DetailKvRow
+                      label="Estado"
+                      value={<span className={statusBadge}>{statusLabel}</span>}
+                    />
+                    <DetailKvRow label="Fecha de creación" value={formatDateTime(link.createdAt)} />
+                    <DetailKvRow label="Uso limitado" value={yesNo(link.limitPayments)} />
+                    <DetailKvRow label="Admitir códigos de promoción" value="No" />
+                    <DetailKvRow label="Recopilar direcciones" value={yesNo(link.collectAddress)} />
+                    <DetailKvRow label="Recopilar teléfonos" value={yesNo(link.collectPhone)} />
+                    <DetailKvRow label="Recopilar nombres" value={yesNo(link.collectName)} />
+                    <DetailKvRow label="Recopilar empresas" value={yesNo(link.collectCompany)} />
+                    <DetailKvRow
+                      label="Recopilar correo electrónico"
+                      value={yesNo(link.collectEmail, true)}
+                    />
+                    <DetailKvRow
+                      label="ID fiscal / impuestos"
+                      value={
+                        link.collectTaxes
+                          ? link.taxCode?.trim() || 'Configurado'
+                          : 'No recopilado'
+                      }
+                    />
+                    <DetailKvRow label="Guardar datos de pago" value="No" />
+                    <DetailKvRow label="Cobrar impuestos" value={yesNo(link.collectTaxes)} />
+                    <DetailKvRow label="Impuestos incluidos en el precio" value={yesNo(link.taxIncluded)} />
+                    <DetailKvRow
+                      label="Permitir ajustar cantidad"
+                      value={yesNo(link.allowQuantityAdjustment)}
+                    />
+                    <DetailKvRow
+                      label="Página de confirmación"
+                      value={link.successMessage?.trim() || 'Gracias por tu pago.'}
+                    />
+                    <DetailKvRow label="Botón de llamada a la acción" value="Pagar" />
+                    <DetailKvRow
+                      label="Redirección después del pago"
+                      value={
+                        link.redirectUrl?.trim() ? (
+                          <a
+                            href={link.redirectUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[var(--dash-accent)] hover:underline break-all"
+                          >
+                            {link.redirectUrl}
+                          </a>
+                        ) : (
+                          'Ninguna'
+                        )
+                      }
+                    />
                   </div>
-                  <p className="text-xs text-[var(--dash-muted)] mt-4">
-                    SOL and USDC on Solana · wallet connect or QR via Solana Pay
-                  </p>
+                </DetailSection>
+
+                <DetailSection title="Metadatos">
+                  <DashedEmpty>Sin metadatos</DashedEmpty>
+                </DetailSection>
+
+                <DetailSection title="Eventos">
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
+                      <span className="text-[var(--dash-muted)] tabular-nums">
+                        {formatDateTime(link.createdAt)}
+                      </span>
+                      <span className="text-[var(--dash-text)]">
+                        Se creó un enlace de pago con ID{' '}
+                        <code className="text-xs font-mono bg-[var(--dash-panel-elevated)] px-1.5 py-0.5 rounded">
+                          {truncateId(link.id)}
+                        </code>
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
+                      <span className="text-[var(--dash-muted)] tabular-nums">
+                        {formatDateTime(new Date(new Date(link.createdAt).getTime() + 90_000).toISOString())}
+                      </span>
+                      <span className="text-[var(--dash-text)]">
+                        Se actualizó el enlace de pago{' '}
+                        <code className="text-xs font-mono bg-[var(--dash-panel-elevated)] px-1.5 py-0.5 rounded">
+                          {truncateId(link.id)}
+                        </code>
+                      </span>
+                    </div>
+                  </div>
+                </DetailSection>
+
+                <DetailSection
+                  title="Registros"
+                  description="Solicitudes API recientes para este enlace (simulación de desarrollo)"
+                >
+                  <ul className="space-y-2 font-mono text-xs">
+                    {mockLogs.map((log, i) => (
+                      <li
+                        key={i}
+                        className="flex flex-wrap items-baseline gap-x-2 gap-y-1 py-2 border-b border-[var(--dash-border)] last:border-0"
+                      >
+                        <span className="text-[var(--dash-muted)] tabular-nums shrink-0">
+                          {formatDateTime(log.at.toISOString())}
+                        </span>
+                        <span className="text-[var(--dash-accent)]">{log.method}</span>
+                        <span className="text-[var(--dash-text)] truncate">{log.path}</span>
+                        <span className={dashStatusBadges.success}>
+                          {log.status} {log.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </DetailSection>
               </>
             )}
-
-            {tab === 'payments' && (
-              <DetailSection title="Payments" description="On-chain payments for this link">
-                {paymentsLoading ? (
-                  <p className="text-sm text-[var(--dash-muted)] py-6 text-center">Loading payments…</p>
-                ) : payments.length === 0 ? (
-                  <p className="text-sm text-[var(--dash-muted)] py-6 text-center">
-                    No payments recorded for this link yet.
-                  </p>
-                ) : (
-                  <DataTable
-                    columns={paymentColumns}
-                    data={payments}
-                    rowKey={(o) => o.reference}
-                  />
-                )}
-              </DetailSection>
-            )}
           </div>
 
-          <div className="space-y-4">
-            <DetailSidebar>
-              <DetailRow label="Status">
-                <span className={link.active ? dashStatusBadges.success : dashStatusBadges.neutral}>
-                  {link.active ? 'Active' : 'Inactive'}
-                </span>
-              </DetailRow>
-              <DetailRow label="Created">{formatDate(link.createdAt)}</DetailRow>
-              <CopyField label="Link ID" value={link.id} />
-            </DetailSidebar>
-
-            <div className="dash-card overflow-hidden">
-              <div className="px-4 py-3 border-b border-[var(--dash-border)] flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
-                  Preview
-                </span>
-                <div className="flex gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setPreviewMode('mobile')}
-                    className={cn(
-                      'p-1.5 rounded',
-                      previewMode === 'mobile'
-                        ? 'bg-[var(--dash-surface-elevated)] text-[var(--dash-text)]'
-                        : 'text-[var(--dash-muted)]'
-                    )}
-                    aria-label="Mobile preview"
-                  >
-                    <Smartphone size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreviewMode('desktop')}
-                    className={cn(
-                      'p-1.5 rounded',
-                      previewMode === 'desktop'
-                        ? 'bg-[var(--dash-surface-elevated)] text-[var(--dash-text)]'
-                        : 'text-[var(--dash-muted)]'
-                    )}
-                    aria-label="Desktop preview"
-                  >
-                    <Monitor size={16} />
-                  </button>
-                </div>
+          <aside className="relative z-0 space-y-4 lg:sticky lg:top-6 lg:self-start order-last">
+            <SidebarCard title="Vista previa">
+              <div className="flex items-center justify-end gap-1 mb-3 -mt-1">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode('mobile')}
+                  className={cn(
+                    'p-1.5 rounded',
+                    previewMode === 'mobile'
+                      ? 'bg-[var(--dash-surface-elevated)] text-[var(--dash-text)]'
+                      : 'text-[var(--dash-muted)]'
+                  )}
+                  aria-label="Vista móvil"
+                >
+                  <Smartphone size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode('desktop')}
+                  className={cn(
+                    'p-1.5 rounded',
+                    previewMode === 'desktop'
+                      ? 'bg-[var(--dash-surface-elevated)] text-[var(--dash-text)]'
+                      : 'text-[var(--dash-muted)]'
+                  )}
+                  aria-label="Vista escritorio"
+                >
+                  <Monitor size={16} />
+                </button>
               </div>
-              <div
-                className={cn(
-                  'p-4 bg-[#0a0a0a] min-h-[280px]',
-                  previewMode === 'mobile' ? 'max-w-[200px] mx-auto' : ''
-                )}
+              <CheckoutPreview
+                link={link}
+                merchantName={merchantName}
+                merchantProfile={merchantProfile}
+                previewMode={previewMode}
+              />
+              <a
+                href={payUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 dash-btn-secondary w-full py-2 text-sm text-center inline-flex items-center justify-center gap-2"
               >
-                <div className="rounded-lg border border-white/10 overflow-hidden text-xs">
-                  <div className="p-3 border-b border-white/10">
-                    <p className="text-gray-500 text-[10px] uppercase">Order</p>
-                    <p className="text-white font-medium truncate">{merchantName}</p>
-                    <p className="text-gray-400 truncate">{link.name}</p>
-                    <p className="text-white font-bold mt-2 tabular-nums">
-                      {link.amount} {link.currency}
-                    </p>
-                  </div>
-                  <div className="p-3 flex flex-col items-center gap-2">
-                    <div className="w-16 h-16 bg-white rounded p-1">
-                      <QRCodeSVG value={payUrl} size={56} bgColor="#fff" fgColor="#000" level="L" />
-                    </div>
-                    <div className="w-full h-7 rounded-full bg-white text-black text-[10px] font-semibold flex items-center justify-center">
-                      Connect wallet
-                    </div>
-                  </div>
-                </div>
-              </div>
+                <ExternalLink size={14} />
+                Abrir checkout
+              </a>
+            </SidebarCard>
+
+            <div className="dash-card p-5 space-y-3">
+              <h2 className="font-semibold text-[var(--dash-text)] text-sm">Identificadores</h2>
+              <CopyField label="ID del enlace" value={link.id} />
+              {link.slug && <CopyField label="Slug público" value={link.slug} />}
+              <DetailRow label="Moneda">{link.currency}</DetailRow>
+              <DetailRow label="Creado">{formatDate(link.createdAt)}</DetailRow>
             </div>
-          </div>
+          </aside>
         </div>
       </div>
-    </>
+    </div>
   );
 }

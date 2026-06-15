@@ -15,6 +15,7 @@ import {
   CreditCard,
   FileText,
   BarChart3,
+  Shield,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -44,58 +45,56 @@ interface ShortcutItem {
 }
 
 const mainNav: NavItem[] = [
-  { href: '/dashboard', label: 'Home', icon: LayoutDashboard },
-  { href: '/dashboard/balances', label: 'Balances', icon: Wallet },
-  { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
-  { href: '/dashboard/customers', label: 'Customers', icon: Users },
-  { href: '/dashboard/products', label: 'Product catalog', icon: Package },
+  { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
+  { href: '/dashboard/balances', label: 'Saldos', icon: Wallet },
+  { href: '/dashboard/transactions', label: 'Transacciones', icon: Receipt },
+  { href: '/dashboard/customers', label: 'Clientes', icon: Users },
+  { href: '/dashboard/products', label: 'Catálogo de productos', icon: Package },
 ];
 
 const shortcuts: ShortcutItem[] = [
   { href: '/dashboard/pos', label: 'Terminal' },
-  { href: '/dashboard/qr', label: 'QR codes' },
-  { href: '/dashboard/links', label: 'Payment links' },
-  { href: '/dashboard/reporting', label: 'Reports' },
+  { href: '/dashboard/links', label: 'Enlaces de pago' },
+  { href: '/dashboard/reporting', label: 'Informes' },
 ];
 
 const productsGroups: NavGroup[] = [
   {
     id: 'payments',
-    label: 'Payments',
+    label: 'Pagos',
     icon: CreditCard,
     children: [
-      { href: '/dashboard/tax', label: 'Tax' },
-      { href: '/dashboard/products', label: 'Product catalog' },
-      { href: '/dashboard/links', label: 'Payment links' },
-      { href: '/dashboard/qr', label: 'QR codes' },
-      { href: '/dashboard/payments/sell', label: 'Sell' },
+      { href: '/dashboard/tax', label: 'Impuestos' },
+      { href: '/dashboard/products', label: 'Catálogo de productos' },
+      { href: '/dashboard/links', label: 'Enlaces de pago' },
+      { href: '/dashboard/payments/sell', label: 'Venta' },
       { href: '/dashboard/pos', label: 'Terminal' },
-      { href: '/dashboard/payments/plans', label: 'Payment plans' },
-      { href: '/dashboard/payments/checkout', label: 'Payment settings' },
+      { href: '/dashboard/payments/plans', label: 'Planes de pago' },
+      { href: '/dashboard/payments/checkout', label: 'Ajustes de pago' },
     ],
   },
   {
     id: 'billing',
-    label: 'Billing',
+    label: 'Facturación',
     icon: FileText,
     children: [
-      { href: '/dashboard/billing/invoices', label: 'On-chain invoices' },
-      { href: '/dashboard/customers', label: 'Customers' },
-      { href: '/dashboard/billing/subscriptions', label: 'Subscriptions' },
-      { href: '/dashboard/billing/quotes', label: 'Quotes' },
-      { href: '/dashboard/billing/pending', label: 'Revenue recovery' },
+      { href: '/dashboard/billing/invoices', label: 'Facturas on-chain' },
+      { href: '/dashboard/customers', label: 'Clientes' },
+      { href: '/dashboard/billing/subscriptions', label: 'Suscripciones' },
+      { href: '/dashboard/billing/quotes', label: 'Presupuestos' },
+      { href: '/dashboard/billing/pending', label: 'Recuperación de ingresos' },
     ],
   },
   {
     id: 'reporting',
-    label: 'Reporting',
+    label: 'Informes',
     icon: BarChart3,
     children: [
-      { href: '/dashboard/reporting', label: 'Reports' },
-      { href: '/dashboard/reporting/custom-metrics', label: 'Custom metrics' },
+      { href: '/dashboard/reporting', label: 'Informes' },
+      { href: '/dashboard/reporting/custom-metrics', label: 'Métricas personalizadas' },
       { href: '/dashboard/reporting/sigma', label: 'Sigma' },
-      { href: '/dashboard/reporting/revenue-recognition', label: 'Revenue recognition' },
-      { href: '/dashboard/reporting/data-management', label: 'Data management' },
+      { href: '/dashboard/reporting/revenue-recognition', label: 'Reconocimiento de ingresos' },
+      { href: '/dashboard/reporting/data-management', label: 'Gestión de datos' },
     ],
   },
 ];
@@ -131,12 +130,20 @@ function getExpandedForPath(pathname: string): Record<string, boolean> {
 interface SidebarNavProps {
   businessName?: string;
   email?: string;
+  isPlatformAdmin?: boolean;
   onSignOut?: () => void;
   onNavigate?: () => void;
   className?: string;
 }
 
-export function SidebarNav({ businessName, email, onSignOut, onNavigate, className }: SidebarNavProps) {
+export function SidebarNav({
+  businessName,
+  email,
+  isPlatformAdmin = false,
+  onSignOut,
+  onNavigate,
+  className,
+}: SidebarNavProps) {
   const pathname = usePathname();
   const [userExpanded, setUserExpanded] = useState<Record<string, boolean>>({});
 
@@ -158,14 +165,14 @@ export function SidebarNav({ businessName, email, onSignOut, onNavigate, classNa
         className
       )}
     >
-      <div className="shrink-0 p-4 border-b border-[var(--dash-border)]">
+      <div className="shrink-0 p-4 border-b border-[var(--dash-border)] space-y-3">
         <button
           type="button"
           className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] transition-colors text-left"
         >
           <div className="min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dash-muted)] mb-0.5">
-              Business unit
+              Unidad de negocio
             </p>
             <p className="text-sm font-semibold truncate text-[var(--dash-text)]">
               {businessName || 'Luxor Pay'}
@@ -176,12 +183,22 @@ export function SidebarNav({ businessName, email, onSignOut, onNavigate, classNa
           </div>
           <ChevronDown size={14} className="text-[var(--dash-muted)] shrink-0" />
         </button>
+        {isPlatformAdmin && (
+          <Link
+            href="/admin"
+            onClick={onNavigate}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-[var(--dash-accent-soft)] border border-[rgba(153,69,255,0.25)] text-[var(--dash-accent)] text-sm font-semibold hover:bg-[rgba(153,69,255,0.15)] transition-colors"
+          >
+            <Shield size={16} className="shrink-0" />
+            <span className="truncate">Administración de plataforma</span>
+          </Link>
+        )}
       </div>
 
       <nav className="sidebar-nav-scroll flex-1 min-h-0 p-3 space-y-6 overflow-y-auto overscroll-contain">
         <div>
           <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-            Main pages
+            Páginas principales
           </p>
           <div className="space-y-0.5">
             {mainNav.map(({ href, label, icon: Icon }) => (
@@ -199,7 +216,7 @@ export function SidebarNav({ businessName, email, onSignOut, onNavigate, classNa
 
         <div>
           <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-            Shortcuts
+            Accesos directos
           </p>
           <div className="space-y-0.5">
             {shortcuts.map((item) => (
@@ -216,7 +233,7 @@ export function SidebarNav({ businessName, email, onSignOut, onNavigate, classNa
 
         <div>
           <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-            Products
+            Productos
           </p>
           <div className="space-y-0.5">
             {productsGroups.map((group) => (
@@ -241,7 +258,7 @@ export function SidebarNav({ businessName, email, onSignOut, onNavigate, classNa
             className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-[var(--dash-muted)] hover:bg-[var(--dash-surface-elevated)] hover:text-[var(--dash-text)] transition-colors"
           >
             <LogOut size={16} className="shrink-0" />
-            <span>Sign out</span>
+            <span>Cerrar sesión</span>
           </button>
         )}
         <div className="flex items-center gap-2 px-3 py-1 text-xs text-[var(--dash-muted)]">

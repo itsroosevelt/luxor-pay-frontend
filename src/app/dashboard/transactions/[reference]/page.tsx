@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { fetchPayment, listPayments } from '@/lib/payments-api';
+import { getCheckoutPayment } from '@/lib/checkout-payments-local';
+import { isFrontendOnly } from '@/lib/frontend-only';
 import type { PaymentOrder } from '@luxor/contracts';
 import { getExplorerTxUrl } from '@/web3/config/network';
 import {
@@ -47,10 +49,28 @@ export default function PaymentDetailPage() {
 
     const load = async (user: NonNullable<typeof auth.currentUser>) => {
       try {
+        if (isFrontendOnly() && reference.startsWith('chk_')) {
+          const local = getCheckoutPayment(user.uid, reference);
+          if (!cancelled) {
+            if (local) setPayment(local);
+            else toast.error('Pago no encontrado');
+          }
+          return;
+        }
+
         const order = await fetchPayment(reference);
         if (!cancelled) setPayment(order);
       } catch {
         try {
+          if (isFrontendOnly()) {
+            const local = getCheckoutPayment(user.uid, reference);
+            if (!cancelled) {
+              if (local) setPayment(local);
+              else toast.error('Pago no encontrado');
+            }
+            return;
+          }
+
           const token = await user.getIdToken();
           const orders = await listPayments(token);
           const cached = orders.find((o) => o.reference === reference);
@@ -88,16 +108,16 @@ export default function PaymentDetailPage() {
 
   if (loading) {
     return (
-      <p className="text-sm text-[var(--dash-muted)] py-16 text-center">Loading payment…</p>
+      <p className="text-sm text-[var(--dash-muted)] py-16 text-center">Cargando pago…</p>
     );
   }
 
   if (!payment) {
     return (
       <div className="p-8 text-center space-y-4">
-        <p className="text-[var(--dash-muted)]">Payment not found</p>
+        <p className="text-[var(--dash-muted)]">Pago no encontrado</p>
         <Link href="/dashboard/transactions" className="dash-btn-secondary px-4 py-2 text-sm inline-block">
-          Back to transactions
+          Volver a transacciones
         </Link>
       </div>
     );
@@ -109,7 +129,7 @@ export default function PaymentDetailPage() {
         title={
           <div className="space-y-1">
             <p className="text-xs font-semibold uppercase tracking-widest text-[var(--dash-muted)]">
-              Payments
+              Pagos
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <span className="tabular-nums text-xl font-semibold">
@@ -132,7 +152,7 @@ export default function PaymentDetailPage() {
             className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
           >
             <ArrowLeft size={16} />
-            All transactions
+            Todas las transacciones
           </Link>
         }
       />
@@ -140,21 +160,21 @@ export default function PaymentDetailPage() {
       <div className="p-6 md:p-8 max-w-[1400px] mx-auto">
         <div className="grid xl:grid-cols-[1fr_320px] gap-6">
           <div className="space-y-6">
-            <DetailSection title="Summary">
+            <DetailSection title="Resumen">
               <table className="w-full text-sm">
                 <tbody>
                   <tr className="border-b border-[var(--dash-border)]">
-                    <td className="py-3 text-[var(--dash-muted)]">Gross amount</td>
+                    <td className="py-3 text-[var(--dash-muted)]">Importe bruto</td>
                     <td className="py-3 text-right tabular-nums font-medium">
                       {formatPaymentAmount(payment.amount, payment.currency)}
                     </td>
                   </tr>
                   <tr className="border-b border-[var(--dash-border)]">
-                    <td className="py-3 text-[var(--dash-muted)]">Network fee estimate</td>
+                    <td className="py-3 text-[var(--dash-muted)]">Comisión de red (est.)</td>
                     <td className="py-3 text-right text-[var(--dash-muted)]">—</td>
                   </tr>
                   <tr>
-                    <td className="py-3 font-medium">Net</td>
+                    <td className="py-3 font-medium">Neto</td>
                     <td className="py-3 text-right tabular-nums font-semibold">
                       {formatPaymentAmount(payment.amount, payment.currency)}
                     </td>
@@ -163,7 +183,7 @@ export default function PaymentDetailPage() {
               </table>
             </DetailSection>
 
-            <DetailSection title="Payment method">
+            <DetailSection title="Método de pago">
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="dash-badge dash-badge-neutral px-3 py-1 text-xs font-medium">
@@ -171,10 +191,10 @@ export default function PaymentDetailPage() {
                   </span>
                   <span className="text-sm text-[var(--dash-muted)]">Solana · {payment.currency}</span>
                 </div>
-                <DetailRow label="Customer / payer">
+                <DetailRow label="Cliente / pagador">
                   {paymentCustomerLabel(payment)}
                 </DetailRow>
-                <DetailRow label="Recipient wallet">
+                <DetailRow label="Wallet destinataria">
                   <code className="text-xs font-mono break-all">{payment.recipient}</code>
                 </DetailRow>
               </div>
@@ -183,7 +203,7 @@ export default function PaymentDetailPage() {
             <DetailSection title="On-chain">
               {payment.signature ? (
                 <div className="space-y-3">
-                  <CopyField label="Transaction signature" value={payment.signature} />
+                  <CopyField label="Firma de transacción" value={payment.signature} />
                   <a
                     href={getExplorerTxUrl(payment.signature)}
                     target="_blank"
@@ -191,43 +211,43 @@ export default function PaymentDetailPage() {
                     className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
                   >
                     <ExternalLink size={14} />
-                    View on Solana Explorer
+                    Ver en Solana Explorer
                   </a>
                 </div>
               ) : (
                 <p className="text-sm text-[var(--dash-muted)]">
-                  No on-chain signature yet. Signature appears after the customer completes payment.
+                  Aún no hay firma on-chain. Aparecerá cuando el cliente complete el pago.
                 </p>
               )}
             </DetailSection>
 
             {payment.linkId && (
-              <DetailSection title="Payment link">
+              <DetailSection title="Enlace de pago">
                 <Link
                   href={`/dashboard/links/${payment.linkId}`}
                   className="text-sm text-[var(--dash-accent)] hover:underline"
                 >
-                  View link {payment.linkId}
+                  Ver enlace {payment.linkId}
                 </Link>
               </DetailSection>
             )}
 
-            <DetailSection title="Events">
+            <DetailSection title="Eventos">
               <Timeline events={timelineEvents} />
             </DetailSection>
           </div>
 
           <DetailSidebar>
-            <CopyField label="Payment ID" value={payment.reference} />
-            {payment.linkId && <CopyField label="Link ID" value={payment.linkId} />}
-            <DetailRow label="Currency">{payment.currency}</DetailRow>
-            <DetailRow label="Status">
+            <CopyField label="ID de pago" value={payment.reference} />
+            {payment.linkId && <CopyField label="ID del enlace" value={payment.linkId} />}
+            <DetailRow label="Moneda">{payment.currency}</DetailRow>
+            <DetailRow label="Estado">
               {displayStatus && (
                 <span className={statusBadgeClass[displayStatus.tone]}>{displayStatus.label}</span>
               )}
             </DetailRow>
-            <DetailRow label="Metadata">
-              <span className="text-[var(--dash-muted)]">No metadata</span>
+            <DetailRow label="Metadatos">
+              <span className="text-[var(--dash-muted)]">Sin metadatos</span>
             </DetailRow>
           </DetailSidebar>
         </div>

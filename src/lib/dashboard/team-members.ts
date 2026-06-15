@@ -109,30 +109,38 @@ export function formatLastSignIn(iso: string | null): string {
   return `${diffDays} days ago`;
 }
 
-let cachedMembersSnapshot: TeamMember[] = buildDefaultMembers();
-let cachedMembersSerialized = JSON.stringify(cachedMembersSnapshot);
+const DEFAULT_MEMBERS_SNAPSHOT = buildDefaultMembers();
 
+let cachedMembersSnapshot: TeamMember[] = DEFAULT_MEMBERS_SNAPSHOT;
+let cachedMembersSerialized: string | null | undefined;
+
+/** Stable snapshot for useSyncExternalStore — same reference when members are unchanged. */
 export function getTeamMembersSnapshot(): TeamMember[] {
-  if (typeof window === 'undefined') return cachedMembersSnapshot;
+  if (typeof window === 'undefined') return DEFAULT_MEMBERS_SNAPSHOT;
   try {
     const raw = localStorage.getItem(TEAM_MEMBERS_STORAGE_KEY);
-    if (raw === null) {
-      const defaults = buildDefaultMembers();
-      localStorage.setItem(TEAM_MEMBERS_STORAGE_KEY, JSON.stringify(defaults));
-      cachedMembersSerialized = JSON.stringify(defaults);
-      cachedMembersSnapshot = defaults;
-      return defaults;
+    if (raw === cachedMembersSerialized) {
+      return cachedMembersSnapshot;
     }
-    if (raw !== cachedMembersSerialized) {
-      cachedMembersSerialized = raw;
-      cachedMembersSnapshot = JSON.parse(raw) as TeamMember[];
+    cachedMembersSerialized = raw;
+    if (raw === null) {
+      cachedMembersSnapshot = DEFAULT_MEMBERS_SNAPSHOT;
+      const serialized = JSON.stringify(DEFAULT_MEMBERS_SNAPSHOT);
+      localStorage.setItem(TEAM_MEMBERS_STORAGE_KEY, serialized);
+      cachedMembersSerialized = serialized;
+    } else {
+      const parsed = JSON.parse(raw) as TeamMember[];
+      cachedMembersSnapshot =
+        Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_MEMBERS_SNAPSHOT;
     }
   } catch {
-    cachedMembersSnapshot = buildDefaultMembers();
+    cachedMembersSerialized = null;
+    cachedMembersSnapshot = DEFAULT_MEMBERS_SNAPSHOT;
   }
   return cachedMembersSnapshot;
 }
 
+/** Stable server snapshot for useSyncExternalStore hydration. */
 export function getTeamMembersServerSnapshot(): TeamMember[] {
-  return cachedMembersSnapshot;
+  return DEFAULT_MEMBERS_SNAPSHOT;
 }

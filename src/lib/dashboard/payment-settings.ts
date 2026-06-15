@@ -39,7 +39,10 @@ export function loadPaymentSettings(): PaymentSettings {
 
 export function savePaymentSettings(settings: PaymentSettings): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem(PAYMENT_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+  const serialized = JSON.stringify(settings);
+  localStorage.setItem(PAYMENT_SETTINGS_STORAGE_KEY, serialized);
+  cachedSerialized = serialized;
+  cachedSettings = settings;
 }
 
 export function patchPaymentSettings(patch: Partial<PaymentSettings>): PaymentSettings {
@@ -50,28 +53,36 @@ export function patchPaymentSettings(patch: Partial<PaymentSettings>): PaymentSe
 
 export const PAYMENT_SETTINGS_CHANGE_EVENT = 'luxor-payment-settings-change';
 
-let cachedSettings = buildDefaultPaymentSettings();
-let cachedSerialized = JSON.stringify(cachedSettings);
+const DEFAULT_PAYMENT_SETTINGS_SNAPSHOT = buildDefaultPaymentSettings();
 
+let cachedSettings: PaymentSettings = DEFAULT_PAYMENT_SETTINGS_SNAPSHOT;
+let cachedSerialized: string | null | undefined;
+
+/** Stable snapshot for useSyncExternalStore — same reference when settings are unchanged. */
 export function getPaymentSettingsSnapshot(): PaymentSettings {
-  if (typeof window === 'undefined') return cachedSettings;
+  if (typeof window === 'undefined') return DEFAULT_PAYMENT_SETTINGS_SNAPSHOT;
   try {
     const raw = localStorage.getItem(PAYMENT_SETTINGS_STORAGE_KEY);
-    if (raw === null) {
-      cachedSettings = buildDefaultPaymentSettings();
-      cachedSerialized = JSON.stringify(cachedSettings);
+    if (raw === cachedSerialized) {
       return cachedSettings;
     }
-    if (raw !== cachedSerialized) {
-      cachedSerialized = raw;
-      cachedSettings = { ...buildDefaultPaymentSettings(), ...JSON.parse(raw) };
+    cachedSerialized = raw;
+    if (raw === null) {
+      cachedSettings = DEFAULT_PAYMENT_SETTINGS_SNAPSHOT;
+    } else {
+      cachedSettings = {
+        ...DEFAULT_PAYMENT_SETTINGS_SNAPSHOT,
+        ...JSON.parse(raw),
+      };
     }
   } catch {
-    cachedSettings = buildDefaultPaymentSettings();
+    cachedSerialized = null;
+    cachedSettings = DEFAULT_PAYMENT_SETTINGS_SNAPSHOT;
   }
   return cachedSettings;
 }
 
+/** Stable server snapshot for useSyncExternalStore hydration. */
 export function getPaymentSettingsServerSnapshot(): PaymentSettings {
-  return cachedSettings;
+  return DEFAULT_PAYMENT_SETTINGS_SNAPSHOT;
 }

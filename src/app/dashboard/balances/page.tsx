@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchant-data';
 import { listPayments } from '@/lib/payments-api';
+import { listCheckoutPayments } from '@/lib/checkout-payments-local';
+import { isFrontendOnly } from '@/lib/frontend-only';
 import type { Currency, PaymentOrder } from '@luxor/contracts';
 import {
   PageHeader,
@@ -102,7 +104,9 @@ export default function BalancesPage() {
       try {
         const [profile, payments] = await Promise.all([
           getMerchantProfile(user.uid),
-          user.getIdToken().then((token) => listPayments(token)).catch(() => [] as PaymentOrder[]),
+          isFrontendOnly()
+            ? Promise.resolve(listCheckoutPayments(user.uid))
+            : user.getIdToken().then((token) => listPayments(token)).catch(() => [] as PaymentOrder[]),
         ]);
         setHasWallet(Boolean(profile?.merchantWallet));
         setWallet(profile?.merchantWallet ?? '');

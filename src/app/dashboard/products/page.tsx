@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { listProducts } from '@/lib/merchant-data';
+import { buildPaymentLinkCreateHref } from '@/lib/dashboard/catalog-flow-links';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import type { ProductCatalogItem } from '@luxor/contracts';
 import { cn } from '@/lib/cn';
 import {
@@ -13,6 +14,7 @@ import {
   DataTable,
   FilterRow,
   FilterChip,
+  CatalogFlowSectionNav,
   CatalogFlowCrossLinks,
   TaxConfigNotice,
   BackendNotice,
@@ -42,35 +44,30 @@ type ProductSummaryFilter = 'all' | 'active' | 'archived';
 
 type StatusFilter = 'all' | 'active' | 'archived';
 
-const CATALOG_TABS: {
-  id: ProductCatalogTab | 'tax';
-  label: string;
-  href?: string;
-}[] = [
-  { id: 'products', label: 'All products' },
-  { id: 'features', label: 'Features' },
-  { id: 'coupons', label: 'Coupons' },
-  { id: 'shipping', label: 'Shipping rates' },
-  { id: 'tax', label: 'Tax rates', href: '/dashboard/tax' },
-  { id: 'pricing', label: 'Pricing tables' },
+const CATALOG_TABS: { id: ProductCatalogTab; label: string }[] = [
+  { id: 'products', label: 'Todos los productos' },
+  { id: 'features', label: 'Funciones' },
+  { id: 'coupons', label: 'Cupones' },
+  { id: 'shipping', label: 'Envíos' },
+  { id: 'pricing', label: 'Tablas de precios' },
 ];
 
 const SUMMARY_CARDS: { id: ProductSummaryFilter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'active', label: 'Active' },
-  { id: 'archived', label: 'Archived' },
+  { id: 'all', label: 'Todos' },
+  { id: 'active', label: 'Activos' },
+  { id: 'archived', label: 'Archivados' },
 ];
 
 const STATUS_CYCLE: StatusFilter[] = ['all', 'active', 'archived'];
 
 const STATUS_LABELS: Record<StatusFilter, string> = {
-  all: 'All',
-  active: 'Active',
-  archived: 'Archived',
+  all: 'Todos',
+  active: 'Activos',
+  archived: 'Archivados',
 };
 
 function formatTableDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-US', {
+  return new Date(iso).toLocaleDateString('es-ES', {
     day: 'numeric',
     month: 'short',
     year: 'numeric',
@@ -114,11 +111,11 @@ function RangePaginationFooter({
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3 border-t border-[var(--dash-border)] text-sm text-[var(--dash-muted)]">
       <span>
-        {totalItems} {totalItems === 1 ? 'item' : 'items'}
+        {totalItems} {totalItems === 1 ? 'elemento' : 'elementos'}
         {totalPages > 1 && (
           <span className="text-[var(--dash-muted)]">
             {' '}
-            · Showing {from}–{to}
+            · Mostrando {from}–{to}
           </span>
         )}
       </span>
@@ -130,7 +127,7 @@ function RangePaginationFooter({
             className="dash-btn-secondary px-3 py-1.5 text-sm disabled:opacity-40"
             onClick={() => onPageChange(page - 1)}
           >
-            Previous
+            Anterior
           </button>
           <button
             type="button"
@@ -138,7 +135,7 @@ function RangePaginationFooter({
             className="dash-btn-secondary px-3 py-1.5 text-sm disabled:opacity-40"
             onClick={() => onPageChange(page + 1)}
           >
-            Next
+            Siguiente
           </button>
         </div>
       )}
@@ -153,7 +150,7 @@ function StubTabPanel({ title }: { title: string }) {
       <EmptyState
         icon={Package}
         title={title}
-        description="This section will be available when the catalog backend is connected."
+        description="Esta sección estará disponible cuando se conecte el backend del catálogo."
       />
     </div>
   );
@@ -161,8 +158,9 @@ function StubTabPanel({ title }: { title: string }) {
 
 export default function ProductsPage() {
   const router = useRouter();
+  const { user, authReady } = useFirebaseAuth();
   const [products, setProducts] = useState<ProductCatalogItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedForUser, setLoadedForUser] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<ProductCatalogTab>('products');
   const [summaryFilter, setSummaryFilter] = useState<ProductSummaryFilter>('all');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -172,19 +170,26 @@ export default function ProductsPage() {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-      try {
-        const data = await listProducts(user.uid);
-        setProducts(data);
-      } catch {
-        toast.error('Could not load catalog.');
-      } finally {
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
+    if (!authReady || !user) return;
+
+    let cancelled = false;
+    void listProducts(user.uid)
+      .then((data) => {
+        if (!cancelled) setProducts(data);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('No se pudo cargar el catálogo.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadedForUser(user.uid);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, user]);
+
+  const loading = !authReady || (user ? loadedForUser !== user.uid : false);
 
   useEffect(() => {
     if (!openMenuId) return;
@@ -233,14 +238,18 @@ export default function ProductsPage() {
 
   const hasActiveFilters = summaryFilter !== 'all' || statusFilter !== 'all';
 
-  const handleProductCreated = useCallback((product: ProductCatalogItem) => {
-    setProducts((prev) => [product, ...prev]);
-  }, []);
+  const handleProductCreated = useCallback(
+    (product: ProductCatalogItem) => {
+      setProducts((prev) => [product, ...prev]);
+      router.push(`/dashboard/products/${product.id}`);
+    },
+    [router]
+  );
 
   const columns: DataTableColumn<ProductCatalogItem>[] = [
     {
       key: 'name',
-      header: 'Name',
+      header: 'Nombre',
       render: (p) => (
         <div className="flex items-center gap-3 min-w-[180px]">
           <div className="w-8 h-8 rounded-md bg-[var(--dash-accent-soft)] flex items-center justify-center text-[var(--dash-accent)] shrink-0">
@@ -258,7 +267,7 @@ export default function ProductsPage() {
     },
     {
       key: 'pricing',
-      header: 'Pricing',
+      header: 'Precio',
       render: (p) => (
         <span className="font-medium tabular-nums">
           {p.currency} {p.price.toFixed(2)}
@@ -267,19 +276,19 @@ export default function ProductsPage() {
     },
     {
       key: 'category',
-      header: 'Product category',
+      header: 'Categoría',
       render: () => <span className="text-[var(--dash-muted)]">General</span>,
     },
     {
       key: 'createdAt',
-      header: 'Created',
+      header: 'Creado',
       render: (p) => (
         <span className="text-[var(--dash-muted)] tabular-nums">{formatTableDate(p.createdAt)}</span>
       ),
     },
     {
       key: 'updatedAt',
-      header: 'Updated',
+      header: 'Actualizado',
       render: () => <span className="text-[var(--dash-muted)]">—</span>,
     },
     {
@@ -291,7 +300,7 @@ export default function ProductsPage() {
           <button
             type="button"
             className="p-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] text-[var(--dash-muted)]"
-            aria-label="Actions"
+            aria-label="Acciones"
             onClick={(e) => {
               e.stopPropagation();
               setOpenMenuId((id) => (id === p.id ? null : p.id));
@@ -314,7 +323,7 @@ export default function ProductsPage() {
                   router.push(`/dashboard/products/${p.id}`);
                 }}
               >
-                View product
+                Ver producto
               </button>
               <button
                 type="button"
@@ -323,10 +332,17 @@ export default function ProductsPage() {
                 onClick={(e) => {
                   e.stopPropagation();
                   setOpenMenuId(null);
-                  router.push('/dashboard/links');
+                  router.push(
+                    buildPaymentLinkCreateHref({
+                      id: p.id,
+                      name: p.name,
+                      price: p.price,
+                      currency: p.currency,
+                    })
+                  );
                 }}
               >
-                Create Solana Pay link
+                Crear enlace Solana Pay
               </button>
             </div>
           )}
@@ -340,10 +356,10 @@ export default function ProductsPage() {
       <button
         type="button"
         className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-        onClick={() => toast.info('Product analytics — coming soon')}
+        onClick={() => toast.info('Análisis de productos — próximamente')}
       >
         <BarChart3 size={16} />
-        Analyze
+        Analizar
       </button>
       <button
         type="button"
@@ -351,17 +367,13 @@ export default function ProductsPage() {
         className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
       >
         <Plus size={16} />
-        Create product
+        Crear producto
       </button>
     </div>
   );
 
   const handleTabClick = (tab: (typeof CATALOG_TABS)[number]) => {
-    if (tab.href) {
-      router.push(tab.href);
-      return;
-    }
-    setActiveTab(tab.id as ProductCatalogTab);
+    setActiveTab(tab.id);
     resetPagination();
   };
 
@@ -373,26 +385,14 @@ export default function ProductsPage() {
         onCreated={handleProductCreated}
       />
 
-      <PageHeader title="Product catalog" actions={headerActions} />
+      <PageHeader title="Catálogo de productos" actions={headerActions} />
 
-      <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-6">
+      <div className="p-4 sm:p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-6 overflow-x-hidden">
+        <CatalogFlowSectionNav />
+
         <div className="flex flex-wrap gap-1 border-b border-[var(--dash-border)]">
           {CATALOG_TABS.map((tab) => {
-            const isActive = tab.id === 'products' ? activeTab === 'products' : false;
-            if (tab.href) {
-              return (
-                <Link
-                  key={tab.id}
-                  href={tab.href}
-                  className={cn(
-                    'px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap',
-                    'border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-text)]'
-                  )}
-                >
-                  {tab.label}
-                </Link>
-              );
-            }
+            const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
@@ -441,12 +441,12 @@ export default function ProductsPage() {
             <FilterRow className="justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <FilterChip
-                  label="Creation date"
-                  value="All"
-                  onClick={() => toast.info('Creation date filter — coming soon')}
+                  label="Fecha de creación"
+                  value="Todos"
+                  onClick={() => toast.info('Filtro por fecha — próximamente')}
                 />
                 <FilterChip
-                  label="Status"
+                  label="Estado"
                   value={STATUS_LABELS[statusFilter]}
                   active={statusFilter !== 'all'}
                   onClick={() => {
@@ -455,9 +455,9 @@ export default function ProductsPage() {
                   }}
                 />
                 <FilterChip
-                  label="Product category"
-                  value="All"
-                  onClick={() => toast.info('Product category filter — coming soon')}
+                  label="Categoría"
+                  value="Todos"
+                  onClick={() => toast.info('Filtro por categoría — próximamente')}
                 />
                 {hasActiveFilters && (
                   <button
@@ -465,7 +465,7 @@ export default function ProductsPage() {
                     onClick={clearFilters}
                     className="text-sm text-[var(--dash-accent)] hover:underline px-1"
                   >
-                    Clear filters
+                    Limpiar filtros
                   </button>
                 )}
               </div>
@@ -473,26 +473,26 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-                  onClick={() => toast.info('Export prices — coming soon')}
+                  onClick={() => toast.info('Exportar precios — próximamente')}
                 >
                   <Download size={14} />
-                  Export prices
+                  Exportar precios
                 </button>
                 <button
                   type="button"
                   className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-                  onClick={() => toast.info('Export products — coming soon')}
+                  onClick={() => toast.info('Exportar productos — próximamente')}
                 >
                   <Download size={14} />
-                  Export products
+                  Exportar productos
                 </button>
                 <button
                   type="button"
                   className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-                  onClick={() => toast.info('Edit columns — coming soon')}
+                  onClick={() => toast.info('Editar columnas — próximamente')}
                 >
                   <Columns3 size={14} />
-                  Edit columns
+                  Editar columnas
                 </button>
               </div>
             </FilterRow>
@@ -500,17 +500,17 @@ export default function ProductsPage() {
             {!loading && filteredProducts.length === 0 ? (
               <EmptyState
                 icon={Package}
-                title={products.length === 0 ? 'No products yet' : 'No products match filters'}
+                title={products.length === 0 ? 'Aún no hay productos' : 'Ningún producto coincide con los filtros'}
                 description={
                   products.length === 0
-                    ? 'Create your first product to organize USDC/SOL pricing and Solana Pay links.'
-                    : 'Try adjusting your filters or clear them to see all products.'
+                    ? 'Crea tu primer producto para organizar precios en USDC/SOL y enlaces de Solana Pay.'
+                    : 'Prueba a ajustar los filtros o límpialos para ver todos los productos.'
                 }
                 action={
                   products.length === 0
-                    ? { label: 'Create product', onClick: () => setShowCreateDrawer(true) }
+                    ? { label: 'Crear producto', onClick: () => setShowCreateDrawer(true) }
                     : hasActiveFilters
-                      ? { label: 'Clear filters', onClick: clearFilters }
+                      ? { label: 'Limpiar filtros', onClick: clearFilters }
                       : undefined
                 }
               />
@@ -520,7 +520,7 @@ export default function ProductsPage() {
                 data={paginatedProducts}
                 rowKey={(p) => p.id}
                 loading={loading}
-                loadingMessage="Loading products…"
+                loadingMessage="Cargando productos…"
                 onRowClick={(p) => router.push(`/dashboard/products/${p.id}`)}
                 footer={
                   !loading ? (
@@ -537,10 +537,10 @@ export default function ProductsPage() {
           </>
         )}
 
-        {activeTab === 'features' && <StubTabPanel title="Features" />}
-        {activeTab === 'coupons' && <StubTabPanel title="Coupons" />}
-        {activeTab === 'shipping' && <StubTabPanel title="Shipping rates" />}
-        {activeTab === 'pricing' && <StubTabPanel title="Pricing tables" />}
+        {activeTab === 'features' && <StubTabPanel title="Funciones" />}
+        {activeTab === 'coupons' && <StubTabPanel title="Cupones" />}
+        {activeTab === 'shipping' && <StubTabPanel title="Tarifas de envío" />}
+        {activeTab === 'pricing' && <StubTabPanel title="Tablas de precios" />}
 
         <CatalogFlowCrossLinks excludeHref="/dashboard/products" />
       </div>

@@ -3,7 +3,6 @@ import {
   ArrowRightLeft,
   FileText,
   Link as LinkIcon,
-  QrCode,
   Repeat,
   Smartphone,
 } from 'lucide-react';
@@ -31,19 +30,11 @@ export const CREATE_PAYMENT_OPTIONS: CreatePaymentOption[] = [
   {
     id: 'payment-link',
     title: 'Solana Pay link',
-    description: 'Create a shareable checkout URL for one-time SOL or USDC payments.',
+    description:
+      'Create a shareable checkout URL with wallet, Solana Pay QR, and card (coming soon).',
     href: '/dashboard/links/create',
     icon: LinkIcon,
     shortcut: 'cl',
-  },
-  {
-    id: 'solana-pay-qr',
-    title: 'Solana Pay QR',
-    headerTitle: 'Solana Pay QR',
-    description: 'Generate a QR code to display, print, or show on a POS screen.',
-    href: '/dashboard/qr',
-    icon: QrCode,
-    shortcut: 'cq',
   },
   {
     id: 'subscription',
@@ -76,9 +67,8 @@ export const HEADER_TRANSFER_OPTION: CreatePaymentOption = {
 /** Header quick-create order; transfer is header-only */
 export const HEADER_CREATE_OPTIONS: CreatePaymentOption[] = [
   CREATE_PAYMENT_OPTIONS[0],
-  CREATE_PAYMENT_OPTIONS[3],
-  CREATE_PAYMENT_OPTIONS[1],
   CREATE_PAYMENT_OPTIONS[2],
-  CREATE_PAYMENT_OPTIONS[4],
+  CREATE_PAYMENT_OPTIONS[1],
+  CREATE_PAYMENT_OPTIONS[3],
   HEADER_TRANSFER_OPTION,
 ];

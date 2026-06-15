@@ -14,8 +14,8 @@ const PRIMARY_TABS = [
 ] as const;
 
 const MORE_ITEMS = [
-  { id: 'links', label: 'Payment links' },
-  { id: 'plans', label: 'Payment plans' },
+  { href: '/dashboard/links', label: 'Payment links' },
+  { href: '/dashboard/payments/plans', label: 'Payment plans' },
 ] as const;
 
 function isTabActive(pathname: string, href: string) {
@@ -24,9 +24,7 @@ function isTabActive(pathname: string, href: string) {
 
 function isMoreActive(pathname: string) {
   return MORE_ITEMS.some(
-    (item) =>
-      pathname === `/dashboard/payments/${item.id}` ||
-      pathname.startsWith(`/dashboard/payments/${item.id}/`)
+    (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
   );
 }
 
@@ -37,9 +35,7 @@ export function PaymentsSectionNav() {
   const moreActive = isMoreActive(pathname);
   const moreLabel =
     MORE_ITEMS.find(
-      (item) =>
-        pathname === `/dashboard/payments/${item.id}` ||
-        pathname.startsWith(`/dashboard/payments/${item.id}/`)
+      (item) => pathname === item.href || pathname.startsWith(`${item.href}/`)
     )?.label ?? 'More';
 
   useEffect(() => {
@@ -95,13 +91,13 @@ export function PaymentsSectionNav() {
           >
             {MORE_ITEMS.map((item) => (
               <Link
-                key={item.id}
-                href={`/dashboard/payments/${item.id}`}
+                key={item.href}
+                href={item.href}
                 role="menuitem"
                 onClick={() => setMoreOpen(false)}
                 className={cn(
                   'block w-full text-left px-4 py-2 text-sm transition-colors',
-                  pathname.startsWith(`/dashboard/payments/${item.id}`)
+                  pathname === item.href || pathname.startsWith(`${item.href}/`)
                     ? 'text-[var(--dash-accent)] bg-[var(--dash-accent-soft)]'
                     : 'text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]'
                 )}

@@ -3,12 +3,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { auth, onAuthStateChanged } from '@/lib/firebase';
-import {
-  getProduct,
-  listPaymentLinks,
-  updateProduct,
-} from '@/lib/merchant-data';
+import { auth } from '@/lib/firebase';
+import { getProduct, listPaymentLinks, updateProduct } from '@/lib/merchant-data';
+import { buildPaymentLinkCreateHref } from '@/lib/dashboard/catalog-flow-links';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import type { Currency, PaymentLink, ProductCatalogItem } from '@luxor/contracts';
 import { dashStatusBadges } from '@/lib/dashboard-styles';
 import {
@@ -97,9 +95,10 @@ function SidebarCard({
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { user, authReady } = useFirebaseAuth();
   const [product, setProduct] = useState<ProductCatalogItem | null>(null);
   const [relatedLinks, setRelatedLinks] = useState<PaymentLink[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editName, setEditName] = useState('');
@@ -109,20 +108,21 @@ export default function ProductDetailPage() {
   const [editActive, setEditActive] = useState(true);
   const [showMoreDetails, setShowMoreDetails] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [priceMenuOpen, setPriceMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const priceMenuRef = useRef<HTMLDivElement>(null);
+
+  const fetchKey = user && id ? `${user.uid}:${id}` : null;
+  const loading = !authReady || (fetchKey ? loadedKey !== fetchKey : false);
 
   useEffect(() => {
-    if (!id) return;
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const [p, links] = await Promise.all([
-          getProduct(user.uid, id),
-          listPaymentLinks(user.uid),
-        ]);
+    if (!authReady || !user || !id) return;
+
+    const key = `${user.uid}:${id}`;
+    let cancelled = false;
+    void Promise.all([getProduct(user.uid, id), listPaymentLinks(user.uid)])
+      .then(([p, links]) => {
+        if (cancelled) return;
         setProduct(p);
         if (p) {
           setRelatedLinks(
@@ -134,25 +134,32 @@ export default function ProductDetailPage() {
             )
           );
         }
-      } catch {
-        toast.error('Could not load product');
-      } finally {
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [id]);
+      })
+      .catch(() => {
+        if (!cancelled) toast.error('Could not load product');
+      })
+      .finally(() => {
+        if (!cancelled) setLoadedKey(key);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [authReady, user, id]);
 
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !priceMenuOpen) return;
     const onPointerDown = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
+      if (priceMenuRef.current && !priceMenuRef.current.contains(e.target as Node)) {
+        setPriceMenuOpen(false);
+      }
     };
     document.addEventListener('mousedown', onPointerDown);
     return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [menuOpen]);
+  }, [menuOpen, priceMenuOpen]);
 
   const openEdit = () => {
     if (!product) return;
@@ -193,14 +200,24 @@ export default function ProductDetailPage() {
   };
 
   const createLinkHref = useMemo(() => {
-    if (!product) return '/dashboard/links/new';
-    const params = new URLSearchParams({
+    if (!product) return '/dashboard/links/create';
+    return buildPaymentLinkCreateHref({
+      id: product.id,
       name: product.name,
-      amount: String(product.price),
+      price: product.price,
       currency: product.currency,
+      description: product.description,
     });
-    return `/dashboard/links/new?${params.toString()}`;
   }, [product]);
+
+  const defaultPaymentLink = relatedLinks[0] ?? null;
+  const priceId = product ? `price_${product.id}` : '';
+
+  const copyPriceId = () => {
+    if (!priceId) return;
+    void navigator.clipboard.writeText(priceId);
+    toast.success('ID del precio copiado');
+  };
 
   const mockLogs = useMemo(() => {
     if (!product) return [];
@@ -250,12 +267,12 @@ export default function ProductDetailPage() {
   }
 
   const statusBadge = product.active ? dashStatusBadges.success : dashStatusBadges.neutral;
-  const statusLabel = product.active ? 'Active' : 'Archived';
+  const statusLabel = product.active ? 'Activo' : 'Archivado';
 
   return (
     <div className="min-h-full">
-      <header className="dash-header border-b border-[var(--dash-border)]">
-        <div className="px-6 md:px-8 pt-6 pb-4">
+      <header className="relative z-30 dash-header border-b border-[var(--dash-border)]">
+        <div className="px-4 sm:px-6 md:px-8 pt-5 sm:pt-6 pb-4">
           <nav className="flex items-center gap-1.5 text-sm text-[var(--dash-muted)] mb-4">
             <Link
               href="/dashboard/products"
@@ -274,7 +291,7 @@ export default function ProductDetailPage() {
               </div>
               <div className="min-w-0 space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-2xl font-semibold text-[var(--dash-text)] tracking-tight truncate">
+                  <h1 className="text-xl sm:text-2xl font-semibold text-[var(--dash-text)] tracking-tight break-words">
                     {product.name}
                   </h1>
                   <span className={statusBadge}>{statusLabel}</span>
@@ -285,11 +302,11 @@ export default function ProductDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto lg:shrink-0">
               <button
                 type="button"
                 onClick={openEdit}
-                className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
+                className="dash-btn-secondary px-4 py-2.5 text-sm inline-flex items-center gap-2 min-h-[44px]"
               >
                 <Pencil size={16} />
                 Edit product
@@ -297,7 +314,7 @@ export default function ProductDetailPage() {
               <div className="relative" ref={menuRef}>
                 <button
                   type="button"
-                  className="dash-btn-secondary p-2"
+                  className="dash-btn-secondary p-2.5 min-h-[44px] min-w-[44px]"
                   aria-label="More actions"
                   onClick={() => setMenuOpen((open) => !open)}
                 >
@@ -349,8 +366,8 @@ export default function ProductDetailPage() {
         </div>
       </header>
 
-      <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto">
-        <div className="grid xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-6">
+      <div className="p-4 sm:p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto">
+        <div className="grid lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)] gap-6">
           <div className="space-y-6 min-w-0">
             {editing && (
               <form onSubmit={handleSave} className="dash-card p-6 space-y-4">
@@ -578,7 +595,7 @@ export default function ProductDetailPage() {
             </DetailSection>
           </div>
 
-          <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">
+          <aside className="relative z-0 space-y-4 lg:sticky lg:top-6 lg:self-start order-last">
             <SidebarCard title="Details" onEdit={openEdit}>
               <CopyField label="Product ID" value={product.id} />
               <DetailRow label="Product category">
@@ -625,7 +642,7 @@ export default function ProductDetailPage() {
               href={createLinkHref}
               className="dash-btn-primary w-full py-2.5 text-sm text-center inline-block"
             >
-              Create Solana Pay link
+              Crear enlace de pago
             </Link>
           </aside>
         </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { auth, onAuthStateChanged } from '@/lib/firebase';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import type { ApiResult } from '@/lib/api/http';
 
 interface UseBackendListState<T> {
@@ -16,42 +16,50 @@ interface UseBackendListState<T> {
 export function useBackendList<T>(
   fetcher: () => Promise<ApiResult<T[]>>
 ): UseBackendListState<T> {
+  const { user, authReady } = useFirebaseAuth();
   const [items, setItems] = useState<T[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedForUser, setLoadedForUser] = useState<string | null>(null);
   const [unavailable, setUnavailable] = useState(false);
   const [notImplemented, setNotImplemented] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-      setLoading(true);
-      setError(null);
-      setUnavailable(false);
-      setNotImplemented(false);
+  const loading = !authReady || (user ? loadedForUser !== user.uid : false);
 
-      const result = await fetcher();
+  useEffect(() => {
+    if (!authReady || !user) return;
+
+    let cancelled = false;
+
+    void fetcher().then((result) => {
+      if (cancelled) return;
       if (result.ok) {
         setItems(Array.isArray(result.data) ? result.data : []);
+        setUnavailable(false);
+        setNotImplemented(false);
+        setError(null);
       } else {
         setItems([]);
         setUnavailable(Boolean(result.unavailable));
         setNotImplemented(Boolean(result.notImplemented));
         if (!result.unavailable && !result.notImplemented) {
           setError(result.error);
+        } else {
+          setError(null);
         }
       }
-      setLoading(false);
+      setLoadedForUser(user.uid);
     });
-    return () => unsubscribe();
-    // Fetcher is stable per page module; re-run only on mount.
+
+    return () => {
+      cancelled = true;
+    };
+    // Fetcher is stable per page module; re-run when auth becomes ready.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [authReady, user]);
 
   const reload = () => {
-    const user = auth.currentUser;
     if (!user) return;
-    setLoading(true);
+    setLoadedForUser(null);
     void fetcher().then((result) => {
       if (result.ok) {
         setItems(Array.isArray(result.data) ? result.data : []);
@@ -64,7 +72,7 @@ export function useBackendList<T>(
         setNotImplemented(Boolean(result.notImplemented));
         setError(result.unavailable || result.notImplemented ? null : result.error);
       }
-      setLoading(false);
+      setLoadedForUser(user.uid);
     });
   };
 

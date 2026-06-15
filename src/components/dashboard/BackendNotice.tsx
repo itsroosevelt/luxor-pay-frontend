@@ -12,15 +12,15 @@ export function BackendNotice({ unavailable, notImplemented }: BackendNoticeProp
     <div className="dash-card p-4 text-sm text-[var(--dash-muted)] border-[var(--dash-border)]">
       {unavailable ? (
         <p>
-          <strong className="text-[var(--dash-text)]">Frontend demo mode.</strong> No external
-          backend is connected — billing, radar, disputes, and similar screens show empty states.
-          Payments, payment links, products, customers, and merchant settings use browser
-          localStorage.
+          <strong className="text-[var(--dash-text)]">Modo demo (solo frontend).</strong> No hay
+          backend conectado — facturación, radar, disputas y pantallas similares muestran estados
+          vacíos. Pagos, enlaces, productos, clientes y ajustes del comercio usan localStorage del
+          navegador.
         </p>
       ) : (
         <p>
-          <strong className="text-[var(--dash-text)]">Not available in demo mode.</strong> This UI is
-          ready for when you connect a backend server.
+          <strong className="text-[var(--dash-text)]">No disponible en modo demo.</strong> Esta
+          interfaz estará lista cuando conectes un servidor backend.
         </p>
       )}
     </div>

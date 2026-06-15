@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { listPayments } from '@/lib/payments-api';
+import { listCheckoutPayments } from '@/lib/checkout-payments-local';
+import { isFrontendOnly } from '@/lib/frontend-only';
 import type { Currency, PaymentOrder } from '@luxor/contracts';
 import { getExplorerTxUrl } from '@/web3/config/network';
 import { toast } from 'sonner';
@@ -50,19 +52,19 @@ import {
 const PAGE_SIZE = 20;
 
 const TRANSACTION_TABS: { id: TransactionTab; label: string }[] = [
-  { id: 'payments', label: 'Payments' },
-  { id: 'transfers', label: 'Transfers' },
-  { id: 'topups', label: 'Top-ups' },
-  { id: 'all', label: 'All activity' },
+  { id: 'payments', label: 'Pagos' },
+  { id: 'transfers', label: 'Transferencias' },
+  { id: 'topups', label: 'Recargas' },
+  { id: 'all', label: 'Toda la actividad' },
 ];
 
 const SUMMARY_CARDS: { id: PaymentSummaryFilter; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'succeeded', label: 'Succeeded' },
-  { id: 'refunded', label: 'Refunded' },
-  { id: 'disputed', label: 'Disputed' },
-  { id: 'failed', label: 'Failed' },
-  { id: 'uncaptured', label: 'Uncaptured' },
+  { id: 'all', label: 'Todos' },
+  { id: 'succeeded', label: 'Completados' },
+  { id: 'refunded', label: 'Reembolsados' },
+  { id: 'disputed', label: 'Disputados' },
+  { id: 'failed', label: 'Fallidos' },
+  { id: 'uncaptured', label: 'Sin capturar' },
 ];
 
 const CURRENCIES: Currency[] = ['USDC', 'SOL'];
@@ -90,9 +92,9 @@ const activityStatusStyles: Record<BalanceActivityStatus, string> = {
 };
 
 const activityStatusLabels: Record<BalanceActivityStatus, string> = {
-  paid: 'Paid',
-  pending: 'Pending',
-  failed: 'Failed',
+  paid: 'Pagado',
+  pending: 'Pendiente',
+  failed: 'Fallido',
 };
 
 function formatTableDate(iso: string): string {
@@ -188,11 +190,19 @@ export default function TransactionsPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
-        const data = await listPayments(token);
-        setOrders(data);
+        if (isFrontendOnly()) {
+          setOrders(listCheckoutPayments(user.uid));
+        } else {
+          const token = await user.getIdToken();
+          const data = await listPayments(token);
+          setOrders(data);
+        }
       } catch {
-        toast.error('Could not load transactions. Is the backend running?');
+        toast.error(
+          isFrontendOnly()
+            ? 'No se pudieron cargar las transacciones.'
+            : 'Could not load transactions. Is the backend running?'
+        );
       } finally {
         setLoading(false);
       }
@@ -532,23 +542,25 @@ export default function TransactionsPage() {
 
   const emptyTitle =
     activeTab === 'transfers'
-      ? 'No transfers'
+      ? 'Sin transferencias'
       : activeTab === 'topups'
-        ? 'No top-ups'
+        ? 'Sin recargas'
         : activeTab === 'all'
-          ? 'No activity'
-          : 'No payments';
+          ? 'Sin actividad'
+          : 'Sin pagos';
 
   const emptyDescription =
     activeTab === 'transfers'
-      ? 'Transfers to external wallets will appear here when available on your account.'
+      ? 'Las transferencias a wallets externas aparecerán aquí cuando estén disponibles.'
       : activeTab === 'topups'
-        ? 'Balance top-ups will appear here when available on your account.'
+        ? 'Las recargas de saldo aparecerán aquí cuando estén disponibles.'
         : activeTab === 'all'
-          ? 'Share a payment link or charge with POS to see activity.'
-          : summaryFilter !== 'all' || currencyFilter !== 'all'
-            ? 'No payments match the selected filters.'
-            : 'Share a payment link or charge with POS to receive your first Solana payment.';
+          ? 'Comparte un enlace de pago o cobra con POS para ver actividad.'
+            : summaryFilter !== 'all' || currencyFilter !== 'all'
+            ? 'No hay pagos que coincidan con los filtros seleccionados.'
+            : isFrontendOnly()
+              ? 'Comparte un enlace de pago y completa un checkout de demo para ver tu primer pago.'
+              : 'Comparte un enlace de pago o cobra con POS para recibir tu primer pago en Solana.';
 
   const handleExport = () => {
     if (activeTab === 'transfers' || activeTab === 'topups') {
@@ -597,19 +609,20 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <PageHeader title="Transactions" actions={headerActions} />
+      <PageHeader title="Transacciones" actions={headerActions} />
 
-      <div className="px-6 md:px-8 pt-4">
+      <div className="px-4 sm:px-6 md:px-8 pt-4">
         <div className="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] px-4 py-3 text-sm text-[var(--dash-muted)] flex gap-3 items-start max-w-[1400px] mx-auto">
           <Info size={16} className="shrink-0 mt-0.5 text-[var(--dash-accent)]" />
           <p>
-            Confirmed Luxor Pay payments are credited to your Solana wallet. Amounts and statuses
-            reflect real orders from your account — no demo data.
+            {isFrontendOnly()
+              ? 'Los pagos de demo se guardan en este navegador al completar un checkout. Comparte el enlace de pago y simula un pago para ver transacciones aquí.'
+              : 'Los pagos confirmados de Luxor Pay se acreditan en tu wallet de Solana. Los montos y estados reflejan pedidos reales de tu cuenta.'}
           </p>
         </div>
       </div>
 
-      <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-6">
+      <div className="p-4 sm:p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-6 overflow-x-hidden">
         <div className="flex flex-wrap gap-1 border-b border-[var(--dash-border)]">
           {TRANSACTION_TABS.map(({ id, label }) => (
             <button
@@ -812,7 +825,7 @@ export default function TransactionsPage() {
             description={emptyDescription}
             action={
               activeTab === 'payments' || activeTab === 'all'
-                ? { label: 'Create payment link', href: '/dashboard/links' }
+                ? { label: 'Crear enlace de pago', href: '/dashboard/links' }
                 : undefined
             }
           />
@@ -822,7 +835,7 @@ export default function TransactionsPage() {
             data={paginatedPayments}
             rowKey={(o) => o.reference}
             loading={loading}
-            loadingMessage="Loading transactions…"
+            loadingMessage="Cargando transacciones…"
             onRowClick={(o) => router.push(`/dashboard/transactions/${o.reference}`)}
             footer={
               !loading ? (
@@ -841,7 +854,7 @@ export default function TransactionsPage() {
             data={transferRows}
             rowKey={(row) => row.id}
             loading={loading}
-            loadingMessage="Loading transfers…"
+            loadingMessage="Cargando transferencias…"
             onRowClick={(row) => router.push(`/dashboard/transactions/${row.id}`)}
             footer={!loading ? <CountFooter totalItems={transferRows.length} /> : undefined}
           />
@@ -851,7 +864,7 @@ export default function TransactionsPage() {
             data={topupRows}
             rowKey={(row) => row.id}
             loading={loading}
-            loadingMessage="Loading top-ups…"
+            loadingMessage="Cargando recargas…"
             onRowClick={(row) => router.push(`/dashboard/transactions/${row.id}`)}
             footer={!loading ? <CountFooter totalItems={topupRows.length} /> : undefined}
           />

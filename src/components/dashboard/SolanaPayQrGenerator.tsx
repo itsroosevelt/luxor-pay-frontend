@@ -3,15 +3,18 @@
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { ArrowLeft, Copy, Download } from 'lucide-react';
-import type { Currency } from '@luxor/contracts';
+import type { Currency, MerchantProfile } from '@luxor/contracts';
 import { QRCodePayment } from '@/features/checkout/components/QRCodePayment';
+import { assessMerchantQrReadiness, getQrReadinessSettingsHref } from '@/lib/qr-readiness';
 import { buildSolanaPayUrl } from '@/lib/solana-pay-url';
 import { toast } from 'sonner';
 
 export function SolanaPayQrGenerator({
+  merchantProfile,
   merchantWallet,
   merchantName = 'Luxor Pay',
 }: {
+  merchantProfile?: MerchantProfile | null;
   merchantWallet: string;
   merchantName?: string;
 }) {
@@ -24,8 +27,13 @@ export function SolanaPayQrGenerator({
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!merchantWallet.trim()) {
-      toast.error('Add your Solana wallet in Settings before generating QR codes');
+    const readiness = assessMerchantQrReadiness(merchantProfile ?? null, {
+      wallet: merchantWallet,
+      businessName: merchantName,
+    });
+
+    if (!readiness.ready) {
+      toast.error(readiness.issues[0]?.message ?? 'Completa tu perfil de comercio en Ajustes');
       return;
     }
 
@@ -80,6 +88,14 @@ export function SolanaPayQrGenerator({
     };
     img.src = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgData)))}`;
   };
+
+  const readiness = assessMerchantQrReadiness(merchantProfile ?? null, {
+    wallet: merchantWallet,
+    businessName: merchantName,
+  });
+  const settingsHref = readiness.ready
+    ? '/dashboard/settings/profile'
+    : getQrReadinessSettingsHref(readiness.issues[0]?.field ?? 'wallet');
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[var(--dash-panel)]">
@@ -145,19 +161,23 @@ export function SolanaPayQrGenerator({
               </p>
             </div>
 
-            {!merchantWallet.trim() && (
-              <p className="text-sm text-amber-400/90">
-                Add your merchant wallet in{' '}
-                <Link href="/dashboard/settings" className="text-[var(--dash-accent)] hover:underline">
-                  Settings
-                </Link>{' '}
-                to generate QR codes.
-              </p>
+            {!readiness.ready && (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/90 space-y-2">
+                <p className="font-medium">Completa tu perfil de comercio para generar QR</p>
+                <ul className="text-xs space-y-1 text-amber-200/80">
+                  {readiness.issues.map((issue) => (
+                    <li key={issue.field}>• {issue.message}</li>
+                  ))}
+                </ul>
+                <Link href={settingsHref} className="text-[var(--dash-accent)] hover:underline text-xs">
+                  Ir a Ajustes
+                </Link>
+              </div>
             )}
 
             <button
               type="submit"
-              disabled={!merchantWallet.trim()}
+              disabled={!readiness.ready}
               className="dash-btn-primary w-full py-2.5 text-sm disabled:opacity-50"
             >
               Generate QR

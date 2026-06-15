@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, Link as LinkIcon, QrCode, ShoppingCart, Terminal } from 'lucide-react';
+import { ArrowRight, Link as LinkIcon, ShoppingCart, Terminal } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 export interface EnabledProduct {
@@ -37,17 +37,10 @@ const AVAILABLE_PRODUCTS: CatalogProduct[] = [
     icon: Terminal,
   },
   {
-    id: 'qr-codes',
-    label: 'QR codes',
-    description: 'Generate Solana Pay QR codes for display, print, or POS screens.',
-    href: '/dashboard/qr',
-    learnMoreHref: '/dashboard/qr',
-    icon: QrCode,
-  },
-  {
     id: 'payment-links',
     label: 'Payment links',
-    description: 'Share checkout URLs that accept SOL and USDC without writing code.',
+    description:
+      'Share checkout URLs with wallet, Solana Pay QR, and card (coming soon) — no separate QR needed.',
     href: '/dashboard/links',
     learnMoreHref: '/dashboard/links',
     icon: LinkIcon,

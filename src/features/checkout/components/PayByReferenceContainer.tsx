@@ -8,18 +8,18 @@ import {
   CheckoutError,
 } from '@/features/checkout/components/CheckoutShell';
 import { PayByReferenceView } from '@/features/checkout/components/PayByReferenceView';
+import type { CheckoutPaymentMethod } from '@/features/checkout/components/CheckoutPaymentMethods';
 
 export function PayByReferenceContainer() {
   const params = useParams();
   const router = useRouter();
   const reference = params.reference as string;
   const { data, isLoading, isError, errorMessage } = usePaymentStatus(reference);
-  const [method, setMethod] = useState<'qr' | 'wallet'>('qr');
+  const [method, setMethod] = useState<CheckoutPaymentMethod>('wallet');
 
   useEffect(() => {
-    if (reference.startsWith('lx_')) {
-      router.replace(`/pay/link/${reference}`);
-    }
+    if (!reference.startsWith('lx_')) return;
+    router.replace(`/pay/${reference}`);
   }, [reference, router]);
 
   if (isLoading) {

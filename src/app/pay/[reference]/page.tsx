@@ -1,5 +1,5 @@
-import { PayByReferenceContainer } from '@/features/checkout/components/PayByReferenceContainer';
+import { PayPageContainer } from '@/features/checkout/components/PayPageContainer';
 
 export default function PayByReferencePage() {
-  return <PayByReferenceContainer />;
+  return <PayPageContainer />;
 }

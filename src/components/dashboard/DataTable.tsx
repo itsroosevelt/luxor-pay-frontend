@@ -37,8 +37,8 @@ export function DataTable<T>({
 
   return (
     <div className={cn('dash-card overflow-hidden', className)}>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto -mx-px">
+        <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-[var(--dash-border)] bg-[var(--dash-surface-elevated)]">
               {columns.map((col) => (

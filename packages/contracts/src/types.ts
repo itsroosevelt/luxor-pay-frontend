@@ -11,13 +11,30 @@ export interface MerchantProfile {
 export interface PaymentLink {
   id: string;
   merchantId: string;
+  /** Short public identifier for /pay/[slug] URLs */
+  slug?: string;
   name: string;
   amount: number;
   currency: Currency;
   merchantWallet: string;
+  /** Snapshot of merchant display name when the link was created. */
+  merchantBusinessName?: string;
+  /** True when the merchant profile met QR requirements at link creation. */
+  qrReady?: boolean;
   active: boolean;
   createdAt: string;
   collectEmail?: boolean;
+  collectName?: boolean;
+  collectCompany?: boolean;
+  collectAddress?: boolean;
+  collectPhone?: boolean;
+  collectTaxes?: boolean;
+  taxCode?: string;
+  taxIncluded?: boolean;
+  taxRate?: number;
+  quantity?: number;
+  allowQuantityAdjustment?: boolean;
+  limitPayments?: boolean;
   successMessage?: string;
   redirectUrl?: string;
 }

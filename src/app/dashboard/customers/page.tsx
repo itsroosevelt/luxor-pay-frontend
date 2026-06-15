@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { listCustomers } from '@/lib/merchant-data';
 import { listPayments } from '@/lib/payments-api';
+import { listCheckoutPayments } from '@/lib/checkout-payments-local';
+import { isFrontendOnly } from '@/lib/frontend-only';
 import {
   countryFlag,
   customerDescription,
@@ -41,12 +43,12 @@ import { cn } from '@/lib/cn';
 const PAGE_SIZE = 20;
 
 const TABS: { id: CustomerTab; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'top', label: 'Top customers' },
-  { id: 'new', label: 'New customers' },
-  { id: 'high-refunds', label: 'High refunds' },
-  { id: 'high-disputes', label: 'High disputes' },
-  { id: 'remaining-balances', label: 'Remaining balances' },
+  { id: 'all', label: 'Todos' },
+  { id: 'top', label: 'Mejores clientes' },
+  { id: 'new', label: 'Clientes nuevos' },
+  { id: 'high-refunds', label: 'Muchos reembolsos' },
+  { id: 'high-disputes', label: 'Muchas disputas' },
+  { id: 'remaining-balances', label: 'Saldos pendientes' },
 ];
 
 function RangePaginationFooter({
@@ -113,7 +115,9 @@ export default function CustomersPage() {
         const token = await user.getIdToken();
         const [data, orders] = await Promise.all([
           listCustomers(user.uid).catch(() => [] as Customer[]),
-          listPayments(token).catch(() => [] as PaymentOrder[]),
+          isFrontendOnly()
+            ? Promise.resolve(listCheckoutPayments(user.uid))
+            : listPayments(token).catch(() => [] as PaymentOrder[]),
         ]);
         setCustomers(data);
         setPayments(orders);
@@ -328,7 +332,7 @@ export default function CustomersPage() {
         onCreated={(customer) => setCustomers((prev) => [customer, ...prev])}
       />
 
-      <PageHeader title="Customers" actions={headerActions} />
+      <PageHeader title="Clientes" actions={headerActions} />
 
       <div className="p-6 md:px-8 md:pb-8 max-w-[1400px] mx-auto space-y-4">
         <div className="flex flex-wrap items-center gap-2 overflow-x-auto pb-1">

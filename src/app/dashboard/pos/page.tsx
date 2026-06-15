@@ -207,6 +207,18 @@ export default function PosDevicesPage() {
       />
 
       <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-6">
+        <div className="dash-card p-4 flex items-start gap-3 text-sm border border-[var(--dash-accent)]/20 bg-[var(--dash-accent-soft)]/30">
+          <p className="text-[var(--dash-muted)] text-xs leading-relaxed">
+            <span className="font-medium text-[var(--dash-text)]">¿Cobro rápido en mostrador?</span>{' '}
+            Crea un{' '}
+            <Link href="/dashboard/links/create" className="text-[var(--dash-accent)] hover:underline">
+              enlace de pago
+            </Link>{' '}
+            y muestra el QR de su checkout en pantalla. Terminal es para integraciones API con
+            dispositivos registrados.
+          </p>
+        </div>
+
         {showForm && (
           <div className="dash-card p-6">{registrationForm}</div>
         )}

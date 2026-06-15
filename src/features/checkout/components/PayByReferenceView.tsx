@@ -1,17 +1,18 @@
 'use client';
 
 import type { PaymentOrder } from '@luxor/contracts';
-import { QRCodePayment } from '@/features/checkout/components/QRCodePayment';
-import { PaymentButton } from '@/features/checkout/components/PaymentButton';
+import {
+  CheckoutPaymentMethods,
+  type CheckoutPaymentMethod,
+} from '@/features/checkout/components/CheckoutPaymentMethods';
 import { TransactionStatus } from '@/features/checkout/components/TransactionStatus';
-import { CheckoutShell } from '@/features/checkout/components/CheckoutShell';
-import { cn } from '@/lib/cn';
+import { StripeCheckoutLayout } from '@/features/checkout/components/CheckoutShell';
 import { formatCurrencyAmount } from '@/lib/format-currency';
 
 export interface PayByReferenceViewProps {
   order: PaymentOrder;
-  method: 'qr' | 'wallet';
-  onMethodChange: (method: 'qr' | 'wallet') => void;
+  method: CheckoutPaymentMethod;
+  onMethodChange: (method: CheckoutPaymentMethod) => void;
 }
 
 export function PayByReferenceView({ order, method, onMethodChange }: PayByReferenceViewProps) {
@@ -23,58 +24,45 @@ export function PayByReferenceView({ order, method, onMethodChange }: PayByRefer
   const isConfirmed = order.status === 'confirmed';
 
   return (
-    <CheckoutShell
+    <StripeCheckoutLayout
       merchantName="Luxor Pay"
-      productName={order.label ?? 'Checkout'}
-      amount={displayAmount}
+      lineItems={[
+        {
+          name: order.label ?? 'Checkout',
+          unitPrice: order.amount,
+          quantity: 1,
+        },
+      ]}
       currency={order.currency}
+      contactFields={{ collectEmail: true }}
       statusSlot={<TransactionStatus order={order} />}
+      payLabel="Pagar"
     >
       {isConfirmed ? (
-        <p className="text-center text-[#60A5FA] font-semibold text-lg">
-          Thank you for your payment.
+        <p className="text-center text-[#14f195] font-semibold text-lg">
+          Gracias por tu pago.
         </p>
       ) : (
         <>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => onMethodChange('qr')}
-              className={cn(
-                'flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors',
-                method === 'qr'
-                  ? 'border-white bg-white text-black'
-                  : 'border-white/15 text-gray-400 hover:border-white/30'
-              )}
-            >
-              QR (Solana Pay)
-            </button>
-            <button
-              type="button"
-              onClick={() => onMethodChange('wallet')}
-              className={cn(
-                'flex-1 py-2.5 rounded-lg text-sm font-medium border transition-colors',
-                method === 'wallet'
-                  ? 'border-white bg-white text-black'
-                  : 'border-white/15 text-gray-400 hover:border-white/30'
-              )}
-            >
-              Wallet
-            </button>
-          </div>
+          <CheckoutPaymentMethods
+            method={method}
+            onMethodChange={onMethodChange}
+            payUrl={payUrl}
+            onPay={() => window.open(payUrl, '_blank')}
+            name="pay-reference-method"
+          />
 
-          {method === 'qr' && payUrl ? (
-            <QRCodePayment url={payUrl} size={240} />
-          ) : (
-            <div className="space-y-3">
-              <PaymentButton variant="white" onPay={() => window.open(payUrl, '_blank')} />
-              <p className="text-xs text-center text-gray-500">
-                Connect Phantom, Solflare, or another Solana wallet
-              </p>
-            </div>
-          )}
+          {method !== 'card' ? (
+            <button
+              type="button"
+              onClick={() => window.open(payUrl, '_blank')}
+              className="mt-1 w-full rounded-xl bg-white py-3.5 text-[15px] font-semibold text-black shadow-sm transition-all hover:bg-gray-100 active:scale-[0.99]"
+            >
+              Pagar {displayAmount} {order.currency}
+            </button>
+          ) : null}
         </>
       )}
-    </CheckoutShell>
+    </StripeCheckoutLayout>
   );
 }

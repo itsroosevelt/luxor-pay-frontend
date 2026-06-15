@@ -5,12 +5,15 @@ import { usePathname, useRouter } from 'next/navigation';
 import { auth, signOut } from '@/lib/firebase';
 import { useEffect, useRef, useState } from 'react';
 import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
-import { Search, HelpCircle, Menu, X, LayoutGrid, Settings } from 'lucide-react';
+import { usePlatformAdmin } from '@/hooks/usePlatformAdmin';
+import { Search, HelpCircle, Menu, X, LayoutGrid, Settings, Shield } from 'lucide-react';
+import { PlatformAdminBanner } from '@/components/dashboard/PlatformAdminBanner';
 import { NotificationsDropdown } from '@/components/dashboard/NotificationsDropdown';
 import { QuickCreateMenu } from '@/components/dashboard/QuickCreateMenu';
 import { ensureMerchantProfile } from '@/lib/merchant-data';
 import { getErrorMessage } from '@/lib/firestore-errors';
 import { SidebarNav } from '@/components/dashboard/SidebarNav';
+import { isDashboardImmersiveRoute } from '@/lib/dashboard/immersive-routes';
 import { cn } from '@/lib/cn';
 import { toast } from 'sonner';
 
@@ -27,8 +30,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, authReady } = useFirebaseAuth();
+  const { isPlatformAdmin } = usePlatformAdmin();
   const [businessName, setBusinessName] = useState<string>();
-  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [appLauncherOpen, setAppLauncherOpen] = useState(false);
@@ -36,6 +39,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const settingsActive =
     pathname === '/dashboard/settings' || pathname.startsWith('/dashboard/settings/');
+  const immersive = isDashboardImmersiveRoute(pathname);
 
   useEffect(() => {
     if (!authReady) return;
@@ -55,13 +59,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         const profile = await ensureMerchantProfile(uid, user.email ?? '');
         if (!cancelled) {
           setBusinessName(profile?.businessName);
-          setLoadedUserId(uid);
         }
       } catch (e) {
         console.error(e);
         if (!cancelled) {
           toast.error(getErrorMessage(e, 'Could not load merchant profile'));
-          setLoadedUserId(uid);
         }
       }
     })();
@@ -70,8 +72,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       cancelled = true;
     };
   }, [authReady, user]);
-
-  const profileReady = !user || loadedUserId === user.uid;
 
   useEffect(() => {
     if (!appLauncherOpen) return;
@@ -102,7 +102,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     else if (q.includes('transaction') || q.includes('order') || q.includes('transacc'))
       router.push('/dashboard/transactions');
     else if (q.includes('qr') || q.includes('código') || q.includes('codigo'))
-      router.push('/dashboard/qr');
+      router.push('/dashboard/links?from=qr');
     else if (q.includes('pos') || q.includes('terminal')) router.push('/dashboard/pos');
     else if (q.includes('api') || q.includes('key') || q.includes('developer'))
       router.push('/dashboard/developers');
@@ -111,7 +111,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     else router.push('/dashboard');
   };
 
-  if (!authReady || !profileReady) {
+  if (!authReady) {
     return (
       <div className="min-h-screen dashboard-shell flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[var(--dash-accent)] border-t-transparent rounded-full animate-spin" />
@@ -123,14 +123,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="dashboard-shell dashboard-shell-layout flex">
-      <SidebarNav
-        businessName={businessName}
-        email={user.email ?? undefined}
-        onSignOut={handleSignOut}
-        className="dashboard-sidebar hidden md:flex shrink-0"
-      />
+      {!immersive && (
+        <SidebarNav
+          businessName={businessName}
+          email={user.email ?? undefined}
+          isPlatformAdmin={isPlatformAdmin}
+          onSignOut={handleSignOut}
+          className="dashboard-sidebar hidden md:flex shrink-0"
+        />
+      )}
 
-      {mobileNavOpen && (
+      {!immersive && mobileNavOpen && (
         <div className="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Navigation menu">
           <button
             type="button"
@@ -148,6 +151,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <SidebarNav
               businessName={businessName}
               email={user.email ?? undefined}
+              isPlatformAdmin={isPlatformAdmin}
               onSignOut={handleSignOut}
               onNavigate={() => setMobileNavOpen(false)}
               className="dashboard-sidebar dashboard-sidebar-mobile flex-1 min-h-0 border-r-0 !bg-[var(--dash-bg)]"
@@ -157,88 +161,108 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       )}
 
       <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-        <header className="sticky top-0 z-40 dash-header">
-          <div className="flex items-center gap-3 px-4 md:px-6 py-3">
-            <button
-              type="button"
-              className="md:hidden p-2 -ml-1 rounded-md hover:bg-[var(--dash-surface-elevated)]"
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu size={20} />
-            </button>
-
-            <form onSubmit={handleSearch} className="flex-1 max-w-xl">
-              <div className="relative">
-                <Search
-                  size={16}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--dash-muted)]"
-                />
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search links, transactions, settings…"
-                  className="dash-input w-full pl-9 pr-4 py-2 text-sm"
-                />
-              </div>
-            </form>
-
-            <div className="flex items-center gap-0.5 shrink-0">
-              <div className="relative" ref={appLauncherRef}>
-                <button
-                  type="button"
-                  onClick={() => setAppLauncherOpen((open) => !open)}
-                  className="dash-header-icon-btn"
-                  aria-label="Apps"
-                  aria-expanded={appLauncherOpen}
-                >
-                  <LayoutGrid size={18} />
-                </button>
-                {appLauncherOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-52 py-2 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg-elevated)] shadow-xl z-50">
-                    <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-                      Products
-                    </p>
-                    {APP_LAUNCHER_LINKS.map(({ href, label }) => (
-                      <Link
-                        key={href}
-                        href={href}
-                        onClick={() => setAppLauncherOpen(false)}
-                        className="block px-3 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]"
-                      >
-                        {label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+        {!immersive && (
+          <header className="sticky top-0 z-40 dash-header">
+            <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 md:px-6 py-3 min-w-0">
               <button
                 type="button"
-                className="dash-header-icon-btn"
-                aria-label="Help"
-                onClick={() => toast.info('Help center — coming soon')}
+                className="md:hidden p-2.5 -ml-1 rounded-md hover:bg-[var(--dash-surface-elevated)] shrink-0"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open menu"
               >
-                <HelpCircle size={18} />
+                <Menu size={20} />
               </button>
-              <NotificationsDropdown />
-              <Link
-                href="/dashboard/settings"
-                className={cn(
-                  'dash-header-icon-btn',
-                  settingsActive && 'dash-header-icon-btn-active'
-                )}
-                aria-label="Settings"
-                aria-current={settingsActive ? 'page' : undefined}
-              >
-                <Settings size={18} />
-              </Link>
-              <QuickCreateMenu />
-            </div>
-          </div>
-        </header>
 
-        <main className="flex-1 min-h-0 overflow-y-auto">{children}</main>
+              <form onSubmit={handleSearch} className="flex-1 min-w-0 max-w-xl">
+                <div className="relative">
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--dash-muted)]"
+                  />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search links, transactions, settings…"
+                    className="dash-input w-full pl-9 pr-4 py-2 text-sm"
+                  />
+                </div>
+              </form>
+
+              <div className="flex items-center gap-0.5 shrink-0 overflow-x-auto max-w-[45%] sm:max-w-none">
+                <div className="relative" ref={appLauncherRef}>
+                  <button
+                    type="button"
+                    onClick={() => setAppLauncherOpen((open) => !open)}
+                    className="dash-header-icon-btn"
+                    aria-label="Apps"
+                    aria-expanded={appLauncherOpen}
+                  >
+                    <LayoutGrid size={18} />
+                  </button>
+                  {appLauncherOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-52 py-2 rounded-xl border border-[var(--dash-border)] bg-[var(--dash-bg-elevated)] shadow-xl z-50">
+                      <p className="px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
+                        Products
+                      </p>
+                      {APP_LAUNCHER_LINKS.map(({ href, label }) => (
+                        <Link
+                          key={href}
+                          href={href}
+                          onClick={() => setAppLauncherOpen(false)}
+                          className="block px-3 py-2 text-sm text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]"
+                        >
+                          {label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="dash-header-icon-btn"
+                  aria-label="Help"
+                  onClick={() => toast.info('Help center — coming soon')}
+                >
+                  <HelpCircle size={18} />
+                </button>
+                <NotificationsDropdown />
+                {isPlatformAdmin && (
+                  <Link
+                    href="/admin"
+                    className="dash-header-icon-btn"
+                    aria-label="Administración de plataforma"
+                    title="Administración de plataforma"
+                  >
+                    <Shield size={18} />
+                  </Link>
+                )}
+                <Link
+                  href="/dashboard/settings"
+                  className={cn(
+                    'dash-header-icon-btn',
+                    settingsActive && 'dash-header-icon-btn-active'
+                  )}
+                  aria-label="Settings"
+                  aria-current={settingsActive ? 'page' : undefined}
+                >
+                  <Settings size={18} />
+                </Link>
+                <QuickCreateMenu />
+              </div>
+            </div>
+          </header>
+        )}
+
+        <main
+          className={cn(
+            'flex-1 min-h-0',
+            immersive ? 'overflow-hidden' : 'overflow-y-auto'
+          )}
+        >
+          {!immersive && isPlatformAdmin && <PlatformAdminBanner />}
+          {children}
+        </main>
       </div>
     </div>
   );

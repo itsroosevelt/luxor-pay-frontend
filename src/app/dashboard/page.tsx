@@ -6,6 +6,8 @@ import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { listCustomers } from '@/lib/merchant-data';
 import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
 import { listPayments } from '@/lib/payments-api';
+import { listCheckoutPayments } from '@/lib/checkout-payments-local';
+import { isFrontendOnly } from '@/lib/frontend-only';
 import { computeBalanceSummary } from '@/lib/balance-utils';
 import {
   buildDailyCountSeries,
@@ -31,6 +33,8 @@ import {
   SummaryMetricCard,
   MiniBarChart,
   VolumeSparkline,
+  DemoModeBanner,
+  MerchantSetupChecklist,
 } from '@/components/dashboard';
 import { Plus, Pencil, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -48,14 +52,16 @@ export default function DashboardOverviewPage() {
       if (!user) return;
       try {
         const [payments, customerList] = await Promise.all([
-          user.getIdToken().then((token) => listPayments(token)).catch(() => [] as PaymentOrder[]),
+          isFrontendOnly()
+            ? Promise.resolve(listCheckoutPayments(user.uid))
+            : user.getIdToken().then((token) => listPayments(token)).catch(() => [] as PaymentOrder[]),
           listCustomers(user.uid).catch(() => [] as Customer[]),
         ]);
         setOrders(payments);
         setCustomers(customerList);
       } catch (e) {
         console.error(e);
-        toast.error(getFirestoreErrorMessage(e, 'Could not load dashboard data'));
+        toast.error(getFirestoreErrorMessage(e, 'No se pudieron cargar los datos del panel'));
       } finally {
         setLoading(false);
       }
@@ -144,27 +150,33 @@ export default function DashboardOverviewPage() {
 
   const allTimeConfirmed = useMemo(() => confirmedOrders(orders).length, [orders]);
 
-  const placeholderAction = () => toast.message('Coming soon');
+  const placeholderAction = () => toast.message('Próximamente');
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-10">
-      {/* Section 1 — Today */}
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-10">
+      <MerchantSetupChecklist />
+      {isFrontendOnly() ? <DemoModeBanner /> : null}
+
+      {/* Section 1 — Hoy */}
       <section className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-[var(--dash-text)] tracking-tight">Today</h1>
-          <Link href="/dashboard/balances" className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2">
+          <h1 className="text-2xl font-semibold text-[var(--dash-text)] tracking-tight">Hoy</h1>
+          <Link
+            href="/dashboard/balances"
+            className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center justify-center gap-2 w-full sm:w-auto"
+          >
             <ArrowRightLeft size={16} />
-            Transfer funds
+            Transferir fondos
           </Link>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 dash-card p-5 space-y-4">
+          <div className="lg:col-span-2 dash-card p-4 sm:p-5 space-y-4">
             <div>
-              <p className="text-sm text-[var(--dash-muted)]">Net volume</p>
+              <p className="text-sm text-[var(--dash-muted)]">Volumen neto</p>
               <div className="flex items-baseline gap-3 mt-1 flex-wrap">
                 <p className="text-3xl font-semibold tabular-nums text-[var(--dash-text)]">
-                  {loading ? '…' : `${formatCombinedVolume(todayNetVolume)} units`}
+                  {loading ? '…' : `${formatCombinedVolume(todayNetVolume)} unidades`}
                 </p>
                 {!loading && todayDelta && (
                   <span
@@ -179,75 +191,75 @@ export default function DashboardOverviewPage() {
                 )}
               </div>
               <p className="text-xs text-[var(--dash-muted)] mt-1">
-                Confirmed SOL + USDC (combined units)
+                SOL + USDC confirmados (unidades combinadas)
               </p>
             </div>
             <VolumeSparkline
               data={loading ? [] : todayChartSeries}
               height={220}
-              emptyLabel="No volume yet — flat line at zero"
+              emptyLabel="Sin volumen aún — línea plana en cero"
             />
           </div>
 
-          <div className="dash-card p-5 flex flex-col justify-between">
+          <div className="dash-card p-4 sm:p-5 flex flex-col justify-between">
             <div>
-              <p className="text-sm font-medium text-[var(--dash-text)]">Tip</p>
+              <p className="text-sm font-medium text-[var(--dash-text)]">Consejo</p>
               <p className="text-sm text-[var(--dash-muted)] mt-2">
-                Charts use payment orders from local demo storage. Complete a checkout — payments
-                auto-confirm after ~15s.
+                Los gráficos usan pagos del almacenamiento local de demo. Completa un checkout —
+                los pagos se confirman solos tras ~15 s.
               </p>
             </div>
             <Link
-              href="/dashboard/balances"
+              href="/dashboard/links"
               className="dash-btn-secondary px-4 py-2 text-sm inline-block text-center mt-4"
             >
-              View balances
+              Crear enlace de pago
             </Link>
           </div>
         </div>
 
         <div className="grid sm:grid-cols-3 gap-4">
-          <div className="dash-card p-5">
-            <p className="text-sm text-[var(--dash-muted)] mb-1">Balance · SOL</p>
+          <div className="dash-card p-4 sm:p-5">
+            <p className="text-sm text-[var(--dash-muted)] mb-1">Saldo · SOL</p>
             <p className="text-xl font-semibold tabular-nums">
               {loading ? '…' : formatPaymentAmount(solBalance.available, 'SOL')}
             </p>
             {solBalance.incoming > 0 && (
               <p className="text-xs text-[var(--dash-muted)] mt-1">
-                +{formatPaymentAmount(solBalance.incoming, 'SOL')} incoming
+                +{formatPaymentAmount(solBalance.incoming, 'SOL')} entrante
               </p>
             )}
           </div>
-          <div className="dash-card p-5">
-            <p className="text-sm text-[var(--dash-muted)] mb-1">Balance · USDC</p>
+          <div className="dash-card p-4 sm:p-5">
+            <p className="text-sm text-[var(--dash-muted)] mb-1">Saldo · USDC</p>
             <p className="text-xl font-semibold tabular-nums">
               {loading ? '…' : formatPaymentAmount(usdcBalance.available, 'USDC')}
             </p>
             {usdcBalance.incoming > 0 && (
               <p className="text-xs text-[var(--dash-muted)] mt-1">
-                +{formatPaymentAmount(usdcBalance.incoming, 'USDC')} incoming
+                +{formatPaymentAmount(usdcBalance.incoming, 'USDC')} entrante
               </p>
             )}
           </div>
-          <div className="dash-card p-5">
-            <p className="text-sm text-[var(--dash-muted)] mb-1">Transfers</p>
+          <div className="dash-card p-4 sm:p-5">
+            <p className="text-sm text-[var(--dash-muted)] mb-1">Transferencias</p>
             <p className="text-xl font-semibold tabular-nums">
               {loading ? '…' : transfersToday}
             </p>
-            <p className="text-xs text-[var(--dash-muted)] mt-1">Today (confirmed + pending)</p>
+            <p className="text-xs text-[var(--dash-muted)] mt-1">Hoy (confirmadas + pendientes)</p>
           </div>
         </div>
       </section>
 
-      {/* Section 2 — Your summary */}
+      {/* Section 2 — Resumen */}
       <section className="space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <h2 className="text-xl font-semibold text-[var(--dash-text)]">Your summary</h2>
+          <h2 className="text-xl font-semibold text-[var(--dash-text)]">Tu resumen</h2>
           <div className="flex flex-wrap items-center gap-2">
             <FilterRow>
-              <FilterChip label="Date range" value="Last 7 days" />
-              <FilterChip label="Interval" value="Daily" />
-              <FilterChip label="Compare" value="Previous period" />
+              <FilterChip label="Rango de fechas" value="Últimos 7 días" />
+              <FilterChip label="Intervalo" value="Diario" />
+              <FilterChip label="Comparar" value="Periodo anterior" />
             </FilterRow>
             <button
               type="button"
@@ -255,7 +267,7 @@ export default function DashboardOverviewPage() {
               className="dash-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
             >
               <Plus size={14} />
-              Add
+              Añadir
             </button>
             <button
               type="button"
@@ -263,16 +275,16 @@ export default function DashboardOverviewPage() {
               className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
             >
               <Pencil size={14} />
-              Edit
+              Editar
             </button>
           </div>
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           <SummaryMetricCard
-            label="Payments"
+            label="Pagos"
             value={loading ? '…' : periodConfirmed.length}
-            sublabel={allTimeConfirmed > 0 ? `${allTimeConfirmed} all time` : undefined}
+            sublabel={allTimeConfirmed > 0 ? `${allTimeConfirmed} en total` : undefined}
             empty={!loading && periodConfirmed.length === 0}
           >
             {!loading && periodConfirmed.length > 0 && (
@@ -281,43 +293,43 @@ export default function DashboardOverviewPage() {
           </SummaryMetricCard>
 
           <SummaryMetricCard
-            label="Gross volume"
-            value={loading ? '…' : `${formatCombinedVolume(periodGross)} units`}
-            sublabel="Last 7 days · confirmed"
+            label="Volumen bruto"
+            value={loading ? '…' : `${formatCombinedVolume(periodGross)} unidades`}
+            sublabel="Últimos 7 días · confirmados"
             empty={!loading && periodGross === 0}
           >
             {!loading && hasSeriesData(grossSeries) && (
-              <VolumeSparkline data={grossSeries} height={72} emptyLabel="No data" />
+              <VolumeSparkline data={grossSeries} height={72} emptyLabel="Sin datos" />
             )}
           </SummaryMetricCard>
 
           <SummaryMetricCard
-            label="Net volume"
-            value={loading ? '…' : `${formatCombinedVolume(periodNet)} units`}
-            sublabel="Last 7 days · after fees (MVP: same as gross)"
+            label="Volumen neto"
+            value={loading ? '…' : `${formatCombinedVolume(periodNet)} unidades`}
+            sublabel="Últimos 7 días · tras comisiones (MVP: igual que bruto)"
             empty={!loading && periodNet === 0}
           >
             {!loading && hasSeriesData(grossSeries) && (
-              <VolumeSparkline data={grossSeries} height={72} emptyLabel="No data" />
+              <VolumeSparkline data={grossSeries} height={72} emptyLabel="Sin datos" />
             )}
           </SummaryMetricCard>
 
           <SummaryMetricCard
-            label="Failed payments"
+            label="Pagos fallidos"
             value={loading ? '…' : periodFailed.length}
-            sublabel="Failed or expired"
+            sublabel="Fallidos o expirados"
             empty={!loading && periodFailed.length === 0}
           />
 
           <SummaryMetricCard
-            label="New customers"
+            label="Clientes nuevos"
             value={loading ? '…' : newCustomers}
-            sublabel="Created in period"
+            sublabel="Creados en el periodo"
             empty={!loading && newCustomers === 0}
           />
 
           <SummaryMetricCard
-            label="Top customers by spend"
+            label="Mejores clientes por gasto"
             empty={!loading && topCustomers.length === 0}
           >
             {!loading && topCustomers.length > 0 && (
@@ -329,7 +341,7 @@ export default function DashboardOverviewPage() {
                   >
                     <span className="text-[var(--dash-text)] truncate">{row.label}</span>
                     <span className="text-[var(--dash-muted)] tabular-nums shrink-0">
-                      {formatCombinedVolume(row.total)} units · {row.count}
+                      {formatCombinedVolume(row.total)} u. · {row.count}
                     </span>
                   </li>
                 ))}

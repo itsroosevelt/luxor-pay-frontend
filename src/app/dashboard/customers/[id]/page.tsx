@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { auth, onAuthStateChanged } from '@/lib/firebase';
 import { getCustomer, updateCustomer } from '@/lib/merchant-data';
 import { listPayments } from '@/lib/payments-api';
+import { listCheckoutPayments } from '@/lib/checkout-payments-local';
+import { isFrontendOnly } from '@/lib/frontend-only';
 import type { Currency, Customer, PaymentOrder } from '@luxor/contracts';
 import {
   PageHeader,
@@ -77,7 +79,9 @@ export default function CustomerDetailPage() {
           setEditCountry(c.countryCode ?? '');
         }
         try {
-          const orders = await listPayments(token);
+          const orders = isFrontendOnly()
+            ? listCheckoutPayments(user.uid)
+            : await listPayments(token);
           if (c) setPayments(filterPaymentsForCustomer(orders, c));
         } catch {
           /* payments optional */

@@ -23,11 +23,14 @@ export function WalletBanner({ connected, walletAddress, className }: WalletBann
           <Wallet size={16} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-[var(--dash-text)]">Solana wallet connected</p>
+          <p className="text-sm font-medium text-[var(--dash-text)]">Wallet de Solana conectada</p>
           <p className="text-xs text-[var(--dash-muted)] font-mono truncate">{walletAddress}</p>
         </div>
-        <Link href="/dashboard/settings" className="text-xs font-medium text-[var(--dash-accent)] hover:underline shrink-0">
-          Manage
+        <Link
+          href="/dashboard/settings/profile"
+          className="text-xs font-medium text-[var(--dash-accent)] hover:underline shrink-0"
+        >
+          Gestionar
         </Link>
       </div>
     );
@@ -44,16 +47,16 @@ export function WalletBanner({ connected, walletAddress, className }: WalletBann
         <Wallet size={16} />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-[var(--dash-text)]">Connect your Solana wallet</p>
+        <p className="text-sm font-medium text-[var(--dash-text)]">Conecta tu wallet de Solana</p>
         <p className="text-xs text-[var(--dash-muted)]">
-          Add a wallet in Settings to accept SOL and USDC on links and POS.
+          Añade una wallet en Ajustes para aceptar SOL y USDC en enlaces y POS.
         </p>
       </div>
       <Link
-        href="/dashboard/settings"
+        href="/dashboard/settings/profile"
         className="dash-btn-primary px-3 py-1.5 text-xs shrink-0"
       >
-        Set up wallet
+        Configurar wallet
       </Link>
     </div>
   );

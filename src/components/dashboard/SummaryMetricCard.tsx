@@ -26,7 +26,7 @@ export function SummaryMetricCard({
 
       {empty ? (
         <div className="flex-1 flex items-center justify-center border border-dashed border-[var(--dash-border)] rounded-md min-h-[100px]">
-          <p className="text-sm text-[var(--dash-muted)]">No data</p>
+          <p className="text-sm text-[var(--dash-muted)]">Sin datos</p>
         </div>
       ) : (
         <>

@@ -1,6 +1,7 @@
-import type { Currency, Customer, PaymentLink, ProductCatalogItem } from '@luxor/contracts';
+import type { Currency, Customer, MerchantProfile, PaymentLink, ProductCatalogItem } from '@luxor/contracts';
 import { getIdToken } from '@/lib/auth-client';
 import { isFrontendOnly } from '@/lib/frontend-only';
+import { dispatchMerchantProfileUpdated } from '@/lib/merchant-profile-events';
 import {
   buildLocalMerchantProfile,
   loadLocalMerchantProfile,
@@ -17,6 +18,38 @@ import {
   fetchPaymentLinkById,
   listPaymentLinks as listPaymentLinksApi,
 } from '@/lib/payments-api';
+import {
+  createLocalPaymentLink,
+  duplicateLocalPaymentLink,
+  findLocalPaymentLinkById,
+  findLocalPaymentLinkBySlug,
+  listLocalPaymentLinks,
+  updateLocalPaymentLink,
+} from '@/lib/payment-links-local';
+import {
+  createLocalProduct,
+  findLocalProductById,
+  listLocalProducts,
+  updateLocalProduct,
+} from '@/lib/products-local';
+import {
+  createLocalCustomer,
+  getLocalCustomer,
+  listLocalCustomers,
+  updateLocalCustomer,
+} from '@/lib/customers-local';
+import { listCheckoutPaymentRecords } from '@/lib/checkout-payments-local';
+
+function mapPaymentLinkError(error: unknown): Error {
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    if (msg.includes('merchant wallet') || msg.includes('configure merchant')) {
+      return new Error('MERCHANT_WALLET_REQUIRED');
+    }
+    return error;
+  }
+  return new Error('Payment link request failed');
+}
 
 export type PaymentLinkInput = {
   name: string;
@@ -24,6 +57,17 @@ export type PaymentLinkInput = {
   currency: Currency;
   active?: boolean;
   collectEmail?: boolean;
+  collectName?: boolean;
+  collectCompany?: boolean;
+  collectAddress?: boolean;
+  collectPhone?: boolean;
+  collectTaxes?: boolean;
+  taxCode?: string;
+  taxIncluded?: boolean;
+  taxRate?: number;
+  quantity?: number;
+  allowQuantityAdjustment?: boolean;
+  limitPayments?: boolean;
   successMessage?: string;
   redirectUrl?: string;
 };
@@ -32,6 +76,20 @@ async function requireToken(): Promise<string> {
   const token = await getIdToken();
   if (!token) throw new Error('Not authenticated');
   return token;
+}
+
+/** Keep a locally saved wallet when the API profile omits or clears it. */
+function mergeMerchantProfile(
+  remote: MerchantProfile,
+  local: MerchantProfile | null
+): MerchantProfile {
+  if (!local) return remote;
+  const remoteWallet = remote.merchantWallet?.trim() ?? '';
+  const localWallet = local.merchantWallet?.trim() ?? '';
+  if (!remoteWallet && localWallet) {
+    return { ...remote, merchantWallet: localWallet };
+  }
+  return remote;
 }
 
 const NOT_AVAILABLE = 'This feature is not available on the Solana backend yet.';
@@ -43,68 +101,138 @@ export async function ensureMerchantProfile(merchantId: string, email: string) {
     saveLocalMerchantProfile(merchantId, profile);
     return profile;
   }
-  const token = await requireToken();
-  const outcome = await ensureMerchantApi(token, email, { merchantId });
-  return outcome.profile;
+
+  const local = loadLocalMerchantProfile(merchantId);
+  try {
+    const token = await requireToken();
+    const outcome = await ensureMerchantApi(token, email, { merchantId });
+    const merged = mergeMerchantProfile(outcome.profile, local);
+    saveLocalMerchantProfile(merchantId, merged);
+    return merged;
+  } catch {
+    return local ?? buildLocalMerchantProfile(email, merchantId);
+  }
 }
 
 export async function getMerchantProfile(merchantId: string) {
+  const local = loadLocalMerchantProfile(merchantId);
+
   if (isFrontendOnly()) {
-    return loadLocalMerchantProfile(merchantId);
+    return local;
   }
-  const token = await requireToken();
-  const profile = await getMerchantApi(token);
-  if (profile) {
-    saveLocalMerchantProfile(merchantId, profile);
-    return profile;
+
+  try {
+    const token = await requireToken();
+    const profile = await getMerchantApi(token);
+    if (profile) {
+      const merged = mergeMerchantProfile(profile, local);
+      saveLocalMerchantProfile(merchantId, merged);
+      return merged;
+    }
+  } catch {
+    // Token or network not ready — fall back to the last saved local profile.
   }
-  return loadLocalMerchantProfile(merchantId);
+
+  return local;
 }
 
 export async function updateMerchantProfile(merchantId: string, data: UpdateMerchantDto) {
-  const token = await requireToken();
-  return updateMerchantApi(token, data, { merchantId });
+  let profile: Awaited<ReturnType<typeof updateMerchantApi>>;
+  if (isFrontendOnly()) {
+    profile = await updateMerchantApi('', data, { merchantId });
+  } else {
+    const token = await requireToken();
+    profile = await updateMerchantApi(token, data, { merchantId });
+  }
+  dispatchMerchantProfileUpdated();
+  return profile;
 }
 
-export async function listPaymentLinks(_merchantId: string) {
+export async function listPaymentLinks(merchantId: string) {
+  if (isFrontendOnly()) {
+    return listLocalPaymentLinks(merchantId);
+  }
   const token = await requireToken();
   return listPaymentLinksApi(token);
 }
 
-export async function createPaymentLink(_merchantId: string, input: PaymentLinkInput) {
+export async function createPaymentLink(merchantId: string, input: PaymentLinkInput) {
+  if (isFrontendOnly()) {
+    return createLocalPaymentLink(merchantId, input);
+  }
   const token = await requireToken();
-  return createPaymentLinkApi(token, {
-    name: input.name,
-    amount: input.amount,
-    currency: input.currency,
-  });
+  try {
+    return await createPaymentLinkApi(token, {
+      name: input.name,
+      amount: input.amount,
+      currency: input.currency,
+    });
+  } catch (error) {
+    throw mapPaymentLinkError(error);
+  }
 }
 
 export async function updatePaymentLink(
-  _merchantId: string,
-  _linkId: string,
-  _input: Partial<PaymentLinkInput>
+  merchantId: string,
+  linkId: string,
+  input: Partial<PaymentLinkInput>
 ): Promise<PaymentLink> {
+  if (isFrontendOnly()) {
+    return updateLocalPaymentLink(merchantId, linkId, input);
+  }
   throw new Error('Payment link updates are not supported by the API yet.');
 }
 
+export async function duplicatePaymentLink(
+  merchantId: string,
+  linkId: string
+): Promise<PaymentLink> {
+  if (isFrontendOnly()) {
+    return duplicateLocalPaymentLink(merchantId, linkId);
+  }
+  throw new Error('Payment link duplication is not supported by the API yet.');
+}
+
 export async function getPaymentLinkById(linkId: string) {
+  if (isFrontendOnly()) {
+    const link = findLocalPaymentLinkById(linkId);
+    if (!link || !link.active) throw new Error('Payment link not found');
+    return link;
+  }
   const token = await getIdToken();
   return fetchPaymentLinkById(linkId, token ?? undefined);
 }
 
-export async function getPaymentLink(_merchantId: string, linkId: string) {
+export async function getPaymentLinkBySlug(slug: string) {
+  if (isFrontendOnly()) {
+    const link = findLocalPaymentLinkBySlug(slug);
+    if (!link || !link.active) throw new Error('Payment link not found');
+    return link;
+  }
+  const token = await getIdToken();
+  return fetchPaymentLinkById(slug, token ?? undefined);
+}
+
+export async function getPaymentLink(merchantId: string, linkId: string) {
+  if (isFrontendOnly()) {
+    const link = findLocalPaymentLinkById(linkId);
+    if (!link || link.merchantId !== merchantId) throw new Error('Payment link not found');
+    return link;
+  }
   const token = await requireToken();
   return fetchPaymentLinkById(linkId, token);
 }
 
-export async function listProducts(_merchantId: string): Promise<ProductCatalogItem[]> {
+export async function listProducts(merchantId: string): Promise<ProductCatalogItem[]> {
+  if (isFrontendOnly()) {
+    return listLocalProducts(merchantId);
+  }
   return [];
 }
 
 export async function createProduct(
-  _merchantId: string,
-  _input: {
+  merchantId: string,
+  input: {
     name: string;
     description?: string;
     price: number;
@@ -112,31 +240,43 @@ export async function createProduct(
     active?: boolean;
   }
 ): Promise<ProductCatalogItem> {
+  if (isFrontendOnly()) {
+    return createLocalProduct(merchantId, input);
+  }
   throw new Error(NOT_AVAILABLE);
 }
 
 export async function getProduct(
-  _merchantId: string,
-  _productId: string
+  merchantId: string,
+  productId: string
 ): Promise<ProductCatalogItem | null> {
+  if (isFrontendOnly()) {
+    return findLocalProductById(merchantId, productId);
+  }
   return null;
 }
 
 export async function updateProduct(
-  _merchantId: string,
-  _productId: string,
-  _data: Partial<ProductCatalogItem>
+  merchantId: string,
+  productId: string,
+  data: Partial<ProductCatalogItem>
 ): Promise<ProductCatalogItem> {
+  if (isFrontendOnly()) {
+    return updateLocalProduct(merchantId, productId, data);
+  }
   throw new Error(NOT_AVAILABLE);
 }
 
-export async function listCustomers(_merchantId: string): Promise<Customer[]> {
+export async function listCustomers(merchantId: string): Promise<Customer[]> {
+  if (isFrontendOnly()) {
+    return listLocalCustomers(merchantId, listCheckoutPaymentRecords(merchantId));
+  }
   return [];
 }
 
 export async function createCustomer(
-  _merchantId: string,
-  _input: {
+  merchantId: string,
+  input: {
     name: string;
     email?: string;
     walletAddress?: string;
@@ -145,21 +285,30 @@ export async function createCustomer(
     type?: Customer['type'];
   }
 ): Promise<Customer> {
+  if (isFrontendOnly()) {
+    return createLocalCustomer(merchantId, input);
+  }
   throw new Error(NOT_AVAILABLE);
 }
 
 export async function getCustomer(
-  _merchantId: string,
-  _customerId: string
+  merchantId: string,
+  customerId: string
 ): Promise<Customer | null> {
+  if (isFrontendOnly()) {
+    return getLocalCustomer(merchantId, customerId, listCheckoutPaymentRecords(merchantId));
+  }
   return null;
 }
 
 export async function updateCustomer(
-  _merchantId: string,
-  _customerId: string,
-  _data: Partial<Customer>
+  merchantId: string,
+  customerId: string,
+  data: Partial<Customer>
 ): Promise<Customer> {
+  if (isFrontendOnly()) {
+    return updateLocalCustomer(merchantId, customerId, data);
+  }
   throw new Error(NOT_AVAILABLE);
 }
 

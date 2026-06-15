@@ -46,10 +46,18 @@ function resolveLoginError(error: unknown): string {
   return 'Something went wrong. Open browser DevTools → Console for details.';
 }
 
+function resolveSafeRedirect(redirect: string | null): string {
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
+    return '/dashboard';
+  }
+  return redirect;
+}
+
 function LoginContent() {
   const searchParams = useSearchParams();
   const isRegisterParam = searchParams.get('register') === 'true';
   const isLoginParam = searchParams.get('mode') === 'login';
+  const postLoginPath = resolveSafeRedirect(searchParams.get('redirect'));
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -73,8 +81,8 @@ function LoginContent() {
 
   useEffect(() => {
     if (!authReady || !user || googleSignInInFlight.current) return;
-    router.replace('/dashboard');
-  }, [authReady, user, router]);
+    router.replace(postLoginPath);
+  }, [authReady, user, router, postLoginPath]);
 
   useEffect(() => {
     return () => {
@@ -84,7 +92,7 @@ function LoginContent() {
 
   const completeAuth = async () => {
     // Merchant profile creation/fetching is handled by DashboardShell upon redirect
-    router.replace('/dashboard');
+    router.replace(postLoginPath);
   };
 
   const handleGoogleLogin = async () => {

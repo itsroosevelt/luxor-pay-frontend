@@ -38,10 +38,10 @@ export function DetailSidebar({
   className?: string;
 }) {
   return (
-    <aside className={cn('space-y-4 lg:sticky lg:top-6 lg:self-start', className)}>
+    <aside className={cn('relative z-0 space-y-4 lg:sticky lg:top-6 lg:self-start', className)}>
       <div className="dash-card p-5 space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
-          Details
+          Detalles
         </h2>
         {children}
       </div>

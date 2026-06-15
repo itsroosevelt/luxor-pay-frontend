@@ -78,7 +78,7 @@ export default function SettingsProfilePage() {
         description="Contact information, password, authentication methods, and active sessions."
       />
 
-      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-6 pb-12">
+      <div className="p-4 sm:p-6 md:p-8 max-w-3xl mx-auto space-y-6 pb-12">
         <SettingsSection
           title="User"
           action={<SettingsOutlineButton>Edit</SettingsOutlineButton>}

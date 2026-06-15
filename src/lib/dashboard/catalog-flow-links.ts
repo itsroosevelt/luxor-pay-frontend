@@ -31,7 +31,8 @@ export const CATALOG_FLOW_LINKS: CatalogFlowLink[] = [
     href: '/dashboard/links',
     icon: LinkIcon,
     title: 'Solana Pay links',
-    description: 'Shareable checkout URLs with wallet connect or QR payment.',
+    description:
+      'Shareable checkout URLs — your customer can pay with wallet, scan QR, or card (coming soon).',
   },
   {
     href: '/dashboard/billing/pending',
@@ -46,3 +47,22 @@ export const CATALOG_FLOW_NAV_TABS = [
   { href: '/dashboard/products', label: 'Product catalog' },
   { href: '/dashboard/links', label: 'Payment links' },
 ] as const;
+
+/** Canonical create URL; prefill from a catalog product when provided. */
+export function buildPaymentLinkCreateHref(product?: {
+  id?: string;
+  name: string;
+  price: number;
+  currency: string;
+  description?: string;
+}): string {
+  if (!product) return '/dashboard/links/create';
+  const params = new URLSearchParams({
+    name: product.name,
+    amount: String(product.price),
+    currency: product.currency,
+  });
+  if (product.id) params.set('productId', product.id);
+  if (product.description) params.set('description', product.description);
+  return `/dashboard/links/create?${params.toString()}`;
+}

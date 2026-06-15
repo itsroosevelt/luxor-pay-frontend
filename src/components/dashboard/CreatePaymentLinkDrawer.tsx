@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { auth, onAuthStateChanged } from '@/lib/firebase';
-import { createPaymentLink, getMerchantProfile } from '@/lib/merchant-data';
+import { auth } from '@/lib/firebase';
+import { createPaymentLink, listProducts } from '@/lib/merchant-data';
+import type { ProductCatalogItem } from '@luxor/contracts';
 import {
   PaymentLinkEditor,
   defaultPaymentLinkEditorValues,
+  editorValuesToPaymentLinkInput,
   type PaymentLinkEditorValues,
 } from './PaymentLinkEditor';
 import { SlideOverPanel } from './SlideOverPanel';
+import { useMerchantProfile } from '@/hooks/useMerchantProfile';
 import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
 import { toast } from 'sonner';
 import type { PaymentLink } from '@luxor/contracts';
@@ -26,11 +29,14 @@ export function CreatePaymentLinkDrawer({
   onCreated,
   initialValues,
 }: CreatePaymentLinkDrawerProps) {
-  const [merchantName, setMerchantName] = useState('Luxor Pay');
-  const [hasWallet, setHasWallet] = useState<boolean | null>(null);
+  const { profile: merchantProfile, hasWallet, isLoading, refetch } = useMerchantProfile({
+    refreshOnFocus: true,
+  });
   const [saving, setSaving] = useState(false);
-  const [ready, setReady] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+  const [products, setProducts] = useState<ProductCatalogItem[]>([]);
+
+  const merchantDisplayName = merchantProfile?.businessName?.trim() || 'Luxor Pay';
 
   const mergedInitial = useMemo(
     (): PaymentLinkEditorValues => ({
@@ -42,23 +48,13 @@ export function CreatePaymentLinkDrawer({
 
   useEffect(() => {
     if (!open) return;
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        setReady(true);
-        return;
-      }
-      try {
-        const profile = await getMerchantProfile(user.uid);
-        if (profile?.businessName) setMerchantName(profile.businessName);
-        setHasWallet(Boolean(profile?.merchantWallet));
-      } catch (err) {
-        toast.error(getFirestoreErrorMessage(err, 'Could not load merchant profile'));
-      } finally {
-        setReady(true);
-      }
-    });
-    return () => unsubscribe();
-  }, [open]);
+    void refetch();
+    const user = auth.currentUser;
+    if (!user) return;
+    void listProducts(user.uid)
+      .then(setProducts)
+      .catch(() => setProducts([]));
+  }, [open, refetch]);
 
   const handleClose = () => {
     setEditorKey((k) => k + 1);
@@ -67,37 +63,41 @@ export function CreatePaymentLinkDrawer({
 
   const handleSave = async (values: PaymentLinkEditorValues) => {
     const user = auth.currentUser;
-    if (!user) return;
-
-    const parsed = parseFloat(values.amount);
-    if (!values.name.trim() || Number.isNaN(parsed) || parsed <= 0) {
-      toast.error('Enter a valid product name and amount');
+    if (!user) {
+      toast.error('Inicia sesión para crear enlaces de pago');
       return;
     }
 
-    if (hasWallet === false) {
-      toast.error('Add your Solana wallet in Settings first');
+    const input = editorValuesToPaymentLinkInput(values);
+    if (!input.name || Number.isNaN(input.amount) || input.amount <= 0) {
+      toast.error('Ingresa un nombre de producto y un monto válido');
+      return;
+    }
+
+    if (values.redirectUrl.trim()) {
+      try {
+        new URL(values.redirectUrl.trim());
+      } catch {
+        toast.error('Ingresa una URL de redirección válida o déjala vacía');
+        return;
+      }
+    }
+
+    if (!hasWallet) {
+      toast.error('Configura tu wallet de Solana en Ajustes y pulsa «Guardar cambios» primero');
       return;
     }
 
     setSaving(true);
     try {
-      const link = await createPaymentLink(user.uid, {
-        name: values.name.trim(),
-        amount: parsed,
-        currency: values.currency,
-        active: values.active,
-        collectEmail: values.collectEmail,
-        successMessage: values.successMessage,
-        redirectUrl: values.redirectUrl,
-      });
+      const link = await createPaymentLink(user.uid, input);
       toast.success('Payment link created');
       setEditorKey((k) => k + 1);
       onCreated(link);
       onClose();
     } catch (err) {
       if (err instanceof Error && err.message === 'MERCHANT_WALLET_REQUIRED') {
-        toast.error('Add your Solana wallet in Settings first');
+        toast.error('Add your Solana wallet in Settings and click Save first');
       } else {
         toast.error(getFirestoreErrorMessage(err, 'Could not create payment link'));
       }
@@ -114,7 +114,7 @@ export function CreatePaymentLinkDrawer({
       width="2xl"
       hideHeader
     >
-      {!ready ? (
+      {isLoading ? (
         <p className="text-sm text-[var(--dash-muted)] p-6">Loading editor…</p>
       ) : (
         <PaymentLinkEditor
@@ -122,9 +122,10 @@ export function CreatePaymentLinkDrawer({
           mode="create"
           layout="drawer"
           initialValues={mergedInitial}
-          merchantName={merchantName}
+          products={products}
+          merchantName={merchantDisplayName}
+          merchantProfile={merchantProfile}
           saving={saving}
-          submitDisabled={hasWallet === false}
           onSave={handleSave}
           onCancel={handleClose}
         />
