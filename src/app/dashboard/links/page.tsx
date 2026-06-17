@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { createPaymentLink, listPaymentLinks } from '@/lib/firestore-data';
+import { createPaymentLink, listPaymentLinks } from '@/lib/payments-api';
 import type { PaymentLink, Currency } from '@luxor/contracts';
 import { Copy, Link as LinkIcon, Plus, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
@@ -22,7 +22,8 @@ export default function PaymentLinksPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const data = await listPaymentLinks(user.uid);
+        const token = await user.getIdToken();
+        const data = await listPaymentLinks(token);
         setLinks(data);
       } catch {
         toast.error('Could not load links');
@@ -46,7 +47,8 @@ export default function PaymentLinksPage() {
 
     setCreating(true);
     try {
-      const link = await createPaymentLink(user.uid, {
+      const token = await user.getIdToken();
+      const link = await createPaymentLink(token, {
         name: name.trim(),
         amount: parsed,
         currency,

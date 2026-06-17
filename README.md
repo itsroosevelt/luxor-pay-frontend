@@ -22,6 +22,3 @@ npm run dev:frontend   # desde la raíz del monorepo
 
 Variables: `frontend/.env.local` (plantilla en `config/env/web.development.example`).
 
-## Vercel
-
-Root Directory: `frontend` (monorepo) o `.` (repo frontend dedicado).

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getMerchantProfile, updateMerchantProfile } from '@/lib/firestore-data';
+import { getMerchantProfile, updateMerchantProfile } from '@/lib/merchants-api';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
@@ -16,11 +16,15 @@ export default function SettingsPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const profile = await getMerchantProfile(user.uid);
+        const token = await user.getIdToken();
+        const profile = await getMerchantProfile(token);
+        
         if (profile) {
           setBusinessName(profile.businessName ?? '');
           setMerchantWallet(profile.merchantWallet ?? '');
         }
+      } catch {
+        // Silently handle get profile failure
       } finally {
         setLoading(false);
       }
@@ -35,10 +39,12 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      await updateMerchantProfile(user.uid, {
+      const token = await user.getIdToken();
+      await updateMerchantProfile(token, {
         businessName: businessName.trim() || undefined,
         merchantWallet: merchantWallet.trim() || undefined,
       });
+
       toast.success('Profile saved');
     } catch {
       toast.error('Could not save profile');

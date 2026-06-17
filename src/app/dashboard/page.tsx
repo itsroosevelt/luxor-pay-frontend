@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { listPaymentLinks, listPosDevices, getMerchantProfile } from '@/lib/firestore-data';
+import { getMerchantProfile } from '@/lib/merchants-api';
+import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
 import { Link as LinkIcon, Terminal, Code2, ArrowRight } from 'lucide-react';
 
 export default function DashboardOverviewPage() {
@@ -14,10 +15,11 @@ export default function DashboardOverviewPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
+        const token = await user.getIdToken();
         const [links, pos, profile] = await Promise.all([
-          listPaymentLinks(user.uid),
-          listPosDevices(user.uid),
-          getMerchantProfile(user.uid),
+          listPaymentLinks(token),
+          listPosDevices(token),
+          getMerchantProfile(token),
         ]);
         setStats({
           links: links.length,

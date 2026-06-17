@@ -14,7 +14,7 @@ import {
   LogOut,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
-import { ensureMerchantProfile } from '@/lib/firestore-data';
+import { ensureMerchantProfile } from '@/lib/merchants-api';
 import { clsx } from 'clsx';
 
 const nav = [
@@ -40,7 +40,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       }
       setUser(currentUser);
       try {
-        await ensureMerchantProfile(currentUser.uid, currentUser.email ?? '');
+        const token = await currentUser.getIdToken();
+        await ensureMerchantProfile(token, currentUser.email ?? '');
       } catch (e) {
         console.error(e);
       }
