@@ -7,9 +7,11 @@ import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
 import { Link as LinkIcon, Terminal, Code2, ArrowRight } from 'lucide-react';
+import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
+  const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -26,6 +28,7 @@ export default function DashboardOverviewPage() {
           pos: pos.length,
           hasWallet: Boolean(profile?.merchantWallet),
         });
+        setMerchantWallet(profile?.merchantWallet || null);
       } catch (e) {
         console.error(e);
       }
@@ -55,11 +58,14 @@ export default function DashboardOverviewPage() {
           </div>
         )}
 
+        <WalletBalanceContainer merchantWallet={merchantWallet} />
         <div className="grid md:grid-cols-3 gap-4">
           <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />
           <StatCard label="POS devices" value={stats.pos} href="/dashboard/pos" />
           <StatCard label="API" value="Ready" href="/dashboard/developers" isText />
         </div>
+
+        
 
         <section>
           <h2 className="text-lg font-semibold mb-4">Quick start</h2>
