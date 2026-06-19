@@ -69,3 +69,4 @@ export type { InvoiceCreateValues, InvoiceLineItem, InvoicePaymentCollection } f
 export { SubscriptionCreateEditor, defaultSubscriptionCreateValues } from './SubscriptionCreateEditor';
 export type { SubscriptionCreateValues, SubscriptionInterval } from './SubscriptionCreateEditor';
 export { PaymentCreateForm } from './PaymentCreateForm';
+export { WalletStatusHeader } from './WalletStatusHeader';

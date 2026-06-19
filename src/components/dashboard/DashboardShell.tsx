@@ -10,6 +10,7 @@ import { Search, HelpCircle, Menu, X, LayoutGrid, Settings, Shield } from 'lucid
 import { PlatformAdminBanner } from '@/components/dashboard/PlatformAdminBanner';
 import { NotificationsDropdown } from '@/components/dashboard/NotificationsDropdown';
 import { QuickCreateMenu } from '@/components/dashboard/QuickCreateMenu';
+import { WalletStatusHeader } from '@/components/dashboard/WalletStatusHeader';
 import { ensureMerchantProfile } from '@/lib/merchant-data';
 import { getErrorMessage } from '@/lib/firestore-errors';
 import { SidebarNav } from '@/components/dashboard/SidebarNav';
@@ -32,6 +33,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const { user, authReady } = useFirebaseAuth();
   const { isPlatformAdmin } = usePlatformAdmin();
   const [businessName, setBusinessName] = useState<string>();
+  const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [appLauncherOpen, setAppLauncherOpen] = useState(false);
@@ -59,6 +61,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         const profile = await ensureMerchantProfile(uid, user.email ?? '');
         if (!cancelled) {
           setBusinessName(profile?.businessName);
+          setMerchantWallet(profile?.merchantWallet || null);
         }
       } catch (e) {
         console.error(e);
@@ -189,7 +192,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </div>
               </form>
 
-              <div className="flex items-center gap-0.5 shrink-0 overflow-x-auto max-w-[45%] sm:max-w-none">
+              <div className="flex items-center gap-1 shrink-0 overflow-x-auto max-w-[55%] sm:max-w-none">
+                {merchantWallet && (
+                  <div className="mr-1.5 hidden md:block">
+                    <WalletStatusHeader merchantWallet={merchantWallet} />
+                  </div>
+                )}
                 <div className="relative" ref={appLauncherRef}>
                   <button
                     type="button"
