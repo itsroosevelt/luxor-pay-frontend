@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import {
   LayoutDashboard,
@@ -16,6 +16,8 @@ import {
   FileText,
   BarChart3,
   Shield,
+  Menu,
+  Search,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -134,6 +136,9 @@ interface SidebarNavProps {
   isPlatformAdmin?: boolean;
   onSignOut?: () => void;
   onNavigate?: () => void;
+  bottomActions?: (isCollapsed: boolean) => React.ReactNode;
+  isCollapsed?: boolean;
+  onCollapseChange?: (collapsed: boolean) => void;
   className?: string;
 }
 
@@ -143,10 +148,40 @@ export function SidebarNav({
   isPlatformAdmin = false,
   onSignOut,
   onNavigate,
+  bottomActions,
+  isCollapsed: externalIsCollapsed,
+  onCollapseChange,
   className,
 }: SidebarNavProps) {
   const pathname = usePathname();
   const [userExpanded, setUserExpanded] = useState<Record<string, boolean>>({});
+  const [localIsCollapsed, setLocalIsCollapsed] = useState(false);
+
+  const isCollapsed = externalIsCollapsed ?? localIsCollapsed;
+  const setIsCollapsed = (val: boolean) => {
+    setLocalIsCollapsed(val);
+    onCollapseChange?.(val);
+  };
+
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQuery.toLowerCase();
+    if (!q) return;
+    if (q.includes('bal') || q.includes('saldo')) router.push('/dashboard/balances');
+    else if (q.includes('tx') || q.includes('trans')) router.push('/dashboard/transactions');
+    else if (q.includes('client') || q.includes('cust')) router.push('/dashboard/customers');
+    else if (q.includes('prod') || q.includes('cat')) router.push('/dashboard/products');
+    else if (q.includes('pos') || q.includes('terminal')) router.push('/dashboard/pos');
+    else if (q.includes('api') || q.includes('key') || q.includes('developer'))
+      router.push('/dashboard/developers');
+    else if (q.includes('wallet') || q.includes('setting') || q.includes('config'))
+      router.push('/dashboard/settings');
+    else router.push('/dashboard');
+    if (onNavigate) onNavigate();
+  };
 
   const expandedGroups = useMemo(() => {
     const fromPath = getExpandedForPath(pathname);
@@ -162,29 +197,33 @@ export function SidebarNav({
   return (
     <aside
       className={cn(
-        'w-[var(--dash-sidebar-width)] shrink-0 border-r border-[var(--dash-border)] bg-[var(--dash-surface)] flex flex-col h-full overflow-hidden',
+        isCollapsed ? 'w-[72px]' : 'w-[var(--dash-sidebar-width)]',
+        'shrink-0 bg-[var(--dash-surface)] flex flex-col overflow-hidden transition-all duration-300',
         className
       )}
     >
       <div className="shrink-0 p-4 border-b border-[var(--dash-border)] space-y-3">
         <button
           type="button"
-          className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] transition-colors text-left"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={cn(
+            "w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-[var(--dash-surface-elevated)] transition-colors",
+            isCollapsed ? "justify-center" : "justify-between text-left"
+          )}
         >
-          <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--dash-muted)] mb-0.5">
-              Unidad de negocio
-            </p>
-            <p className="text-sm font-semibold truncate text-[var(--dash-text)]">
-              {businessName || 'Luxor Pay'}
-            </p>
-            {email && (
-              <p className="text-xs text-[var(--dash-muted)] truncate">{email}</p>
-            )}
-          </div>
-          <ChevronDown size={14} className="text-[var(--dash-muted)] shrink-0" />
+          {!isCollapsed && (
+            <div className="min-w-0">
+              <p className="text-sm font-semibold truncate text-[var(--dash-text)]">
+                {businessName || 'Luxor Pay'}
+              </p>
+              {email && (
+                <p className="text-xs text-[var(--dash-muted)] truncate">{email}</p>
+              )}
+            </div>
+          )}
+          <Menu size={16} className="text-[var(--dash-muted)] shrink-0" />
         </button>
-        {isPlatformAdmin && (
+        {isPlatformAdmin && !isCollapsed && (
           <Link
             href="/admin"
             onClick={onNavigate}
@@ -196,11 +235,31 @@ export function SidebarNav({
         )}
       </div>
 
-      <nav className="sidebar-nav-scroll flex-1 min-h-0 p-3 space-y-6 overflow-y-auto overscroll-contain">
+      {!isCollapsed && (
+        <div className="shrink-0 px-4 pt-4 pb-2">
+          <form onSubmit={handleSearch} className="relative">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--dash-muted)]"
+            />
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search..."
+              className="dash-input w-full pl-9 pr-3 py-1.5 text-xs bg-[var(--dash-bg)] border-[var(--dash-border)] focus:border-[var(--dash-accent)] transition-colors rounded-lg text-[var(--dash-text)] placeholder-[var(--dash-muted)]"
+            />
+          </form>
+        </div>
+      )}
+
+      <nav className="sidebar-nav-scroll flex-1 min-h-0 p-3 space-y-4 overflow-y-auto overscroll-contain">
         <div>
-          <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-            Páginas principales
-          </p>
+          {!isCollapsed && (
+            <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
+              Páginas principales
+            </p>
+          )}
           <div className="space-y-0.5">
             {mainNav.map(({ href, label, icon: Icon }) => (
               <NavLink
@@ -210,32 +269,37 @@ export function SidebarNav({
                 icon={Icon}
                 active={isNavActive(pathname, href, mainNavHrefs)}
                 onNavigate={onNavigate}
+                isCollapsed={isCollapsed}
               />
             ))}
           </div>
         </div>
 
-        <div>
-          <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-            Accesos directos
-          </p>
-          <div className="space-y-0.5">
-            {shortcuts.map((item) => (
-              <ShortcutLink
-                key={item.label}
-                href={item.href}
-                label={item.label}
-                active={isNavActive(pathname, item.href, shortcutHrefs)}
-                onNavigate={onNavigate}
-              />
-            ))}
+        {!isCollapsed && (
+          <div>
+            <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
+              Accesos directos
+            </p>
+            <div className="space-y-0.5">
+              {shortcuts.map((item) => (
+                <ShortcutLink
+                  key={item.label}
+                  href={item.href}
+                  label={item.label}
+                  active={isNavActive(pathname, item.href, shortcutHrefs)}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div>
-          <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
-            Productos
-          </p>
+          {!isCollapsed && (
+            <p className="px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider text-[var(--dash-muted)]">
+              Productos
+            </p>
+          )}
           <div className="space-y-0.5">
             {productsGroups.map((group) => (
               <ProductsGroup
@@ -245,27 +309,37 @@ export function SidebarNav({
                 expanded={!!expandedGroups[group.id]}
                 onToggle={() => toggleGroup(group.id)}
                 onNavigate={onNavigate}
+                isCollapsed={isCollapsed}
               />
             ))}
           </div>
         </div>
       </nav>
 
-      <div className="shrink-0 p-3 border-t border-[var(--dash-border)] space-y-2">
+      <div className="shrink-0 p-3 border-t border-[var(--dash-border)] space-y-3">
+        {bottomActions && (
+          <div className={cn(
+            "flex gap-2",
+            isCollapsed ? "flex-col items-center" : "flex-row flex-wrap items-center justify-start"
+          )}>
+            {bottomActions(isCollapsed)}
+          </div>
+        )}
+        
         {onSignOut && (
           <button
             type="button"
             onClick={onSignOut}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-[var(--dash-muted)] hover:bg-[var(--dash-surface-elevated)] hover:text-[var(--dash-text)] transition-colors"
+            className={cn(
+              "w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-xs font-medium text-[var(--dash-muted)] hover:bg-[var(--dash-surface-elevated)] hover:text-[var(--dash-text)] transition-colors",
+              isCollapsed && "justify-center px-0"
+            )}
+            title={isCollapsed ? "Cerrar sesión" : undefined}
           >
             <LogOut size={16} className="shrink-0" />
-            <span>Cerrar sesión</span>
+            {!isCollapsed && <span>Cerrar sesión</span>}
           </button>
         )}
-        <div className="flex items-center gap-2 px-3 py-1 text-xs text-[var(--dash-muted)]">
-          <span className="w-2 h-2 rounded-full bg-primary shrink-0" aria-hidden />
-          Solana · {networkLabel}
-        </div>
       </div>
     </aside>
   );
@@ -277,12 +351,14 @@ function ProductsGroup({
   expanded,
   onToggle,
   onNavigate,
+  isCollapsed,
 }: {
   group: NavGroup;
   pathname: string;
   expanded: boolean;
   onToggle: () => void;
   onNavigate?: () => void;
+  isCollapsed?: boolean;
 }) {
   const { icon: Icon, label, children } = group;
   const groupHrefs = children.map((child) => child.href);
@@ -292,24 +368,26 @@ function ProductsGroup({
     <div>
       <button
         type="button"
-        onClick={onToggle}
+        onClick={isCollapsed ? undefined : onToggle}
         className={cn(
           'w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
           groupActive && !expanded
             ? 'bg-[var(--dash-accent-soft)] text-[var(--dash-accent)]'
-            : 'text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]'
+            : 'text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]',
+          isCollapsed && 'justify-center px-0'
         )}
         aria-expanded={expanded}
+        title={isCollapsed ? label : undefined}
       >
         <Icon size={16} className="shrink-0" />
-        <span className="truncate flex-1 text-left">{label}</span>
-        {expanded ? (
+        {!isCollapsed && <span className="truncate flex-1 text-left">{label}</span>}
+        {!isCollapsed && (expanded ? (
           <ChevronDown size={14} className="shrink-0 text-[var(--dash-muted)]" />
         ) : (
           <ChevronRight size={14} className="shrink-0 text-[var(--dash-muted)]" />
-        )}
+        ))}
       </button>
-      {expanded && (
+      {!isCollapsed && expanded && (
         <div className="mt-0.5 mb-1 space-y-0.5 border-l border-[var(--dash-border)] ml-5 pl-2">
           {children.map((child) => (
             <NavChildLink
@@ -386,12 +464,14 @@ function NavLink({
   icon: Icon,
   active,
   onNavigate,
+  isCollapsed,
 }: {
   href: string;
   label: string;
   icon: LucideIcon;
   active: boolean;
   onNavigate?: () => void;
+  isCollapsed?: boolean;
 }) {
   return (
     <Link
@@ -401,11 +481,13 @@ function NavLink({
         'flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors',
         active
           ? 'bg-[var(--dash-accent-soft)] text-[var(--dash-accent)]'
-          : 'text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]'
+          : 'text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)]',
+        isCollapsed && 'justify-center px-0'
       )}
+      title={isCollapsed ? label : undefined}
     >
       <Icon size={16} className="shrink-0" />
-      <span className="truncate">{label}</span>
+      {!isCollapsed && <span className="truncate">{label}</span>}
     </Link>
   );
 }

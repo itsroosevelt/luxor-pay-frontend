@@ -41,6 +41,11 @@ import {
   FileText,
   BarChart3,
   Receipt,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpRight,
+  Copy,
+  ArrowUpDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -204,295 +209,235 @@ export default function BalancesPage() {
 
   return (
     <>
-      <PageHeader
-        title={
-          <span className="inline-flex items-center gap-2 flex-wrap">
-            <span>Balances</span>
-            <span className="tabular-nums text-[var(--dash-text)]">
-              {DISPLAY_CURRENCY}{' '}
-              {loading ? '…' : formatDecimalAmount(balanceSummary.available, 2)}
-            </span>
-            <button
-              type="button"
-              className="p-1 rounded-md text-[var(--dash-muted)] hover:text-[var(--dash-text)] hover:bg-[var(--dash-surface-elevated)] transition-colors"
-              aria-label="Balance information"
-              title="Available USDC from confirmed Luxor Pay payments. Does not reflect real-time on-chain wallet balance."
-              onClick={() =>
-                toast.info(
-                  'Balances reflect Luxor Pay payments. For on-chain funds, check your Solana wallet.'
-                )
-              }
-            >
-              <Info size={18} />
-            </button>
-          </span>
-        }
-        actions={
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href="/dashboard/balances/transfers/create"
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-            >
-              <ArrowRightLeft size={16} />
-              Transfer
-            </Link>
-            <button
-              type="button"
-              className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center gap-2"
-              onClick={() => setAddFundsOpen(true)}
-            >
-              <Plus size={16} />
-              Add funds
-            </button>
-            <div className="relative" ref={transferMenuRef}>
-              <button
-                type="button"
-                className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-                onClick={() => setTransferMenuOpen((open) => !open)}
-                aria-expanded={transferMenuOpen}
-                aria-haspopup="menu"
-              >
-                Transfer management
-                <ChevronDown size={16} className={cn(transferMenuOpen && 'rotate-180', 'transition-transform')} />
-              </button>
-              {transferMenuOpen && (
-                <div
-                  role="menu"
-                  className="absolute right-0 top-full mt-1 z-20 min-w-[220px] dash-card py-1 shadow-lg"
-                >
-                  <Link
-                    href="/dashboard/balances/transfers/create"
-                    role="menuitem"
-                    className="block w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] transition-colors"
-                    onClick={() => setTransferMenuOpen(false)}
-                  >
-                    New transfer
-                  </Link>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] transition-colors"
-                    onClick={() => {
-                      setTransferMenuOpen(false);
-                      toast.info('Transfer history — pending backend');
-                    }}
-                  >
-                    View history
+      <div className="p-4 sm:p-6 md:p-8 space-y-6">
+        <div className="flex items-center gap-3 mb-2">
+          <h1 className="text-2xl font-semibold text-white tracking-tight">Balances</h1>
+          <button className="text-zinc-500 hover:text-white transition-colors mt-1" aria-label="Refresh">
+            <RefreshCw size={14} />
+          </button>
+        </div>
+
+        <div className="bg-[#18181b] rounded-2xl p-6 relative overflow-hidden">
+          <h2 className="text-[13px] font-medium text-white mb-6">Overview</h2>
+          
+          <div className="grid lg:grid-cols-[380px_1fr] gap-6">
+            {/* Left Column */}
+            <div className="space-y-4">
+              <div className="bg-[#222225] rounded-[14px] p-6 border border-white/[0.04]">
+                <p className="text-[13px] text-zinc-500">Total Balance</p>
+                <p className="text-[36px] font-semibold text-white mt-1 mb-8 tracking-tight">$30.86</p>
+                
+                <div className="flex flex-wrap gap-2.5">
+                  <button className="bg-white hover:bg-zinc-200 text-black rounded-[10px] py-2 px-4 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                    <ArrowUp size={14} strokeWidth={2.5} className="shrink-0" />
+                    <span>Send</span>
                   </button>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-[var(--dash-surface-elevated)] transition-colors"
-                    onClick={() => {
-                      setTransferMenuOpen(false);
-                      toast.info('Payment settingss — pending backend');
-                    }}
-                  >
-                    Configure payments
+                  <button className="bg-white hover:bg-zinc-200 text-black rounded-[10px] py-2 px-4 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                    <ArrowDown size={14} strokeWidth={2.5} className="shrink-0" />
+                    <span>Deposit</span>
+                  </button>
+                  <button className="bg-white hover:bg-zinc-200 text-black rounded-[10px] py-2 px-4 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                    <ArrowUpRight size={14} strokeWidth={2.5} className="shrink-0" />
+                    <span>Trade</span>
                   </button>
                 </div>
-              )}
-            </div>
-            <button
-              type="button"
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center gap-2"
-              onClick={() => setSettlementCurrencyOpen(true)}
-            >
-              <Plus size={16} />
-              Add settlement currency
-            </button>
-          </div>
-        }
-      />
-
-      <div className="px-6 md:px-8 pt-4">
-        <div className="rounded-lg border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)] px-4 py-3 text-sm text-[var(--dash-muted)] flex gap-3 items-start max-w-[1400px] mx-auto">
-          <Info size={16} className="shrink-0 mt-0.5 text-[var(--dash-accent)]" />
-          <p>
-            Confirmed Luxor Pay charges are credited to your configured Solana wallet. <strong className="text-[var(--dash-text)]">Incoming</strong> balance includes pending payments; <strong className="text-[var(--dash-text)]">available</strong> balance reflects confirmed on-chain transactions.
-          </p>
-        </div>
-      </div>
-
-      <div className="p-6 md:p-8 max-w-[1400px] mx-auto flex flex-col xl:flex-row gap-8">
-        <main className="flex-1 min-w-0 space-y-8">
-          <section className="dash-card overflow-hidden">
-            <div className="px-4 py-3 border-b border-[var(--dash-border)] bg-[var(--dash-surface-elevated)]">
-              <h2 className="text-sm font-semibold text-[var(--dash-text)]">Balance summary</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--dash-border)]">
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
-                      Payment type
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-[var(--dash-muted)]">
-                      Amount
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-b border-[var(--dash-border)] hover:bg-[var(--dash-surface-elevated)] transition-colors">
-                    <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center gap-2 font-medium">
-                        <BalanceDot color="incoming" />
-                        Incoming
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 tabular-nums text-right">
-                      {loading
-                        ? '…'
-                        : formatBalanceAmount(balanceSummary.incoming, DISPLAY_CURRENCY)}
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-[var(--dash-surface-elevated)] transition-colors">
-                    <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center gap-2 font-medium">
-                        <BalanceDot color="available" />
-                        Available
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 tabular-nums text-right font-medium">
-                      {loading
-                        ? '…'
-                        : formatBalanceAmount(balanceSummary.available, DISPLAY_CURRENCY)}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className="space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className="text-lg font-semibold text-[var(--dash-text)]">Recent activity</h2>
-            </div>
-
-            <div className="flex flex-wrap gap-1 border-b border-[var(--dash-border)]">
-              {ACTIVITY_TABS.map(({ id, label }) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setActivityTab(id)}
-                  className={cn(
-                    'px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-                    activityTab === id
-                      ? 'border-[var(--dash-accent)] text-[var(--dash-accent)]'
-                      : 'border-transparent text-[var(--dash-muted)] hover:text-[var(--dash-text)]'
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {!loading && filteredActivities.length === 0 ? (
-              <EmptyState
-                icon={Receipt}
-                title="No activity in this category"
-                description={
-                  activityTab === 'all'
-                    ? 'Share a payment link or charge with POS to see activity here.'
-                    : 'No transfers or top-ups recorded on your account yet.'
-                }
-                action={
-                  activityTab === 'all'
-                    ? { label: 'Create payment link', href: '/dashboard/links' }
-                    : undefined
-                }
-              />
-            ) : (
-              <>
-                <DataTable
-                  columns={activityColumns}
-                  data={displayedActivities}
-                  rowKey={(row) => row.id}
-                  loading={loading}
-                  loadingMessage="Loading activity…"
-                  onRowClick={(row) => router.push(`/dashboard/balances/transfers/${row.id}`)}
-                />
-                {hasMoreActivities && (
-                  <div className="flex justify-center pt-3">
-                    <Link
-                      href={`/dashboard/transactions?tab=${ACTIVITY_TAB_TO_TRANSACTIONS[activityTab]}`}
-                      className="text-sm font-medium text-[var(--dash-accent)] hover:underline"
-                    >
-                      Ver más
-                    </Link>
-                  </div>
-                )}
-              </>
-            )}
-          </section>
-        </main>
-
-        <aside className="xl:w-80 shrink-0 space-y-4">
-          <SidebarCard
-            icon={Zap}
-            title="Payouts"
-            subtitle="Instant transfers available"
-          >
-            <p className="text-sm text-[var(--dash-muted)]">
-              Withdraw USDC and SOL to your cold wallet or another Solana address when the settlement
-              backend is active.
-            </p>
-            <button
-              type="button"
-              disabled={!hasWallet}
-              className="dash-btn-primary w-full py-2 text-sm mt-3 disabled:opacity-50"
-              onClick={() => toast.info('Instant payout — pending backend')}
-            >
-              {hasWallet ? 'Start payout' : 'Connect wallet first'}
-            </button>
-            {wallet && (
-              <p className="text-xs text-[var(--dash-muted)] font-mono truncate mt-2" title={wallet}>
-                Destination: {wallet.slice(0, 8)}…{wallet.slice(-4)}
-              </p>
-            )}
-          </SidebarCard>
-
-          <SidebarCard icon={RefreshCw} title="Automatic transfers">
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[var(--dash-muted)]">Schedule</span>
-                <span className="text-xs px-2 py-0.5 rounded-full border border-[var(--dash-border)] bg-[var(--dash-surface-elevated)]">
-                  Disabled
-                </span>
               </div>
-              <p className="text-[var(--dash-muted)] text-xs">
-                Set up daily or weekly automatic payouts to your merchant wallet.
-              </p>
-              <Link
-                href="/dashboard/settings"
-                className="text-sm text-[var(--dash-accent)] hover:underline inline-flex items-center gap-1"
-              >
-                Configure in Settings
-                <ArrowRightLeft size={14} />
-              </Link>
-            </div>
-          </SidebarCard>
 
-          <SidebarCard icon={FileText} title="Reports">
-            <ul className="space-y-2">
-              <ReportLink
-                icon={BarChart3}
-                label="Balance summary"
-                onClick={() => toast.info('Balance report — pending backend')}
-              />
-              <ReportLink
-                icon={Receipt}
-                label="Payment activity"
-                href="/dashboard/transactions"
-              />
-              <ReportLink
-                icon={Wallet}
-                label="Export activity CSV"
-                onClick={() => toast.info('CSV export — pending backend')}
-              />
-            </ul>
-          </SidebarCard>
-        </aside>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-[#222225] rounded-[14px] p-5 border border-white/[0.04]">
+                  <p className="text-[22px] font-semibold text-white">11</p>
+                  <p className="text-[13px] text-zinc-500 mt-1">Members</p>
+                </div>
+                <div className="bg-[#222225] rounded-[14px] p-5 border border-white/[0.04] flex flex-col justify-between">
+                  <p className="text-[22px] font-semibold text-white">3/7</p>
+                  <p className="text-[13px] text-zinc-500 mt-1 flex items-center gap-1.5">
+                    Threshold
+                    <Info size={14} className="text-zinc-500" />
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Chart Area */}
+            <div className="flex flex-col">
+              <div className="flex items-center justify-between mb-6">
+                <button className="bg-[#222225] hover:bg-zinc-800 text-white rounded-[8px] px-3 py-1.5 text-[13px] font-medium flex items-center gap-2 transition-colors border border-white/[0.04]">
+                  Total
+                  <ChevronDown size={14} className="text-zinc-500" />
+                </button>
+                <div className="flex items-center gap-1">
+                  <button className="text-zinc-500 hover:text-white hover:bg-[#222225] rounded-[6px] px-2.5 py-1 text-[12px] font-medium transition-colors">
+                    1W
+                  </button>
+                  <button className="text-zinc-500 hover:text-white hover:bg-[#222225] rounded-[6px] px-2.5 py-1 text-[12px] font-medium transition-colors">
+                    1M
+                  </button>
+                  <button className="bg-[#222225] text-white rounded-[6px] px-2.5 py-1 text-[12px] font-medium border border-white/[0.04]">
+                    1Y
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex-1 flex gap-4 min-h-[200px]">
+                {/* Y Axis */}
+                <div className="flex flex-col justify-between text-[11px] text-zinc-500 py-1 font-medium">
+                  <span>$47.00</span>
+                  <span>$42.00</span>
+                  <span>$38.00</span>
+                  <span>$34.00</span>
+                  <span>$29.00</span>
+                  <span>$25.00</span>
+                </div>
+                
+                {/* Grid Area */}
+                <div className="flex-1 relative border-l border-b border-zinc-800/60 ml-2">
+                  {/* Horizontal Grid Lines */}
+                  <div className="absolute inset-0 flex flex-col justify-between">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="w-full h-[1px] bg-zinc-800/40" />
+                    ))}
+                    <div className="w-full h-[1px] bg-transparent" />
+                  </div>
+                  
+                  {/* X Axis */}
+                  <div className="absolute -bottom-7 left-0 right-0 flex justify-around text-[11px] text-zinc-500 font-medium">
+                    <span>May 2026</span>
+                    <span>Jun 2026</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Accounts Table Section */}
+          <div className="mt-8 pt-8">
+            {/* Tabs */}
+            <div className="flex gap-6 border-b border-white/[0.04] mb-2">
+              <button className="text-[13px] font-semibold text-white border-b-2 border-white pb-3">Accounts</button>
+              <button className="text-[13px] font-medium text-zinc-500 hover:text-white pb-3 transition-colors">Coins</button>
+              <button className="text-[13px] font-medium text-zinc-500 hover:text-white pb-3 transition-colors">NFTs</button>
+            </div>
+
+            {/* Table */}
+            <table className="w-full text-left text-[13px]">
+              <thead>
+                <tr className="text-zinc-500 font-medium">
+                  <th className="py-4 font-normal">Account</th>
+                  <th className="py-4 font-normal">Balance</th>
+                  <th className="py-4 font-normal">Weight</th>
+                  <th className="py-4"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--dash-border)]">
+                {/* Row 1 */}
+                <tr className="group">
+                  <td className="py-4">
+                    <p className="font-semibold text-white">GENESYS</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] text-zinc-500 font-mono">HQ8e...ejRe</span>
+                      <Copy size={12} className="text-zinc-500 cursor-pointer hover:text-white transition-colors" />
+                    </div>
+                  </td>
+                  <td className="py-4 font-medium text-white">
+                    <div className="flex items-center gap-2">
+                      $17.04
+                      <div className="flex -space-x-1">
+                        <div className="w-4 h-4 rounded-full bg-[#1A88F8] border border-[#18181b]"></div>
+                        <div className="w-4 h-4 rounded-full bg-[#8247E5] border border-[#18181b]"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4">
+                    <div className="flex flex-col gap-1.5 w-32">
+                      <span className="font-medium text-white">55%</span>
+                      <div className="h-0.5 w-full bg-white/[0.04] rounded-full overflow-hidden">
+                        <div className="h-full bg-white rounded-full" style={{ width: '55%' }}></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                        <ArrowUp size={14} />
+                      </button>
+                      <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                        <ArrowUpDown size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {/* Row 2 */}
+                <tr className="group">
+                  <td className="py-4">
+                    <p className="font-semibold text-white">10 % Fundation Vault</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] text-zinc-500 font-mono">FR6m...h5JG</span>
+                      <Copy size={12} className="text-zinc-500 cursor-pointer hover:text-white transition-colors" />
+                    </div>
+                  </td>
+                  <td className="py-4 font-medium text-white">
+                    <div className="flex items-center gap-2">
+                      $1.76
+                      <div className="flex -space-x-1">
+                        <div className="w-4 h-4 rounded-full bg-[#1A88F8] border border-[#18181b]"></div>
+                        <div className="w-4 h-4 rounded-full bg-[#F3BA2F] border border-[#18181b]"></div>
+                        <div className="w-4 h-4 rounded-full bg-[#8247E5] border border-[#18181b]"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4">
+                    <div className="flex flex-col gap-1.5 w-32">
+                      <span className="font-medium text-white">6%</span>
+                      <div className="h-0.5 w-full bg-white/[0.04] rounded-full overflow-hidden">
+                        <div className="h-full bg-white rounded-full" style={{ width: '6%' }}></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                        <ArrowUp size={14} />
+                      </button>
+                      <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                        <ArrowUpDown size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                {/* Row 3 */}
+                <tr className="group">
+                  <td className="py-4">
+                    <p className="font-semibold text-white">20 % Main Holding (Vesting)</p>
+                  </td>
+                  <td className="py-4 font-medium text-white">
+                    <div className="flex items-center gap-2">
+                      $0.00
+                      <div className="flex -space-x-1">
+                        <div className="w-4 h-4 rounded-full bg-[#F3BA2F] border border-[#18181b]"></div>
+                        <div className="w-4 h-4 rounded-full bg-[#8247E5] border border-[#18181b]"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="py-4">
+                    <div className="flex flex-col gap-1.5 w-32">
+                      <span className="font-medium text-white">0%</span>
+                    </div>
+                  </td>
+                  <td className="py-4 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                        <ArrowUp size={14} />
+                      </button>
+                      <button className="p-2 bg-[#222225] hover:bg-zinc-700 text-[var(--dash-text)] rounded-[6px] transition-colors border border-white/[0.04]">
+                        <ArrowUpDown size={14} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <AddFundsModal

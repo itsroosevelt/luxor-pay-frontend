@@ -36,7 +36,7 @@ import {
   DemoModeBanner,
   MerchantSetupChecklist,
 } from '@/components/dashboard';
-import { Plus, Pencil, Send, QrCode } from 'lucide-react';
+import { Plus, Pencil, Send, QrCode, ArrowUp, ArrowDown, ArrowUpRight, RefreshCw, ChevronDown, Info, Copy, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 // Import develop functional wallet components and modals
@@ -165,211 +165,237 @@ export default function DashboardOverviewPage() {
   const placeholderAction = () => toast.message('Próximamente');
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-10">
-      <MerchantSetupChecklist />
-      {isFrontendOnly() ? <DemoModeBanner /> : null}
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <h1 className="text-2xl font-semibold text-white tracking-tight">Dashboard</h1>
+        <button className="text-zinc-500 hover:text-white transition-colors mt-1" aria-label="Refresh">
+          <RefreshCw size={14} />
+        </button>
+      </div>
 
-      {/* Section 1 — Hoy */}
-      <section className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <h1 className="text-2xl font-semibold text-[var(--dash-text)] tracking-tight">Hoy</h1>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <button
-              onClick={() => setIsReceiveModalOpen(true)}
-              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center justify-center gap-2 flex-1 sm:flex-none"
-            >
-              <QrCode size={16} /> Recibir
-            </button>
-            <button
-              onClick={() => setIsTransferModalOpen(true)}
-              className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center justify-center gap-2 flex-1 sm:flex-none"
-            >
-              <Send size={16} /> Transferir
-            </button>
-          </div>
-        </div>
-
-        <div className="grid lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 dash-card p-4 sm:p-5 space-y-4">
-            <div>
-              <p className="text-sm text-[var(--dash-muted)]">Volumen neto</p>
-              <div className="flex items-baseline gap-3 mt-1 flex-wrap">
-                <p className="text-3xl font-semibold tabular-nums text-[var(--dash-text)]">
-                  {loading ? '…' : `${formatCombinedVolume(todayNetVolume)} unidades`}
-                </p>
-                {!loading && todayDelta && (
-                  <span
-                    className={
-                      todayNetVolume >= yesterdayNetVolume
-                        ? 'text-sm text-emerald-400'
-                        : 'text-sm text-[var(--dash-muted)]'
-                    }
-                  >
-                    {todayDelta}
-                  </span>
-                )}
+      <div className="bg-white/[0.03] backdrop-blur-xl rounded-2xl p-6 shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/[0.08]">
+        <h2 className="text-[13px] font-medium text-white mb-6">Overview</h2>
+        
+        <div className="grid lg:grid-cols-[380px_1fr] gap-6">
+          {/* Left Column */}
+          <div className="space-y-4">
+            <div className="bg-[#222225] rounded-[14px] p-6 border border-white/[0.04]">
+              <p className="text-[13px] text-zinc-400">Total Balance</p>
+              <p className="text-[36px] font-semibold text-white mt-1 mb-8 tracking-tight">$30.86</p>
+              
+              <div className="flex flex-wrap gap-2.5">
+                <button className="bg-white hover:bg-zinc-200 text-black rounded-[10px] py-2 px-4 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                  <ArrowUp size={14} strokeWidth={2.5} className="shrink-0" />
+                  <span>Send</span>
+                </button>
+                <button className="bg-white hover:bg-zinc-200 text-black rounded-[10px] py-2 px-4 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                  <ArrowDown size={14} strokeWidth={2.5} className="shrink-0" />
+                  <span>Deposit</span>
+                </button>
+                <button className="bg-white hover:bg-zinc-200 text-black rounded-[10px] py-2 px-4 text-[13px] font-semibold flex items-center justify-center gap-1.5 transition-colors">
+                  <ArrowUpRight size={14} strokeWidth={2.5} className="shrink-0" />
+                  <span>Trade</span>
+                </button>
               </div>
-              <p className="text-xs text-[var(--dash-muted)] mt-1">
-                SOL + USDC confirmados (unidades combinadas)
-              </p>
             </div>
-            <VolumeSparkline
-              data={loading ? [] : todayChartSeries}
-              height={220}
-              emptyLabel="Sin volumen aún — línea plana en cero"
-            />
-          </div>
 
-          <div className="dash-card p-4 sm:p-5 flex flex-col justify-between">
-            <div>
-              <p className="text-sm font-medium text-[var(--dash-text)]">Consejo</p>
-              <p className="text-sm text-[var(--dash-muted)] mt-2">
-                Los gráficos usan pagos del almacenamiento local de demo o del historial de transacciones. 
-                Completa un checkout — los pagos se confirman tras validarse en la red.
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#222225] rounded-[14px] p-5 border border-white/[0.04]">
+                <p className="text-[22px] font-semibold text-white">11</p>
+                <p className="text-[13px] text-zinc-400 mt-1">Members</p>
+              </div>
+              <div className="bg-[#222225] rounded-[14px] p-5 border border-white/[0.04] flex flex-col justify-between">
+                <p className="text-[22px] font-semibold text-white">3/7</p>
+                <p className="text-[13px] text-zinc-400 mt-1 flex items-center gap-1.5">
+                  Threshold
+                  <Info size={14} className="text-zinc-500" />
+                </p>
+              </div>
             </div>
-            <Link
-              href="/dashboard/links"
-              className="dash-btn-secondary px-4 py-2 text-sm inline-block text-center mt-4"
-            >
-              Crear enlace de pago
-            </Link>
+          </div>
+
+          {/* Right Column - Chart Area */}
+          <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-6">
+              <button className="bg-[#222225] hover:bg-zinc-800 text-white rounded-[8px] px-3 py-1.5 text-[13px] font-medium flex items-center gap-2 transition-colors border border-white/[0.04]">
+                Total
+                <ChevronDown size={14} className="text-zinc-400" />
+              </button>
+              <div className="flex items-center gap-1">
+                <button className="text-zinc-400 hover:text-white hover:bg-[#222225] rounded-[6px] px-2.5 py-1 text-[12px] font-medium transition-colors">
+                  1W
+                </button>
+                <button className="text-zinc-400 hover:text-white hover:bg-[#222225] rounded-[6px] px-2.5 py-1 text-[12px] font-medium transition-colors">
+                  1M
+                </button>
+                <button className="bg-[#222225] text-white rounded-[6px] px-2.5 py-1 text-[12px] font-medium border border-white/[0.04]">
+                  1Y
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 flex gap-4 min-h-[200px]">
+              {/* Y Axis */}
+              <div className="flex flex-col justify-between text-[11px] text-zinc-500 py-1 font-medium">
+                <span>$47.00</span>
+                <span>$42.00</span>
+                <span>$38.00</span>
+                <span>$34.00</span>
+                <span>$29.00</span>
+                <span>$25.00</span>
+              </div>
+              
+              {/* Grid Area */}
+              <div className="flex-1 relative border-l border-b border-zinc-800/60 ml-2">
+                {/* Horizontal Grid Lines */}
+                <div className="absolute inset-0 flex flex-col justify-between">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="w-full h-[1px] bg-zinc-800/40" />
+                  ))}
+                  <div className="w-full h-[1px] bg-transparent" />
+                </div>
+                
+                {/* X Axis */}
+                <div className="absolute -bottom-7 left-0 right-0 flex justify-around text-[11px] text-zinc-500 font-medium">
+                  <span>May 2026</span>
+                  <span>Jun 2026</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Live On-chain Balance */}
-        {merchantWallet && (
-          <div className="pt-2">
-            <WalletBalanceContainer merchantWallet={merchantWallet} />
+        {/* Accounts Table Section */}
+        <div className="mt-8 pt-8">
+          {/* Tabs */}
+          <div className="flex gap-6 border-b border-white/[0.04] mb-2">
+            <button className="text-[13px] font-semibold text-white border-b-2 border-white pb-3">Accounts</button>
+            <button className="text-[13px] font-medium text-zinc-500 hover:text-white pb-3 transition-colors">Coins</button>
+            <button className="text-[13px] font-medium text-zinc-500 hover:text-white pb-3 transition-colors">NFTs</button>
           </div>
-        )}
 
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="dash-card p-4 sm:p-5">
-            <p className="text-sm text-[var(--dash-muted)] mb-1">Transferencias hoy</p>
-            <p className="text-xl font-semibold tabular-nums">
-              {loading ? '…' : transfersToday}
-            </p>
-            <p className="text-xs text-[var(--dash-muted)] mt-1">Hoy (confirmadas + pendientes)</p>
-          </div>
-          <div className="dash-card p-4 sm:p-5">
-            <p className="text-sm text-[var(--dash-muted)] mb-1">Payment Links</p>
-            <p className="text-xl font-semibold tabular-nums">
-              Activos
-            </p>
-            <p className="text-xs text-[var(--dash-muted)] mt-1">Accept payments anywhere</p>
-          </div>
-          <div className="dash-card p-4 sm:p-5">
-            <p className="text-sm text-[var(--dash-muted)] mb-1">API Integrations</p>
-            <p className="text-xl font-semibold text-primary">
-              Ready
-            </p>
-            <p className="text-xs text-[var(--dash-muted)] mt-1">Custom backend routes enabled</p>
-          </div>
+          {/* Table */}
+          <table className="w-full text-left text-[13px]">
+            <thead>
+              <tr className="text-zinc-500 font-medium">
+                <th className="py-4 font-normal">Account</th>
+                <th className="py-4 font-normal">Balance</th>
+                <th className="py-4 font-normal">Weight</th>
+                <th className="py-4"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[var(--dash-border)]">
+              {/* Row 1 */}
+              <tr className="group">
+                <td className="py-4">
+                  <p className="font-semibold text-white">GENESYS</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[11px] text-zinc-500 font-mono">HQ8e...ejRe</span>
+                    <Copy size={12} className="text-zinc-500 cursor-pointer hover:text-white transition-colors" />
+                  </div>
+                </td>
+                <td className="py-4 font-medium text-white">
+                  <div className="flex items-center gap-2">
+                    $17.04
+                    <div className="flex -space-x-1">
+                      <div className="w-4 h-4 rounded-full bg-[#1A88F8] border border-transparent"></div>
+                      <div className="w-4 h-4 rounded-full bg-[#8247E5] border border-transparent"></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4">
+                  <div className="flex flex-col gap-1.5 w-32">
+                    <span className="font-medium text-white">55%</span>
+                    <div className="h-0.5 w-full bg-white/[0.04] rounded-full overflow-hidden">
+                      <div className="h-full bg-white rounded-full" style={{ width: '55%' }}></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                      <ArrowUp size={14} />
+                    </button>
+                    <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                      <ArrowUpDown size={14} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {/* Row 2 */}
+              <tr className="group">
+                <td className="py-4">
+                  <p className="font-semibold text-white">10 % Fundation Vault</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[11px] text-zinc-500 font-mono">FR6m...h5JG</span>
+                    <Copy size={12} className="text-zinc-500 cursor-pointer hover:text-white transition-colors" />
+                  </div>
+                </td>
+                <td className="py-4 font-medium text-white">
+                  <div className="flex items-center gap-2">
+                    $1.76
+                    <div className="flex -space-x-1">
+                      <div className="w-4 h-4 rounded-full bg-[#1A88F8] border border-transparent"></div>
+                      <div className="w-4 h-4 rounded-full bg-[#F3BA2F] border border-transparent"></div>
+                      <div className="w-4 h-4 rounded-full bg-[#8247E5] border border-transparent"></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4">
+                  <div className="flex flex-col gap-1.5 w-32">
+                    <span className="font-medium text-white">6%</span>
+                    <div className="h-0.5 w-full bg-white/[0.04] rounded-full overflow-hidden">
+                      <div className="h-full bg-white rounded-full" style={{ width: '6%' }}></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                      <ArrowUp size={14} />
+                    </button>
+                    <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                      <ArrowUpDown size={14} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {/* Row 3 */}
+              <tr className="group">
+                <td className="py-4">
+                  <p className="font-semibold text-white">20 % Main Holding (Vesting)</p>
+                </td>
+                <td className="py-4 font-medium text-white">
+                  <div className="flex items-center gap-2">
+                    $0.00
+                    <div className="flex -space-x-1">
+                      <div className="w-4 h-4 rounded-full bg-[#F3BA2F] border border-transparent"></div>
+                      <div className="w-4 h-4 rounded-full bg-[#8247E5] border border-transparent"></div>
+                    </div>
+                  </div>
+                </td>
+                <td className="py-4">
+                  <div className="flex flex-col gap-1.5 w-32">
+                    <span className="font-medium text-white">0%</span>
+                  </div>
+                </td>
+                <td className="py-4 text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <button className="p-2 bg-[#222225] hover:bg-zinc-800 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                      <ArrowUp size={14} />
+                    </button>
+                    <button className="p-2 bg-[#222225] hover:bg-zinc-700 text-white rounded-[6px] transition-colors border border-white/[0.04]">
+                      <ArrowUpDown size={14} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </section>
-
-      {/* Section 2 — Resumen */}
-      <section className="space-y-4">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <h2 className="text-xl font-semibold text-[var(--dash-text)]">Tu resumen</h2>
-          <div className="flex flex-wrap items-center gap-2">
-            <FilterRow>
-              <FilterChip label="Rango de fechas" value="Últimos 7 días" />
-              <FilterChip label="Intervalo" value="Diario" />
-              <FilterChip label="Comparar" value="Periodo anterior" />
-            </FilterRow>
-            <button
-              type="button"
-              onClick={placeholderAction}
-              className="dash-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-            >
-              <Plus size={14} />
-              Añadir
-            </button>
-            <button
-              type="button"
-              onClick={placeholderAction}
-              className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
-            >
-              <Pencil size={14} />
-              Editar
-            </button>
-          </div>
-        </div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <SummaryMetricCard
-            label="Pagos"
-            value={loading ? '…' : periodConfirmed.length}
-            sublabel={allTimeConfirmed > 0 ? `${allTimeConfirmed} en total` : undefined}
-            empty={!loading && periodConfirmed.length === 0}
-          >
-            {!loading && periodConfirmed.length > 0 && (
-              <MiniBarChart data={paymentCountSeries} />
-            )}
-          </SummaryMetricCard>
-
-          <SummaryMetricCard
-            label="Volumen bruto"
-            value={loading ? '…' : `${formatCombinedVolume(periodGross)} unidades`}
-            sublabel="Últimos 7 días · confirmados"
-            empty={!loading && periodGross === 0}
-          >
-            {!loading && hasSeriesData(grossSeries) && (
-              <VolumeSparkline data={grossSeries} height={72} emptyLabel="Sin datos" />
-            )}
-          </SummaryMetricCard>
-
-          <SummaryMetricCard
-            label="Volumen neto"
-            value={loading ? '…' : `${formatCombinedVolume(periodNet)} unidades`}
-            sublabel="Últimos 7 días · tras comisiones (MVP: igual que bruto)"
-            empty={!loading && periodNet === 0}
-          >
-            {!loading && hasSeriesData(grossSeries) && (
-              <VolumeSparkline data={grossSeries} height={72} emptyLabel="Sin datos" />
-            )}
-          </SummaryMetricCard>
-
-          <SummaryMetricCard
-            label="Pagos fallidos"
-            value={loading ? '…' : periodFailed.length}
-            sublabel="Fallidos o expirados"
-            empty={!loading && periodFailed.length === 0}
-          />
-
-          <SummaryMetricCard
-            label="Clientes nuevos"
-            value={loading ? '…' : newCustomers}
-            sublabel="Creados en el periodo"
-            empty={!loading && newCustomers === 0}
-          />
-
-          <SummaryMetricCard
-            label="Mejores clientes por gasto"
-            empty={!loading && topCustomers.length === 0}
-          >
-            {!loading && topCustomers.length > 0 && (
-              <ul className="space-y-2 text-sm">
-                {topCustomers.map((row) => (
-                  <li
-                    key={row.label}
-                    className="flex items-center justify-between gap-2 border-b border-[var(--dash-border)] pb-2 last:border-0 last:pb-0"
-                  >
-                    <span className="text-[var(--dash-text)] truncate">{row.label}</span>
-                    <span className="text-[var(--dash-muted)] tabular-nums shrink-0">
-                      {formatCombinedVolume(row.total)} u. · {row.count}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SummaryMetricCard>
-        </div>
-      </section>
-
-      {/* Modals for Solana Payments */}
+      </div>
+      
+      {/* Modals for Solana Payments (Hidden) */}
       <TransferModal 
         isOpen={isTransferModalOpen}
         onClose={() => setIsTransferModalOpen(false)}
