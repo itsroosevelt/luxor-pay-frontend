@@ -1,25 +1,62 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { getMerchantProfile } from '@/lib/merchants-api';
-import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
-import { Link as LinkIcon, Terminal, Code2, ArrowRight, Send, QrCode } from 'lucide-react';
+import { auth, onAuthStateChanged } from '@/lib/firebase';
+import { listCustomers, getMerchantProfile } from '@/lib/merchant-data';
+import { getFirestoreErrorMessage } from '@/lib/firestore-errors';
+import { listPayments } from '@/lib/payments-api';
+import { listCheckoutPayments } from '@/lib/checkout-payments-local';
+import { isFrontendOnly } from '@/lib/frontend-only';
+import { computeBalanceSummary } from '@/lib/balance-utils';
+import {
+  buildDailyCountSeries,
+  buildDailyVolumeSeries,
+  confirmedOrders,
+  countNewCustomersInPeriod,
+  formatCombinedVolume,
+  grossVolumeInPeriod,
+  hasSeriesData,
+  netVolumeInPeriod,
+  ordersInRange,
+  periodRange,
+  startOfDay,
+  topCustomersBySpend,
+  volumeForDay,
+  yesterdayDeltaLabel,
+} from '@/lib/dashboard-metrics';
+import { formatPaymentAmount } from '@/lib/transaction-utils';
+import type { Customer, PaymentOrder } from '@luxor/contracts';
+import {
+  FilterRow,
+  FilterChip,
+  SummaryMetricCard,
+  MiniBarChart,
+  VolumeSparkline,
+  DemoModeBanner,
+  MerchantSetupChecklist,
+} from '@/components/dashboard';
+import { Plus, Pencil, Send, QrCode } from 'lucide-react';
+import { toast } from 'sonner';
+
+// Import develop functional wallet components and modals
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
 import { Transfer } from '@/lib/transfers-api';
 
+const SUMMARY_DAYS = 7;
+const TODAY_CHART_DAYS = 14;
+
 export default function DashboardOverviewPage() {
-  const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
+  const [orders, setOrders] = useState<PaymentOrder[]>([]);
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
-
   const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
 
@@ -27,99 +64,312 @@ export default function DashboardOverviewPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
-        const [links, pos, profile] = await Promise.all([
-          listPaymentLinks(token),
-          listPosDevices(token),
-          getMerchantProfile(token),
+        const [payments, customerList, profile] = await Promise.all([
+          isFrontendOnly()
+            ? Promise.resolve(listCheckoutPayments(user.uid))
+            : user.getIdToken().then((token) => listPayments(token)).catch(() => [] as PaymentOrder[]),
+          listCustomers(user.uid).catch(() => [] as Customer[]),
+          getMerchantProfile(user.uid).catch(() => null),
         ]);
-        setStats({
-          links: links.length,
-          pos: pos.length,
-          hasWallet: Boolean(profile?.merchantWallet),
-        });
+        setOrders(payments);
+        setCustomers(customerList);
         setMerchantWallet(profile?.merchantWallet || null);
       } catch (e) {
         console.error(e);
+        toast.error(getFirestoreErrorMessage(e, 'No se pudieron cargar los datos del panel'));
+      } finally {
+        setLoading(false);
       }
     });
     return () => unsubscribe();
   }, []);
 
-  return (
-    <>
-      <header className="p-6 md:p-10 border-b border-white/5 bg-white/[0.01] flex flex-col md:flex-row md:justify-between md:items-end gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Overview</h1>
-          <p className="text-gray-400 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            Your Solana payment platform — links, POS, and API in one place.
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={() => setIsReceiveModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
-            style={{ fontFamily: 'Outfit, sans-serif' }}
-          >
-            <QrCode size={18} /> Receive
-          </button>
-          <button 
-            onClick={() => setIsTransferModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-colors"
-            style={{ fontFamily: 'Outfit, sans-serif' }}
-          >
-            <Send size={18} /> Transfer
-          </button>
-        </div>
-      </header>
+  const today = useMemo(() => startOfDay(new Date()), []);
+  const yesterday = useMemo(() => {
+    const d = startOfDay(new Date());
+    d.setDate(d.getDate() - 1);
+    return d;
+  }, []);
 
-      <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
-        {!stats.hasWallet && (
-          <div className="glass-panel p-4 border border-amber-500/30 bg-amber-500/5 text-sm">
-            <p className="text-amber-200">
-              Add your Solana wallet in{' '}
-              <Link href="/dashboard/settings" className="underline font-medium">
-                Settings
-              </Link>{' '}
-              to accept payments on links and POS.
-            </p>
+  const todayNetVolume = useMemo(() => volumeForDay(orders, today), [orders, today]);
+  const yesterdayNetVolume = useMemo(() => volumeForDay(orders, yesterday), [orders, yesterday]);
+  const todayDelta = useMemo(
+    () => yesterdayDeltaLabel(todayNetVolume, yesterdayNetVolume),
+    [todayNetVolume, yesterdayNetVolume]
+  );
+
+  const todayChartSeries = useMemo(
+    () => buildDailyVolumeSeries(orders, TODAY_CHART_DAYS),
+    [orders]
+  );
+
+  const transfersToday = useMemo(
+    () =>
+      ordersInRange(orders, today, new Date()).filter(
+        (o) => o.status === 'confirmed' || o.status === 'pending'
+      ).length,
+    [orders, today]
+  );
+
+  const { start: periodStart, end: periodEnd } = useMemo(
+    () => periodRange(SUMMARY_DAYS),
+    []
+  );
+
+  const periodConfirmed = useMemo(
+    () => ordersInRange(orders, periodStart, periodEnd, (o) => o.status === 'confirmed'),
+    [orders, periodStart, periodEnd]
+  );
+
+  const periodFailed = useMemo(
+    () =>
+      ordersInRange(orders, periodStart, periodEnd, (o) =>
+        ['failed', 'expired'].includes(o.status)
+      ),
+    [orders, periodStart, periodEnd]
+  );
+
+  const paymentCountSeries = useMemo(
+    () =>
+      buildDailyCountSeries(orders, SUMMARY_DAYS, (o) => o.status === 'confirmed', periodEnd),
+    [orders, periodEnd]
+  );
+
+  const grossSeries = useMemo(
+    () => buildDailyVolumeSeries(orders, SUMMARY_DAYS, periodEnd),
+    [orders, periodEnd]
+  );
+
+  const periodGross = useMemo(
+    () => grossVolumeInPeriod(orders, periodStart, periodEnd),
+    [orders, periodStart, periodEnd]
+  );
+
+  const periodNet = useMemo(
+    () => netVolumeInPeriod(orders, periodStart, periodEnd),
+    [orders, periodStart, periodEnd]
+  );
+
+  const newCustomers = useMemo(
+    () => countNewCustomersInPeriod(customers, periodStart, periodEnd),
+    [customers, periodStart, periodEnd]
+  );
+
+  const topCustomers = useMemo(
+    () => topCustomersBySpend(orders, periodStart, periodEnd, 5),
+    [orders, periodStart, periodEnd]
+  );
+
+  const allTimeConfirmed = useMemo(() => confirmedOrders(orders).length, [orders]);
+
+  const placeholderAction = () => toast.message('Próximamente');
+
+  return (
+    <div className="p-4 sm:p-6 md:p-8 max-w-6xl mx-auto space-y-6 sm:space-y-10">
+      <MerchantSetupChecklist />
+      {isFrontendOnly() ? <DemoModeBanner /> : null}
+
+      {/* Section 1 — Hoy */}
+      <section className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h1 className="text-2xl font-semibold text-[var(--dash-text)] tracking-tight">Hoy</h1>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => setIsReceiveModalOpen(true)}
+              className="dash-btn-secondary px-4 py-2 text-sm inline-flex items-center justify-center gap-2 flex-1 sm:flex-none"
+            >
+              <QrCode size={16} /> Recibir
+            </button>
+            <button
+              onClick={() => setIsTransferModalOpen(true)}
+              className="dash-btn-primary px-4 py-2 text-sm inline-flex items-center justify-center gap-2 flex-1 sm:flex-none"
+            >
+              <Send size={16} /> Transferir
+            </button>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 dash-card p-4 sm:p-5 space-y-4">
+            <div>
+              <p className="text-sm text-[var(--dash-muted)]">Volumen neto</p>
+              <div className="flex items-baseline gap-3 mt-1 flex-wrap">
+                <p className="text-3xl font-semibold tabular-nums text-[var(--dash-text)]">
+                  {loading ? '…' : `${formatCombinedVolume(todayNetVolume)} unidades`}
+                </p>
+                {!loading && todayDelta && (
+                  <span
+                    className={
+                      todayNetVolume >= yesterdayNetVolume
+                        ? 'text-sm text-emerald-400'
+                        : 'text-sm text-[var(--dash-muted)]'
+                    }
+                  >
+                    {todayDelta}
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-[var(--dash-muted)] mt-1">
+                SOL + USDC confirmados (unidades combinadas)
+              </p>
+            </div>
+            <VolumeSparkline
+              data={loading ? [] : todayChartSeries}
+              height={220}
+              emptyLabel="Sin volumen aún — línea plana en cero"
+            />
+          </div>
+
+          <div className="dash-card p-4 sm:p-5 flex flex-col justify-between">
+            <div>
+              <p className="text-sm font-medium text-[var(--dash-text)]">Consejo</p>
+              <p className="text-sm text-[var(--dash-muted)] mt-2">
+                Los gráficos usan pagos del almacenamiento local de demo o del historial de transacciones. 
+                Completa un checkout — los pagos se confirman tras validarse en la red.
+              </p>
+            </div>
+            <Link
+              href="/dashboard/links"
+              className="dash-btn-secondary px-4 py-2 text-sm inline-block text-center mt-4"
+            >
+              Crear enlace de pago
+            </Link>
+          </div>
+        </div>
+
+        {/* Live On-chain Balance */}
+        {merchantWallet && (
+          <div className="pt-2">
+            <WalletBalanceContainer merchantWallet={merchantWallet} />
           </div>
         )}
 
-        <WalletBalanceContainer merchantWallet={merchantWallet} />
-        <div className="grid md:grid-cols-3 gap-4">
-          <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />
-          <StatCard label="POS devices" value={stats.pos} href="/dashboard/pos" />
-          <StatCard label="API" value="Ready" href="/dashboard/developers" isText />
+        <div className="grid sm:grid-cols-3 gap-4">
+          <div className="dash-card p-4 sm:p-5">
+            <p className="text-sm text-[var(--dash-muted)] mb-1">Transferencias hoy</p>
+            <p className="text-xl font-semibold tabular-nums">
+              {loading ? '…' : transfersToday}
+            </p>
+            <p className="text-xs text-[var(--dash-muted)] mt-1">Hoy (confirmadas + pendientes)</p>
+          </div>
+          <div className="dash-card p-4 sm:p-5">
+            <p className="text-sm text-[var(--dash-muted)] mb-1">Payment Links</p>
+            <p className="text-xl font-semibold tabular-nums">
+              Activos
+            </p>
+            <p className="text-xs text-[var(--dash-muted)] mt-1">Accept payments anywhere</p>
+          </div>
+          <div className="dash-card p-4 sm:p-5">
+            <p className="text-sm text-[var(--dash-muted)] mb-1">API Integrations</p>
+            <p className="text-xl font-semibold text-primary">
+              Ready
+            </p>
+            <p className="text-xs text-[var(--dash-muted)] mt-1">Custom backend routes enabled</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Section 2 — Resumen */}
+      <section className="space-y-4">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <h2 className="text-xl font-semibold text-[var(--dash-text)]">Tu resumen</h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <FilterRow>
+              <FilterChip label="Rango de fechas" value="Últimos 7 días" />
+              <FilterChip label="Intervalo" value="Diario" />
+              <FilterChip label="Comparar" value="Periodo anterior" />
+            </FilterRow>
+            <button
+              type="button"
+              onClick={placeholderAction}
+              className="dash-btn-primary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
+            >
+              <Plus size={14} />
+              Añadir
+            </button>
+            <button
+              type="button"
+              onClick={placeholderAction}
+              className="dash-btn-secondary px-3 py-1.5 text-sm inline-flex items-center gap-1.5"
+            >
+              <Pencil size={14} />
+              Editar
+            </button>
+          </div>
         </div>
 
-        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <SummaryMetricCard
+            label="Pagos"
+            value={loading ? '…' : periodConfirmed.length}
+            sublabel={allTimeConfirmed > 0 ? `${allTimeConfirmed} en total` : undefined}
+            empty={!loading && periodConfirmed.length === 0}
+          >
+            {!loading && periodConfirmed.length > 0 && (
+              <MiniBarChart data={paymentCountSeries} />
+            )}
+          </SummaryMetricCard>
 
-        <section>
-          <h2 className="text-lg font-semibold mb-4">Quick start</h2>
-          <div className="grid gap-3">
-            <QuickLink
-              href="/dashboard/links"
-              icon={LinkIcon}
-              title="Create a payment link"
-              description="Share a checkout URL on your website or social media."
-            />
-            <QuickLink
-              href="/dashboard/pos"
-              icon={Terminal}
-              title="Connect a POS terminal"
-              description="Register hardware and charge with your API key."
-            />
-            <QuickLink
-              href="/dashboard/developers"
-              icon={Code2}
-              title="Get API keys"
-              description="Integrate Luxor Pay like Stripe — REST on the same domain."
-            />
-          </div>
-        </section>
-      </div>
+          <SummaryMetricCard
+            label="Volumen bruto"
+            value={loading ? '…' : `${formatCombinedVolume(periodGross)} unidades`}
+            sublabel="Últimos 7 días · confirmados"
+            empty={!loading && periodGross === 0}
+          >
+            {!loading && hasSeriesData(grossSeries) && (
+              <VolumeSparkline data={grossSeries} height={72} emptyLabel="Sin datos" />
+            )}
+          </SummaryMetricCard>
 
+          <SummaryMetricCard
+            label="Volumen neto"
+            value={loading ? '…' : `${formatCombinedVolume(periodNet)} unidades`}
+            sublabel="Últimos 7 días · tras comisiones (MVP: igual que bruto)"
+            empty={!loading && periodNet === 0}
+          >
+            {!loading && hasSeriesData(grossSeries) && (
+              <VolumeSparkline data={grossSeries} height={72} emptyLabel="Sin datos" />
+            )}
+          </SummaryMetricCard>
+
+          <SummaryMetricCard
+            label="Pagos fallidos"
+            value={loading ? '…' : periodFailed.length}
+            sublabel="Fallidos o expirados"
+            empty={!loading && periodFailed.length === 0}
+          />
+
+          <SummaryMetricCard
+            label="Clientes nuevos"
+            value={loading ? '…' : newCustomers}
+            sublabel="Creados en el periodo"
+            empty={!loading && newCustomers === 0}
+          />
+
+          <SummaryMetricCard
+            label="Mejores clientes por gasto"
+            empty={!loading && topCustomers.length === 0}
+          >
+            {!loading && topCustomers.length > 0 && (
+              <ul className="space-y-2 text-sm">
+                {topCustomers.map((row) => (
+                  <li
+                    key={row.label}
+                    className="flex items-center justify-between gap-2 border-b border-[var(--dash-border)] pb-2 last:border-0 last:pb-0"
+                  >
+                    <span className="text-[var(--dash-text)] truncate">{row.label}</span>
+                    <span className="text-[var(--dash-muted)] tabular-nums shrink-0">
+                      {formatCombinedVolume(row.total)} u. · {row.count}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SummaryMetricCard>
+        </div>
+      </section>
+
+      {/* Modals for Solana Payments */}
       <TransferModal 
         isOpen={isTransferModalOpen}
         onClose={() => setIsTransferModalOpen(false)}
@@ -140,55 +390,6 @@ export default function DashboardOverviewPage() {
         onClose={() => setIsTransferSuccessModalOpen(false)}
         transferData={transferSuccessData}
       />
-    </>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  href,
-  isText,
-}: {
-  label: string;
-  value: number | string;
-  href: string;
-  isText?: boolean;
-}) {
-  return (
-    <Link href={href} className="glass-panel p-6 hover:bg-white/[0.04] transition-colors block">
-      <p className="text-gray-400 text-sm mb-2">{label}</p>
-      <p className={isText ? 'text-xl font-bold text-primary' : 'text-3xl font-bold'}>{value}</p>
-    </Link>
-  );
-}
-
-function QuickLink({
-  href,
-  icon: Icon,
-  title,
-  description,
-}: {
-  href: string;
-  icon: typeof LinkIcon;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Link
-      href={href}
-      className="glass-panel p-5 flex items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors"
-    >
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-          <Icon size={20} />
-        </div>
-        <div>
-          <p className="font-semibold">{title}</p>
-          <p className="text-sm text-gray-400">{description}</p>
-        </div>
-      </div>
-      <ArrowRight className="text-gray-500 shrink-0" size={18} />
-    </Link>
+    </div>
   );
 }

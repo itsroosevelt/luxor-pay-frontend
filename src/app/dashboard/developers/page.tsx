@@ -1,172 +1,198 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { authHeaders } from '@/lib/auth-client';
-import { apiUrl, getApiBaseUrl } from '@/lib/api-client';
-import { Key, Plus, Trash2, Copy } from 'lucide-react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import {
+  ApiKeysPanel,
+  PreferenceToggleGroup,
+  SettingsPageHeader,
+  SettingsSection,
+  SettingsSectionRow,
+} from '@/components/dashboard/settings';
+import { auth, onAuthStateChanged } from '@/lib/firebase';
+import { getMerchantProfile } from '@/lib/merchant-data';
+import {
+  getDeveloperPrefsServerSnapshot,
+  getDeveloperPrefsSnapshot,
+  saveSdkLanguage,
+  saveWorkbenchTheme,
+  SDK_LANGUAGE_OPTIONS,
+  WORKBENCH_THEME_OPTIONS,
+  type SdkLanguageId,
+  type WorkbenchTheme,
+} from '@/lib/dashboard/developer-prefs';
+import { cn } from '@/lib/cn';
+import { Check, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
-interface ApiKeyRow {
-  id: string;
-  name: string;
-  keyPrefix: string;
-  createdAt: string;
+const DEVELOPER_PREFS_CHANGE_EVENT = 'luxor-developer-prefs-change';
+
+function subscribeToDeveloperPrefs(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+  const handler = () => onStoreChange();
+  window.addEventListener(DEVELOPER_PREFS_CHANGE_EVENT, handler);
+  window.addEventListener('storage', handler);
+  return () => {
+    window.removeEventListener(DEVELOPER_PREFS_CHANGE_EVENT, handler);
+    window.removeEventListener('storage', handler);
+  };
+}
+
+function scrollToApiKeys() {
+  document.getElementById('api-keys')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 export default function DevelopersPage() {
-  const [keys, setKeys] = useState<ApiKeyRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [name, setName] = useState('');
-  const [newSecret, setNewSecret] = useState<string | null>(null);
-  const [adminMissing, setAdminMissing] = useState(false);
-
-  const loadKeys = async () => {
-    try {
-      const res = await fetch(apiUrl('/api/v1/api-keys'), { headers: await authHeaders() });
-      if (res.status === 503) {
-        setAdminMissing(true);
-        return;
-      }
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setKeys(json.data ?? []);
-    } catch {
-      toast.error('Could not load API keys');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [businessName, setBusinessName] = useState('your business');
+  const prefs = useSyncExternalStore(
+    subscribeToDeveloperPrefs,
+    getDeveloperPrefsSnapshot,
+    getDeveloperPrefsServerSnapshot
+  );
 
   useEffect(() => {
-    loadKeys();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const profile = await getMerchantProfile(user.uid);
+        if (profile?.businessName?.trim()) {
+          setBusinessName(profile.businessName.trim());
+        }
+      } catch {
+        /* keep fallback label */
+      }
+    });
+    return () => unsubscribe();
   }, []);
 
-  const createKey = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim()) return;
-    try {
-      const res = await fetch(apiUrl('/api/v1/api-keys'), {
-        method: 'POST',
-        headers: await authHeaders(),
-        body: JSON.stringify({ name: name.trim() }),
-      });
-      if (res.status === 503) {
-        setAdminMissing(true);
-        toast.error('Configure Firebase Admin to use API keys');
-        return;
-      }
-      if (!res.ok) throw new Error();
-      const json = await res.json();
-      setNewSecret(json.secret);
-      setName('');
-      await loadKeys();
-      toast.success('API key created — copy it now');
-    } catch {
-      toast.error('Could not create API key');
-    }
+  const dispatchPrefsChange = useCallback(() => {
+    window.dispatchEvent(new Event(DEVELOPER_PREFS_CHANGE_EVENT));
+  }, []);
+
+  const handleThemeChange = (theme: WorkbenchTheme) => {
+    saveWorkbenchTheme(theme);
+    dispatchPrefsChange();
+    toast.success('Workbench appearance saved');
   };
 
-  const revokeKey = async (id: string) => {
-    try {
-      const res = await fetch(apiUrl(`/api/v1/api-keys/${id}`), {
-        method: 'DELETE',
-        headers: await authHeaders(),
-      });
-      if (!res.ok) throw new Error();
-      setKeys((prev) => prev.filter((k) => k.id !== id));
-      toast.success('API key revoked');
-    } catch {
-      toast.error('Could not revoke key');
-    }
+  const handleSdkChange = (language: SdkLanguageId) => {
+    saveSdkLanguage(language);
+    dispatchPrefsChange();
+    toast.success('SDK language saved');
   };
 
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5">
-        <h1 className="text-2xl font-bold mb-1">Developers</h1>
-        <p className="text-gray-400 text-sm">
-          API keys, endpoints, and integrations — same domain as your dashboard.
-        </p>
-      </header>
+      <SettingsPageHeader
+        title="Developers"
+        description="Manage API keys, Workbench preferences, and SDK settings for your Luxor Pay integration."
+      />
 
-      <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
-        {adminMissing && (
-          <div className="glass-panel p-4 border border-amber-500/30 text-sm text-amber-100">
-            Start the backend and set Firebase Admin in{' '}
-            <code className="text-primary">backend/.env</code>.
-            Payment links still work via Firestore from the dashboard.
-          </div>
-        )}
-
-        {newSecret && (
-          <div className="glass-panel p-4 border border-primary/40 space-y-2">
-            <p className="text-sm font-semibold text-primary">New secret key (shown once)</p>
-            <code className="block text-xs break-all bg-black/50 p-3 rounded-lg">{newSecret}</code>
+      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-6 pb-12">
+        <SettingsSection
+          title="API keys"
+          description="API keys can be managed from the Developers area."
+        >
+          <div className="px-5 py-4">
             <button
               type="button"
-              onClick={() => {
-                navigator.clipboard.writeText(newSecret);
-                toast.success('Copied');
-              }}
-              className="text-sm flex items-center gap-2 text-primary"
+              onClick={scrollToApiKeys}
+              className="dash-btn-secondary inline-flex items-center gap-1.5 px-4 py-2 text-sm"
             >
-              <Copy size={14} /> Copy key
+              Manage API keys
             </button>
           </div>
-        )}
+        </SettingsSection>
 
-        <form onSubmit={createKey} className="glass-panel p-6 flex flex-col sm:flex-row gap-3">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Key name (e.g. Production POS)"
-            className="flex-1 bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
-          />
-          <button
-            type="submit"
-            className="px-5 py-2.5 bg-white text-black font-semibold text-sm rounded-lg flex items-center justify-center gap-2"
-          >
-            <Plus size={16} /> Create key
-          </button>
-        </form>
+        <SettingsSection
+          title="Workbench"
+          description="Debug, manage, and grow your Solana payment integration with Luxor Pay Workbench."
+        >
+          <SettingsSectionRow label="Status">
+            <p className="text-[var(--dash-text)]">
+              Workbench is enabled for{' '}
+              <span className="font-medium">{businessName}</span>
+            </p>
+          </SettingsSectionRow>
 
-        <div className="glass-panel p-6 font-mono text-sm text-gray-400 space-y-2">
-          <p className="text-white font-sans font-semibold">Base URL</p>
-          <p>{getApiBaseUrl()}/api/v1</p>
-          <p className="pt-2 text-white font-sans font-semibold">Example</p>
-          <p>GET /payment-links · POST /pos/charge · Header X-Api-Key</p>
-        </div>
-
-        {loading ? (
-          <p className="text-gray-500 text-sm">Loading keys…</p>
-        ) : keys.length === 0 ? (
-          <p className="text-gray-500 text-sm">No API keys yet.</p>
-        ) : (
-          <div className="grid gap-3">
-            {keys.map((k) => (
-              <div
-                key={k.id}
-                className="glass-panel p-4 flex items-center justify-between gap-4"
-              >
-                <div className="flex items-center gap-3">
-                  <Key className="text-primary" size={18} />
-                  <div>
-                    <p className="font-medium">{k.name}</p>
-                    <p className="text-xs text-gray-500">{k.keyPrefix}…</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => revokeKey(k.id)}
-                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg"
-                  aria-label="Revoke key"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
+          <div className="px-5 md:px-6 py-6 border-b border-[var(--dash-border)] flex flex-wrap gap-4">
+            <a
+              href="https://docs.luxorpay.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
+            >
+              Read documentation
+              <ExternalLink size={14} aria-hidden />
+            </a>
+            <button
+              type="button"
+              onClick={() => toast.message('Legacy Workbench is not available yet')}
+              className="text-sm font-medium text-[var(--dash-accent)] hover:text-[var(--dash-accent-hover)] transition-colors"
+            >
+              Return to legacy version
+            </button>
           </div>
-        )}
+
+          <SettingsSectionRow
+            label="Appearance"
+            description="Choose how Workbench looks for you."
+          >
+            <PreferenceToggleGroup
+              ariaLabel="Workbench appearance"
+              options={WORKBENCH_THEME_OPTIONS}
+              value={prefs.theme}
+              onChange={handleThemeChange}
+            />
+          </SettingsSectionRow>
+        </SettingsSection>
+
+        <SettingsSection
+          title="SDK language"
+          description="Choose the language for Luxor Pay code samples and documentation snippets."
+        >
+          <div className="px-5 py-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {SDK_LANGUAGE_OPTIONS.map((opt) => {
+                const selected = prefs.sdk === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => handleSdkChange(opt.id)}
+                    aria-pressed={selected}
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-lg border text-left transition-colors',
+                      selected
+                        ? 'border-[var(--dash-accent)] bg-[var(--dash-accent-soft)]'
+                        : 'border-[var(--dash-border)] hover:border-[var(--dash-muted)]'
+                    )}
+                  >
+                    <span
+                      className="w-9 h-9 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 text-white"
+                      style={{
+                        backgroundColor:
+                          opt.id === 'none' ? 'var(--dash-border)' : opt.accent,
+                        color: opt.id === 'none' ? 'var(--dash-muted)' : '#fff',
+                      }}
+                    >
+                      {opt.initials}
+                    </span>
+                    <span className="text-sm font-medium text-[var(--dash-text)] flex-1 min-w-0">
+                      {opt.label}
+                    </span>
+                    {selected && (
+                      <Check size={16} className="text-[var(--dash-accent)] shrink-0" aria-hidden />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </SettingsSection>
+
+        <div id="api-keys" className="scroll-mt-6">
+          <ApiKeysPanel />
+        </div>
       </div>
     </>
   );

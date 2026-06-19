@@ -1,100 +1,38 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
-import { getMerchantProfile, updateMerchantProfile } from '@/lib/merchants-api';
-import { toast } from 'sonner';
+import { PageHeader, SettingsTile } from '@/components/dashboard';
+import { SETTINGS_SECTIONS } from '@/lib/dashboard/settings-sections';
 
 export default function SettingsPage() {
-  const [businessName, setBusinessName] = useState('');
-  const [merchantWallet, setMerchantWallet] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-      try {
-        const token = await user.getIdToken();
-        const profile = await getMerchantProfile(token);
-        
-        if (profile) {
-          setBusinessName(profile.businessName ?? '');
-          setMerchantWallet(profile.merchantWallet ?? '');
-        }
-      } catch {
-        // Silently handle get profile failure
-      } finally {
-        setLoading(false);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const user = auth.currentUser;
-    if (!user) return;
-
-    setSaving(true);
-    try {
-      const token = await user.getIdToken();
-      await updateMerchantProfile(token, {
-        businessName: businessName.trim() || undefined,
-        merchantWallet: merchantWallet.trim() || undefined,
-      });
-
-      toast.success('Profile saved');
-    } catch {
-      toast.error('Could not save profile');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5">
-        <h1 className="text-2xl font-bold mb-1">Settings</h1>
-        <p className="text-gray-400 text-sm">Business profile and Solana wallet for receiving payments.</p>
-      </header>
+      <PageHeader
+        title="Settings"
+        description="Manage your account, team, security, products, and Luxor Pay preferences."
+      />
 
-      <div className="p-6 md:p-10 max-w-xl">
-        {loading ? (
-          <p className="text-gray-500 text-sm">Loading…</p>
-        ) : (
-          <form onSubmit={handleSave} className="glass-panel p-6 space-y-4">
-            <div>
-              <label className="text-sm text-gray-400 block mb-1">Business name</label>
-              <input
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
-                placeholder="My Store"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-400 block mb-1">Solana wallet address</label>
-              <input
-                value={merchantWallet}
-                onChange={(e) => setMerchantWallet(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm font-mono"
-                placeholder="Your pubkey for USDC / SOL"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Used on payment links, QR codes, and POS charges.
-              </p>
-            </div>
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-5 py-2.5 bg-white text-black font-semibold text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50"
+      <div className="p-6 md:p-8 max-w-3xl mx-auto space-y-10 pb-12">
+        {SETTINGS_SECTIONS.map((section) => (
+          <section key={section.id} aria-labelledby={`settings-section-${section.id}`}>
+            <h2
+              id={`settings-section-${section.id}`}
+              className="text-xs font-semibold uppercase tracking-wider text-[var(--dash-muted)] mb-3"
             >
-              {saving ? 'Saving…' : 'Save profile'}
-            </button>
-          </form>
-        )}
+              {section.title}
+            </h2>
+            <div className="space-y-2">
+              {section.tiles.map((tile) => (
+                <SettingsTile
+                  key={tile.href}
+                  href={tile.href}
+                  title={tile.title}
+                  description={tile.description}
+                  icon={tile.icon}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </>
   );

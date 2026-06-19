@@ -1,21 +1,32 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { SolanaProvider } from '@/web3/providers/SolanaProvider';
+import type { Metadata } from 'next';
+import { Geist_Mono, Montserrat, Outfit } from 'next/font/google';
+import './globals.css';
+import StyledComponentsRegistry from '@/lib/styled-components-registry';
+import { GlobalStyle } from '@/styles/GlobalStyle';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const outfit = Outfit({
+  variable: '--font-outfit',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
+
+const montserrat = Montserrat({
+  variable: '--font-montserrat',
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
-  title: "Luxor Pay | Solana Payment Gateway",
-  description: "Next-gen payment gateway for the Solana ecosystem.",
+  title: 'Luxor Pay | Solana Payment Gateway',
+  description: 'Next-gen payment gateway for the Solana ecosystem.',
 };
 
 export default function RootLayout({
@@ -26,11 +37,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${outfit.variable} ${montserrat.variable} ${geistMono.variable} antialiased`}
       >
-        <SolanaProvider>
+        <StyledComponentsRegistry>
+          <GlobalStyle />
           {children}
-        </SolanaProvider>
+        </StyledComponentsRegistry>
       </body>
     </html>
   );

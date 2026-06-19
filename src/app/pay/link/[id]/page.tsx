@@ -1,34 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { isFrontendOnly } from '@/lib/frontend-only';
+import { getPaymentLinkById } from '@/lib/merchant-data';
+import { getPaymentLinkPublicPath } from '@/lib/payment-link-utils';
 import { createPaymentFromLink } from '@/lib/payments-api';
+import { CheckoutError, CheckoutLoading } from '@/features/checkout/components/CheckoutShell';
 
-/** Payment link entry: creates an on-chain payment session then redirects to /pay/[reference]. */
+/** Legacy entry point — redirects to canonical /pay/[slug]. */
 export default function PayLinkPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [error, setError] = useState<string | null>(null);
+  const frontendOnly = isFrontendOnly();
 
   useEffect(() => {
     if (!id) return;
+
+    if (frontendOnly) {
+      getPaymentLinkById(id)
+        .then((link) => router.replace(getPaymentLinkPublicPath(link)))
+        .catch(() => router.replace(`/pay/${id}`));
+      return;
+    }
+
     createPaymentFromLink(id)
       .then((order) => router.replace(`/pay/${order.reference}`))
-      .catch((e) => setError(e instanceof Error ? e.message : 'Could not start checkout'));
-  }, [id, router]);
+      .catch(() => {
+        // Fall back to slug route if backend link lookup fails.
+        router.replace(`/pay/${id}`);
+      });
+  }, [id, router, frontendOnly]);
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center p-6">
-        <div className="glass-panel p-8 max-w-md text-center text-red-400">{error}</div>
-      </div>
-    );
+  if (frontendOnly) {
+    return <CheckoutLoading message="Redirigiendo al checkout…" />;
   }
 
-  return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center gap-4">
-      <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      <p className="text-gray-400 text-sm">Preparing secure checkout…</p>
-    </div>
-  );
+  return <CheckoutLoading message="Preparando checkout seguro…" />;
 }

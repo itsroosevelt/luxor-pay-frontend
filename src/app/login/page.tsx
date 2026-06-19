@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect, useRef, Suspense } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
+  auth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
-  onAuthStateChanged,
-} from 'firebase/auth';
-import { auth, getMissingFirebaseEnvKeys, isFirebaseConfigured } from '@/lib/firebase';
+  getMissingFirebaseEnvKeys,
+  isFirebaseConfigured,
+} from '@/lib/firebase';
+import { useFirebaseAuth } from '@/hooks/useFirebaseAuth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { SolanaParticles } from '@/components/login/SolanaParticles';
@@ -33,8 +35,6 @@ function resolveLoginError(error: unknown): string {
     'auth/api-key-not-valid.-please-pass-a-valid-api-key.':
       'Invalid Firebase API key. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vercel.',
     'auth/invalid-api-key': 'Invalid Firebase API key. Check NEXT_PUBLIC_FIREBASE_API_KEY in Vercel.',
-    'permission-denied':
-      'Firestore denied access. Enable Firestore in Firebase Console and deploy security rules.',
   };
 
   if (authMessages[code]) return authMessages[code];
@@ -46,10 +46,18 @@ function resolveLoginError(error: unknown): string {
   return 'Something went wrong. Open browser DevTools → Console for details.';
 }
 
+function resolveSafeRedirect(redirect: string | null): string {
+  if (!redirect || !redirect.startsWith('/') || redirect.startsWith('//')) {
+    return '/dashboard';
+  }
+  return redirect;
+}
+
 function LoginContent() {
   const searchParams = useSearchParams();
   const isRegisterParam = searchParams.get('register') === 'true';
   const isLoginParam = searchParams.get('mode') === 'login';
+  const postLoginPath = resolveSafeRedirect(searchParams.get('redirect'));
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -57,6 +65,9 @@ function LoginContent() {
   const [showForm, setShowForm] = useState(isRegisterParam || isLoginParam);
   const [isRegistering, setIsRegistering] = useState(isRegisterParam);
   const router = useRouter();
+  const pathname = usePathname();
+  const { user, authReady } = useFirebaseAuth();
+  const googleSignInInFlight = useRef(false);
   const missingFirebaseEnv = getMissingFirebaseEnvKeys();
 
   useEffect(() => {
@@ -69,17 +80,42 @@ function LoginContent() {
   }, [missingFirebaseEnv]);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/dashboard');
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
+    if (!authReady || !user || googleSignInInFlight.current) return;
+    router.replace(postLoginPath);
+  }, [authReady, user, router, postLoginPath]);
 
-  const completeAuth = async (user: any) => {
+  useEffect(() => {
+    return () => {
+      googleSignInInFlight.current = false;
+    };
+  }, []);
+
+  const completeAuth = async () => {
     // Merchant profile creation/fetching is handled by DashboardShell upon redirect
-    router.push('/dashboard');
+    router.replace(postLoginPath);
+  };
+
+  const handleGoogleLogin = async () => {
+    if (pathname !== '/login') return;
+    if (googleSignInInFlight.current) return;
+    if (!isFirebaseConfigured) {
+      toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
+      return;
+    }
+    googleSignInInFlight.current = true;
+    setLoading(true);
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+      toast.success('Signed in with Google');
+      await completeAuth();
+    } catch (error: unknown) {
+      console.error('Login error:', error);
+      toast.error(resolveLoginError(error));
+    } finally {
+      googleSignInInFlight.current = false;
+      setLoading(false);
+    }
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -91,33 +127,14 @@ function LoginContent() {
     setLoading(true);
     try {
       if (isRegistering) {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await createUserWithEmailAndPassword(auth, email, password);
         toast.success('Merchant account created');
-        await completeAuth(cred.user);
+        await completeAuth();
       } else {
-        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
         toast.success('Welcome back');
-        await completeAuth(cred.user);
+        await completeAuth();
       }
-    } catch (error: unknown) {
-      console.error('Login error:', error);
-      toast.error(resolveLoginError(error));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    if (!isFirebaseConfigured) {
-      toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
-      return;
-    }
-    setLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      const cred = await signInWithPopup(auth, provider);
-      toast.success('Signed in with Google');
-      await completeAuth(cred.user);
     } catch (error: unknown) {
       console.error('Login error:', error);
       toast.error(resolveLoginError(error));
@@ -242,7 +259,7 @@ function LoginContent() {
                 ).map((line, lineIndex) => (
                   <div
                     key={line}
-                    className={`flex flex-wrap justify-center gap-x-[0.2em] font-light tracking-wide ${
+                    className={`flex flex-wrap justify-center gap-x-[0.25em] font-light tracking-wide ${
                       lineIndex === 0
                         ? 'text-xl md:text-2xl text-white/90'
                         : 'text-base md:text-lg text-white/50'

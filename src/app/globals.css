@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-outfit), sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
 :root {
   --background: #0a0a0a;
   --foreground: #ededed;
-  --primary: #14f195; /* Solana Green */
-  --secondary: #9945ff; /* Solana Purple */
-  --accent: #00ffd1;
+  /* Luxor palette (primary tokens) */
+  --luxor-accent-light: #60a5fa;
+  --luxor-accent-dark: #2563eb;
+  --primary: #60a5fa;
+  --secondary: #2563eb;
+  --accent: #60a5fa;
+  /* Legacy Solana aliases — mapped to Luxor blues for gradual migration */
+  --solana-green: #14f195;
+  --solana-purple: #9945ff;
 }
 
 @layer base {
@@ -22,18 +28,337 @@
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 40px;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
 }
 
 .solana-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(to right, var(--luxor-accent-light), var(--luxor-accent-dark));
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(to right, var(--luxor-accent-light), var(--luxor-accent-dark));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--luxor-accent-light);
+  outline-offset: 2px;
+}
+
+/* Dashboard shell — dark theme aligned with landing page */
+.dashboard-shell {
+  --dash-bg: #0a0a0a;
+  --dash-bg-elevated: #1a1a1a;
+  --dash-surface: rgba(255, 255, 255, 0.03);
+  --dash-surface-elevated: rgba(255, 255, 255, 0.06);
+  /* Opaque surfaces for slide-overs, modals, and floating panels */
+  --dash-panel: #0f0f12;
+  --dash-panel-elevated: #161619;
+  --dash-border: rgba(255, 255, 255, 0.1);
+  --dash-text: #ededed;
+  --dash-muted: #9ca3af;
+  --dash-accent: #60a5fa;
+  --dash-accent-soft: rgba(96, 165, 250, 0.15);
+  --dash-accent-hover: #2563eb;
+  --dash-primary: #60a5fa;
+  --dash-sidebar-width: 240px;
+  background: radial-gradient(circle at top left, var(--dash-bg-elevated), var(--dash-bg));
+  color: var(--dash-text);
+  min-height: 100vh;
+}
+
+/* Dashboard app layout: viewport-height shell, independent scroll regions */
+.dashboard-shell-layout {
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+@supports not (height: 100dvh) {
+  .dashboard-shell-layout {
+    height: 100vh;
+    max-height: 100vh;
+  }
+}
+
+.dashboard-sidebar {
+  height: 100%;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+
+@supports not (max-height: 100dvh) {
+  .dashboard-sidebar {
+    max-height: 100vh;
+  }
+}
+
+/* Sidebar nav: scrollable but no visible scrollbar */
+.dashboard-sidebar .sidebar-nav-scroll,
+.dashboard-sidebar nav.sidebar-nav-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.dashboard-sidebar .sidebar-nav-scroll::-webkit-scrollbar,
+.dashboard-sidebar nav.sidebar-nav-scroll::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Mobile drawer: solid opaque panel (not glass/transparent surface) */
+.dashboard-mobile-drawer {
+  background: var(--dash-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dashboard-sidebar.dashboard-sidebar-mobile {
+  background: var(--dash-bg);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.dashboard-sidebar-mobile .sidebar-nav-scroll {
+  background: var(--dash-bg);
+}
+
+.dash-header {
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--dash-border);
+}
+
+.dash-header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 8px;
+  color: var(--dash-muted);
+  transition: background 0.15s, color 0.15s;
+}
+
+.dash-header-icon-btn:hover {
+  background: var(--dash-surface-elevated);
+  color: var(--dash-text);
+}
+
+.dash-header-icon-btn-active {
+  background: var(--dash-accent-soft);
+  color: var(--dash-accent);
+}
+
+.dash-header-icon-btn-active:hover {
+  background: var(--dash-accent-soft);
+  color: var(--dash-accent-hover);
+}
+
+.dash-header-create-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  background: #3b82f6;
+  color: #ffffff;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.dash-header-create-btn:hover {
+  background: #2563eb;
+  transform: scale(1.04);
+}
+
+.dash-card {
+  background: var(--dash-surface);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--dash-border);
+  border-radius: 12px;
+}
+
+/* Solid opaque panel for modals and slide-overs (no glass/blur) */
+.dash-modal {
+  background: var(--dash-panel);
+  border: 1px solid var(--dash-border);
+  border-radius: 12px;
+}
+
+.dash-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--dash-border);
+  border-radius: 8px;
+  color: var(--dash-text);
+}
+
+.dash-input-solid {
+  background: var(--dash-panel-elevated);
+}
+
+.dash-input::placeholder {
+  color: var(--dash-muted);
+}
+
+.dash-input:focus {
+  outline: none;
+  border-color: var(--dash-accent);
+  box-shadow: 0 0 0 3px var(--dash-accent-soft);
+}
+
+.dash-btn-primary {
+  background: #ffffff;
+  color: #0a0a0a;
+  border: none;
+  border-radius: 9999px;
+  font-weight: 600;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.dash-btn-primary:hover:not(:disabled) {
+  background: #e5e5e5;
+  transform: scale(1.02);
+}
+
+.dash-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dash-btn-secondary {
+  background: transparent;
+  color: var(--dash-text);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 9999px;
+  font-weight: 500;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.dash-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.dash-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.dash-badge-success {
+  background: rgba(20, 241, 149, 0.12);
+  color: #6ee7b7;
+  border-color: rgba(20, 241, 149, 0.35);
+}
+
+.dash-badge-warning {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.dash-badge-error {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, 0.35);
+}
+
+.dash-badge-neutral {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--dash-muted);
+  border-color: var(--dash-border);
+}
+
+.dash-banner-success {
+  background: rgba(20, 241, 149, 0.08);
+  border-color: rgba(20, 241, 149, 0.25);
+}
+
+.dash-banner-warning {
+  background: rgba(251, 191, 36, 0.08);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.dash-banner-info {
+  background: rgba(153, 69, 255, 0.08);
+  border-color: rgba(153, 69, 255, 0.25);
+}
+
+/* Wallet adapter overrides inside dashboard */
+.dashboard-shell .wallet-adapter-button-trigger {
+  background-color: transparent !important;
+  border-radius: 9999px;
+}
+
+.dashboard-shell .wallet-adapter-button {
+  background: transparent !important;
+  color: var(--dash-text) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  border-radius: 9999px !important;
+  font-family: inherit !important;
+  font-weight: 500 !important;
+  height: 40px !important;
+  line-height: 40px !important;
+  font-size: 14px !important;
+}
+
+.dashboard-shell .wallet-adapter-button-trigger .wallet-adapter-button:not([disabled]):hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-wrapper {
+  background: rgba(0, 0, 0, 0.75) !important;
+}
+
+.dashboard-shell .wallet-adapter-modal {
+  background: #141414 !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 16px !important;
+  font-family: inherit !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-title {
+  color: #ededed !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-list {
+  margin: 0 !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-list .wallet-adapter-button {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #ededed !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 8px !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-list .wallet-adapter-button:hover:not([disabled]) {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dashboard-shell .wallet-adapter-modal-button-close {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.dashboard-shell select option {
+  background: #141414;
+  color: var(--dash-text);
+}
+
+.dashboard-shell input[type='checkbox'] {
+  accent-color: var(--dash-accent);
 }

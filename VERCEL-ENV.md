@@ -1,5 +1,15 @@
 # Variables Vercel — copiar en dashboard
 
+## Arquitectura (alcance actual)
+
+| Pieza | Repo / servicio | Estado |
+|-------|-----------------|--------|
+| Frontend pagos | `luxor-pay-frontend` | Activo |
+| Backend API | **`luxor-pay-be-solana`** (`luxor-payment-service`, NestJS + PostgreSQL) | Activo — `NEXT_PUBLIC_API_URL` |
+| Auth | Firebase (`luxor-pay-gateway` / `-dev`) | Activo |
+| Agent backend | `luxor-be-agent` | **Pendiente** — no conectado a este frontend |
+| Legacy | `luxor-pay-backend` (Fastify + Firestore) | **No usar** |
+
 ## ⚠️ Error común: "Firebase env vars missing"
 
 Las variables `NEXT_PUBLIC_*` se **incrustan en el build**. Si faltan al hacer deploy, el login no funciona aunque las agregues después sin redeploy.
@@ -37,7 +47,8 @@ Environment: **Production** (+ Preview opcional)
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | *(Firebase Console)* |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | *(Firebase Console)* |
 | `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` | *(opcional)* |
-| `NEXT_PUBLIC_API_URL` | `https://placeholder.example.com` *(hasta tener backend)* |
+| `NEXT_PUBLIC_FRONTEND_ONLY` | `false` |
+| `NEXT_PUBLIC_API_URL` | URL de **luxor-pay-be-solana** (staging en Render). No usar `luxor-pay-backend`. |
 | `NEXT_PUBLIC_SOLANA_NETWORK` | `mainnet-beta` |
 | `NEXT_PUBLIC_SOLANA_RPC_URL` | *(Helius RPC, opcional para login)* |
 
@@ -59,7 +70,8 @@ Environment: **Production**
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | *(Firebase Console)* |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | *(Firebase Console)* |
 | `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` | *(opcional)* |
-| `NEXT_PUBLIC_API_URL` | `https://api.tu-dominio.com` |
+| `NEXT_PUBLIC_FRONTEND_ONLY` | `false` |
+| `NEXT_PUBLIC_API_URL` | URL de **luxor-pay-be-solana** (producción en Render). No usar `luxor-pay-backend`. |
 | `NEXT_PUBLIC_SOLANA_NETWORK` | `mainnet-beta` |
 | `NEXT_PUBLIC_SOLANA_RPC_URL` | *(Helius RPC)* |
 

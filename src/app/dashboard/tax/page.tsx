@@ -1,0 +1,32 @@
+'use client';
+
+import {
+  BackendNotice,
+  CatalogFlowCrossLinks,
+  CatalogFlowSectionNav,
+  EmptyState,
+  PageHeader,
+} from '@/components/dashboard';
+import { Percent } from 'lucide-react';
+
+export default function TaxPage() {
+  return (
+    <>
+      <PageHeader
+        title="Tax"
+        description="Set default tax behavior for SOL and USDC charges in your product catalog and Solana Pay links."
+      />
+      <div className="p-6 md:px-8 md:pb-8 max-w-6xl mx-auto space-y-6 pb-12">
+        <CatalogFlowSectionNav />
+        <BackendNotice notImplemented />
+        <EmptyState
+          icon={Percent}
+          title="Solana tax settings"
+          description="Configure default tax behavior for SOL and USDC on-chain charges. Rates flow into the product catalog and Solana Pay checkout once the backend is connected."
+          action={{ label: 'Product catalog', href: '/dashboard/products' }}
+        />
+        <CatalogFlowCrossLinks excludeHref="/dashboard/tax" title="Continue setup" />
+      </div>
+    </>
+  );
+}
