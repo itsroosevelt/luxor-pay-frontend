@@ -55,3 +55,38 @@ export async function getTransfers(
 
   return json as TransfersResponse;
 }
+
+export interface SendTransferPayload {
+  toWallet: string;
+  amount: string;
+  mint?: string | null;
+  toNickname?: string | null;
+  reference?: string;
+}
+
+export async function sendTransfer(token: string, payload: SendTransferPayload): Promise<{ data: Transfer }> {
+  const response = await fetch(apiUrl('/transfers/send'), {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const json = await response.json();
+
+  if (!response.ok) {
+    let errorMessage = 'Failed to process transfer';
+    if (Array.isArray(json.message)) {
+      errorMessage = json.message.join(', ');
+    } else if (json.message) {
+      errorMessage = json.message;
+    } else if (json.error) {
+      errorMessage = json.error;
+    }
+    throw new Error(errorMessage);
+  }
+
+  return json as { data: Transfer };
+}

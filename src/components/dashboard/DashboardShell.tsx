@@ -12,6 +12,7 @@ import {
   Code2,
   Settings,
   LogOut,
+  Users,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -22,6 +23,7 @@ const nav = [
   { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
   { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
   { href: '/dashboard/pos', label: 'POS Devices', icon: Terminal },
+  { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
   { href: '/dashboard/developers', label: 'Developers', icon: Code2 },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
