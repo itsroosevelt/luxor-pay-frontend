@@ -9,10 +9,10 @@ interface Particle {
   vy: number;
   size: number;
   seed: number;
-  hue: 'green' | 'purple';
+  color: string;
 }
 
-/** Animated background — adapted from Roosevelt login, Solana green/purple palette */
+/** Animated background — shiny silver particles with twinkling/glimmering effect */
 export function SolanaParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particles = useRef<Particle[]>([]);
@@ -31,14 +31,21 @@ export function SolanaParticles() {
     window.addEventListener('resize', resize);
     resize();
 
+    const silverShades = [
+      '255, 255, 255', // Pure white reflection
+      '229, 231, 235', // Bright silver/gray-200
+      '209, 213, 219', // Metallic silver/gray-300
+      '186, 192, 203', // Light metallic blue-silver
+    ];
+
     particles.current = Array.from({ length: 380 }).map((_, i) => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       vx: (Math.random() - 0.5) * 0.2,
       vy: (Math.random() - 0.5) * 0.2,
-      size: Math.random() * 1.5 + 0.5,
+      size: Math.random() * 2.5 + 1.2,
       seed: Math.random(),
-      hue: i % 2 === 0 ? 'green' : 'purple',
+      color: silverShades[i % silverShades.length],
     }));
 
     const animate = () => {
@@ -53,11 +60,11 @@ export function SolanaParticles() {
         if (p.y < 0) p.y = canvas.height;
         if (p.y > canvas.height) p.y = 0;
 
-        const opacity = 0.08 + p.seed * 0.28;
-        const rgb =
-          p.hue === 'green' ? `20, 241, 149` : `153, 69, 255`;
+        // Twinkle/shimmer effect using sin on the seed
+        const twinkle = 0.4 + Math.sin(Date.now() * 0.003 + p.seed * 50) * 0.6;
+        const opacity = (0.08 + p.seed * 0.35) * twinkle;
 
-        ctx.fillStyle = `rgba(${rgb}, ${opacity})`;
+        ctx.fillStyle = `rgba(${p.color}, ${opacity})`;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();

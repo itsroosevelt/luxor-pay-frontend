@@ -144,10 +144,10 @@ function LoginContent() {
   };
 
   const inputClass =
-    'w-full bg-white/5 border border-white/10 rounded-full h-12 focus:outline-none focus:border-[#14f195]/50 text-white placeholder:text-white/25 transition-all text-xs tracking-widest px-6 text-center';
+    'w-full bg-transparent border border-white/20 rounded-full py-[11px] focus:outline-none focus:border-[#2563EB]/50 text-white placeholder:text-white/25 transition-all text-xs tracking-widest px-6 text-center leading-normal';
 
   const outlineBtnClass =
-    'w-full max-w-sm h-14 rounded-full bg-white/5 border border-white/10 text-white/90 hover:bg-white/10 font-light text-xs md:text-sm tracking-widest transition-all shadow-lg';
+    'w-full max-w-sm h-11 rounded-full bg-transparent border border-white/25 text-white/90 hover:bg-[#2563EB] hover:border-[#2563EB] font-light text-xs md:text-sm tracking-widest transition-all shadow-lg flex items-center justify-center leading-none';
 
   return (
     <div className="min-h-screen bg-black text-white relative flex flex-col items-center justify-center overflow-hidden selection:bg-white/10">
@@ -178,7 +178,7 @@ function LoginContent() {
               className="w-full space-y-4 flex flex-col items-center"
             >
               <div className="flex flex-col items-center mb-12 text-center">
-                <div className="flex flex-wrap justify-center gap-x-[0.25em] text-3xl md:text-5xl font-light tracking-tight text-white leading-[1.15]">
+                <div className="flex flex-wrap justify-center gap-x-[0.27em] text-3xl md:text-5xl font-light tracking-tight text-white leading-[1.15]">
                   {'Welcome to'.split(' ').map((word, i) => (
                     <motion.span
                       key={`w-${i}`}
@@ -190,15 +190,13 @@ function LoginContent() {
                       {word}
                     </motion.span>
                   ))}
-                </div>
-                <div className="flex flex-wrap justify-center gap-x-[0.25em] text-lg md:text-3xl font-semibold tracking-tight mt-2">
                   {'Luxor Pay'.split(' ').map((word, i) => (
                     <motion.span
                       key={`l-${i}`}
                       initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
                       animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                       transition={{ delay: 0.5 + i * 0.12, duration: 0.7 }}
-                      className="inline-block text-gradient"
+                      className="inline-block text-gradient font-semibold"
                     >
                       {word}
                     </motion.span>
@@ -210,7 +208,7 @@ function LoginContent() {
                   transition={{ delay: 0.9 }}
                   className="text-white/50 text-sm md:text-base mt-4 font-light tracking-wide"
                 >
-                  Solana payment gateway for merchants
+                  Receive your crypto payments anywhere in the world
                 </motion.p>
               </div>
 
@@ -231,7 +229,7 @@ function LoginContent() {
                   setShowForm(true);
                   setIsRegistering(false);
                 }}
-                className={`${outlineBtnClass} bg-white/10 backdrop-blur-xl border-white/20 hover:bg-white/20`}
+                className={outlineBtnClass}
               >
                 I ALREADY HAVE AN ACCOUNT
               </button>
@@ -252,34 +250,23 @@ function LoginContent() {
               exit={{ opacity: 0, y: -20 }}
               className="w-full max-w-md px-4 space-y-6"
             >
-              <div className="text-center px-2 flex flex-col gap-3 min-h-[5rem] justify-center mb-4">
+              <div className="text-center px-2 flex flex-col gap-2 min-h-[5rem] justify-center mb-4">
                 {(isRegistering
                   ? ['Start accepting Solana payments', 'Create your merchant account']
                   : ['Welcome back', 'Sign in to your dashboard']
-                ).map((line, lineIndex) => (
-                  <div
+                ).map((line, index) => (
+                  <motion.div
                     key={line}
-                    className={`flex flex-wrap justify-center gap-x-[0.25em] font-light tracking-wide ${
-                      lineIndex === 0
-                        ? 'text-xl md:text-2xl text-white/90'
-                        : 'text-base md:text-lg text-white/50'
-                    }`}
+                    initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{
+                      delay: 0.2 + index * 0.15,
+                      duration: 0.6,
+                    }}
+                    className="font-light tracking-wide text-xl md:text-2xl text-white block whitespace-nowrap"
                   >
-                    {line.split(' ').map((word, wordIndex) => (
-                      <motion.span
-                        key={`${lineIndex}-${wordIndex}`}
-                        initial={{ opacity: 0, y: 8, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        transition={{
-                          delay: 0.2 + lineIndex * 0.4 + wordIndex * 0.08,
-                          duration: 0.6,
-                        }}
-                        className="inline-block"
-                      >
-                        {word}
-                      </motion.span>
-                    ))}
-                  </div>
+                    {line}
+                  </motion.div>
                 ))}
               </div>
 
@@ -307,7 +294,7 @@ function LoginContent() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full h-12 rounded-full solana-gradient text-black font-semibold text-sm tracking-wider transition-all hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 mt-2 shadow-[0_0_24px_rgba(20,241,149,0.35)]"
+                  className="w-full h-11 rounded-full bg-transparent border border-white/25 text-white font-semibold text-xs md:text-sm tracking-wider transition-all hover:bg-[#2563EB] hover:border-[#2563EB] disabled:opacity-50 mt-2 flex items-center justify-center leading-none"
                 >
                   {loading ? 'Processing…' : isRegistering ? 'Create account' : 'Sign in'}
                 </button>
@@ -321,27 +308,56 @@ function LoginContent() {
                 <div className="flex-grow border-t border-white/10" />
               </div>
 
-              <button
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={loading}
-                className="w-full max-w-sm mx-auto h-12 rounded-full bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center gap-3 font-medium text-sm"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" aria-hidden>
-                  <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
-                  <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
-                  <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
-                  <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
-                </svg>
-                Continue with Google
-              </button>
+              <div className="flex flex-col gap-3 w-full max-w-sm mx-auto">
+                <button
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  className="w-full h-11 rounded-full bg-transparent border border-white/25 text-white hover:bg-[#2563EB] hover:border-[#2563EB] transition-all flex items-center justify-center gap-3 font-light text-xs md:text-sm tracking-widest leading-none"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18" height="18" aria-hidden>
+                    <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z" />
+                    <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z" />
+                    <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z" />
+                    <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z" />
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toast.info('Apple sign-in coming soon')}
+                  disabled={loading}
+                  className="w-full h-11 rounded-full bg-transparent border border-white/25 text-white hover:bg-[#2563EB] hover:border-[#2563EB] transition-all flex items-center justify-center gap-3 font-light text-xs md:text-sm tracking-widest leading-none"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.22.67-2.94 1.5-.62.71-1.16 1.85-1.01 2.96 1.11.09 2.27-.58 2.96-1.4z"/>
+                  </svg>
+                  Continue with Apple
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => toast.info('Microsoft sign-in coming soon')}
+                  disabled={loading}
+                  className="w-full h-11 rounded-full bg-transparent border border-white/25 text-white hover:bg-[#2563EB] hover:border-[#2563EB] transition-all flex items-center justify-center gap-3 font-light text-xs md:text-sm tracking-widest leading-none"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 23 23" width="18" height="18" aria-hidden="true">
+                    <rect x="0" y="0" width="11" height="11" fill="#F25022"/>
+                    <rect x="12" y="0" width="11" height="11" fill="#7FBA00"/>
+                    <rect x="0" y="12" width="11" height="11" fill="#00A4EF"/>
+                    <rect x="12" y="12" width="11" height="11" fill="#FFB900"/>
+                  </svg>
+                  Continue with Microsoft
+                </button>
+              </div>
 
               <p className="text-center text-sm text-white/40">
-                {isRegistering ? 'Already registered?' : 'New merchant?'}{' '}
+                {isRegistering ? 'Already registered?' : 'New here?'}{' '}
                 <button
                   type="button"
                   onClick={() => setIsRegistering(!isRegistering)}
-                  className="text-[#14f195] hover:underline font-medium"
+                  className="text-gradient hover:underline font-semibold"
                 >
                   {isRegistering ? 'Sign in' : 'Create account'}
                 </button>

@@ -2,8 +2,9 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import { HeroBackground } from '@/components/HeroBackground';
+import { SolanaParticles } from '@/components/login/SolanaParticles';
 import {
   Body,
   ButtonLink,
@@ -28,17 +29,28 @@ const Nav = styled.nav`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem 2rem;
+  padding: 0.85rem 2rem;
   z-index: 50;
   backdrop-filter: blur(12px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 `;
 
 const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   font-family: ${theme.fonts.heading};
-  font-size: 1.25rem;
+  font-size: 1.55rem;
   font-weight: 600;
   letter-spacing: -0.02em;
+  color: #FFFFFF;
+`;
+
+const LogoImage = styled.img`
+  height: 3.5rem;
+  width: 3.5rem;
+  object-fit: contain;
+  border-radius: 6px;
 `;
 
 const NavLinks = styled.div`
@@ -72,6 +84,36 @@ const NavActions = styled.div`
   display: flex;
   gap: 1rem;
   align-items: center;
+`;
+
+const NavButton = styled(ButtonLink)<{ $variant?: 'primary' | 'secondary' }>`
+  min-width: 10.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-weight: 500;
+  font-family: ${theme.fonts.heading};
+  line-height: 1.2;
+  background: transparent;
+  color: #ffffff;
+
+  border: 1px solid rgba(255, 255, 255, 0.25);
+
+  &:hover:not(:disabled) {
+    border-color: ${theme.colors.accentDark};
+    background: ${theme.colors.accentDark};
+    color: #ffffff;
+  }
+
+  &:active:not(:disabled) {
+    background: ${theme.colors.accentLight};
+    border-color: ${theme.colors.accentLight};
+  }
 `;
 
 const HeroSection = styled.section`
@@ -203,7 +245,8 @@ export default function LandingPage() {
     <Page>
       <Nav>
         <Logo>
-          Luxor <GradientText>Pay</GradientText>
+          <LogoImage src="/logo.jpg" alt="Luxor Logo" />
+          <span>Luxor <GradientText>Pay</GradientText></span>
         </Logo>
         <NavLinks>
           <Link href="#features">Features</Link>
@@ -211,19 +254,19 @@ export default function LandingPage() {
           <Link href="#pricing">Pricing</Link>
         </NavLinks>
         <NavActions>
-          <ButtonLink as={Link} href="/login" $variant="secondary">
+          <NavButton as={Link} href="/login" $variant="secondary">
             Login
-          </ButtonLink>
-          <ButtonLink as={Link} href="/login?register=true" $variant="primary">
+          </NavButton>
+          <NavButton as={Link} href="/login?register=true" $variant="primary">
             Get Started
-          </ButtonLink>
+          </NavButton>
         </NavActions>
       </Nav>
 
       <main>
         <HeroSection>
           <HeroBackground />
-          <HeroGlow />
+          <SolanaParticles />
 
           <HeroContent {...motionProps}>
             <Eyebrow>Solana infrastructure</Eyebrow>

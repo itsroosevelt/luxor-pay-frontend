@@ -7,24 +7,25 @@ export type ButtonVariant = 'primary' | 'secondary';
 
 const variantStyles = {
   primary: css`
-    background: #ffffff;
-    color: #000000;
-    border: none;
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.45);
 
     &:hover:not(:disabled) {
       background: ${theme.colors.accentDark};
+      border-color: ${theme.colors.accentDark};
       color: #ffffff;
     }
   `,
   secondary: css`
     background: transparent;
-    color: ${theme.colors.accentLight};
+    color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
 
     &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.35);
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.45);
+      color: #ffffff;
     }
   `,
 };
