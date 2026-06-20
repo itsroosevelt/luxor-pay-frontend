@@ -17,11 +17,14 @@ const HeaderRow = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 16px;
 `;
 
 const SelectorsRow = styled.div`
   display: flex;
   gap: 16px;
+  flex-wrap: wrap;
 `;
 
 const Select = styled.select`
@@ -169,7 +172,7 @@ export function TransactionsView({
   onSetLimit,
   onSetStatus,
 }: TransactionsViewProps) {
-  
+
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = data?.totalPages || 1;
   const hasNext = currentPage < totalPages;
@@ -193,8 +196,8 @@ export function TransactionsView({
           {data !== null ? `Showing ${data.data.length} of ${data.total} transactions` : 'Loading...'}
         </PageInfo>
         <SelectorsRow>
-          <Select 
-            value={status || ""} 
+          <Select
+            value={status || ""}
             onChange={(e) => onSetStatus(e.target.value || undefined)}
           >
             <option value="">All Statuses</option>
@@ -202,8 +205,8 @@ export function TransactionsView({
             <option value="CONFIRMED">Confirmed</option>
             <option value="FAILED">Failed</option>
           </Select>
-          <Select 
-            value={limit} 
+          <Select
+            value={limit}
             onChange={(e) => onSetLimit(Number(e.target.value))}
           >
             <option value={5}>5 per page</option>
