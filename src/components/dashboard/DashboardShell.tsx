@@ -13,6 +13,8 @@ import {
   Settings,
   LogOut,
   Users,
+  Menu,
+  X
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -33,6 +35,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -52,6 +55,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, [router]);
 
+  useEffect(() => {
+    // Close mobile menu on route change
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
   const handleSignOut = async () => {
     await signOut(auth);
     router.push('/');
@@ -59,53 +67,119 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   if (!user) return null;
 
+  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+    <>
+      {nav.map(({ href, label, icon: Icon }) => {
+        const active = pathname === href;
+        return (
+          <Link
+            key={href}
+            href={href}
+            onClick={onClick}
+            className={clsx(
+              'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
+              active
+                ? 'bg-white/10 text-white'
+                : 'text-gray-400 hover:text-white hover:bg-white/5'
+            )}
+          >
+            <Icon size={18} /> {label}
+          </Link>
+        );
+      })}
+    </>
+  );
+
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-primary/30 flex">
+    <div className="min-h-screen bg-[#0A0A0A] text-[#EDEDED] selection:bg-[#2563EB]/30 flex font-['Montserrat',sans-serif]">
+      {/* Desktop Sidebar */}
       <aside className="w-64 border-r border-white/5 bg-white/[0.02] hidden md:flex flex-col">
         <div className="p-6 border-b border-white/5">
-          <Link href="/dashboard" className="text-xl font-bold tracking-tight">
-            Luxor <span className="text-primary">Pay</span>
+          <Link href="/dashboard" className="text-xl font-bold tracking-tight font-['Outfit',sans-serif]">
+            Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
           </Link>
         </div>
-        <nav className="flex-1 p-4 space-y-1">
-          {nav.map(({ href, label, icon: Icon }) => {
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
-                  active
-                    ? 'bg-white/10 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                )}
-              >
-                <Icon size={18} /> {label}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <NavLinks />
         </nav>
         <div className="p-4 border-t border-white/5">
           <p className="text-xs text-gray-500 truncate px-4 mb-3">{user.email}</p>
           <button
             type="button"
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors"
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors font-['Outfit',sans-serif]"
           >
             <LogOut size={18} /> Sign out
           </button>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto">{children}</main>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+        {/* Mobile Header */}
+        <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4 border-b border-white/5 bg-[#0A0A0A]">
+          <Link href="/dashboard" className="text-xl font-bold tracking-tight font-['Outfit',sans-serif]">
+            Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+          >
+            <Menu size={24} />
+          </button>
+        </header>
+
+        {/* Mobile Menu Overlay */}
+        {isMobileMenuOpen && (
+          <div className="fixed inset-0 z-50 flex md:hidden">
+            <div
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <aside className="relative flex flex-col w-72 max-w-[80%] bg-[#0A0A0A] border-r border-white/5 h-full animate-in slide-in-from-left-full duration-200">
+              <div className="p-4 border-b border-white/5 flex items-center justify-between">
+                <Link href="/dashboard" className="text-xl font-bold tracking-tight font-['Outfit',sans-serif]" onClick={() => setIsMobileMenuOpen(false)}>
+                  Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+              <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                <NavLinks onClick={() => setIsMobileMenuOpen(false)} />
+              </nav>
+              <div className="p-4 border-t border-white/5">
+                <p className="text-xs text-gray-500 truncate px-4 mb-3">{user.email}</p>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors font-['Outfit',sans-serif]"
+                >
+                  <LogOut size={18} /> Sign out
+                </button>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto">
+          {children}
+        </div>
+      </main>
     </div>
   );
 }
