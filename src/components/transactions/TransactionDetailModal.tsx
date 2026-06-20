@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ExternalLink, Copy, Download } from "lucide-react";
 import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { Transfer } from "@/lib/transfers-api";
 import { getExplorerTxUrl } from "@/web3/config/network";
 import { getTokenSymbol } from "@/lib/token-registry";
@@ -158,17 +158,32 @@ export function TransactionDetailModal({ transfer, onClose, merchantWallet }: Tr
     if (!element) return;
     
     try {
-      const canvas = await html2canvas(element, { 
+      const dataUrl = await toPng(element, {
         backgroundColor: '#0A0A0A',
-        scale: 2 
+        pixelRatio: 2,
       });
-      const imgData = canvas.toDataURL('image/png');
+
       const pdf = new jsPDF('p', 'mm', 'a4');
       
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      const pdfPageWidth = pdf.internal.pageSize.getWidth();
+      
+      // Add Brand Name at the top
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(24);
+      pdf.setTextColor(37, 99, 235); // Luxor blue
+      pdf.text('LuxorPay', pdfPageWidth / 2, 20, { align: 'center' });
+      
+      // Calculate receipt dimensions (max width 140mm, centered)
+      const receiptWidth = 140;
+      const receiptHeight = (img.height * receiptWidth) / img.width;
+      const xOffset = (pdfPageWidth - receiptWidth) / 2;
+      const yOffset = 35; // Below the title
+      
+      pdf.addImage(dataUrl, 'PNG', xOffset, yOffset, receiptWidth, receiptHeight);
       pdf.save(`Transaction_${transfer.id.slice(0,8)}.pdf`);
     } catch (e) {
       console.error('Failed to generate PDF', e);
@@ -262,12 +277,12 @@ export function TransactionDetailModal({ transfer, onClose, merchantWallet }: Tr
                   <Label>Signature</Label>
                   <ValueBox>
                     <ValueText>{transfer.signature.slice(0, 16)}...{transfer.signature.slice(-16)}</ValueText>
-                    <button onClick={() => copyToClipboard(transfer.signature!)} className="text-gray-400 hover:text-white transition-colors cursor-pointer" data-html2canvas-ignore>
+                    <button onClick={() => copyToClipboard(transfer.signature!)} className="text-gray-400 hover:text-white transition-colors cursor-pointer">
                       <Copy size={16} />
                     </button>
                   </ValueBox>
                 </DetailRow>
-                <LinkButton href={getExplorerTxUrl(transfer.signature)} target="_blank" rel="noopener noreferrer" data-html2canvas-ignore>
+                <LinkButton href={getExplorerTxUrl(transfer.signature)} target="_blank" rel="noopener noreferrer">
                   View on Explorer <ExternalLink size={16} />
                 </LinkButton>
               </>
