@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   Users,
+  ArrowLeftRight,
   Menu,
   X
 } from 'lucide-react';
@@ -21,13 +22,14 @@ import { ensureMerchantProfile } from '@/lib/merchants-api';
 import { clsx } from 'clsx';
 
 const nav = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
-  { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
-  { href: '/dashboard/pos', label: 'POS Devices', icon: Terminal },
-  { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
-  { href: '/dashboard/developers', label: 'Developers', icon: Code2 },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+  { href: '/dashboard', label: 'Inicio', icon: LayoutDashboard },
+  { href: '/dashboard/links', label: 'Enlaces de pago', icon: LinkIcon },
+  { href: '/dashboard/transactions', label: 'Transacciones', icon: Receipt },
+  { href: '/dashboard/pos', label: 'Terminal POS', icon: Terminal },
+  { href: '/dashboard/contacts', label: 'Contactos', icon: Users },
+  { href: '/dashboard/trade', label: 'Intercambio', icon: ArrowLeftRight },
+  { href: '/dashboard/developers', label: 'Desarrolladores', icon: Code2 },
+  { href: '/dashboard/settings', label: 'Configuración', icon: Settings },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -117,7 +119,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors font-['Outfit',sans-serif]"
           >
-            <LogOut size={18} /> Sign out
+            <LogOut size={18} /> Cerrar sesión
           </button>
         </div>
       </aside>

@@ -1,5 +1,14 @@
 import { apiUrl } from '@/lib/api-client';
+import { parseApiError } from '@/lib/api-errors';
 import type { PaymentOrder } from '@luxor/contracts';
+
+async function parseJson(res: Response): Promise<Record<string, unknown>> {
+  try {
+    return (await res.json()) as Record<string, unknown>;
+  } catch {
+    return {};
+  }
+}
 
 export async function createPaymentFromLink(linkId: string): Promise<PaymentOrder> {
   const res = await fetch(apiUrl('/api/payments/create'), {
@@ -38,9 +47,11 @@ export async function listPayments(token: string): Promise<PaymentOrder[]> {
   const res = await fetch(apiUrl('/api/payments'), {
     headers: { Authorization: `Bearer ${token}` },
   });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? 'Failed to load payments');
-  return json.data as PaymentOrder[];
+  const json = await parseJson(res);
+  if (!res.ok) {
+    throw new Error(parseApiError(json, 'No se pudieron cargar los pagos'));
+  }
+  return (json.data as PaymentOrder[]) ?? [];
 }
 
 export async function listPaymentLinks(token: string): Promise<any[]> {
@@ -80,5 +91,16 @@ export async function createPosDevice(token: string, data: { name: string, posId
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.message ?? 'Failed to register device');
+  return json.data as any;
+}
+
+export async function fetchPaymentLinkById(id: string, token?: string): Promise<any> {
+  const headers: Record<string, string> = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  const res = await fetch(apiUrl(`/payment-links/${id}`), { headers });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message ?? 'Failed to fetch payment link');
   return json.data as any;
 }
