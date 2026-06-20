@@ -1,4 +1,5 @@
 import { apiUrl } from '@/lib/api-client';
+import { parseApiError } from '@/lib/api-errors';
 
 export interface Transfer {
   id: string;
@@ -31,7 +32,9 @@ export async function getTransfers(
   limit: number = 10,
   status?: string
 ): Promise<TransfersResponse> {
-  const url = new URL(apiUrl('/transfers'));
+  const base = apiUrl('/transfers');
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const url = new URL(base, base.startsWith('/') ? origin : undefined);
   url.searchParams.append('offset', offset.toString());
   url.searchParams.append('limit', limit.toString());
   if (status) {
@@ -48,9 +51,7 @@ export async function getTransfers(
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(
-      json.message?.[0] || json.message || json.error || 'Failed to fetch transfers'
-    );
+    throw new Error(parseApiError(json as Record<string, unknown>, 'No se pudieron cargar las transferencias'));
   }
 
   return json as TransfersResponse;

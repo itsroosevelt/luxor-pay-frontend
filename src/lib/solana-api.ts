@@ -1,4 +1,5 @@
 import { apiUrl } from '@/lib/api-client';
+import { parseApiError } from '@/lib/api-errors';
 
 export interface TokenBalance {
   mint: string;
@@ -34,9 +35,7 @@ export async function getWalletBalance(
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(
-      json.message?.[0] || json.message || json.error || 'Failed to fetch wallet balance'
-    );
+    throw new Error(parseApiError(json as Record<string, unknown>, 'No se pudo cargar el saldo de la wallet'));
   }
 
   return json.data as WalletBalanceData;
