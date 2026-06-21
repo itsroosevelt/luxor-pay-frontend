@@ -13,7 +13,7 @@ export function QRCodePayment({
     <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl">
       <QRCodeSVG value={url} size={size} bgColor="#ffffff" fgColor="#000000" level="M" />
       <p className="mt-4 text-xs text-black font-semibold text-center">
-        Escanea con Phantom, Solflare u otra wallet de Solana
+        Scan with Phantom, Solflare, or any Solana wallet
       </p>
     </div>
   );

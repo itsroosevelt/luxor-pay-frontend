@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getTransfers, TransfersResponse } from '@/lib/transfers-api';
-import { apiErrorMessage } from '@/lib/api-errors';
 import { auth } from '@/lib/firebase';
 
 interface UseGetTransfersReturn {
@@ -41,11 +40,9 @@ export function useGetTransfers(initialLimit: number = 5): UseGetTransfersReturn
       const responseData = await getTransfers(token, offset, limit, status);
       
       setData(responseData);
-    } catch (error: unknown) {
+    } catch (error: any) {
       setIsError(true);
-      setErrorMessage(
-        apiErrorMessage(error, 'No se pudieron cargar las transferencias')
-      );
+      setErrorMessage(error.message || 'Failed to fetch transfers');
       setData(null);
     } finally {
       setIsLoading(false);
