@@ -1,6 +1,6 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged as firebaseOnAuthStateChanged, type User, type NextOrObserver } from 'firebase/auth';
+import { getAuth } from 'firebase/auth';
 
 /** Strip accidental whitespace from Vercel copy-paste (tabs/newlines break Firebase iframe URLs). */
 function trimEnv(raw: string | undefined): string | undefined {
@@ -58,26 +58,10 @@ if (isFirebaseConfigured) {
   app = null;
   db = null;
   auth = {
-    onAuthStateChanged: (callback: any) => {
-      // Return dummy unsubscribe function
-      return () => {};
-    },
+    onAuthStateChanged: () => () => {},
     signOut: async () => {},
     currentUser: null
   };
-}
-
-export function onAuthStateChanged(
-  authInstance: any,
-  callback: (user: User | null) => void
-) {
-  if (isFirebaseConfigured) {
-    return firebaseOnAuthStateChanged(authInstance, callback);
-  }
-  if (authInstance && typeof authInstance.onAuthStateChanged === 'function') {
-    return authInstance.onAuthStateChanged(callback);
-  }
-  return () => {};
 }
 
 export { app, db, auth };
