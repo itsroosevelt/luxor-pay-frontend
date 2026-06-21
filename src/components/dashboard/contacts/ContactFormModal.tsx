@@ -219,8 +219,6 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
   const isError = isCreateError || isUpdateError;
   const errorMessage = createError || updateError;
 
-  const [localValidationError, setLocalValidationError] = useState<string | null>(null);
-
   const [formData, setFormData] = useState<CreateContactPayload>({
     nickname: '',
     walletAddress: '',
@@ -273,15 +271,6 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLocalValidationError(null);
-
-    const email = formData.email?.trim();
-    const telephone = formData.telephone?.trim();
-    if (!email && !telephone) {
-      setLocalValidationError('Es indispensable proporcionar al menos un correo electrónico o un número de teléfono.');
-      return;
-    }
-
     let result;
     
     if (initialData) {
@@ -372,7 +361,7 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
             </FormGroup>
 
             <FormGroup>
-              <Label>EMAIL (AT LEAST EMAIL OR PHONE REQUIRED)</Label>
+              <Label>EMAIL (OPTIONAL)</Label>
               <Input 
                 type="email"
                 name="email"
@@ -384,7 +373,7 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
             </FormGroup>
 
             <FormGroup>
-              <Label>PHONE (AT LEAST EMAIL OR PHONE REQUIRED)</Label>
+              <Label>PHONE (OPTIONAL)</Label>
               <Input 
                 name="telephone"
                 value={formData.telephone}
@@ -416,7 +405,6 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
               <CheckboxLabel>Mark as Favorite</CheckboxLabel>
             </CheckboxGroup>
 
-            {localValidationError && <ErrorText>{localValidationError}</ErrorText>}
             {isError && <ErrorText>{errorMessage}</ErrorText>}
 
             <ButtonGroup>
