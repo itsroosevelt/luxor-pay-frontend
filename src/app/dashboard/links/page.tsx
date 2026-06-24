@@ -8,15 +8,21 @@ import type { PaymentLink, Currency } from '@luxor/contracts';
 import { Copy, Link as LinkIcon, Plus, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { getLuxorEnv } from '@/lib/luxor-env';
 
 export default function PaymentLinksPage() {
   const router = useRouter();
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('USDC');
+  const [currency, setCurrency] = useState<string>('USDC');
   const [creating, setCreating] = useState(false);
+
+  const env = getLuxorEnv();
+  const isDev = env === 'development';
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -40,8 +46,8 @@ export default function PaymentLinksPage() {
     if (!user) return;
 
     const parsed = parseFloat(amount);
-    if (!name.trim() || Number.isNaN(parsed) || parsed <= 0) {
-      toast.error('Enter a valid name and amount');
+    if (!name.trim() || !businessName.trim() || Number.isNaN(parsed) || parsed <= 0) {
+      toast.error('Enter valid details for all fields');
       return;
     }
 
@@ -50,11 +56,13 @@ export default function PaymentLinksPage() {
       const token = await user.getIdToken();
       const link = await createPaymentLink(token, {
         name: name.trim(),
+        businessName: businessName.trim(),
         amount: parsed,
         currency,
       });
       setLinks((prev) => [link, ...prev]);
       setName('');
+      setBusinessName('');
       setAmount('');
       toast.success('Payment link created');
     } catch (err) {
@@ -87,7 +95,7 @@ export default function PaymentLinksPage() {
           <h2 className="font-semibold flex items-center gap-2">
             <Plus size={18} className="text-primary" /> New link
           </h2>
-          <div className="grid md:grid-cols-3 gap-3">
+          <div className="grid md:grid-cols-4 gap-3">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -95,8 +103,14 @@ export default function PaymentLinksPage() {
               className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
             />
             <input
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              placeholder="Business name"
+              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
+            />
+            <input
               type="number"
-              step="0.01"
+              step="any"
               min="0"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
@@ -105,11 +119,27 @@ export default function PaymentLinksPage() {
             />
             <select
               value={currency}
-              onChange={(e) => setCurrency(e.target.value as Currency)}
+              onChange={(e) => setCurrency(e.target.value)}
               className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
             >
-              <option value="USDC">USDC</option>
-              <option value="SOL">SOL</option>
+              <option value="SOL">Solana (SOL)</option>
+              {isDev ? (
+                <optgroup label="Devnet Tokens">
+                  {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
+                    <option key={symbol} value={symbol}>
+                      {symbol}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : (
+                <optgroup label="Mainnet Beta Tokens">
+                  {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
+                    <option key={symbol} value={symbol}>
+                      {symbol}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
           <button
@@ -155,7 +185,7 @@ export default function PaymentLinksPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => router.push(`/pay/link/${link.id}`)}
+                    onClick={() => router.push(`/dashboard/links/preview/${link.id}`)}
                     className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm border border-white/10"
                   >
                     <ExternalLink size={16} /> Preview
