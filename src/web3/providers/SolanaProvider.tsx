@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback, useEffect } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base';
 import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl } from '@solana/web3.js';
@@ -28,9 +28,49 @@ export const SolanaProvider = ({ children }: { children: React.ReactNode }) => {
     [],
   );
 
+  const handleWalletError = useCallback((error: WalletError) => {
+    // Intercept and log wallet errors to console instead of throwing them globally
+    console.warn('Solana Wallet Adapter Error Intercepted:', error.name, error.message);
+  }, []);
+
+  useEffect(() => {
+    const handleGlobalError = (event: ErrorEvent) => {
+      // Suppress extension/wallet-adapter error noise in development
+      const isExtensionError = event.filename?.includes('chrome-extension') || 
+                               event.message?.includes('WalletDisconnectedError') ||
+                               event.message?.includes('WalletSignTransactionError');
+      if (isExtensionError) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+      }
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const reason = event.reason;
+      if (
+        reason &&
+        (reason.name === 'WalletDisconnectedError' ||
+         reason.name === 'WalletSignTransactionError' ||
+         reason.message?.includes('WalletDisconnectedError') ||
+         reason.stack?.includes('chrome-extension'))
+      ) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError, true);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleGlobalError, true);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect onError={handleWalletError}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

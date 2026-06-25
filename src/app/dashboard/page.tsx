@@ -2,29 +2,29 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
 import { Link as LinkIcon, Terminal, Code2, ArrowRight, Send, QrCode } from 'lucide-react';
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
-import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
 import { Transfer } from '@/lib/transfers-api';
+import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (!user) return;
       try {
         const token = await user.getIdToken();
@@ -55,13 +55,13 @@ export default function DashboardOverviewPage() {
             Your Solana payment platform — links, POS, and API in one place.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button 
-            onClick={() => setIsReceiveModalOpen(true)}
+            onClick={() => setIsQrModalOpen(true)}
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
-            <QrCode size={18} /> Receive
+            <QrCode size={18} /> QR Pay / Charge
           </button>
           <button 
             onClick={() => setIsTransferModalOpen(true)}
@@ -129,17 +129,18 @@ export default function DashboardOverviewPage() {
         }}
       />
       
-      <ReceiveModal
-        isOpen={isReceiveModalOpen}
-        onClose={() => setIsReceiveModalOpen(false)}
-        merchantWallet={merchantWallet}
-      />
-
       <TransferSuccessModal
         isOpen={isTransferSuccessModalOpen}
         onClose={() => setIsTransferSuccessModalOpen(false)}
         transferData={transferSuccessData}
       />
+
+      <QrOperationsModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        merchantWallet={merchantWallet}
+      />
+
     </>
   );
 }

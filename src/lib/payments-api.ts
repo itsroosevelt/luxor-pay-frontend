@@ -1,19 +1,49 @@
 import { apiUrl } from '@/lib/api-client';
 import type { PaymentOrder } from '@luxor/contracts';
 
-export async function createPaymentFromLink(linkId: string): Promise<PaymentOrder> {
-  const res = await fetch(apiUrl('/api/payments/create'), {
+function apiErrorMessage(json: unknown, fallback: string): string {
+  if (!json || typeof json !== 'object') return fallback;
+  const body = json as Record<string, unknown>;
+  if (typeof body.message === 'string') {
+    const generic =
+      body.message === 'Internal server error' ||
+      body.message === 'Internal Server Error';
+    if (!generic) return body.message;
+  }
+  if (Array.isArray(body.message)) return body.message.join(', ');
+  if (typeof body.error === 'string' && body.error !== 'Internal server error') {
+    return body.error;
+  }
+  if (typeof body.details === 'string') return body.details;
+  if (typeof body.message === 'string') return body.message;
+  return fallback;
+}
+
+function normalizePaymentLinkError(message: string): string {
+  if (/merchant wallet/i.test(message)) return 'MERCHANT_WALLET_REQUIRED';
+  return message;
+}
+
+export async function createPaymentFromLink(
+  linkId: string,
+  options?: { amount?: number },
+): Promise<PaymentOrder> {
+  const body: { linkId: string; amount?: number } = { linkId };
+  if (options?.amount != null) {
+    body.amount = options.amount;
+  }
+  const res = await fetch(apiUrl('/payments/create'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ linkId }),
+    body: JSON.stringify(body),
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(json.error ?? 'Failed to create payment');
+  if (!res.ok) throw new Error(apiErrorMessage(json, 'Failed to create payment'));
   return json.data as PaymentOrder;
 }
 
 export async function fetchPayment(reference: string): Promise<PaymentOrder> {
-  const res = await fetch(apiUrl(`/api/payments/${reference}`));
+  const res = await fetch(apiUrl(`/payments/${reference}`));
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? 'Payment not found');
   return json.data as PaymentOrder;
@@ -24,7 +54,7 @@ export async function verifyPayment(reference: string): Promise<{
   confirmed: boolean;
   signature?: string;
 }> {
-  const res = await fetch(apiUrl('/api/payments/verify'), {
+  const res = await fetch(apiUrl('/payments/verify'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reference }),
@@ -35,7 +65,7 @@ export async function verifyPayment(reference: string): Promise<{
 }
 
 export async function listPayments(token: string): Promise<PaymentOrder[]> {
-  const res = await fetch(apiUrl('/api/payments'), {
+  const res = await fetch(apiUrl('/payments'), {
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await res.json();
@@ -59,14 +89,21 @@ export async function getPaymentLink(id: string): Promise<any> {
   return json.data as any;
 }
 
-export async function createPaymentLink(token: string, data: { name: string, businessName: string, amount: number, currency: string }): Promise<any> {
+export async function createPaymentLink(
+  token: string,
+  data: { name: string; businessName: string; amount?: number; currency: string },
+): Promise<any> {
   const res = await fetch(apiUrl('/payment-links'), {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(json.message ?? 'Failed to create link');
+  if (!res.ok) {
+    throw new Error(
+      normalizePaymentLinkError(apiErrorMessage(json, 'Failed to create link')),
+    );
+  }
   return json.data as any;
 }
 

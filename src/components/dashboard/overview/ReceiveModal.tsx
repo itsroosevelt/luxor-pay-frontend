@@ -5,11 +5,15 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from 'next/navigation';
+import { buildOpenAmountQrUrl } from '@/lib/solana-pay-url';
 
 interface ReceiveModalProps {
   isOpen: boolean;
   onClose: () => void;
   merchantWallet: string | null;
+  title?: string;
+  subtitle?: string;
+  showCreateLinkButton?: boolean;
 }
 
 const Overlay = styled(motion.div)`
@@ -142,10 +146,19 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   `}
 `;
 
-export function ReceiveModal({ isOpen, onClose, merchantWallet }: ReceiveModalProps) {
+export function ReceiveModal({
+  isOpen,
+  onClose,
+  merchantWallet,
+  title = 'Receive Funds',
+  subtitle = 'Show this QR code to accept direct payments.',
+  showCreateLinkButton = true,
+}: ReceiveModalProps) {
   const router = useRouter();
 
   if (!isOpen) return null;
+
+  const solanaPayUri = merchantWallet ? buildOpenAmountQrUrl(merchantWallet, title) : null;
 
   const handleCreateLink = () => {
     onClose();
@@ -164,17 +177,17 @@ export function ReceiveModal({ isOpen, onClose, merchantWallet }: ReceiveModalPr
           onClick={(e) => e.stopPropagation()}
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          exit={{ opacity: 0, scale: 0.95, y: 0 }}
           transition={{ type: "spring", bounce: 0.4, duration: 0.6 }}
         >
-          <Title>Receive Funds</Title>
-          <Subtitle>Show this QR code to accept direct payments.</Subtitle>
+          <Title>{title}</Title>
+          <Subtitle>{subtitle}</Subtitle>
 
-          {merchantWallet ? (
+          {merchantWallet && solanaPayUri ? (
             <>
               <QrContainer>
                 <QRCodeSVG 
-                  value={merchantWallet} 
+                  value={solanaPayUri} 
                   size={200}
                   level="H"
                   includeMargin={false}
@@ -191,10 +204,12 @@ export function ReceiveModal({ isOpen, onClose, merchantWallet }: ReceiveModalPr
           )}
 
           <ButtonGroup>
-            <Button type="button" $variant="primary" onClick={handleCreateLink}>
-              Create Payment Link
-            </Button>
-            <Button type="button" $variant="secondary" onClick={onClose}>
+            {showCreateLinkButton && (
+              <Button type="button" $variant="primary" onClick={handleCreateLink}>
+                Create Payment Link
+              </Button>
+            )}
+            <Button type="button" $variant={showCreateLinkButton ? 'secondary' : 'primary'} onClick={onClose}>
               Close
             </Button>
           </ButtonGroup>

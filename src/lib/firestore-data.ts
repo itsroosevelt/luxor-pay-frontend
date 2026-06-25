@@ -60,12 +60,12 @@ export async function listPaymentLinks(merchantId: string): Promise<PaymentLink[
     orderBy('createdAt', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PaymentLink, 'id'>) }));
+  return snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as Omit<PaymentLink, 'id'>) }));
 }
 
 export async function createPaymentLink(
   merchantId: string,
-  input: { name: string; amount: number; currency: Currency }
+  input: { name: string; amount?: number; currency: Currency }
 ): Promise<PaymentLink> {
   const firestore = assertDb();
   const profile = await getMerchantProfile(merchantId);
@@ -79,7 +79,8 @@ export async function createPaymentLink(
     id,
     merchantId,
     name: input.name,
-    amount: input.amount,
+    businessName: profile.businessName || '',
+    amount: input.amount ?? null,
     currency: input.currency,
     merchantWallet: profile.merchantWallet,
     active: true,
@@ -106,7 +107,7 @@ export async function listPosDevices(merchantId: string): Promise<PosDevice[]> {
     orderBy('createdAt', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PosDevice, 'id'>) }));
+  return snap.docs.map((d: any) => ({ id: d.id, ...(d.data() as Omit<PosDevice, 'id'>) }));
 }
 
 export async function createPosDevice(
