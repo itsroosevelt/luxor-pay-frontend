@@ -11,6 +11,7 @@ import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceCont
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
+import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import { Transfer } from '@/lib/transfers-api';
 
 export default function DashboardOverviewPage() {
@@ -19,6 +20,7 @@ export default function DashboardOverviewPage() {
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
 
   const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
@@ -133,6 +135,13 @@ export default function DashboardOverviewPage() {
         isOpen={isReceiveModalOpen}
         onClose={() => setIsReceiveModalOpen(false)}
         merchantWallet={merchantWallet}
+        onAskForPayment={() => setIsPaymentRequestModalOpen(true)}
+      />
+
+      <PaymentRequestModal
+        isOpen={isPaymentRequestModalOpen}
+        onClose={() => setIsPaymentRequestModalOpen(false)}
+        requesterWallet={merchantWallet}
       />
 
       <TransferSuccessModal

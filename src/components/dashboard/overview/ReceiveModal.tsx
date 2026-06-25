@@ -1,15 +1,16 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { useRouter } from 'next/navigation';
+import { Copy, Check, HandCoins } from 'lucide-react';
 
 interface ReceiveModalProps {
   isOpen: boolean;
   onClose: () => void;
   merchantWallet: string | null;
+  onAskForPayment?: () => void;
 }
 
 const Overlay = styled(motion.div)`
@@ -80,17 +81,42 @@ const AddressLabel = styled.span`
   text-transform: uppercase;
 `;
 
+const AddressWrapper = styled.div`
+  width: 100%;
+  margin-bottom: 28px;
+  position: relative;
+`;
+
 const Address = styled.div`
   font-family: monospace;
-  font-size: 15px;
+  font-size: 14px;
   color: #60A5FA;
   word-break: break-all;
-  background: rgba(96, 165, 250, 0.1);
-  padding: 12px 16px;
+  background: rgba(96, 165, 250, 0.08);
+  padding: 12px 48px 12px 16px;
   border-radius: 12px;
-  width: 100%;
-  margin-bottom: 32px;
   border: 1px dashed rgba(96, 165, 250, 0.3);
+  text-align: left;
+`;
+
+const CopyButton = styled.button<{ $copied: boolean }>`
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: ${({ $copied }) => $copied ? 'rgba(34, 197, 94, 0.15)' : 'rgba(96, 165, 250, 0.1)'};
+  border: 1px solid ${({ $copied }) => $copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(96, 165, 250, 0.2)'};
+  border-radius: 9999px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${({ $copied }) => $copied ? '#4ADE80' : '#60A5FA'};
+  cursor: pointer;
+  transition: all 0.2s;
+  &:hover { background: rgba(96, 165, 250, 0.2); }
+  &:focus-visible { outline: 2px solid #60A5FA; outline-offset: 2px; }
 `;
 
 const ButtonGroup = styled.div`
@@ -142,14 +168,22 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   `}
 `;
 
-export function ReceiveModal({ isOpen, onClose, merchantWallet }: ReceiveModalProps) {
-  const router = useRouter();
+export function ReceiveModal({ isOpen, onClose, merchantWallet, onAskForPayment }: ReceiveModalProps) {
+  const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleCreateLink = () => {
+  const handleCopy = () => {
+    if (!merchantWallet) return;
+    navigator.clipboard.writeText(merchantWallet).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  const handleAskForPayment = () => {
     onClose();
-    router.push('/dashboard/links');
+    onAskForPayment?.();
   };
 
   return (
@@ -182,7 +216,18 @@ export function ReceiveModal({ isOpen, onClose, merchantWallet }: ReceiveModalPr
               </QrContainer>
 
               <AddressLabel>YOUR DEPOSIT ADDRESS</AddressLabel>
-              <Address>{merchantWallet}</Address>
+              <AddressWrapper>
+                <Address>{merchantWallet}</Address>
+                <CopyButton
+                  type="button"
+                  $copied={copied}
+                  onClick={handleCopy}
+                  title={copied ? 'Copied!' : 'Copy address'}
+                  aria-label="Copy deposit address"
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                </CopyButton>
+              </AddressWrapper>
             </>
           ) : (
             <div style={{ marginBottom: '32px', color: '#F87171' }}>
@@ -191,8 +236,9 @@ export function ReceiveModal({ isOpen, onClose, merchantWallet }: ReceiveModalPr
           )}
 
           <ButtonGroup>
-            <Button type="button" $variant="primary" onClick={handleCreateLink}>
-              Create Payment Link
+            <Button type="button" $variant="primary" onClick={handleAskForPayment}>
+              <HandCoins size={18} style={{ flexShrink: 0 }} />
+              Ask for a Payment
             </Button>
             <Button type="button" $variant="secondary" onClick={onClose}>
               Close
