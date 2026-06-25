@@ -59,3 +59,72 @@ export async function createPaymentRequest(
 
   return response.json();
 }
+
+export type PaymentRequestPerspective = 'requester' | 'payer';
+
+export interface ListPaymentRequestsResponse {
+  perspective: PaymentRequestPerspective;
+  data: PaymentRequest[];
+}
+
+export async function listPaymentRequests(
+  token: string,
+  perspective: PaymentRequestPerspective,
+  walletAddress: string,
+): Promise<ListPaymentRequestsResponse> {
+  const params = new URLSearchParams({ perspective, walletAddress });
+  const response = await fetch(apiUrl(`/payment-requests?${params}`), {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to fetch payment requests');
+  }
+
+  return response.json();
+}
+
+export async function resendPaymentRequestNotification(
+  token: string,
+  id: string,
+): Promise<{ success: boolean }> {
+  const response = await fetch(apiUrl(`/payment-requests/${id}/notify`), {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to resend notification');
+  }
+
+  return response.json();
+}
+
+export async function cancelPaymentRequest(
+  token: string,
+  id: string,
+): Promise<{ success: boolean }> {
+  const response = await fetch(apiUrl(`/payment-requests/${id}`), {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ status: 'CANCELLED' }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to cancel payment request');
+  }
+
+  return response.json();
+}
