@@ -1,11 +1,12 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from 'next/navigation';
 import { buildOpenAmountQrUrl } from '@/lib/solana-pay-url';
+import { Copy, Check, HandCoins } from 'lucide-react';
 
 interface ReceiveModalProps {
   isOpen: boolean;
@@ -14,6 +15,7 @@ interface ReceiveModalProps {
   title?: string;
   subtitle?: string;
   showCreateLinkButton?: boolean;
+  onAskForPayment?: () => void;
 }
 
 const Overlay = styled(motion.div)`
@@ -40,80 +42,107 @@ const ModalContent = styled(motion.div)`
   max-width: 440px;
   padding: 40px;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
 `;
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 500;
-  letter-spacing: -1px;
   color: #FFFFFF;
   margin: 0 0 8px 0;
+  text-align: center;
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.6);
   margin: 0 0 32px 0;
+  text-align: center;
+  line-height: 1.5;
 `;
 
 const QrContainer = styled.div`
   background: #FFFFFF;
   padding: 24px;
-  border-radius: 24px;
-  margin-bottom: 24px;
+  border-radius: 32px;
+  width: fit-content;
+  margin: 0 auto 32px auto;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
   display: flex;
-  align-items: center;
   justify-content: center;
-  box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+  align-items: center;
 `;
 
 const AddressLabel = styled.span`
+  display: block;
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #60A5FA;
   margin-bottom: 8px;
-  text-transform: uppercase;
+  text-align: center;
 `;
 
-const Address = styled.div`
-  font-family: monospace;
-  font-size: 15px;
-  color: #60A5FA;
-  word-break: break-all;
-  background: rgba(96, 165, 250, 0.1);
+const AddressWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
   padding: 12px 16px;
-  border-radius: 12px;
-  width: 100%;
   margin-bottom: 32px;
-  border: 1px dashed rgba(96, 165, 250, 0.3);
+`;
+
+const Address = styled.span`
+  font-family: monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+`;
+
+const CopyButton = styled.button<{ $copied?: boolean }>`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: ${({ $copied }) => ($copied ? '#10B981' : '#FFFFFF')};
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 100%;
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
-  font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  padding: 14px 24px;
+  width: 100%;
+  padding: 14px;
   border-radius: 9999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  width: 100%;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -153,16 +182,31 @@ export function ReceiveModal({
   title = 'Receive Funds',
   subtitle = 'Show this QR code to accept direct payments.',
   showCreateLinkButton = true,
+  onAskForPayment,
 }: ReceiveModalProps) {
   const router = useRouter();
+  const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
   const solanaPayUri = merchantWallet ? buildOpenAmountQrUrl(merchantWallet, title) : null;
 
+  const handleCopy = () => {
+    if (!merchantWallet) return;
+    navigator.clipboard.writeText(merchantWallet).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const handleCreateLink = () => {
     onClose();
     router.push('/dashboard/links');
+  };
+
+  const handleAskForPayment = () => {
+    onClose();
+    onAskForPayment?.();
   };
 
   return (
@@ -195,7 +239,18 @@ export function ReceiveModal({
               </QrContainer>
 
               <AddressLabel>YOUR DEPOSIT ADDRESS</AddressLabel>
-              <Address>{merchantWallet}</Address>
+              <AddressWrapper>
+                <Address>{merchantWallet}</Address>
+                <CopyButton
+                  type="button"
+                  $copied={copied}
+                  onClick={handleCopy}
+                  title={copied ? 'Copied!' : 'Copy address'}
+                  aria-label="Copy deposit address"
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                </CopyButton>
+              </AddressWrapper>
             </>
           ) : (
             <div style={{ marginBottom: '32px', color: '#F87171' }}>
@@ -209,7 +264,11 @@ export function ReceiveModal({
                 Create Payment Link
               </Button>
             )}
-            <Button type="button" $variant={showCreateLinkButton ? 'secondary' : 'primary'} onClick={onClose}>
+            <Button type="button" $variant="primary" onClick={handleAskForPayment}>
+              <HandCoins size={18} style={{ marginRight: '8px', flexShrink: 0 }} />
+              Ask for a Payment
+            </Button>
+            <Button type="button" $variant="secondary" onClick={onClose}>
               Close
             </Button>
           </ButtonGroup>

@@ -6,12 +6,16 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
-import { Link as LinkIcon, Terminal, Code2, ArrowRight, Send, QrCode } from 'lucide-react';
+import { listPaymentRequests } from '@/lib/payment-requests-api';
+import { getLuxorEnv } from '@/lib/luxor-env';
+import { Link as LinkIcon, Terminal, Code2, ArrowRight, Send, QrCode, Bell } from 'lucide-react';
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
+import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import { Transfer } from '@/lib/transfers-api';
 import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
+import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
@@ -19,6 +23,9 @@ export default function DashboardOverviewPage() {
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
+  const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
+  const [pendingInboxCount, setPendingInboxCount] = useState(0);
 
   const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
@@ -33,12 +40,20 @@ export default function DashboardOverviewPage() {
           listPosDevices(token),
           getMerchantProfile(token),
         ]);
+        const wallet = profile?.merchantWallet || null;
         setStats({
           links: links.length,
           pos: pos.length,
-          hasWallet: Boolean(profile?.merchantWallet),
+          hasWallet: Boolean(wallet),
         });
-        setMerchantWallet(profile?.merchantWallet || null);
+        setMerchantWallet(wallet);
+
+        if (wallet) {
+          const env = getLuxorEnv();
+          const inboxRes = await listPaymentRequests(token, 'payer', wallet);
+          const pending = inboxRes.data.filter(r => r.status === 'PENDING');
+          setPendingInboxCount(pending.length);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -87,6 +102,38 @@ export default function DashboardOverviewPage() {
         )}
 
         <WalletBalanceContainer merchantWallet={merchantWallet} />
+
+        {pendingInboxCount > 0 && (
+          <Link
+            href="/dashboard/requests"
+            className="flex items-center justify-between gap-4 p-4 rounded-2xl border transition-colors"
+            style={{
+              background: 'rgba(96,165,250,0.06)',
+              borderColor: 'rgba(96,165,250,0.2)',
+              textDecoration: 'none',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '9999px',
+                background: 'rgba(96,165,250,0.12)', border: '1px solid rgba(96,165,250,0.25)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Bell size={16} style={{ color: '#60A5FA' }} />
+              </div>
+              <div>
+                <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>
+                  {pendingInboxCount} payment request{pendingInboxCount !== 1 ? 's' : ''} waiting for your action
+                </p>
+                <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.45)', margin: 0, fontWeight: 300 }}>
+                  Review and pay or decline
+                </p>
+              </div>
+            </div>
+            <ArrowRight size={16} style={{ color: '#60A5FA', flexShrink: 0 }} />
+          </Link>
+        )}
+
         <div className="grid md:grid-cols-3 gap-4">
           <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />
           <StatCard label="POS devices" value={stats.pos} href="/dashboard/pos" />
@@ -129,6 +176,18 @@ export default function DashboardOverviewPage() {
         }}
       />
       
+      <ReceiveModal
+        isOpen={isReceiveModalOpen}
+        onClose={() => setIsReceiveModalOpen(false)}
+        merchantWallet={merchantWallet}
+        onAskForPayment={() => setIsPaymentRequestModalOpen(true)}
+      />
+
+      <PaymentRequestModal
+        isOpen={isPaymentRequestModalOpen}
+        onClose={() => setIsPaymentRequestModalOpen(false)}
+        requesterWallet={merchantWallet}
+      />
       <TransferSuccessModal
         isOpen={isTransferSuccessModalOpen}
         onClose={() => setIsTransferSuccessModalOpen(false)}
