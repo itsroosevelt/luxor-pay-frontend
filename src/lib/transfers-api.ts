@@ -62,6 +62,8 @@ export interface SendTransferPayload {
   mint?: string | null;
   toNickname?: string | null;
   reference?: string;
+  transactionTypeId?: 'Regular' | 'Request' | 'TopUp';
+  paymentRequestId?: string;
 }
 
 export async function sendTransfer(token: string, payload: SendTransferPayload): Promise<{ data: Transfer }> {
