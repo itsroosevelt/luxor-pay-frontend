@@ -13,6 +13,7 @@ import { generatePaymentReference, encodeSolanaPayUrl, getMintForSymbol } from '
 import { routeScannedPaymentContent } from '@/lib/qr-scan-routing';
 import { QrCameraScanner } from '@/components/qr/QrCameraScanner';
 import { Camera, QrCode, ArrowLeft, X, Copy, Check, ExternalLink } from 'lucide-react';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 interface QrOperationsModalProps {
   isOpen: boolean;
@@ -189,7 +190,7 @@ const ReceiveConfigSection = styled.div`
   grid-row: 2;
 
   @media (max-width: 768px) {
-    order: 4;
+    order: 5;
     grid-column: auto;
     grid-row: auto;
   }
@@ -222,6 +223,62 @@ const ReceiveQrSection = styled.div`
   }
 `;
 
+const ReceiveInfoSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 24px;
+
+  @media (max-width: 768px) {
+    order: 3;
+    margin-bottom: 16px;
+  }
+`;
+
+const InfoBox = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  width: 100%;
+  box-sizing: border-box;
+`;
+
+const InfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const InfoLabel = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.6);
+`;
+
+const InfoValue = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #FFFFFF;
+`;
+
+const InfoValueBlue = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #60A5FA;
+`;
+
+const InfoDivider = styled.div`
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 16px 0;
+  width: 100%;
+`;
+
 const ReceiveAddressSection = styled.div`
   display: flex;
   flex-direction: column;
@@ -229,7 +286,7 @@ const ReceiveAddressSection = styled.div`
   width: 100%;
 
   @media (max-width: 768px) {
-    order: 3;
+    order: 4;
   }
 `;
 
@@ -553,7 +610,7 @@ export function QrOperationsModal({
   const router = useRouter();
   const [mode, setMode] = useState<'select' | 'receive' | 'scan'>('select');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState('SOL');
+  const [currency, setCurrency] = useState('USDT');
   const [chargeNote, setChargeNote] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -575,7 +632,7 @@ export function QrOperationsModal({
     if (isOpen) {
       setMode(initialMode);
       setAmount('');
-      setCurrency('SOL');
+      setCurrency('USDT');
       setChargeNote('');
       setLinkCopied(false);
       setAddressCopied(false);
@@ -608,6 +665,16 @@ export function QrOperationsModal({
     }
   };
 
+  const { data: usdRate } = useTokenPrice(currency);
+
+  const tokenAmount = useMemo(() => {
+    if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) return '';
+    const rate = usdRate ?? 1.0;
+    const calculated = parseFloat(amount) / rate;
+    const decimals = currency === 'SOL' ? 9 : 2;
+    return calculated.toFixed(decimals);
+  }, [amount, usdRate, currency]);
+
   const chargeRef = useMemo(() => {
     if (amount && parseFloat(amount) > 0) {
       return generatePaymentReference();
@@ -635,10 +702,11 @@ export function QrOperationsModal({
       label: customLabel.trim() || checkoutLabel,
     };
 
-    if (amount && parseFloat(amount) > 0) {
-      baseParams.amount = amount;
+    if (tokenAmount && parseFloat(tokenAmount) > 0) {
+      baseParams.amount = tokenAmount;
       baseParams.currency = currency;
       baseParams.chargeRef = chargeRef;
+      baseParams.usdAmount = amount;
     }
 
     if (invoiceRef.trim()) {
@@ -650,7 +718,7 @@ export function QrOperationsModal({
     }
 
     return baseParams;
-  }, [recipientWallet, customLabel, checkoutLabel, amount, currency, chargeRef, invoiceRef, expiryTimestamp]);
+  }, [recipientWallet, customLabel, checkoutLabel, tokenAmount, currency, chargeRef, invoiceRef, expiryTimestamp, amount]);
 
   const receiveCheckoutPath = useMemo(() => {
     if (!receiveCheckoutParams) return null;
@@ -668,7 +736,7 @@ export function QrOperationsModal({
     try {
       return encodeSolanaPayUrl({
         recipient: recipientWallet,
-        amount: amount || undefined,
+        amount: tokenAmount || undefined,
         splToken: mint,
         label: customLabel.trim() || checkoutLabel,
         message: chargeNote.trim() || undefined,
@@ -678,7 +746,7 @@ export function QrOperationsModal({
       console.error('Error encoding solana pay url:', e);
       return recipientWallet;
     }
-  }, [recipientWallet, amount, currency, customLabel, checkoutLabel, chargeNote, chargeRef]);
+  }, [recipientWallet, tokenAmount, currency, customLabel, checkoutLabel, chargeNote, chargeRef]);
 
   if (!isOpen) return null;
 
@@ -859,6 +927,24 @@ export function QrOperationsModal({
                       </QrContainer>
                     </ReceiveQrSection>
 
+                    {amount && parseFloat(amount) > 0 && (
+                      <ReceiveInfoSection>
+                        <InfoBox>
+                          <InfoRow>
+                            <InfoLabel>Monto en USD</InfoLabel>
+                            <InfoValue>${parseFloat(amount).toFixed(2)}</InfoValue>
+                          </InfoRow>
+                          <InfoDivider />
+                          <InfoRow>
+                            <InfoLabel>Escanea y paga</InfoLabel>
+                            <InfoValueBlue>
+                              {tokenAmount ? `${tokenAmount} ${currency}` : `... ${currency}`}
+                            </InfoValueBlue>
+                          </InfoRow>
+                        </InfoBox>
+                      </ReceiveInfoSection>
+                    )}
+
                     <ReceiveAddressSection>
                       <RightAddressLabel>
                         Your deposit address
@@ -883,27 +969,40 @@ export function QrOperationsModal({
               <ReceiveConfigSection>
                 <ConfigFields>
                   <FieldGroup>
-                    <FieldLabel>Amount (optional)</FieldLabel>
+                    <FieldLabel>Amount in USD (optional)</FieldLabel>
+                    <TextInput
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={amount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (/^[0-9]*\.?[0-9]*$/.test(val)) {
+                          setAmount(val);
+                        }
+                      }}
+                    />
+                  </FieldGroup>
+
+                  <FieldGroup>
+                    <FieldLabel>Se paga en</FieldLabel>
                     <InputRow>
                       <AmountInput
                         type="text"
-                        inputMode="decimal"
-                        placeholder="Open amount if left empty"
-                        value={amount}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          if (/^[0-9]*\.?[0-9]*$/.test(val)) {
-                            setAmount(val);
-                          }
-                        }}
+                        readOnly
+                        placeholder="0.00"
+                        value={tokenAmount}
+                        style={{ background: 'rgba(255, 255, 255, 0.02)', color: 'rgba(255, 255, 255, 0.8)' }}
+                        aria-label="Converted amount"
                       />
                       <TokenSelect
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
                         aria-label="Currency"
                       >
-                        <option value="SOL">SOL</option>
+                        <option value="USDT">USDT</option>
                         <option value="USDC">USDC</option>
+                        <option value="SOL">SOL</option>
                         <option value="LXR">LXR</option>
                       </TokenSelect>
                     </InputRow>

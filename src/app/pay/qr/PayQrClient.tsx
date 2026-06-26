@@ -391,6 +391,7 @@ export default function PayQrClient() {
   const label = searchParams.get('label') ?? '';
   const invoiceRef = searchParams.get('invoiceRef') ?? '';
   const expiryParam = searchParams.get('expiry') ?? '';
+  const usdAmountParam = searchParams.get('usdAmount');
 
   const hasFixedAmount = Boolean(fixedAmount);
 
@@ -418,9 +419,15 @@ export default function PayQrClient() {
   const amount = hasFixedAmount ? (fixedAmount ?? '') : editableAmount;
   const currency = hasFixedAmount ? fixedCurrency : editableCurrency;
 
-  const { data: usdRate } = useTokenPrice(currency);
+  const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(currency);
 
   const getUsdEquivalent = () => {
+    if (usdAmountParam) {
+      const parsed = parseFloat(usdAmountParam);
+      if (!isNaN(parsed) && parsed > 0) {
+        return parsed;
+      }
+    }
     if (!amount || usdRate === null) return null;
     try {
       return new Decimal(amount).mul(usdRate).toNumber();
@@ -689,23 +696,23 @@ export default function PayQrClient() {
                       }}>
                         {usdAmount !== null ? (
                           `$${usdAmount.toFixed(2)}`
+                        ) : isPriceLoading ? (
+                          '$...'
                         ) : (
-                          parseFloat(amount || '0').toFixed(currency === 'SOL' ? 4 : 2)
+                          `$${(parseFloat(amount || '0') * (usdRate ?? 0)).toFixed(2)}`
                         )}
                       </span>
-                      {usdAmount !== null && (
-                        <div style={{
-                          fontFamily: 'Montserrat, sans-serif',
-                          fontSize: '16px',
-                          fontWeight: 300,
-                          color: 'rgba(255, 255, 255, 0.6)',
-                          marginTop: '6px'
-                        }}>
-                          {parseFloat(amount || '0').toFixed(currency === 'SOL' ? 4 : 2)} {currency}
-                        </div>
-                      )}
+                      <div style={{
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontSize: '16px',
+                        fontWeight: 300,
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        marginTop: '6px'
+                      }}>
+                        {parseFloat(amount || '0').toFixed(currency === 'SOL' ? 9 : 2)} {currency}
+                      </div>
                       <CurrencyBadge style={{ marginTop: '12px' }}>
-                        {usdAmount !== null ? 'USD Equivalent' : currency}
+                        {currency}
                       </CurrencyBadge>
                     </div>
                   </>

@@ -41,7 +41,7 @@ export default function PayByReferencePage() {
     );
   }
 
-  const { data: usdRate } = useTokenPrice(order?.currency);
+  const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(order?.currency);
 
   const getUsdEquivalent = () => {
     if (!order || !order.amount || usdRate === null) return null;
@@ -54,7 +54,7 @@ export default function PayByReferencePage() {
 
   const usdAmount = getUsdEquivalent();
 
-  const displayAmount = order.amount.toFixed(order.currency === 'SOL' ? 4 : 2);
+  const displayAmount = order.amount.toFixed(order.currency === 'SOL' ? 9 : 2);
   const payUrl = order.solanaPayUrl ?? '';
   const isConfirmed = order.status === 'confirmed';
 
@@ -72,17 +72,21 @@ export default function PayByReferencePage() {
           <div className="flex justify-between items-center mb-3">
             <span className="text-gray-400">Total</span>
             <span className="text-2xl font-bold">
-              {usdAmount !== null ? `$${usdAmount.toFixed(2)}` : `${displayAmount} ${order.currency}`}
+              {usdAmount !== null ? (
+                `$${usdAmount.toFixed(2)}`
+              ) : isPriceLoading ? (
+                '$...'
+              ) : (
+                `$${(parseFloat(String(order.amount || '0')) * (usdRate ?? 0)).toFixed(2)}`
+              )}
             </span>
           </div>
-          {usdAmount !== null && (
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-gray-400 text-xs">Equivalent</span>
-              <span className="text-sm text-gray-300">
-                {displayAmount} {order.currency}
-              </span>
-            </div>
-          )}
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-gray-400 text-xs">Equivalent</span>
+            <span className="text-sm text-gray-300">
+              {displayAmount} {order.currency}
+            </span>
+          </div>
           <div className="flex items-center gap-2 text-xs text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">
             <ShieldCheck size={14} />
             Solana {process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet'}

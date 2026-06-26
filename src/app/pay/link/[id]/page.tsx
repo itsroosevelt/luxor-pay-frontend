@@ -163,7 +163,7 @@ export default function PayLinkPage() {
   const [user, setUser] = useState<User | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  const { data: usdRate } = useTokenPrice(link?.currency);
+  const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(link?.currency);
 
   const getUsdEquivalent = () => {
     if (!link || !link.amount || usdRate === null) return null;
@@ -288,16 +288,14 @@ export default function PayLinkPage() {
               <AmountText>
                 {usdAmount !== null ? (
                   `$${usdAmount.toFixed(2)}`
+                ) : isPriceLoading ? (
+                  '$...'
                 ) : (
-                  link.amount ?? '0.00'
+                  `$${(parseFloat(String(link.amount || '0')) * (usdRate ?? 0)).toFixed(2)}`
                 )}
               </AmountText>
               <CurrencyText>
-                {usdAmount !== null ? (
-                  `${parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} ${link.currency}`
-                ) : (
-                  link.currency
-                )}
+                {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 9 : 2)} {link.currency}
               </CurrencyText>
 
               {error && (
