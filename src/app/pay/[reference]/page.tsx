@@ -7,6 +7,8 @@ import { QRCodePayment } from '@/features/checkout/components/QRCodePayment';
 import { PaymentButton } from '@/features/checkout/components/PaymentButton';
 import { TransactionStatus } from '@/features/checkout/components/TransactionStatus';
 import { ShieldCheck } from 'lucide-react';
+import { Decimal } from 'decimal.js';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 export default function PayByReferencePage() {
   const params = useParams();
@@ -39,6 +41,19 @@ export default function PayByReferencePage() {
     );
   }
 
+  const { data: usdRate } = useTokenPrice(order?.currency);
+
+  const getUsdEquivalent = () => {
+    if (!order || !order.amount || usdRate === null) return null;
+    try {
+      return new Decimal(order.amount).mul(usdRate).toNumber();
+    } catch {
+      return null;
+    }
+  };
+
+  const usdAmount = getUsdEquivalent();
+
   const displayAmount = order.amount.toFixed(order.currency === 'SOL' ? 4 : 2);
   const payUrl = order.solanaPayUrl ?? '';
   const isConfirmed = order.status === 'confirmed';
@@ -57,9 +72,17 @@ export default function PayByReferencePage() {
           <div className="flex justify-between items-center mb-3">
             <span className="text-gray-400">Total</span>
             <span className="text-2xl font-bold">
-              {displayAmount} {order.currency}
+              {usdAmount !== null ? `$${usdAmount.toFixed(2)}` : `${displayAmount} ${order.currency}`}
             </span>
           </div>
+          {usdAmount !== null && (
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-gray-400 text-xs">Equivalent</span>
+              <span className="text-sm text-gray-300">
+                {displayAmount} {order.currency}
+              </span>
+            </div>
+          )}
           <div className="flex items-center gap-2 text-xs text-primary bg-primary/10 px-3 py-1 rounded-full w-fit">
             <ShieldCheck size={14} />
             Solana {process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet'}

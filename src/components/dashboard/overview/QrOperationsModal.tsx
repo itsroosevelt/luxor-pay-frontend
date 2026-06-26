@@ -9,10 +9,9 @@ import { toast } from 'sonner';
 import {
   buildLuxorPayCheckoutPath,
 } from '@/lib/luxor-pay-checkout-url';
-import { generatePaymentReference } from '@/lib/solana-pay-url';
+import { generatePaymentReference, encodeSolanaPayUrl, getMintForSymbol } from '@/lib/solana-pay-url';
 import { routeScannedPaymentContent } from '@/lib/qr-scan-routing';
 import { QrCameraScanner } from '@/components/qr/QrCameraScanner';
-import { useGetContacts } from '@/hooks/useGetContacts';
 import { Camera, QrCode, ArrowLeft, X, Copy, Check, ExternalLink } from 'lucide-react';
 
 interface QrOperationsModalProps {
@@ -253,7 +252,7 @@ const QrContainer = styled.div`
   justify-content: center;
   box-shadow: 0 16px 32px rgba(0,0,0,0.5);
   width: 100%;
-  max-width: 320px;
+  max-width: 380px;
 `;
 
 const AddressLabel = styled.span`
@@ -295,11 +294,47 @@ const AddressText = styled.span`
 const PaymentLinkActions = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 8px;
   width: 100%;
-  max-width: 320px;
+  max-width: 380px;
   margin-bottom: 16px;
+`;
+
+const QrTypeSelector = styled.div`
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 4px;
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 380px;
+  box-sizing: border-box;
+`;
+
+const QrTypeButton = styled.button<{ $active: boolean }>`
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 9999px;
+  border: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: ${({ $active }) => ($active ? '#FFFFFF' : 'transparent')};
+  color: ${({ $active }) => ($active ? '#000000' : 'rgba(255, 255, 255, 0.6)')};
+
+  &:hover {
+    color: ${({ $active }) => ($active ? '#000000' : '#FFFFFF')};
+    background: ${({ $active }) => ($active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.05)')};
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
 `;
 
 const IconButton = styled.button<{ $copied?: boolean }>`
@@ -516,18 +551,19 @@ export function QrOperationsModal({
   initialMode = 'select',
 }: QrOperationsModalProps) {
   const router = useRouter();
-  const { data: contactsData, isLoading: isLoadingContacts, refetch: refetchContacts } =
-    useGetContacts();
   const [mode, setMode] = useState<'select' | 'receive' | 'scan'>('select');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('SOL');
   const [chargeNote, setChargeNote] = useState('');
-  const [selectedContactId, setSelectedContactId] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [addressCopied, setAddressCopied] = useState(false);
+  const [qrType, setQrType] = useState<'link' | 'wallet'>('link');
   const [origin, setOrigin] = useState(() =>
     typeof window !== 'undefined' ? window.location.origin : '',
   );
-  const [linkCopied, setLinkCopied] = useState(false);
-  const [addressCopied, setAddressCopied] = useState(false);
+  const [customLabel, setCustomLabel] = useState('');
+  const [invoiceRef, setInvoiceRef] = useState('');
+  const [expiryDuration, setExpiryDuration] = useState('never');
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -541,43 +577,20 @@ export function QrOperationsModal({
       setAmount('');
       setCurrency('SOL');
       setChargeNote('');
-      setSelectedContactId('');
       setLinkCopied(false);
       setAddressCopied(false);
-      void refetchContacts();
+      setQrType('link');
+      setCustomLabel('');
+      setInvoiceRef('');
+      setExpiryDuration('never');
     }
-  }, [isOpen, initialMode, refetchContacts]);
+  }, [isOpen, initialMode]);
 
-  const allContacts = useMemo(
-    () => contactsData?.data ?? [],
-    [contactsData],
-  );
-
-  const selectedContact = useMemo(() => {
-    if (!selectedContactId) return null;
-    return allContacts.find((c) => c.id === selectedContactId) ?? null;
-  }, [selectedContactId, allContacts]);
-
-  const recipientWallet = useMemo(() => {
-    if (selectedContact) {
-      const address = selectedContact.walletAddress?.trim();
-      return address || null;
-    }
-    return merchantWallet?.trim() || null;
-  }, [selectedContact, merchantWallet]);
+  const recipientWallet = merchantWallet?.trim() || null;
 
   const checkoutLabel = useMemo(() => {
-    const note = chargeNote.trim();
-    if (note) return note;
-    if (selectedContact) {
-      const nickname = selectedContact.nickname?.trim();
-      if (nickname) return nickname;
-      const email = selectedContact.email?.trim();
-      if (email) return email;
-      return undefined;
-    }
-    return recipientLabel?.trim() || undefined;
-  }, [chargeNote, selectedContact, recipientLabel]);
+    return chargeNote.trim() || recipientLabel?.trim() || undefined;
+  }, [chargeNote, recipientLabel]);
 
   const exitScanMode = () => {
     if (initialMode === 'scan') {
@@ -600,27 +613,44 @@ export function QrOperationsModal({
       return generatePaymentReference();
     }
     return undefined;
-  }, [amount, selectedContact?.id]);
+  }, [amount]);
+
+  const expiryTimestamp = useMemo(() => {
+    if (expiryDuration === 'never') return null;
+    const now = Date.now();
+    const durations: Record<string, number> = {
+      '5m': 5 * 60 * 1000,
+      '15m': 15 * 60 * 1000,
+      '1h': 60 * 60 * 1000,
+      '1d': 24 * 60 * 60 * 1000,
+    };
+    return now + (durations[expiryDuration] || 0);
+  }, [expiryDuration]);
 
   const receiveCheckoutParams = useMemo(() => {
     if (!recipientWallet) return null;
 
-    const baseParams = {
+    const baseParams: any = {
       recipient: recipientWallet,
-      label: checkoutLabel,
+      label: customLabel.trim() || checkoutLabel,
     };
 
     if (amount && parseFloat(amount) > 0) {
-      return {
-        ...baseParams,
-        amount,
-        currency,
-        chargeRef,
-      };
+      baseParams.amount = amount;
+      baseParams.currency = currency;
+      baseParams.chargeRef = chargeRef;
+    }
+
+    if (invoiceRef.trim()) {
+      baseParams.invoiceRef = invoiceRef.trim();
+    }
+
+    if (expiryTimestamp) {
+      baseParams.expiry = expiryTimestamp.toString();
     }
 
     return baseParams;
-  }, [recipientWallet, checkoutLabel, amount, currency, chargeRef]);
+  }, [recipientWallet, customLabel, checkoutLabel, amount, currency, chargeRef, invoiceRef, expiryTimestamp]);
 
   const receiveCheckoutPath = useMemo(() => {
     if (!receiveCheckoutParams) return null;
@@ -632,19 +662,23 @@ export function QrOperationsModal({
     return `${origin}${receiveCheckoutPath}`;
   }, [receiveCheckoutPath, origin]);
 
-  const selectedContactName = useMemo(() => {
-    if (!selectedContact) return null;
-    return (
-      selectedContact.nickname?.trim() ||
-      selectedContact.email?.trim() ||
-      selectedContact.walletAddress?.trim() ||
-      'contact'
-    );
-  }, [selectedContact]);
-
-  const isContactPaymentLinkReady = Boolean(
-    selectedContact && receivePaymentLinkUrl,
-  );
+  const walletQrUrl = useMemo(() => {
+    if (!recipientWallet) return '';
+    const mint = currency !== 'SOL' ? getMintForSymbol(currency) : null;
+    try {
+      return encodeSolanaPayUrl({
+        recipient: recipientWallet,
+        amount: amount || undefined,
+        splToken: mint,
+        label: customLabel.trim() || checkoutLabel,
+        message: chargeNote.trim() || undefined,
+        reference: chargeRef || undefined,
+      });
+    } catch (e) {
+      console.error('Error encoding solana pay url:', e);
+      return recipientWallet;
+    }
+  }, [recipientWallet, amount, currency, customLabel, checkoutLabel, chargeNote, chargeRef]);
 
   if (!isOpen) return null;
 
@@ -708,21 +742,6 @@ export function QrOperationsModal({
     window.open(receiveCheckoutPath, '_blank', 'noopener,noreferrer');
   };
 
-  const handleSendPaymentLink = async () => {
-    if (!receivePaymentLinkUrl || !selectedContact) return;
-
-    const contactName = selectedContactName ?? 'contact';
-
-    try {
-      await navigator.clipboard.writeText(receivePaymentLinkUrl);
-      setLinkCopied(true);
-      toast.success(`Payment link copied for ${contactName}`);
-      setTimeout(() => setLinkCopied(false), 2000);
-    } catch {
-      toast.error('Could not copy the link');
-    }
-  };
-
   return (
     <AnimatePresence>
       <Overlay
@@ -783,9 +802,7 @@ export function QrOperationsModal({
 
                 <ReceiveTitle>Create QR Charge</ReceiveTitle>
                 <ReceiveSubtitle>
-                  {selectedContact
-                    ? `Payment link ready to share with ${selectedContactName}. Funds will go to the contact's wallet.`
-                    : 'Show this QR to receive deposits to your wallet. Leave the amount empty for an open charge.'}
+                  Show this QR to receive deposits to your wallet. Leave the amount empty for an open charge.
                 </ReceiveSubtitle>
               </ReceiveHeader>
 
@@ -814,11 +831,28 @@ export function QrOperationsModal({
                         </IconButton>
                       </PaymentLinkActions>
 
+                      <QrTypeSelector>
+                        <QrTypeButton
+                          type="button"
+                          $active={qrType === 'link'}
+                          onClick={() => setQrType('link')}
+                        >
+                          Payment Link
+                        </QrTypeButton>
+                        <QrTypeButton
+                          type="button"
+                          $active={qrType === 'wallet'}
+                          onClick={() => setQrType('wallet')}
+                        >
+                          Direct Wallet (Phantom)
+                        </QrTypeButton>
+                      </QrTypeSelector>
+
                       <QrContainer>
                         <QRCodeSVG
-                          key={receivePaymentLinkUrl}
-                          value={receivePaymentLinkUrl}
-                          size={260}
+                          key={qrType === 'link' ? receivePaymentLinkUrl : walletQrUrl}
+                          value={qrType === 'link' ? (receivePaymentLinkUrl || '') : walletQrUrl}
+                          size={320}
                           level="H"
                           includeMargin={false}
                         />
@@ -827,7 +861,7 @@ export function QrOperationsModal({
 
                     <ReceiveAddressSection>
                       <RightAddressLabel>
-                        {selectedContact ? 'Contact wallet address' : 'Your deposit address'}
+                        Your deposit address
                       </RightAddressLabel>
                       <AddressWrapper>
                         <AddressText>{recipientWallet}</AddressText>
@@ -848,26 +882,6 @@ export function QrOperationsModal({
 
               <ReceiveConfigSection>
                 <ConfigFields>
-                  <FieldGroup>
-                    <FieldLabel>Contact (optional)</FieldLabel>
-                    <ContactSelect
-                      value={selectedContactId}
-                      onChange={(e) => setSelectedContactId(e.target.value)}
-                      disabled={isLoadingContacts}
-                      aria-label="Select contact"
-                    >
-                      <option value="">None</option>
-                      {allContacts.map((contact) => (
-                        <option key={contact.id} value={contact.id}>
-                          {contact.nickname?.trim() ||
-                            contact.email?.trim() ||
-                            contact.walletAddress?.trim() ||
-                            'Contact'}
-                        </option>
-                      ))}
-                    </ContactSelect>
-                  </FieldGroup>
-
                   <FieldGroup>
                     <FieldLabel>Amount (optional)</FieldLabel>
                     <InputRow>
@@ -906,30 +920,66 @@ export function QrOperationsModal({
                       aria-label="Charge description"
                     />
                   </FieldGroup>
+
+                  <FieldGroup>
+                    <FieldLabel>Payee Name / Store Label (optional)</FieldLabel>
+                    <TextInput
+                      type="text"
+                      placeholder="e.g. Cashier Till #1"
+                      value={customLabel}
+                      onChange={(e) => setCustomLabel(e.target.value)}
+                      maxLength={80}
+                      aria-label="Payee Name / Store Label"
+                    />
+                  </FieldGroup>
+
+                  <FieldGroup>
+                    <FieldLabel>Invoice / Reference # (optional)</FieldLabel>
+                    <TextInput
+                      type="text"
+                      placeholder="e.g. INV-2026-001"
+                      value={invoiceRef}
+                      onChange={(e) => setInvoiceRef(e.target.value)}
+                      maxLength={50}
+                      aria-label="Invoice / Reference Number"
+                    />
+                  </FieldGroup>
+
+                  <FieldGroup>
+                    <FieldLabel>Expiration Time</FieldLabel>
+                    <ContactSelect
+                      value={expiryDuration}
+                      onChange={(e) => setExpiryDuration(e.target.value)}
+                      aria-label="Select Expiration"
+                    >
+                      <option value="never">Never Expires</option>
+                      <option value="5m">5 Minutes</option>
+                      <option value="15m">15 Minutes</option>
+                      <option value="1h">1 Hour</option>
+                      <option value="1d">1 Day</option>
+                    </ContactSelect>
+                  </FieldGroup>
                 </ConfigFields>
 
                 {!(recipientWallet && receivePaymentLinkUrl) && (
                   <div style={{ marginBottom: '24px', color: '#F87171' }}>
-                    {selectedContact
-                      ? 'The selected contact has no wallet address.'
-                      : 'No configured address found. Add it in Settings.'}
+                    No configured address found. Add it in Settings.
                   </div>
                 )}
 
-                {selectedContact ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
                   <ActionButton
                     type="button"
                     $variant="primary"
-                    onClick={handleSendPaymentLink}
-                    disabled={!isContactPaymentLinkReady}
+                    onClick={handleOpenPaymentPage}
+                    disabled={!receiveCheckoutPath}
                   >
-                    {linkCopied ? 'Link copied!' : 'Send payment link'}
+                    Create
                   </ActionButton>
-                ) : (
                   <ActionButton type="button" $variant="secondary" onClick={exitReceiveMode}>
                     Cancel
                   </ActionButton>
-                )}
+                </div>
               </ReceiveConfigSection>
             </ReceiveLayout>
           )}

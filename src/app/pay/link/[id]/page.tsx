@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { CheckCircle } from 'lucide-react';
+import { Decimal } from 'decimal.js';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 const PageWrapper = styled.div`
   min-height: 100vh;
   background: #000000;
@@ -161,6 +163,19 @@ export default function PayLinkPage() {
   const [user, setUser] = useState<User | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  const { data: usdRate } = useTokenPrice(link?.currency);
+
+  const getUsdEquivalent = () => {
+    if (!link || !link.amount || usdRate === null) return null;
+    try {
+      return new Decimal(link.amount).mul(usdRate).toNumber();
+    } catch {
+      return null;
+    }
+  };
+
+  const usdAmount = getUsdEquivalent();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -270,8 +285,20 @@ export default function PayLinkPage() {
               <BusinessName>{link.businessName || 'Merchant Checkout'}</BusinessName>
               <ProductName>{link.name}</ProductName>
               
-              <AmountText>{link.amount}</AmountText>
-              <CurrencyText>{link.currency}</CurrencyText>
+              <AmountText>
+                {usdAmount !== null ? (
+                  `$${usdAmount.toFixed(2)}`
+                ) : (
+                  link.amount ?? '0.00'
+                )}
+              </AmountText>
+              <CurrencyText>
+                {usdAmount !== null ? (
+                  `${parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} ${link.currency}`
+                ) : (
+                  link.currency
+                )}
+              </CurrencyText>
 
               {error && (
                 <div className="mb-4 text-red-400 text-sm">

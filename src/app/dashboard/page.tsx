@@ -201,7 +201,7 @@ export default function DashboardOverviewPage() {
         onClose={() => setIsQrModalOpen(false)}
         merchantWallet={merchantWallet}
         recipientLabel={businessName}
-        initialMode="receive"
+        initialMode="select"
       />
 
     </>

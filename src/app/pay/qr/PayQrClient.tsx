@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,8 @@ import {
   PaymentSuccessModal,
   PaymentSuccessData,
 } from '@/components/payments/PaymentSuccessModal';
+import { Decimal } from 'decimal.js';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { 
   ArrowRight, 
   ShieldCheck, 
@@ -387,6 +389,8 @@ export default function PayQrClient() {
   const fixedAmount = searchParams.get('amount');
   const fixedCurrency = searchParams.get('currency') ?? 'SOL';
   const label = searchParams.get('label') ?? '';
+  const invoiceRef = searchParams.get('invoiceRef') ?? '';
+  const expiryParam = searchParams.get('expiry') ?? '';
 
   const hasFixedAmount = Boolean(fixedAmount);
 
@@ -398,9 +402,34 @@ export default function PayQrClient() {
   const [error, setError] = useState<string | null>(null);
   const [contactNickname, setContactNickname] = useState<string | null>(null);
   const [recipientBusinessName, setRecipientBusinessName] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const isExpired = useMemo(() => {
+    if (!expiryParam) return false;
+    const expiryTimestamp = parseInt(expiryParam, 10);
+    return !isNaN(expiryTimestamp) && currentTime > expiryTimestamp;
+  }, [expiryParam, currentTime]);
 
   const amount = hasFixedAmount ? (fixedAmount ?? '') : editableAmount;
   const currency = hasFixedAmount ? fixedCurrency : editableCurrency;
+
+  const { data: usdRate } = useTokenPrice(currency);
+
+  const getUsdEquivalent = () => {
+    if (!amount || usdRate === null) return null;
+    try {
+      return new Decimal(amount).mul(usdRate).toNumber();
+    } catch {
+      return null;
+    }
+  };
+
+  const usdAmount = getUsdEquivalent();
 
   const checkoutQuery = searchParams.toString();
   const checkoutPath = checkoutQuery ? `/pay/qr?${checkoutQuery}` : '/pay/qr';
@@ -545,11 +574,15 @@ export default function PayQrClient() {
         }
       }
 
+      const transferRef = invoiceRef.trim()
+        ? `Invoice ${invoiceRef.trim()}: ${label}`
+        : `Direct QR payment: ${label}`;
+
       const res = await sendTransfer(token, {
         toWallet: recipientAddress,
         amount,
         mint,
-        reference: `Direct QR payment: ${label}`,
+        reference: transferRef,
       });
 
       const transfer = res.data;
@@ -563,7 +596,7 @@ export default function PayQrClient() {
           recipientBusinessName ??
           (!isGenericCheckoutLabel(label) ? label.trim() : null),
         signature: transfer?.signature ?? null,
-        reference: transfer?.reference ?? null,
+        reference: transfer?.reference ?? (invoiceRef || null),
       });
 
     } catch (err: unknown) {
@@ -624,6 +657,13 @@ export default function PayQrClient() {
                 Solana {solanaNetworkLabel}
               </NetworkBadge>
 
+              {isExpired && (
+                <ErrorBox>
+                  <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                  <div>This payment request has expired.</div>
+                </ErrorBox>
+              )}
+
               {error && (
                 <ErrorBox>
                   <AlertCircle size={20} style={{ flexShrink: 0 }} />
@@ -647,9 +687,26 @@ export default function PayQrClient() {
                         display: 'block',
                         textAlign: 'center'
                       }}>
-                        {parseFloat(amount || '0').toFixed(currency === 'SOL' ? 4 : 2)}
+                        {usdAmount !== null ? (
+                          `$${usdAmount.toFixed(2)}`
+                        ) : (
+                          parseFloat(amount || '0').toFixed(currency === 'SOL' ? 4 : 2)
+                        )}
                       </span>
-                      <CurrencyBadge style={{ marginTop: '12px' }}>{currency}</CurrencyBadge>
+                      {usdAmount !== null && (
+                        <div style={{
+                          fontFamily: 'Montserrat, sans-serif',
+                          fontSize: '16px',
+                          fontWeight: 300,
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          marginTop: '6px'
+                        }}>
+                          {parseFloat(amount || '0').toFixed(currency === 'SOL' ? 4 : 2)} {currency}
+                        </div>
+                      )}
+                      <CurrencyBadge style={{ marginTop: '12px' }}>
+                        {usdAmount !== null ? 'USD Equivalent' : currency}
+                      </CurrencyBadge>
                     </div>
                   </>
                 ) : (
@@ -677,6 +734,18 @@ export default function PayQrClient() {
                         <option value="LXR">LXR</option>
                       </DropdownSelect>
                     </InputWrapper>
+                    {usdAmount !== null && parseFloat(amount || '0') > 0 && (
+                      <div style={{
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontSize: '14px',
+                        fontWeight: 300,
+                        color: 'rgba(255, 255, 255, 0.6)',
+                        textAlign: 'center',
+                        marginTop: '12px'
+                      }}>
+                        ≈ ${usdAmount.toFixed(2)} USD
+                      </div>
+                    )}
                   </>
                 )}
               </AmountContainer>
@@ -707,6 +776,15 @@ export default function PayQrClient() {
                   </InfoValue>
                 </InfoRow>
 
+                {invoiceRef && (
+                  <InfoRow>
+                    <InfoLabel>Invoice / Ref</InfoLabel>
+                    <InfoValue title={invoiceRef}>
+                      {invoiceRef}
+                    </InfoValue>
+                  </InfoRow>
+                )}
+
                 {user && (
                   <InfoRow>
                     <InfoLabel>Luxor Account</InfoLabel>
@@ -718,7 +796,7 @@ export default function PayQrClient() {
               <ActionButton
                 type="button"
                 $variant="primary"
-                disabled={user ? loading || parsePaymentAmount(amount) === null : false}
+                disabled={isExpired || (user ? loading || parsePaymentAmount(amount) === null : false)}
                 onClick={handlePayment}
               >
                 {!user ? (
