@@ -108,23 +108,44 @@ export async function resendPaymentRequestNotification(
   return response.json();
 }
 
-export async function cancelPaymentRequest(
+export type UpdatePaymentRequestAction = 'CANCEL' | 'EXTEND';
+
+export interface UpdatePaymentRequestPayload {
+  /** Pass 'CANCEL' to hard-cancel. Mutually exclusive with expirationDate. */
+  action?: UpdatePaymentRequestAction;
+  /** ISO-8601 future date to extend the expiration. Mutually exclusive with action='CANCEL'. */
+  expirationDate?: string;
+}
+
+export async function updatePaymentRequest(
   token: string,
   id: string,
-): Promise<{ success: boolean }> {
-  const response = await fetch(apiUrl(`/payment-requests/${id}`), {
+  payload: UpdatePaymentRequestPayload,
+): Promise<{ success: boolean; data: PaymentRequest }> {
+  const response = await fetch(apiUrl(`/payment-requests/${id}/cancel`), {
     method: 'PATCH',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ status: 'CANCELLED' }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Failed to cancel payment request');
+    const msg = Array.isArray(errorData.message)
+      ? errorData.message.join(', ')
+      : errorData.message || 'Failed to update payment request';
+    throw new Error(msg);
   }
 
   return response.json();
+}
+
+/** @deprecated Use updatePaymentRequest({ action: 'CANCEL' }) instead. */
+export async function cancelPaymentRequest(
+  token: string,
+  id: string,
+): Promise<{ success: boolean }> {
+  return updatePaymentRequest(token, id, { action: 'CANCEL' });
 }
