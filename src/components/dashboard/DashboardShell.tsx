@@ -14,7 +14,8 @@ import {
   LogOut,
   Users,
   Menu,
-  X
+  X,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -22,6 +23,7 @@ import { clsx } from 'clsx';
 
 const nav = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/dashboard/requests', label: 'Payment Requests', icon: ArrowLeftRight },
   { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
   { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
   { href: '/dashboard/pos', label: 'POS Devices', icon: Terminal },

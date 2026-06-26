@@ -71,15 +71,17 @@ function LoginContent() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        router.push('/dashboard');
+        const redirect = searchParams.get('redirect');
+        router.push(redirect || '/dashboard');
       }
     });
     return () => unsubscribe();
-  }, [router]);
+  }, [router, searchParams]);
 
   const completeAuth = async (user: any) => {
     // Merchant profile creation/fetching is handled by DashboardShell upon redirect
-    router.push('/dashboard');
+    const redirect = searchParams.get('redirect');
+    router.push(redirect || '/dashboard');
   };
 
   const handleEmailLogin = async (e: React.FormEvent) => {

@@ -1,4 +1,4 @@
-export type Currency = 'SOL' | 'USDC';
+export type Currency = string;
 
 export interface MerchantProfile {
   email: string;
@@ -12,6 +12,7 @@ export interface PaymentLink {
   id: string;
   merchantId: string;
   name: string;
+  businessName: string;
   amount: number;
   currency: Currency;
   merchantWallet: string;
