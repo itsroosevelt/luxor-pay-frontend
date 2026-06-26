@@ -9,7 +9,9 @@ import {
   PaymentRequest,
   cancelPaymentRequest,
   resendPaymentRequestNotification,
+  updatePaymentRequest,
 } from '@/lib/payment-requests-api';
+import { sendTransfer } from '@/lib/transfers-api';
 import { getTokenSymbol } from '@/lib/token-registry';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import {
@@ -22,11 +24,20 @@ import {
   RefreshCw,
   Bell,
   Ban,
-  ExternalLink,
   Wallet,
   Calendar,
   Hash,
   ArrowRight,
+  X,
+  ShieldCheck,
+  Loader2,
+  Building2,
+  FileText,
+  CalendarDays,
+  Pencil,
+  Mail,
+  Smartphone,
+  BellRing,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -124,6 +135,863 @@ function SkeletonCard() {
   );
 }
 
+// ─── Payment Modal ────────────────────────────────────────────────────────────
+
+type PayStep = 'idle' | 'signing' | 'processing' | 'success' | 'error';
+
+function PaymentModal({
+  request,
+  network,
+  onClose,
+  onSuccess,
+}: {
+  request: PaymentRequest;
+  network: 'mainnet-beta' | 'devnet';
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [step, setStep] = useState<PayStep>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const formattedAmount = formatAmount(request.amount, request.assetMint, network);
+  const symbol = getTokenSymbol(request.assetMint, network) || 'SPL';
+  const expDate = formatDate(request.expirationDate);
+  const createdDate = formatDate(request.createdAt);
+
+  const handlePay = async () => {
+    setStep('signing');
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+
+      setStep('processing');
+      await sendTransfer(token, {
+        toWallet: request.requesterWallet,
+        amount: String(request.amount), // API returns amount as number; DTO requires a string
+        mint: request.assetMint,
+        reference: request.reference,
+        transactionTypeId: 'Request',
+        paymentRequestId: request.id,
+      });
+
+      setStep('success');
+      toast.success(`Payment of ${formattedAmount} sent successfully!`);
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 2200);
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Transaction failed');
+      setStep('error');
+    }
+  };
+
+  const stepConfig: Record<PayStep, { label: string; color: string; icon: React.ReactNode }> = {
+    idle:       { label: 'Ready to pay',    color: '#60A5FA', icon: <ShieldCheck size={14} /> },
+    signing:    { label: 'Awaiting signature', color: '#F59E0B', icon: <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> },
+    processing: { label: 'Processing on-chain', color: '#A78BFA', icon: <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> },
+    success:    { label: 'Transaction confirmed', color: '#22C55E', icon: <CheckCircle2 size={14} /> },
+    error:      { label: 'Transaction reverted', color: '#EF4444', icon: <XCircle size={14} /> },
+  };
+
+  const cfg = stepConfig[step];
+  const isBusy = step === 'signing' || step === 'processing';
+  const isDone = step === 'success' || step === 'error';
+
+  return (
+    <AnimatePresence>
+      {/* Backdrop */}
+      <motion.div
+        key="backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={isBusy ? undefined : onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '16px',
+        }}
+      >
+        {/* Modal */}
+        <motion.div
+          key="modal"
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.98 }}
+          transition={{ type: 'spring', bounce: 0.35, duration: 0.55 }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            background: 'rgba(10,10,10,0.95)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '28px',
+            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.8), 0 0 0 1px rgba(96,165,250,0.08)',
+            width: '100%',
+            maxWidth: '460px',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '24px 28px 20px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.08) 0%, rgba(0,0,0,0) 60%)',
+          }}>
+            <div>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#60A5FA', margin: '0 0 6px 0' }}>
+                Payment Request
+              </p>
+              <span style={{
+                fontFamily: 'Outfit, sans-serif', fontSize: '32px', fontWeight: 600, lineHeight: 1,
+                background: 'linear-gradient(to right, #60A5FA, #2563EB)',
+                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+              }}>
+                {formattedAmount}
+              </span>
+            </div>
+            {!isBusy && (
+              <button
+                onClick={onClose}
+                style={{
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '9999px', width: '32px', height: '32px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+                }}
+              >
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* Body */}
+          <div style={{ padding: '20px 28px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+            {/* Details grid */}
+            <div style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: '16px',
+              padding: '16px',
+              display: 'flex', flexDirection: 'column', gap: '10px',
+            }}>
+              <ModalRow icon={<Wallet size={13} />} label="From (Requester)">
+                <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#60A5FA', wordBreak: 'break-all' }}>
+                  {shortenWallet(request.requesterWallet)}
+                </span>
+              </ModalRow>
+
+              <ModalRow icon={<Wallet size={13} />} label="To (Your Wallet)">
+                <span style={{ fontFamily: 'monospace', fontSize: '12px', color: 'rgba(255,255,255,0.7)', wordBreak: 'break-all' }}>
+                  {shortenWallet(request.payerWallet)}
+                </span>
+              </ModalRow>
+
+              {request.businessName && (
+                <ModalRow icon={<Building2 size={13} />} label="Business">
+                  <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: 400 }}>
+                    {request.businessName}
+                  </span>
+                </ModalRow>
+              )}
+
+              {request.reference && (
+                <ModalRow icon={<FileText size={13} />} label="Reference">
+                  <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.7)' }}>
+                    {request.reference}
+                  </span>
+                </ModalRow>
+              )}
+
+              {request.numericalReference && (
+                <ModalRow icon={<Hash size={13} />} label="Ref #">
+                  <span style={{ fontFamily: 'monospace', fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
+                    {request.numericalReference}
+                  </span>
+                </ModalRow>
+              )}
+
+              <ModalRow icon={<Calendar size={13} />} label="Created">
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
+                  {createdDate}
+                </span>
+              </ModalRow>
+
+              {expDate && (
+                <ModalRow icon={<Calendar size={13} />} label="Expires">
+                  <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
+                    {expDate}
+                  </span>
+                </ModalRow>
+              )}
+
+              <ModalRow icon={<Hash size={13} />} label="Asset Mint">
+                <span style={{ fontFamily: 'monospace', fontSize: '11px', color: 'rgba(255,255,255,0.4)', wordBreak: 'break-all' }}>
+                  {request.assetMint.slice(0, 8)}…{request.assetMint.slice(-6)}
+                </span>
+              </ModalRow>
+            </div>
+
+            {/* Tx lifecycle badge */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '8px 14px', borderRadius: '9999px',
+              background: `${cfg.color}18`,
+              border: `1px solid ${cfg.color}30`,
+              alignSelf: 'flex-start',
+            }}>
+              <span style={{ color: cfg.color }}>{cfg.icon}</span>
+              <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '12px', fontWeight: 500, color: cfg.color }}>
+                {cfg.label}
+              </span>
+            </div>
+
+            {/* Error message */}
+            {step === 'error' && (
+              <div style={{
+                padding: '12px 16px', borderRadius: '12px',
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: '#FCA5A5',
+              }}>
+                {errorMsg}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            padding: '0 28px 24px',
+            display: 'flex', flexDirection: 'column', gap: '10px',
+          }}>
+            {step !== 'success' && (
+              <button
+                onClick={handlePay}
+                disabled={isBusy || isDone}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  borderRadius: '9999px',
+                  border: 'none',
+                  background: (isBusy || isDone) ? 'rgba(37,99,235,0.4)' : 'linear-gradient(135deg,#2563EB,#3B82F6)',
+                  color: '#FFFFFF',
+                  fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
+                  cursor: (isBusy || isDone) ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  transition: 'all 0.2s',
+                  opacity: (isBusy || isDone) ? 0.7 : 1,
+                }}
+              >
+                {isBusy ? (
+                  <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> {step === 'signing' ? 'Awaiting Signature…' : 'Processing…'}</>
+                ) : step === 'error' ? (
+                  <><RefreshCw size={16} /> Retry Payment</>
+                ) : (
+                  <><ArrowRight size={16} /> Pay {formattedAmount}</>
+                )}
+              </button>
+            )}
+            {step === 'success' && (
+              <div style={{
+                width: '100%', padding: '14px',
+                borderRadius: '9999px',
+                background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)',
+                color: '#22C55E', fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+              }}>
+                <CheckCircle2 size={16} /> Payment Sent!
+              </div>
+            )}
+            {!isBusy && step !== 'success' && (
+              <button
+                onClick={onClose}
+                style={{
+                  width: '100%', padding: '11px',
+                  borderRadius: '9999px',
+                  background: 'transparent', border: '1px solid rgba(255,255,255,0.1)',
+                  color: 'rgba(255,255,255,0.5)', fontFamily: 'Outfit, sans-serif', fontSize: '14px',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+function ModalRow({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+        <span style={{ color: 'rgba(255,255,255,0.3)' }}>{icon}</span>
+        <span style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          {label}
+        </span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+// ─── Update Modal (Extend / Cancel) ──────────────────────────────────────────
+
+type UpdateStep = 'idle' | 'loading' | 'done' | 'error';
+
+function UpdateModal({
+  request,
+  onClose,
+  onSuccess,
+}: {
+  request: PaymentRequest;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [mode, setMode] = useState<'choose' | 'extend'>('choose');
+  const [step, setStep] = useState<UpdateStep>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [expirationDate, setExpirationDate] = useState('');
+
+  // Minimum date: tomorrow (dates must be in the future)
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const minDate = tomorrow.toISOString().slice(0, 16); // datetime-local format
+
+  const handleCancel = async () => {
+    setStep('loading');
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      await updatePaymentRequest(token, request.id, { action: 'CANCEL' });
+      setStep('done');
+      toast.success('Payment request cancelled');
+      setTimeout(() => { onSuccess(); onClose(); }, 1600);
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Failed to cancel');
+      setStep('error');
+    }
+  };
+
+  const handleExtend = async () => {
+    if (!expirationDate) return;
+    setStep('loading');
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      await updatePaymentRequest(token, request.id, {
+        expirationDate: new Date(expirationDate).toISOString(),
+      });
+      setStep('done');
+      toast.success('Expiration date updated');
+      setTimeout(() => { onSuccess(); onClose(); }, 1600);
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Failed to update date');
+      setStep('error');
+    }
+  };
+
+  const isBusy = step === 'loading';
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="update-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={isBusy ? undefined : onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '16px',
+        }}
+      >
+        <motion.div
+          key="update-modal"
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.98 }}
+          transition={{ type: 'spring', bounce: 0.35, duration: 0.5 }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            background: 'rgba(10,10,10,0.97)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '28px',
+            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(96,165,250,0.06)',
+            width: '100%',
+            maxWidth: '420px',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '24px 28px 18px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.07) 0%, transparent 60%)',
+          }}>
+            <div>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#60A5FA', margin: '0 0 4px 0' }}>
+                Manage Request
+              </p>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                {mode === 'choose' ? 'What would you like to do?' : 'Set New Expiration Date'}
+              </p>
+            </div>
+            {!isBusy && (
+              <button onClick={onClose} style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '9999px', width: '32px', height: '32px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+              }}>
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* Body */}
+          <div style={{ padding: '20px 28px 24px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+            {/* Error */}
+            {step === 'error' && (
+              <div style={{
+                padding: '12px 16px', borderRadius: '12px',
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: '#FCA5A5',
+                display: 'flex', alignItems: 'flex-start', gap: '8px',
+              }}>
+                <XCircle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                {errorMsg}
+              </div>
+            )}
+
+            {/* Choose mode */}
+            {mode === 'choose' && (
+              <>
+                {/* Extend option */}
+                <button
+                  onClick={() => { setMode('extend'); setStep('idle'); setErrorMsg(''); }}
+                  disabled={isBusy}
+                  style={{
+                    width: '100%', padding: '16px 20px',
+                    borderRadius: '16px', border: '1px solid rgba(96,165,250,0.2)',
+                    background: 'rgba(96,165,250,0.05)',
+                    cursor: 'pointer', textAlign: 'left',
+                    display: 'flex', alignItems: 'center', gap: '14px',
+                    transition: 'border-color 0.2s, background 0.2s',
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(96,165,250,0.4)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(96,165,250,0.1)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(96,165,250,0.2)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(96,165,250,0.05)'; }}
+                >
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(96,165,250,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#60A5FA' }}>
+                    <CalendarDays size={18} />
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 600, color: '#FFFFFF', margin: '0 0 2px 0' }}>Update Expiration Date</p>
+                    <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', fontWeight: 300, color: 'rgba(255,255,255,0.5)', margin: 0 }}>Choose a new future date for this request</p>
+                  </div>
+                  <ArrowRight size={16} style={{ marginLeft: 'auto', color: 'rgba(255,255,255,0.3)', flexShrink: 0 }} />
+                </button>
+
+                {/* Cancel option */}
+                <button
+                  onClick={handleCancel}
+                  disabled={isBusy}
+                  style={{
+                    width: '100%', padding: '16px 20px',
+                    borderRadius: '16px', border: '1px solid rgba(239,68,68,0.2)',
+                    background: 'rgba(239,68,68,0.05)',
+                    cursor: isBusy ? 'not-allowed' : 'pointer', textAlign: 'left',
+                    display: 'flex', alignItems: 'center', gap: '14px',
+                    transition: 'border-color 0.2s, background 0.2s',
+                    opacity: isBusy ? 0.6 : 1,
+                  }}
+                  onMouseEnter={e => { if (!isBusy) { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.4)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.1)'; }}}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(239,68,68,0.2)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(239,68,68,0.05)'; }}
+                >
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#FCA5A5' }}>
+                    {isBusy ? <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Ban size={18} />}
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 600, color: '#FCA5A5', margin: '0 0 2px 0' }}>Cancel Request</p>
+                    <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', fontWeight: 300, color: 'rgba(255,255,255,0.5)', margin: 0 }}>Permanently cancel this payment request</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={onClose}
+                  disabled={isBusy}
+                  style={{
+                    width: '100%', padding: '11px',
+                    borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                    fontFamily: 'Outfit, sans-serif', fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Dismiss
+                </button>
+              </>
+            )}
+
+            {/* Extend mode */}
+            {mode === 'extend' && (
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                    New Expiration Date &amp; Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={expirationDate}
+                    min={minDate}
+                    onChange={e => setExpirationDate(e.target.value)}
+                    disabled={isBusy}
+                    style={{
+                      width: '100%', padding: '12px 14px',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '12px',
+                      color: '#FFFFFF',
+                      fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                      colorScheme: 'dark',
+                    }}
+                  />
+                  <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '11px', fontWeight: 300, color: 'rgba(255,255,255,0.35)', margin: '2px 0 0 0' }}>
+                    Must be a future date.
+                  </p>
+                </div>
+
+                <button
+                  onClick={handleExtend}
+                  disabled={!expirationDate || isBusy}
+                  style={{
+                    width: '100%', padding: '14px',
+                    borderRadius: '9999px', border: 'none',
+                    background: (!expirationDate || isBusy) ? 'rgba(37,99,235,0.4)' : 'linear-gradient(135deg,#2563EB,#3B82F6)',
+                    color: '#FFFFFF',
+                    fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
+                    cursor: (!expirationDate || isBusy) ? 'not-allowed' : 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    opacity: (!expirationDate || isBusy) ? 0.6 : 1,
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {isBusy
+                    ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Updating…</>
+                    : <><CalendarDays size={16} /> Confirm New Date</>
+                  }
+                </button>
+
+                <button
+                  onClick={() => { setMode('choose'); setStep('idle'); setErrorMsg(''); }}
+                  disabled={isBusy}
+                  style={{
+                    width: '100%', padding: '11px',
+                    borderRadius: '9999px', border: '1px solid rgba(255,255,255,0.08)',
+                    background: 'transparent', color: 'rgba(255,255,255,0.4)',
+                    fontFamily: 'Outfit, sans-serif', fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Back
+                </button>
+              </>
+            )}
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
+// ─── Resend Notification Modal ──────────────────────────────────────────────
+
+function ResendModal({
+  request,
+  onClose,
+  onSuccess,
+}: {
+  request: PaymentRequest;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [step, setStep] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const existingTarget = request.targetNotification || '';
+  const isExistingEmail = existingTarget.includes('@');
+
+  const [type, setType] = useState<PaymentRequest['targetNotificationType']>(
+    request.targetNotificationType !== 'NONE' ? request.targetNotificationType : 'EMAIL'
+  );
+  
+  const [emailTarget, setEmailTarget] = useState(isExistingEmail ? existingTarget : '');
+  
+  // Simple hack to parse existing phone
+  const defaultPrefix = (!isExistingEmail && existingTarget.match(/^(\+\d{1,3})/)?.[1]) || '+1';
+  const defaultPhone = (!isExistingEmail ? existingTarget.replace(/^(\+\d{1,3})/, '').trim() : '');
+  
+  const [phonePrefix, setPhonePrefix] = useState(defaultPrefix);
+  const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
+
+  const handleResend = async () => {
+    let finalTarget = '';
+    if (type === 'EMAIL') {
+      finalTarget = emailTarget.trim();
+      if (!finalTarget) {
+        setErrorMsg('Email address is required.');
+        setStep('error');
+        return;
+      }
+    } else if (type === 'PHONE') {
+      const num = phoneNumber.trim();
+      if (!num) {
+        setErrorMsg('Phone number is required.');
+        setStep('error');
+        return;
+      }
+      finalTarget = phonePrefix + num;
+    }
+
+    setStep('loading');
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      await resendPaymentRequestNotification(token, request.id, {
+        targetNotificationType: type,
+        targetNotification: type === 'PUSH' ? undefined : finalTarget,
+      });
+      setStep('done');
+      toast.success('Notification resent successfully');
+      setTimeout(() => { onSuccess(); onClose(); }, 1600);
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Failed to resend notification');
+      setStep('error');
+    }
+  };
+
+  const isBusy = step === 'loading';
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="resend-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={isBusy ? undefined : onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '16px',
+        }}
+      >
+        <motion.div
+          key="resend-modal"
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.98 }}
+          transition={{ type: 'spring', bounce: 0.35, duration: 0.5 }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            background: 'rgba(10,10,10,0.97)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '28px',
+            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(96,165,250,0.06)',
+            width: '100%',
+            maxWidth: '420px',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '24px 28px 18px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.07) 0%, transparent 60%)',
+          }}>
+            <div>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#60A5FA', margin: '0 0 4px 0' }}>
+                Resend Request
+              </p>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                Configure Notification
+              </p>
+            </div>
+            {!isBusy && (
+              <button onClick={onClose} style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '9999px', width: '32px', height: '32px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+              }}>
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* Body */}
+          <div style={{ padding: '20px 28px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            
+            {/* Error */}
+            {step === 'error' && (
+              <div style={{
+                padding: '12px 16px', borderRadius: '12px',
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: '#FCA5A5',
+                display: 'flex', alignItems: 'flex-start', gap: '8px',
+              }}>
+                <XCircle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                {errorMsg}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(['EMAIL', 'PHONE', 'PUSH'] as const).map(t => {
+                const isActive = type === t;
+                const Icon = t === 'EMAIL' ? Mail : (t === 'PHONE' ? Smartphone : BellRing);
+                return (
+                  <button
+                    key={t}
+                    onClick={() => { setType(t); setErrorMsg(''); }}
+                    disabled={isBusy}
+                    style={{
+                      flex: 1, padding: '12px 0',
+                      borderRadius: '12px', border: '1px solid',
+                      borderColor: isActive ? '#60A5FA' : 'rgba(255,255,255,0.1)',
+                      background: isActive ? 'rgba(96,165,250,0.1)' : 'rgba(255,255,255,0.02)',
+                      color: isActive ? '#60A5FA' : 'rgba(255,255,255,0.5)',
+                      fontFamily: 'Outfit, sans-serif', fontSize: '13px', fontWeight: 500,
+                      cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <Icon size={16} />
+                    {t === 'EMAIL' ? 'Email' : t === 'PHONE' ? 'Phone SMS' : 'Push Notif'}
+                  </button>
+                )
+              })}
+            </div>
+
+            {type === 'EMAIL' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={emailTarget}
+                  onChange={e => setEmailTarget(e.target.value)}
+                  placeholder="payer@example.com"
+                  disabled={isBusy}
+                  style={{
+                    width: '100%', padding: '12px 14px',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '12px',
+                    color: '#FFFFFF',
+                    fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                    outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
+            {type === 'PHONE' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                  Phone Number
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select
+                    value={phonePrefix}
+                    onChange={e => setPhonePrefix(e.target.value)}
+                    disabled={isBusy}
+                    style={{
+                      padding: '12px',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '12px',
+                      color: '#FFFFFF',
+                      fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+54">🇦🇷 +54</option>
+                    <option value="+57">🇨🇴 +57</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+56">🇨🇱 +56</option>
+                    <option value="+51">🇵🇪 +51</option>
+                  </select>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="1234567890"
+                    disabled={isBusy}
+                    style={{
+                      flex: 1, padding: '12px 14px',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '12px',
+                      color: '#FFFFFF',
+                      fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                      outline: 'none', boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleResend}
+              disabled={isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())}
+              style={{
+                width: '100%', padding: '14px',
+                borderRadius: '9999px', border: 'none',
+                background: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 'rgba(37,99,235,0.4)' : 'linear-gradient(135deg,#2563EB,#3B82F6)',
+                color: '#FFFFFF',
+                fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
+                cursor: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                opacity: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 0.6 : 1,
+                transition: 'all 0.2s', marginTop: '4px',
+              }}
+            >
+              {isBusy
+                ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Sending…</>
+                : <><Bell size={16} /> Send Notification</>
+              }
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 // ─── Request Card ─────────────────────────────────────────────────────────────
 
 interface RequestCardProps {
@@ -131,44 +999,17 @@ interface RequestCardProps {
   perspective: 'requester' | 'payer';
   network: 'mainnet-beta' | 'devnet';
   onRefetch: () => void;
+  onPay?: (req: PaymentRequest) => void;
+  onUpdate?: (req: PaymentRequest) => void;
+  onResend?: (req: PaymentRequest) => void;
 }
 
-function RequestCard({ request, perspective, network, onRefetch }: RequestCardProps) {
+function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate, onResend }: RequestCardProps) {
   const [isActing, setIsActing] = useState(false);
 
-  const handleResend = async () => {
-    setIsActing(true);
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('Not authenticated');
-      const token = await user.getIdToken();
-      await resendPaymentRequestNotification(token, request.id);
-      toast.success('Notification resent successfully');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to resend notification');
-    } finally {
-      setIsActing(false);
-    }
-  };
-
-  const handleCancel = async () => {
-    if (!confirm('Cancel this payment request?')) return;
-    setIsActing(true);
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('Not authenticated');
-      const token = await user.getIdToken();
-      await cancelPaymentRequest(token, request.id);
-      toast.success('Payment request cancelled');
-      onRefetch();
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to cancel request');
-    } finally {
-      setIsActing(false);
-    }
-  };
-
   const isPending = request.status === 'PENDING';
+  const isExpired = request.status === 'EXPIRED';
+  const showActions = isPending || (isExpired && perspective === 'requester');
   const formattedAmount = formatAmount(request.amount, request.assetMint, network);
   const expDate = formatDate(request.expirationDate);
   const createdDate = formatDate(request.createdAt);
@@ -251,31 +1092,33 @@ function RequestCard({ request, perspective, network, onRefetch }: RequestCardPr
       </div>
 
       {/* Actions */}
-      {isPending && (
+      {showActions && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '14px' }}>
           {perspective === 'requester' && (
             <>
+              {isPending && (
+                <ActionButton
+                  onClick={() => onResend?.(request)}
+                  disabled={isActing}
+                  icon={<Bell size={13} />}
+                  variant="ghost"
+                >
+                  Resend Notification
+                </ActionButton>
+              )}
               <ActionButton
-                onClick={handleResend}
+                onClick={() => onUpdate?.(request)}
                 disabled={isActing}
-                icon={<Bell size={13} />}
-                variant="ghost"
-              >
-                Resend Notification
-              </ActionButton>
-              <ActionButton
-                onClick={handleCancel}
-                disabled={isActing}
-                icon={<Ban size={13} />}
+                icon={<Pencil size={13} />}
                 variant="danger"
               >
-                Cancel Request
+                Update
               </ActionButton>
             </>
           )}
-          {perspective === 'payer' && (
+          {perspective === 'payer' && isPending && (
             <ActionButton
-              onClick={() => toast.info('Payment flow — coming soon')}
+              onClick={() => onPay?.(request)}
               disabled={isActing}
               icon={<ArrowRight size={13} />}
               variant="primary"
@@ -347,6 +1190,9 @@ function RequestsPanel({
   network: 'mainnet-beta' | 'devnet';
 }) {
   const { data, isLoading, isError, errorMessage, refetch } = useGetPaymentRequests(perspective, walletAddress);
+  const [payingRequest, setPayingRequest] = useState<PaymentRequest | null>(null);
+  const [updatingRequest, setUpdatingRequest] = useState<PaymentRequest | null>(null);
+  const [resendingRequest, setResendingRequest] = useState<PaymentRequest | null>(null);
 
   if (!walletAddress) {
     return (
@@ -395,17 +1241,44 @@ function RequestsPanel({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      {data.map(req => (
-        <RequestCard
-          key={req.id}
-          request={req}
-          perspective={perspective}
+    <>
+      {payingRequest && (
+        <PaymentModal
+          request={payingRequest}
           network={network}
-          onRefetch={refetch}
+          onClose={() => setPayingRequest(null)}
+          onSuccess={refetch}
         />
-      ))}
-    </div>
+      )}
+      {updatingRequest && (
+        <UpdateModal
+          request={updatingRequest}
+          onClose={() => setUpdatingRequest(null)}
+          onSuccess={refetch}
+        />
+      )}
+      {resendingRequest && (
+        <ResendModal
+          request={resendingRequest}
+          onClose={() => setResendingRequest(null)}
+          onSuccess={refetch}
+        />
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {data.map(req => (
+          <RequestCard
+            key={req.id}
+            request={req}
+            perspective={perspective}
+            network={network}
+            onRefetch={refetch}
+            onPay={setPayingRequest}
+            onUpdate={setUpdatingRequest}
+            onResend={setResendingRequest}
+          />
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -439,8 +1312,11 @@ export default function PaymentRequestsPage() {
 
   return (
     <>
-      {/* Global shimmer keyframe */}
-      <style>{`@keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }`}</style>
+      {/* Global shimmer + spin keyframes */}
+      <style>{`
+        @keyframes shimmer { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+        @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+      `}</style>
 
       <header style={{
         padding: '24px 24px 20px',
