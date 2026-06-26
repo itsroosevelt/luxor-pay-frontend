@@ -13,7 +13,7 @@ export const chargeRequestSchema = z.object({
 export const createPaymentLinkSchema = z.object({
   name: z.string().min(1).max(120),
   businessName: z.string().min(1).max(120),
-  amount: z.number().positive().optional(),
+  amount: z.number().positive(),
   currency: currencySchema.default('USDC'),
 });
 

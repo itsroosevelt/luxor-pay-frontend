@@ -1,3 +1,4 @@
+import { Keypair } from '@solana/web3.js';
 import { TOKEN_REGISTRY } from '@/lib/token-registry';
 
 export type SolanaNetwork = 'mainnet-beta' | 'devnet';
@@ -180,4 +181,9 @@ export function parseSolanaPayUrl(raw: string): ParsedSolanaPayUrl | null {
 export function isBackendSupportedCurrency(currency: string): boolean {
   const upper = currency.trim().toUpperCase();
   return upper === 'SOL' || upper === 'USDC';
+}
+
+/** Client-side on-chain reference pubkey for Solana Pay charge tracking. */
+export function generatePaymentReference(): string {
+  return Keypair.generate().publicKey.toBase58();
 }

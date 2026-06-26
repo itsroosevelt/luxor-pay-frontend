@@ -94,7 +94,7 @@ export default function DevelopersPage() {
           <div className="glass-panel p-4 border border-amber-500/30 text-sm text-amber-100">
             Start the backend and set Firebase Admin in{' '}
             <code className="text-primary">backend/.env</code>.
-            Payment links are created via the NestJS API from the dashboard.
+            Payment links still work via Firestore from the dashboard.
           </div>
         )}
 

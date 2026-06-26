@@ -16,6 +16,7 @@ interface ReceiveModalProps {
   subtitle?: string;
   showCreateLinkButton?: boolean;
   onAskForPayment?: () => void;
+  qrValue?: string;
 }
 
 const Overlay = styled(motion.div)`
@@ -183,13 +184,14 @@ export function ReceiveModal({
   subtitle = 'Show this QR code to accept direct payments.',
   showCreateLinkButton = true,
   onAskForPayment,
+  qrValue,
 }: ReceiveModalProps) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  const solanaPayUri = merchantWallet ? buildOpenAmountQrUrl(merchantWallet, title) : null;
+  const solanaPayUri = qrValue ?? (merchantWallet ? buildOpenAmountQrUrl(merchantWallet, title) : null);
 
   const handleCopy = () => {
     if (!merchantWallet) return;

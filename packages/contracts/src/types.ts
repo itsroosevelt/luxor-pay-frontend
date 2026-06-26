@@ -13,12 +13,11 @@ export interface PaymentLink {
   merchantId: string;
   name: string;
   businessName: string;
-  amount: number | null;
+  amount: number;
   currency: Currency;
   merchantWallet: string;
   active: boolean;
   createdAt: string;
-  email?: string;
 }
 
 export interface ApiKeyRecord {

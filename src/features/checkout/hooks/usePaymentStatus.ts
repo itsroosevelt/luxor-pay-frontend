@@ -3,13 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { PaymentOrder } from '@luxor/contracts';
 import { fetchPayment, verifyPayment } from '@/lib/payments-api';
-import { findOnChainPaymentSignature } from '@/lib/solana-pay-verification';
-
-const DEFAULT_RPC =
-  process.env.NEXT_PUBLIC_SOLANA_RPC_URL ??
-  (process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'devnet'
-    ? 'https://api.devnet.solana.com'
-    : 'https://api.mainnet-beta.solana.com');
 
 export function usePaymentStatus(reference: string | null, pollMs = 4000) {
   const [order, setOrder] = useState<PaymentOrder | null>(null);
@@ -25,21 +18,6 @@ export function usePaymentStatus(reference: string | null, pollMs = 4000) {
       if (data.status === 'pending') {
         const verified = await verifyPayment(reference);
         setOrder(verified.data);
-
-        if (!verified.confirmed) {
-          const onChain = await findOnChainPaymentSignature({
-            rpcUrl: DEFAULT_RPC,
-            reference,
-            recipient: verified.data.recipient,
-            amount: verified.data.amount,
-            currency: verified.data.currency,
-          });
-
-          if (onChain) {
-            const retry = await verifyPayment(reference);
-            setOrder(retry.data);
-          }
-        }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Error loading payment');

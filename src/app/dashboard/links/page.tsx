@@ -4,15 +4,12 @@ import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { createPaymentLink, listPaymentLinks } from '@/lib/payments-api';
-import { formatPaymentLinkAmount } from '@/lib/payment-link-utils';
-import { getMerchantProfile } from '@/lib/merchants-api';
 import type { PaymentLink, Currency } from '@luxor/contracts';
-import { Copy, Plus, ExternalLink, QrCode } from 'lucide-react';
+import { Copy, Link as LinkIcon, Plus, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { TOKEN_REGISTRY } from '@/lib/token-registry';
 import { getLuxorEnv } from '@/lib/luxor-env';
-import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 
 export default function PaymentLinksPage() {
   const router = useRouter();
@@ -21,11 +18,8 @@ export default function PaymentLinksPage() {
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [amount, setAmount] = useState('');
-  const [amountOptional, setAmountOptional] = useState(false);
   const [currency, setCurrency] = useState<string>('USDC');
   const [creating, setCreating] = useState(false);
-  const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
-  const [isOpenAmountQrOpen, setIsOpenAmountQrOpen] = useState(false);
 
   const env = getLuxorEnv();
   const isDev = env === 'development';
@@ -37,12 +31,6 @@ export default function PaymentLinksPage() {
         const token = await user.getIdToken();
         const data = await listPaymentLinks(token);
         setLinks(data);
-
-        const profile = await getMerchantProfile(token);
-        if (profile?.businessName) {
-          setBusinessName(profile.businessName);
-        }
-        setMerchantWallet(profile?.merchantWallet ?? null);
       } catch {
         toast.error('Could not load links');
       } finally {
@@ -57,13 +45,9 @@ export default function PaymentLinksPage() {
     const user = auth.currentUser;
     if (!user) return;
 
-    const parsed = amountOptional ? null : parseFloat(amount);
-    if (!name.trim() || !businessName.trim()) {
+    const parsed = parseFloat(amount);
+    if (!name.trim() || !businessName.trim() || Number.isNaN(parsed) || parsed <= 0) {
       toast.error('Enter valid details for all fields');
-      return;
-    }
-    if (!amountOptional && (Number.isNaN(parsed!) || parsed! <= 0)) {
-      toast.error('Enter a valid amount or check Open amount');
       return;
     }
 
@@ -73,21 +57,19 @@ export default function PaymentLinksPage() {
       const link = await createPaymentLink(token, {
         name: name.trim(),
         businessName: businessName.trim(),
-        ...(parsed != null ? { amount: parsed } : {}),
+        amount: parsed,
         currency,
       });
       setLinks((prev) => [link, ...prev]);
       setName('');
       setBusinessName('');
       setAmount('');
-      setAmountOptional(false);
       toast.success('Payment link created');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Could not create link';
-      if (msg === 'MERCHANT_WALLET_REQUIRED') {
+      if (err instanceof Error && err.message === 'MERCHANT_WALLET_REQUIRED') {
         toast.error('Add your Solana wallet in Settings first');
       } else {
-        toast.error(msg);
+        toast.error('Could not create link. Check Firestore rules.');
       }
     } finally {
       setCreating(false);
@@ -103,21 +85,9 @@ export default function PaymentLinksPage() {
 
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5 bg-white/[0.01] flex flex-col md:flex-row md:justify-between md:items-end gap-4">
-        <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Payment Links</h1>
-          <p className="text-gray-400 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            Checkout URLs for your website, email, or social.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsOpenAmountQrOpen(true)}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
-          style={{ fontFamily: 'Outfit, sans-serif' }}
-        >
-          <QrCode size={18} /> Open amount QR
-        </button>
+      <header className="p-6 md:p-10 border-b border-white/5">
+        <h1 className="text-2xl font-bold mb-1">Payment Links</h1>
+        <p className="text-gray-400 text-sm">Checkout URLs for your website, email, or social.</p>
       </header>
 
       <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
@@ -138,30 +108,15 @@ export default function PaymentLinksPage() {
               placeholder="Business name"
               className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
             />
-            <div className="flex flex-col gap-2">
-              <input
-                type="number"
-                step="any"
-                min="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Amount"
-                disabled={amountOptional}
-                className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={amountOptional}
-                  onChange={(e) => {
-                    setAmountOptional(e.target.checked);
-                    if (e.target.checked) setAmount('');
-                  }}
-                  className="rounded border-white/20"
-                />
-                Open amount (payer enters amount at checkout)
-              </label>
-            </div>
+            <input
+              type="number"
+              step="any"
+              min="0"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Amount"
+              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
+            />
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
@@ -209,11 +164,16 @@ export default function PaymentLinksPage() {
                 key={link.id}
                 className="glass-panel p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
               >
-                <div>
-                  <h3 className="font-semibold">{link.name}</h3>
-                  <p className="text-sm text-gray-400">
-                    {formatPaymentLinkAmount(link)} · /pay/link/{link.id}
-                  </p>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                    <LinkIcon size={20} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">{link.name}</h3>
+                    <p className="text-sm text-gray-400">
+                      {link.amount} {link.currency} · /pay/link/{link.id}
+                    </p>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -236,15 +196,6 @@ export default function PaymentLinksPage() {
           </div>
         )}
       </div>
-
-      <ReceiveModal
-        isOpen={isOpenAmountQrOpen}
-        onClose={() => setIsOpenAmountQrOpen(false)}
-        merchantWallet={merchantWallet}
-        title="Open Amount QR"
-        subtitle="The payer scans this code and enters the amount in their wallet app."
-        showCreateLinkButton={false}
-      />
     </>
   );
 }

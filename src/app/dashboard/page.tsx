@@ -20,6 +20,7 @@ import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string | null>(null);
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -47,6 +48,7 @@ export default function DashboardOverviewPage() {
           hasWallet: Boolean(wallet),
         });
         setMerchantWallet(wallet);
+        setBusinessName(profile?.businessName?.trim() || null);
 
         if (wallet) {
           const env = getLuxorEnv();
@@ -76,7 +78,7 @@ export default function DashboardOverviewPage() {
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
-            <QrCode size={18} /> QR Pay / Charge
+            <QrCode size={18} /> Charge with QR
           </button>
           <button 
             onClick={() => setIsTransferModalOpen(true)}
@@ -198,6 +200,8 @@ export default function DashboardOverviewPage() {
         isOpen={isQrModalOpen}
         onClose={() => setIsQrModalOpen(false)}
         merchantWallet={merchantWallet}
+        recipientLabel={businessName}
+        initialMode="receive"
       />
 
     </>

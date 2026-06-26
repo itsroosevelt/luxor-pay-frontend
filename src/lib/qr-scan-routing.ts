@@ -1,10 +1,15 @@
+import {
+  buildLuxorPayCheckoutPath,
+  buildLuxorPayCheckoutPathFromSolanaPay,
+} from '@/lib/luxor-pay-checkout-url';
 import { parseSolanaPayUrl } from '@/lib/solana-pay-url';
 
 export type ScannedPaymentRoute =
   | { type: 'link'; linkId: string }
   | { type: 'reference'; reference: string }
   | { type: 'wallet'; address: string }
-  | { type: 'invalid' };
+  | { type: 'qr_direct'; url: string }
+  | { type: 'invalid'; url?: string };
 
 const BASE58_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
 
@@ -24,6 +29,19 @@ export function extractWalletAddressFromScan(raw: string): string | null {
 /** Map a scanned QR string to a Luxor Pay checkout route (or wallet-only detection). */
 export function routeScannedPaymentContent(raw: string): ScannedPaymentRoute {
   const trimmed = raw.trim();
+
+  // Si la URL escaneada contiene nuestro checkout directo (/pay/qr)
+  if (trimmed.includes('/pay/qr')) {
+    try {
+      const urlObj = trimmed.startsWith('http')
+        ? new URL(trimmed)
+        : new URL(trimmed, 'https://placeholder.local');
+      return { type: 'qr_direct', url: urlObj.pathname + urlObj.search };
+    } catch {
+      const path = trimmed.startsWith('/') ? trimmed : `/pay/qr?${trimmed}`;
+      return { type: 'qr_direct', url: path };
+    }
+  }
 
   if (trimmed.includes('/pay/link/')) {
     const parts = trimmed.split('/pay/link/');
@@ -45,15 +63,11 @@ export function routeScannedPaymentContent(raw: string): ScannedPaymentRoute {
 
   if (trimmed.startsWith('solana:')) {
     const parsed = parseSolanaPayUrl(trimmed);
-    if (parsed) {
-      const reference = parsed.references[0];
-      if (reference) {
-        return { type: 'reference', reference };
-      }
-
-      if (BASE58_ADDRESS.test(parsed.recipient)) {
-        return { type: 'wallet', address: parsed.recipient };
-      }
+    if (parsed && BASE58_ADDRESS.test(parsed.recipient)) {
+      return {
+        type: 'qr_direct',
+        url: buildLuxorPayCheckoutPathFromSolanaPay(parsed),
+      };
     }
   }
 
@@ -63,8 +77,11 @@ export function routeScannedPaymentContent(raw: string): ScannedPaymentRoute {
 
   const wallet = extractWalletAddressFromScan(trimmed);
   if (wallet) {
-    return { type: 'wallet', address: wallet };
+    return {
+      type: 'qr_direct',
+      url: buildLuxorPayCheckoutPath({ recipient: wallet }),
+    };
   }
 
-  return { type: 'invalid' };
+  return { type: 'invalid', url: trimmed };
 }

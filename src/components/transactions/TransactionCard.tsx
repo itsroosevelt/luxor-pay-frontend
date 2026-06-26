@@ -7,7 +7,7 @@ import { ArrowUpRight, ArrowDownLeft, Clock } from "lucide-react";
 import { Transfer } from "@/lib/transfers-api";
 import { getTokenSymbol } from "@/lib/token-registry";
 
-const CardWrapper = styled(motion.div)<{ $type: 'sent' | 'received'; $isFailed: boolean }>`
+const CardWrapper = styled(motion.div)<{ $type: 'sent' | 'received' }>`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(12px);
@@ -35,8 +35,7 @@ const CardWrapper = styled(motion.div)<{ $type: 'sent' | 'received'; $isFailed: 
     left: 0;
     width: 4px;
     height: 100%;
-    background: ${({ $type, $isFailed }) => 
-      $isFailed ? 'rgba(239, 68, 68, 0.4)' : 
+    background: ${({ $type }: { $type: 'sent' | 'received' }) => 
       $type === 'sent' ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)'};
   }
 `;
@@ -47,20 +46,17 @@ const LeftSection = styled.div`
   gap: 16px;
 `;
 
-const IconCircle = styled.div<{ $type: 'sent' | 'received'; $isFailed: boolean }>`
+const IconCircle = styled.div<{ $type: 'sent' | 'received' }>`
   width: 48px;
   height: 48px;
   border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${({ $type, $isFailed }) => 
-    $isFailed ? 'rgba(239, 68, 68, 0.05)' :
+  background: ${({ $type }) => 
     $type === 'sent' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)'};
-  color: ${({ $type, $isFailed }) => 
-    $isFailed ? '#EF4444' :
+  color: ${({ $type }) => 
     $type === 'sent' ? '#EF4444' : '#10B981'};
-  opacity: ${({ $isFailed }) => $isFailed ? 0.6 : 1};
 `;
 
 const DetailColumn = styled.div`
@@ -92,14 +88,11 @@ const RightSection = styled.div`
   gap: 4px;
 `;
 
-const AmountText = styled.span<{ $type: 'sent' | 'received'; $isFailed: boolean }>`
+const AmountText = styled.span<{ $type: 'sent' | 'received' }>`
   font-family: monospace;
   font-size: 18px;
   font-weight: 700;
-  color: ${({ $type, $isFailed }) => 
-    $isFailed ? 'rgba(255, 255, 255, 0.4)' : 
-    ($type === 'sent' ? '#EDEDED' : '#10B981')};
-  text-decoration: ${({ $isFailed }) => $isFailed ? 'line-through' : 'none'};
+  color: ${({ $type }) => ($type === 'sent' ? '#EDEDED' : '#10B981')};
 `;
 
 const StatusBadge = styled.span<{ $status: string }>`
@@ -131,7 +124,6 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
   const isSent = merchantWallet ? transfer.fromWallet === merchantWallet : false;
   const type = isSent ? 'sent' : 'received';
   const symbol = getTokenSymbol(transfer.mint) || transfer.symbol || 'SOL';
-  const isFailed = transfer.status === 'FAILED';
   
   // Format Date
   const dateObj = new Date(transfer.createdAt);
@@ -157,12 +149,12 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
   };
 
   return (
-    <CardWrapper $type={type} $isFailed={isFailed} onClick={onClick} {...animationProps}>
+    <CardWrapper $type={type} onClick={onClick} {...animationProps}>
       <LeftSection>
-        <IconCircle $type={type} $isFailed={isFailed}>
+        <IconCircle $type={type}>
           {type === 'sent' ? <ArrowUpRight size={24} /> : <ArrowDownLeft size={24} />}
         </IconCircle>
-        <DetailColumn style={{ opacity: isFailed ? 0.6 : 1 }}>
+        <DetailColumn>
           <NicknameText>{isSent ? `To: ${partyName}` : `From: ${partyName}`}</NicknameText>
           <DateText>
             <Clock size={12} />
@@ -171,7 +163,7 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
         </DetailColumn>
       </LeftSection>
       <RightSection>
-        <AmountText $type={type} $isFailed={isFailed}>
+        <AmountText $type={type}>
           {type === 'sent' ? '-' : '+'}{transfer.amount} {symbol}
         </AmountText>
         <StatusBadge $status={transfer.status}>{transfer.status}</StatusBadge>
