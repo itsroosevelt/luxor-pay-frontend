@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const currencySchema = z.enum(['SOL', 'USDC']);
+export const currencySchema = z.string().min(1);
 
 export const chargeRequestSchema = z.object({
   amount: z.number().positive(),
@@ -12,6 +12,7 @@ export const chargeRequestSchema = z.object({
 
 export const createPaymentLinkSchema = z.object({
   name: z.string().min(1).max(120),
+  businessName: z.string().min(1).max(120),
   amount: z.number().positive(),
   currency: currencySchema.default('USDC'),
 });

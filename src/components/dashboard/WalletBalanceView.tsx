@@ -15,16 +15,24 @@ const FontStyles = createGlobalStyle`
 
 const CardContainer = styled(motion.div)`
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(40px);
-  border-radius: 40px;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
-  padding: 24px 32px;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 0;
   position: relative;
   overflow: hidden;
+
+  @media (min-width: 768px) {
+    border-radius: 40px;
+    box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
+    padding: 24px 32px;
+    gap: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 
   &::before {
     content: '';
@@ -33,7 +41,7 @@ const CardContainer = styled(motion.div)`
     left: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.15), transparent 40%);
+    background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 40%);
     pointer-events: none;
     z-index: 0;
   }
@@ -52,36 +60,43 @@ const HeaderRow = styled.div`
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 500;
-  letter-spacing: -0.5px;
-  color: #FFFFFF;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 
   @media (min-width: 768px) {
-    font-size: 28px;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    color: #FFFFFF;
+    text-transform: none;
+    gap: 12px;
   }
 `;
 
 const IconButton = styled.button`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  border: none;
   border-radius: 9999px;
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60A5FA;
+  color: rgba(255, 255, 255, 0.4);
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: rgba(37, 99, 235, 0.2);
-    color: #FFFFFF;
+    color: #60A5FA;
+    background: rgba(96, 165, 250, 0.1);
   }
 
   &:focus-visible {
@@ -90,84 +105,138 @@ const IconButton = styled.button`
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.4;
     cursor: not-allowed;
+  }
+
+  @media (min-width: 768px) {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #60A5FA;
+    &:hover:not(:disabled) {
+      background: rgba(37, 99, 235, 0.2);
+      color: #FFFFFF;
+    }
   }
 `;
 
 const BalanceLabel = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 11px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 8px 0;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 4px 0;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
+
+  @media (min-width: 768px) {
+    font-size: 15px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 8px 0;
+    letter-spacing: 0.1em;
+  }
 `;
 
 const PrimaryBalance = styled.div`
   font-family: monospace;
-  font-size: 40px;
+  font-size: 28px;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   background: linear-gradient(to right, #60A5FA, #2563EB);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  line-height: 1;
+  line-height: 1.1;
 
   @media (min-width: 768px) {
     font-size: 48px;
+    letter-spacing: -1px;
+    line-height: 1;
   }
 `;
 
 const TokenList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 16px;
+  gap: 6px;
+  margin-top: 12px;
+
+  @media (min-width: 768px) {
+    gap: 12px;
+    margin-top: 16px;
+  }
 `;
 
 const TokenRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+
+  @media (min-width: 768px) {
+    padding: 12px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
 `;
 
 const TokenInfo = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+
+  @media (min-width: 768px) {
+    gap: 12px;
+  }
 `;
 
 const TokenIconCircle = styled.div`
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(37, 99, 235, 0.2));
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(37, 99, 235, 0.15));
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  font-size: 12px;
+  font-size: 9px;
   color: #60A5FA;
+
+  @media (min-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(37, 99, 235, 0.2));
+  }
 `;
 
 const TokenSymbol = styled.span`
   font-family: 'Outfit', sans-serif;
   font-weight: 500;
-  font-size: 16px;
-  color: #EDEDED;
+  font-size: 13px;
+  color: rgba(237, 237, 237, 0.85);
+
+  @media (min-width: 768px) {
+    font-size: 16px;
+    color: #EDEDED;
+  }
 `;
 
 const TokenAmount = styled.span`
   font-family: monospace;
-  font-size: 16px;
-  color: #FFFFFF;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+
+  @media (min-width: 768px) {
+    font-size: 16px;
+    color: #FFFFFF;
+  }
 `;
 
 const ErrorContainer = styled.div`
@@ -250,7 +319,7 @@ export function WalletBalanceView({
         <ContentWrapper>
           <HeaderRow>
             <Title>
-              <Coins size={28} className="text-blue-400" />
+              <Coins size={14} className="text-blue-400" style={{ opacity: 0.7 }} />
               Wallet Balance
             </Title>
             <ControlsContainer>
@@ -273,10 +342,10 @@ export function WalletBalanceView({
             </ControlsContainer>
           </HeaderRow>
 
-          <div style={{ marginTop: '32px' }}>
+          <div style={{ marginTop: '14px' }}>
             <BalanceLabel>Total Solana</BalanceLabel>
             {isLoading ? (
-              <SkeletonBox $width="200px" $height="48px" $borderRadius="12px" />
+              <SkeletonBox $width="160px" $height="32px" $borderRadius="8px" />
             ) : isError ? (
               <ErrorContainer>
                 <AlertCircle size={20} />
@@ -311,9 +380,9 @@ export function WalletBalanceView({
 
           {isLoading && (
             <TokenList>
-              <BalanceLabel style={{ marginTop: '16px' }}>Tokens</BalanceLabel>
-              <SkeletonBox $height="56px" $borderRadius="16px" />
-              <SkeletonBox $height="56px" $borderRadius="16px" />
+              <BalanceLabel style={{ marginTop: '8px' }}>Tokens</BalanceLabel>
+              <SkeletonBox $height="36px" $borderRadius="10px" />
+              <SkeletonBox $height="36px" $borderRadius="10px" />
             </TokenList>
           )}
         </ContentWrapper>

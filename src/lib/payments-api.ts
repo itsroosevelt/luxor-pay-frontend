@@ -52,7 +52,14 @@ export async function listPaymentLinks(token: string): Promise<any[]> {
   return json.data as any[];
 }
 
-export async function createPaymentLink(token: string, data: { name: string, amount: number, currency: string }): Promise<any> {
+export async function getPaymentLink(id: string): Promise<any> {
+  const res = await fetch(apiUrl(`/payment-links/${id}`));
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message ?? 'Failed to load link');
+  return json.data as any;
+}
+
+export async function createPaymentLink(token: string, data: { name: string, businessName: string, amount: number, currency: string }): Promise<any> {
   const res = await fetch(apiUrl('/payment-links'), {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -81,4 +88,15 @@ export async function createPosDevice(token: string, data: { name: string, posId
   const json = await res.json();
   if (!res.ok) throw new Error(json.message ?? 'Failed to register device');
   return json.data as any;
+}
+
+export async function sendTransfer(token: string, payload: { toWallet: string, amount: string, mint?: string, reference?: string }): Promise<any> {
+  const res = await fetch(apiUrl('/transfers/send'), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message ?? json.error ?? 'Failed to send transfer');
+  return json;
 }
