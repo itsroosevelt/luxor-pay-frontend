@@ -35,6 +35,9 @@ import {
   FileText,
   CalendarDays,
   Pencil,
+  Mail,
+  Smartphone,
+  BellRing,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -715,6 +718,280 @@ function UpdateModal({
   );
 }
 
+// ─── Resend Notification Modal ──────────────────────────────────────────────
+
+function ResendModal({
+  request,
+  onClose,
+  onSuccess,
+}: {
+  request: PaymentRequest;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [step, setStep] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const existingTarget = request.targetNotification || '';
+  const isExistingEmail = existingTarget.includes('@');
+
+  const [type, setType] = useState<PaymentRequest['targetNotificationType']>(
+    request.targetNotificationType !== 'NONE' ? request.targetNotificationType : 'EMAIL'
+  );
+  
+  const [emailTarget, setEmailTarget] = useState(isExistingEmail ? existingTarget : '');
+  
+  // Simple hack to parse existing phone
+  const defaultPrefix = (!isExistingEmail && existingTarget.match(/^(\+\d{1,3})/)?.[1]) || '+1';
+  const defaultPhone = (!isExistingEmail ? existingTarget.replace(/^(\+\d{1,3})/, '').trim() : '');
+  
+  const [phonePrefix, setPhonePrefix] = useState(defaultPrefix);
+  const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
+
+  const handleResend = async () => {
+    let finalTarget = '';
+    if (type === 'EMAIL') {
+      finalTarget = emailTarget.trim();
+      if (!finalTarget) {
+        setErrorMsg('Email address is required.');
+        setStep('error');
+        return;
+      }
+    } else if (type === 'PHONE') {
+      const num = phoneNumber.trim();
+      if (!num) {
+        setErrorMsg('Phone number is required.');
+        setStep('error');
+        return;
+      }
+      finalTarget = phonePrefix + num;
+    }
+
+    setStep('loading');
+    try {
+      const user = auth.currentUser;
+      if (!user) throw new Error('Not authenticated');
+      const token = await user.getIdToken();
+      await resendPaymentRequestNotification(token, request.id, {
+        targetNotificationType: type,
+        targetNotification: type === 'PUSH' ? undefined : finalTarget,
+      });
+      setStep('done');
+      toast.success('Notification resent successfully');
+      setTimeout(() => { onSuccess(); onClose(); }, 1600);
+    } catch (e: any) {
+      setErrorMsg(e.message || 'Failed to resend notification');
+      setStep('error');
+    }
+  };
+
+  const isBusy = step === 'loading';
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="resend-backdrop"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={isBusy ? undefined : onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 999,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '16px',
+        }}
+      >
+        <motion.div
+          key="resend-modal"
+          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 20, scale: 0.98 }}
+          transition={{ type: 'spring', bounce: 0.35, duration: 0.5 }}
+          onClick={e => e.stopPropagation()}
+          style={{
+            background: 'rgba(10,10,10,0.97)',
+            border: '1px solid rgba(255,255,255,0.12)',
+            borderRadius: '28px',
+            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(96,165,250,0.06)',
+            width: '100%',
+            maxWidth: '420px',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <div style={{
+            padding: '24px 28px 18px',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            background: 'linear-gradient(135deg, rgba(37,99,235,0.07) 0%, transparent 60%)',
+          }}>
+            <div>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#60A5FA', margin: '0 0 4px 0' }}>
+                Resend Request
+              </p>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                Configure Notification
+              </p>
+            </div>
+            {!isBusy && (
+              <button onClick={onClose} style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '9999px', width: '32px', height: '32px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+              }}>
+                <X size={15} />
+              </button>
+            )}
+          </div>
+
+          {/* Body */}
+          <div style={{ padding: '20px 28px 24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            
+            {/* Error */}
+            {step === 'error' && (
+              <div style={{
+                padding: '12px 16px', borderRadius: '12px',
+                background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)',
+                fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: '#FCA5A5',
+                display: 'flex', alignItems: 'flex-start', gap: '8px',
+              }}>
+                <XCircle size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                {errorMsg}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {(['EMAIL', 'PHONE', 'PUSH'] as const).map(t => {
+                const isActive = type === t;
+                const Icon = t === 'EMAIL' ? Mail : (t === 'PHONE' ? Smartphone : BellRing);
+                return (
+                  <button
+                    key={t}
+                    onClick={() => { setType(t); setErrorMsg(''); }}
+                    disabled={isBusy}
+                    style={{
+                      flex: 1, padding: '12px 0',
+                      borderRadius: '12px', border: '1px solid',
+                      borderColor: isActive ? '#60A5FA' : 'rgba(255,255,255,0.1)',
+                      background: isActive ? 'rgba(96,165,250,0.1)' : 'rgba(255,255,255,0.02)',
+                      color: isActive ? '#60A5FA' : 'rgba(255,255,255,0.5)',
+                      fontFamily: 'Outfit, sans-serif', fontSize: '13px', fontWeight: 500,
+                      cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <Icon size={16} />
+                    {t === 'EMAIL' ? 'Email' : t === 'PHONE' ? 'Phone SMS' : 'Push Notif'}
+                  </button>
+                )
+              })}
+            </div>
+
+            {type === 'EMAIL' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={emailTarget}
+                  onChange={e => setEmailTarget(e.target.value)}
+                  placeholder="payer@example.com"
+                  disabled={isBusy}
+                  style={{
+                    width: '100%', padding: '12px 14px',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    borderRadius: '12px',
+                    color: '#FFFFFF',
+                    fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                    outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+              </div>
+            )}
+
+            {type === 'PHONE' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                  Phone Number
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <select
+                    value={phonePrefix}
+                    onChange={e => setPhonePrefix(e.target.value)}
+                    disabled={isBusy}
+                    style={{
+                      padding: '12px',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '12px',
+                      color: '#FFFFFF',
+                      fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                      outline: 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+54">🇦🇷 +54</option>
+                    <option value="+57">🇨🇴 +57</option>
+                    <option value="+55">🇧🇷 +55</option>
+                    <option value="+56">🇨🇱 +56</option>
+                    <option value="+51">🇵🇪 +51</option>
+                  </select>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    placeholder="1234567890"
+                    disabled={isBusy}
+                    style={{
+                      flex: 1, padding: '12px 14px',
+                      background: 'rgba(255,255,255,0.04)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      borderRadius: '12px',
+                      color: '#FFFFFF',
+                      fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                      outline: 'none', boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleResend}
+              disabled={isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())}
+              style={{
+                width: '100%', padding: '14px',
+                borderRadius: '9999px', border: 'none',
+                background: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 'rgba(37,99,235,0.4)' : 'linear-gradient(135deg,#2563EB,#3B82F6)',
+                color: '#FFFFFF',
+                fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
+                cursor: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                opacity: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 0.6 : 1,
+                transition: 'all 0.2s', marginTop: '4px',
+              }}
+            >
+              {isBusy
+                ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Sending…</>
+                : <><Bell size={16} /> Send Notification</>
+              }
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 // ─── Request Card ─────────────────────────────────────────────────────────────
 
 interface RequestCardProps {
@@ -724,27 +1001,15 @@ interface RequestCardProps {
   onRefetch: () => void;
   onPay?: (req: PaymentRequest) => void;
   onUpdate?: (req: PaymentRequest) => void;
+  onResend?: (req: PaymentRequest) => void;
 }
 
-function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate }: RequestCardProps) {
+function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate, onResend }: RequestCardProps) {
   const [isActing, setIsActing] = useState(false);
 
-  const handleResend = async () => {
-    setIsActing(true);
-    try {
-      const user = auth.currentUser;
-      if (!user) throw new Error('Not authenticated');
-      const token = await user.getIdToken();
-      await resendPaymentRequestNotification(token, request.id);
-      toast.success('Notification resent successfully');
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to resend notification');
-    } finally {
-      setIsActing(false);
-    }
-  };
-
   const isPending = request.status === 'PENDING';
+  const isExpired = request.status === 'EXPIRED';
+  const showActions = isPending || (isExpired && perspective === 'requester');
   const formattedAmount = formatAmount(request.amount, request.assetMint, network);
   const expDate = formatDate(request.expirationDate);
   const createdDate = formatDate(request.createdAt);
@@ -827,18 +1092,20 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
       </div>
 
       {/* Actions */}
-      {isPending && (
+      {showActions && (
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '14px' }}>
           {perspective === 'requester' && (
             <>
-              <ActionButton
-                onClick={handleResend}
-                disabled={isActing}
-                icon={<Bell size={13} />}
-                variant="ghost"
-              >
-                Resend Notification
-              </ActionButton>
+              {isPending && (
+                <ActionButton
+                  onClick={() => onResend?.(request)}
+                  disabled={isActing}
+                  icon={<Bell size={13} />}
+                  variant="ghost"
+                >
+                  Resend Notification
+                </ActionButton>
+              )}
               <ActionButton
                 onClick={() => onUpdate?.(request)}
                 disabled={isActing}
@@ -849,7 +1116,7 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
               </ActionButton>
             </>
           )}
-          {perspective === 'payer' && (
+          {perspective === 'payer' && isPending && (
             <ActionButton
               onClick={() => onPay?.(request)}
               disabled={isActing}
@@ -925,6 +1192,7 @@ function RequestsPanel({
   const { data, isLoading, isError, errorMessage, refetch } = useGetPaymentRequests(perspective, walletAddress);
   const [payingRequest, setPayingRequest] = useState<PaymentRequest | null>(null);
   const [updatingRequest, setUpdatingRequest] = useState<PaymentRequest | null>(null);
+  const [resendingRequest, setResendingRequest] = useState<PaymentRequest | null>(null);
 
   if (!walletAddress) {
     return (
@@ -989,6 +1257,13 @@ function RequestsPanel({
           onSuccess={refetch}
         />
       )}
+      {resendingRequest && (
+        <ResendModal
+          request={resendingRequest}
+          onClose={() => setResendingRequest(null)}
+          onSuccess={refetch}
+        />
+      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {data.map(req => (
           <RequestCard
@@ -999,6 +1274,7 @@ function RequestsPanel({
             onRefetch={refetch}
             onPay={setPayingRequest}
             onUpdate={setUpdatingRequest}
+            onResend={setResendingRequest}
           />
         ))}
       </div>

@@ -87,17 +87,23 @@ export async function listPaymentRequests(
 
   return response.json();
 }
+export interface ResendNotificationPayload {
+  targetNotificationType: NotificationType;
+  targetNotification?: string;
+}
 
 export async function resendPaymentRequestNotification(
   token: string,
   id: string,
+  payload?: ResendNotificationPayload,
 ): Promise<{ success: boolean }> {
-  const response = await fetch(apiUrl(`/payment-requests/${id}/notify`), {
+  const response = await fetch(apiUrl(`/payment-requests/${id}/resend`), {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
     },
+    body: payload ? JSON.stringify(payload) : undefined,
   });
 
   if (!response.ok) {
@@ -107,7 +113,6 @@ export async function resendPaymentRequestNotification(
 
   return response.json();
 }
-
 export type UpdatePaymentRequestAction = 'CANCEL' | 'EXTEND';
 
 export interface UpdatePaymentRequestPayload {
