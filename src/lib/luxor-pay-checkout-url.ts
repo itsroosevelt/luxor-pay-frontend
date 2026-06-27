@@ -18,6 +18,7 @@ export interface LuxorPayCheckoutParams {
   invoiceRef?: string;
   expiry?: string;
   usdAmount?: string;
+  message?: string;
 }
 
 export interface ParsedLuxorPayCheckoutParams extends LuxorPayCheckoutParams {
@@ -34,6 +35,7 @@ export function buildLuxorPayCheckoutPath({
   invoiceRef,
   expiry,
   usdAmount,
+  message,
 }: LuxorPayCheckoutParams): string {
   const params = new URLSearchParams();
   params.set('recipient', recipient);
@@ -61,6 +63,10 @@ export function buildLuxorPayCheckoutPath({
 
   if (usdAmount) {
     params.set('usdAmount', usdAmount);
+  }
+
+  if (message) {
+    params.set('message', message);
   }
 
   return `/pay/qr?${params.toString()}`;
@@ -110,6 +116,7 @@ export function parseLuxorPayCheckoutParams(
     invoiceRef: params.get('invoiceRef') ?? undefined,
     expiry: params.get('expiry') ?? undefined,
     usdAmount: params.get('usdAmount') ?? undefined,
+    message: params.get('message') ?? undefined,
   };
 }
 
@@ -126,5 +133,6 @@ export function buildLuxorPayCheckoutPathFromSolanaPay(parsed: ParsedSolanaPayUr
     currency,
     label: parsed.label,
     chargeRef: parsed.references[0],
+    message: parsed.message ?? parsed.memo,
   });
 }

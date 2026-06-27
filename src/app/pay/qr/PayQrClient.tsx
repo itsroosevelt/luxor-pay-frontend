@@ -392,6 +392,7 @@ export default function PayQrClient() {
   const invoiceRef = searchParams.get('invoiceRef') ?? '';
   const expiryParam = searchParams.get('expiry') ?? '';
   const usdAmountParam = searchParams.get('usdAmount');
+  const message = searchParams.get('message') ?? '';
 
   const hasFixedAmount = Boolean(fixedAmount);
 
@@ -404,6 +405,19 @@ export default function PayQrClient() {
   const [contactNickname, setContactNickname] = useState<string | null>(null);
   const [recipientBusinessName, setRecipientBusinessName] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [paymentDate, setPaymentDate] = useState('');
+
+  useEffect(() => {
+    setPaymentDate(
+      new Date().toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    );
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -788,6 +802,22 @@ export default function PayQrClient() {
                     <InfoLabel>Invoice / Ref</InfoLabel>
                     <InfoValue title={invoiceRef}>
                       {invoiceRef}
+                    </InfoValue>
+                  </InfoRow>
+                )}
+
+                {paymentDate && (
+                  <InfoRow>
+                    <InfoLabel>Date</InfoLabel>
+                    <InfoValue>{paymentDate}</InfoValue>
+                  </InfoRow>
+                )}
+
+                {message && (
+                  <InfoRow>
+                    <InfoLabel>Description</InfoLabel>
+                    <InfoValue title={message}>
+                      {message}
                     </InfoValue>
                   </InfoRow>
                 )}

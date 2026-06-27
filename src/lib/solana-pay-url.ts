@@ -160,7 +160,7 @@ export function parseSolanaPayUrl(raw: string): ParsedSolanaPayUrl | null {
   }
 
   try {
-    const urlObj = new URL(trimmed.replace('solana:', 'http://'));
+    const urlObj = new URL(trimmed.replace('solana:', 'http://localhost/'));
     const recipient = urlObj.pathname.replace(/^\//, '');
     if (!recipient) return null;
 

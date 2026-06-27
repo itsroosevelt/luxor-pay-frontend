@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { sendTransfer, getPaymentLink } from '@/lib/payments-api';
+import { sendTransfer, getPaymentLink, createPaymentFromLink } from '@/lib/payments-api';
 import { TOKEN_REGISTRY } from '@/lib/token-registry';
 import { PaymentLink } from '@luxor/contracts';
 import styled from 'styled-components';
@@ -190,11 +190,16 @@ export default function PayLinkPage() {
 
   useEffect(() => {
     if (!id) return;
-    getPaymentLink(id)
-      .then(setLink)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Link not found'))
-      .finally(() => setLoading(false));
-  }, [id]);
+    setLoading(true);
+    createPaymentFromLink(id)
+      .then((order) => {
+        router.replace(`/pay/${order.reference}`);
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : 'Failed to initialize payment');
+        setLoading(false);
+      });
+  }, [id, router]);
 
   const handlePay = async () => {
     if (!user) {

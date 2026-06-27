@@ -565,6 +565,17 @@ const FieldGroup = styled.div`
   gap: 8px;
 `;
 
+const InfoField = styled.div<{ $mono?: boolean }>`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 14px 18px;
+  color: rgba(255, 255, 255, 0.9);
+  font-family: ${({ $mono }) => ($mono ? 'monospace' : "'Outfit', sans-serif")};
+  font-size: ${({ $mono }) => ($mono ? '13px' : '15px')};
+  word-break: break-all;
+`;
+
 const ContactSelect = styled.select`
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -610,7 +621,7 @@ export function QrOperationsModal({
   const router = useRouter();
   const [mode, setMode] = useState<'select' | 'receive' | 'scan'>('select');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState('USDT');
+  const [currency, setCurrency] = useState('USDC');
   const [chargeNote, setChargeNote] = useState('');
   const [linkCopied, setLinkCopied] = useState(false);
   const [addressCopied, setAddressCopied] = useState(false);
@@ -618,8 +629,6 @@ export function QrOperationsModal({
   const [origin, setOrigin] = useState(() =>
     typeof window !== 'undefined' ? window.location.origin : '',
   );
-  const [customLabel, setCustomLabel] = useState('');
-  const [invoiceRef, setInvoiceRef] = useState('');
   const [expiryDuration, setExpiryDuration] = useState('never');
 
   useEffect(() => {
@@ -632,13 +641,11 @@ export function QrOperationsModal({
     if (isOpen) {
       setMode(initialMode);
       setAmount('');
-      setCurrency('USDT');
+      setCurrency('USDC');
       setChargeNote('');
       setLinkCopied(false);
       setAddressCopied(false);
       setQrType('link');
-      setCustomLabel('');
-      setInvoiceRef('');
       setExpiryDuration('never');
     }
   }, [isOpen, initialMode]);
@@ -646,8 +653,8 @@ export function QrOperationsModal({
   const recipientWallet = merchantWallet?.trim() || null;
 
   const checkoutLabel = useMemo(() => {
-    return chargeNote.trim() || recipientLabel?.trim() || undefined;
-  }, [chargeNote, recipientLabel]);
+    return recipientLabel?.trim() || undefined;
+  }, [recipientLabel]);
 
   const exitScanMode = () => {
     if (initialMode === 'scan') {
@@ -699,7 +706,7 @@ export function QrOperationsModal({
 
     const baseParams: any = {
       recipient: recipientWallet,
-      label: customLabel.trim() || checkoutLabel,
+      label: checkoutLabel,
     };
 
     if (tokenAmount && parseFloat(tokenAmount) > 0) {
@@ -709,16 +716,16 @@ export function QrOperationsModal({
       baseParams.usdAmount = amount;
     }
 
-    if (invoiceRef.trim()) {
-      baseParams.invoiceRef = invoiceRef.trim();
-    }
-
     if (expiryTimestamp) {
       baseParams.expiry = expiryTimestamp.toString();
     }
 
+    if (chargeNote.trim()) {
+      baseParams.message = chargeNote.trim();
+    }
+
     return baseParams;
-  }, [recipientWallet, customLabel, checkoutLabel, tokenAmount, currency, chargeRef, invoiceRef, expiryTimestamp, amount]);
+  }, [recipientWallet, checkoutLabel, tokenAmount, currency, chargeRef, expiryTimestamp, amount, chargeNote]);
 
   const receiveCheckoutPath = useMemo(() => {
     if (!receiveCheckoutParams) return null;
@@ -738,7 +745,7 @@ export function QrOperationsModal({
         recipient: recipientWallet,
         amount: tokenAmount || undefined,
         splToken: mint,
-        label: customLabel.trim() || checkoutLabel,
+        label: checkoutLabel,
         message: chargeNote.trim() || undefined,
         reference: chargeRef || undefined,
       });
@@ -746,7 +753,7 @@ export function QrOperationsModal({
       console.error('Error encoding solana pay url:', e);
       return recipientWallet;
     }
-  }, [recipientWallet, tokenAmount, currency, customLabel, checkoutLabel, chargeNote, chargeRef]);
+  }, [recipientWallet, tokenAmount, currency, checkoutLabel, chargeNote, chargeRef]);
 
   if (!isOpen) return null;
 
@@ -968,6 +975,20 @@ export function QrOperationsModal({
 
               <ReceiveConfigSection>
                 <ConfigFields>
+                  {recipientLabel && (
+                    <FieldGroup>
+                      <FieldLabel>Business Name</FieldLabel>
+                      <InfoField>{recipientLabel}</InfoField>
+                    </FieldGroup>
+                  )}
+
+                  {recipientWallet && (
+                    <FieldGroup>
+                      <FieldLabel>Receiving Wallet Address</FieldLabel>
+                      <InfoField $mono>{recipientWallet}</InfoField>
+                    </FieldGroup>
+                  )}
+
                   <FieldGroup>
                     <FieldLabel>Amount in USD (optional)</FieldLabel>
                     <TextInput
@@ -1000,7 +1021,6 @@ export function QrOperationsModal({
                         onChange={(e) => setCurrency(e.target.value)}
                         aria-label="Currency"
                       >
-                        <option value="USDT">USDT</option>
                         <option value="USDC">USDC</option>
                         <option value="SOL">SOL</option>
                         <option value="LXR">LXR</option>
@@ -1017,30 +1037,6 @@ export function QrOperationsModal({
                       onChange={(e) => setChargeNote(e.target.value)}
                       maxLength={120}
                       aria-label="Charge description"
-                    />
-                  </FieldGroup>
-
-                  <FieldGroup>
-                    <FieldLabel>Payee Name / Store Label (optional)</FieldLabel>
-                    <TextInput
-                      type="text"
-                      placeholder="e.g. Cashier Till #1"
-                      value={customLabel}
-                      onChange={(e) => setCustomLabel(e.target.value)}
-                      maxLength={80}
-                      aria-label="Payee Name / Store Label"
-                    />
-                  </FieldGroup>
-
-                  <FieldGroup>
-                    <FieldLabel>Invoice / Reference # (optional)</FieldLabel>
-                    <TextInput
-                      type="text"
-                      placeholder="e.g. INV-2026-001"
-                      value={invoiceRef}
-                      onChange={(e) => setInvoiceRef(e.target.value)}
-                      maxLength={50}
-                      aria-label="Invoice / Reference Number"
                     />
                   </FieldGroup>
 
