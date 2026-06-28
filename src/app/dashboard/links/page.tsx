@@ -1,15 +1,378 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { createPaymentLink, listPaymentLinks } from '@/lib/payments-api';
-import type { PaymentLink, Currency } from '@luxor/contracts';
-import { Copy, Link as LinkIcon, Plus, ExternalLink } from 'lucide-react';
+import type { PaymentLink } from '@luxor/contracts';
+import { Copy, Link as LinkIcon, Plus, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { TOKEN_REGISTRY } from '@/lib/token-registry';
 import { getLuxorEnv } from '@/lib/luxor-env';
+import styled from 'styled-components';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// --- Styled Components ---
+
+const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+`;
+
+const Header = styled.header`
+  padding: 32px 40px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.01);
+
+  @media (max-width: 768px) {
+    padding: 24px;
+  }
+`;
+
+const Title = styled.h1`
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0 0 8px 0;
+  letter-spacing: -1px;
+`;
+
+const Subtitle = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+`;
+
+const ContentLayout = styled.div`
+  padding: 40px;
+  max-width: 1024px;
+  margin: 0 auto;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    gap: 24px;
+  }
+`;
+
+const GlassCard = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(40px);
+  border-radius: 32px;
+  padding: 32px;
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.4);
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    border-radius: 24px;
+  }
+`;
+
+const FormHeader = styled.h2`
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 24px 0;
+
+  svg {
+    color: #60A5FA;
+  }
+`;
+
+const InputGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const Label = styled.label`
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+`;
+
+const Input = styled.input`
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 18px;
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #60A5FA;
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.2);
+  }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
+`;
+
+const Select = styled.select`
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 18px;
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+
+  &:focus {
+    outline: none;
+    border-color: #60A5FA;
+  }
+
+  option, optgroup {
+    background: #0A0A0A;
+    color: #FFFFFF;
+  }
+`;
+
+const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 14px 28px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
+
+  ${({ $variant = 'primary' }) =>
+    $variant === 'primary' &&
+    `
+    background: #FFFFFF;
+    color: #000000;
+    &:hover:not(:disabled) {
+      background: #2563EB;
+      color: #FFFFFF;
+      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+    }
+  `}
+
+  ${({ $variant }) =>
+    $variant === 'secondary' &&
+    `
+    background: rgba(255, 255, 255, 0.05);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  `}
+`;
+
+const LinksList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const LinkItem = styled(motion.div)`
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+`;
+
+const LinkInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  width: 100%;
+`;
+
+const IconWrapper = styled.div`
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(96, 165, 250, 0.1);
+  color: #60A5FA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+`;
+
+const TextContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+`;
+
+const LinkName = styled.h3`
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: #FFFFFF;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const LinkDetails = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  strong {
+    font-weight: 600;
+    color: #60A5FA;
+  }
+`;
+
+const ActionsGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+
+  @media (max-width: 640px) {
+    width: 100%;
+    
+    button {
+      flex: 1;
+    }
+  }
+`;
+
+const UrlSection = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+`;
+
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 64px 24px;
+  border: 1px dashed rgba(255, 255, 255, 0.1);
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.01);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  p {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 15px;
+    font-weight: 300;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0;
+  }
+`;
+
+const LoadingState = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 15px;
+  
+  svg {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    100% { transform: rotate(360deg); }
+  }
+`;
+
+// --- Component ---
 
 export default function PaymentLinksPage() {
   const router = useRouter();
@@ -20,6 +383,7 @@ export default function PaymentLinksPage() {
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<string>('USDC');
   const [creating, setCreating] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const env = getLuxorEnv();
   const isDev = env === 'development';
@@ -64,6 +428,7 @@ export default function PaymentLinksPage() {
       setName('');
       setBusinessName('');
       setAmount('');
+      setIsFormOpen(false);
       toast.success('Payment link created');
     } catch (err) {
       if (err instanceof Error && err.message === 'MERCHANT_WALLET_REQUIRED') {
@@ -84,118 +449,162 @@ export default function PaymentLinksPage() {
   };
 
   return (
-    <>
-      <header className="p-6 md:p-10 border-b border-white/5">
-        <h1 className="text-2xl font-bold mb-1">Payment Links</h1>
-        <p className="text-gray-400 text-sm">Checkout URLs for your website, email, or social.</p>
-      </header>
-
-      <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
-        <form onSubmit={handleCreate} className="glass-panel p-6 space-y-4">
-          <h2 className="font-semibold flex items-center gap-2">
-            <Plus size={18} className="text-primary" /> New link
-          </h2>
-          <div className="grid md:grid-cols-4 gap-3">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Product or service name"
-              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
-            />
-            <input
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              placeholder="Business name"
-              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
-            />
-            <input
-              type="number"
-              step="any"
-              min="0"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Amount"
-              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
-            />
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
-            >
-              <option value="SOL">Solana (SOL)</option>
-              {isDev ? (
-                <optgroup label="Devnet Tokens">
-                  {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
-                    <option key={symbol} value={symbol}>
-                      {symbol}
-                    </option>
-                  ))}
-                </optgroup>
-              ) : (
-                <optgroup label="Mainnet Beta Tokens">
-                  {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
-                    <option key={symbol} value={symbol}>
-                      {symbol}
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
+    <PageContainer>
+      <Header>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <Title>Payment Links</Title>
+            <Subtitle>Checkout URLs for your website, email, or social.</Subtitle>
           </div>
-          <button
-            type="submit"
-            disabled={creating}
-            className="px-5 py-2.5 bg-white text-black font-semibold text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50"
-          >
-            {creating ? 'Creating…' : 'Create link'}
-          </button>
-        </form>
+          {!isFormOpen && (
+            <Button $variant="primary" onClick={() => setIsFormOpen(true)}>
+              <Plus size={16} /> Create Link
+            </Button>
+          )}
+        </div>
+      </Header>
+
+      <ContentLayout>
+        <AnimatePresence>
+          {isFormOpen && (
+            <GlassCard
+              initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+              animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+              exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+              transition={{ duration: 0.3 }}
+            >
+              <form onSubmit={handleCreate}>
+            <FormHeader>
+              <Plus size={24} /> New Link
+            </FormHeader>
+            <InputGrid>
+              <InputGroup>
+                <Label>Product or Service Name</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Premium Subscription"
+                  required
+                />
+              </InputGroup>
+              <InputGroup>
+                <Label>Business Name</Label>
+                <Input
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="e.g. Acme Corp"
+                  required
+                />
+              </InputGroup>
+              <InputGroup>
+                <Label>Amount</Label>
+                <Input
+                  type="number"
+                  step="any"
+                  min="0.000001"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  required
+                />
+              </InputGroup>
+              <InputGroup>
+                <Label>Currency</Label>
+                <Select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                >
+                  <option value="SOL">Solana (SOL)</option>
+                  <option value="USDC">USDC</option>
+                  <option value="USDT">USDT</option>
+                  <option value="EURC">EURC</option>
+                  {isDev ? (
+                    <optgroup label="Devnet Tokens">
+                      {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
+                        <option key={symbol} value={symbol}>
+                          {symbol}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    <optgroup label="Mainnet Beta Tokens">
+                      {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
+                        <option key={symbol} value={symbol}>
+                          {symbol}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </Select>
+              </InputGroup>
+            </InputGrid>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <Button type="button" $variant="secondary" onClick={() => setIsFormOpen(false)} disabled={creating}>
+                Cancel
+              </Button>
+              <Button type="submit" $variant="primary" disabled={creating}>
+                {creating ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" /> Creating...
+                  </>
+                ) : (
+                  <>
+                    <Plus size={18} /> Create Link
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </GlassCard>
+          )}
+        </AnimatePresence>
 
         {loading ? (
-          <p className="text-gray-500 text-sm">Loading links…</p>
+          <LoadingState>
+            <Loader2 size={24} /> Loading links...
+          </LoadingState>
         ) : links.length === 0 ? (
-          <p className="text-center py-12 text-gray-500 border border-dashed border-white/10 rounded-2xl">
-            No links yet. Create your first payment link above.
-          </p>
+          <EmptyState>
+            <LinkIcon size={32} color="rgba(255, 255, 255, 0.2)" />
+            <p>No links yet. Create your first payment link above.</p>
+          </EmptyState>
         ) : (
-          <div className="grid gap-4">
-            {links.map((link) => (
-              <div
+          <LinksList>
+            {links.map((link, index) => (
+              <LinkItem
                 key={link.id}
-                className="glass-panel p-5 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <LinkIcon size={20} />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">{link.name}</h3>
-                    <p className="text-sm text-gray-400">
-                      {link.amount} {link.currency} · /pay/link/{link.id}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => copyUrl(link.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm"
-                  >
+                <LinkInfo>
+                  <IconWrapper>
+                    <LinkIcon size={24} />
+                  </IconWrapper>
+                  <TextContent>
+                    <LinkName>{link.name}</LinkName>
+                    <LinkDetails>
+                      <strong>{link.amount} {link.currency}</strong>
+                      <UrlSection>
+                        <span style={{ color: 'rgba(255, 255, 255, 0.2)' }}>•</span>
+                        <span>/pay/link/{link.id}</span>
+                      </UrlSection>
+                    </LinkDetails>
+                  </TextContent>
+                </LinkInfo>
+                <ActionsGroup>
+                  <Button type="button" $variant="secondary" onClick={() => copyUrl(link.id)}>
                     <Copy size={16} /> Copy
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push(`/dashboard/links/preview/${link.id}`)}
-                    className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-sm border border-white/10"
-                  >
+                  </Button>
+                  <Button type="button" $variant="secondary" onClick={() => router.push(`/dashboard/links/preview/${link.id}`)}>
                     <ExternalLink size={16} /> Preview
-                  </button>
-                </div>
-              </div>
+                  </Button>
+                </ActionsGroup>
+              </LinkItem>
             ))}
-          </div>
+          </LinksList>
         )}
-      </div>
-    </>
+      </ContentLayout>
+    </PageContainer>
   );
 }

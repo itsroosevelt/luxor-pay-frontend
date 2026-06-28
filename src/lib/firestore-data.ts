@@ -60,7 +60,10 @@ export async function listPaymentLinks(merchantId: string): Promise<PaymentLink[
     orderBy('createdAt', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PaymentLink, 'id'>) }));
+  return snap.docs.map((d: { id: string; data: () => DocumentData }) => ({
+    id: d.id,
+    ...(d.data() as Omit<PaymentLink, 'id'>),
+  }));
 }
 
 export async function createPaymentLink(
@@ -75,7 +78,7 @@ export async function createPaymentLink(
 
   const id = generateId('lx_');
   const createdAt = new Date().toISOString();
-  const link: PaymentLink = {
+  const link = {
     id,
     merchantId,
     name: input.name,
@@ -84,7 +87,7 @@ export async function createPaymentLink(
     merchantWallet: profile.merchantWallet,
     active: true,
     createdAt,
-  };
+  } as PaymentLink;
   await setDoc(doc(firestore, 'paymentLinks', id), link);
   return link;
 }
@@ -106,7 +109,10 @@ export async function listPosDevices(merchantId: string): Promise<PosDevice[]> {
     orderBy('createdAt', 'desc')
   );
   const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PosDevice, 'id'>) }));
+  return snap.docs.map((d: { id: string; data: () => DocumentData }) => ({
+    id: d.id,
+    ...(d.data() as Omit<PosDevice, 'id'>),
+  }));
 }
 
 export async function createPosDevice(

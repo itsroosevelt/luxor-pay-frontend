@@ -10,7 +10,7 @@ import { useCreatePaymentRequest } from '@/hooks/useCreatePaymentRequest';
 import { NotificationType } from '@/lib/payment-requests-api';
 import { Contact } from '@/lib/contacts-api';
 import { toast } from 'sonner';
-import { CheckCircle, Copy, Send, X } from 'lucide-react';
+import { CheckCircle, Send, X, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface PaymentRequestModalProps {
   isOpen: boolean;
@@ -22,7 +22,10 @@ interface PaymentRequestModalProps {
 
 const Overlay = styled(motion.div)`
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
   z-index: 100;
@@ -30,51 +33,53 @@ const Overlay = styled(motion.div)`
   align-items: center;
   justify-content: center;
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
 `;
 
-const ModalContent = styled(motion.div)`
-  background: rgba(10, 10, 10, 0.97);
+const ModalContent = styled(motion.div)<{ $wide?: boolean }>`
+  background: rgba(10, 10, 10, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 32px 64px -16px rgba(0,0,0,0.8);
   border-radius: 40px;
   width: 100%;
-  max-width: 560px;
+  max-width: ${({ $wide }) => ($wide ? '880px' : '480px')};
   padding: 40px;
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(96, 165, 250, 0.2) transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: ${({ $wide }) => ($wide ? 'stretch' : 'center')};
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    border-radius: 24px;
+  }
 `;
 
 const CloseButton = styled.button`
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 24px;
+  right: 24px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
+  color: rgba(255, 255, 255, 0.6);
   width: 36px;
   height: 36px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
   transition: all 0.2s;
-  &:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
-  &:focus-visible { outline: 2px solid #60A5FA; outline-offset: 2px; }
-`;
 
-const Eyebrow = styled.span`
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: #60A5FA;
-  display: block;
-  margin-bottom: 8px;
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+  }
 `;
 
 const Title = styled.h2`
@@ -83,81 +88,101 @@ const Title = styled.h2`
   font-weight: 500;
   letter-spacing: -1px;
   color: #FFFFFF;
-  margin: 0 0 6px 0;
+  margin: 0 0 8px 0;
+  text-align: center;
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
   margin: 0 0 32px 0;
-  line-height: 1.6;
+  text-align: center;
+  line-height: 1.5;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  width: 100%;
+  gap: 16px;
 `;
 
-const FormGroup = styled.div`
+const FieldGroup = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 8px;
 `;
 
-const Label = styled.label`
+const FieldLabel = styled.span`
   font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 2px;
+  display: block;
 `;
 
-const Input = styled.input`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 14px 16px;
-  color: #FFFFFF;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+const TextInput = styled.input`
   width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 18px;
+  color: #FFFFFF;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
   transition: all 0.2s;
-  &:focus-visible {
+
+  &:focus {
     outline: none;
     border-color: #60A5FA;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
-    background: rgba(96, 165, 250, 0.04);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.2);
   }
-  &::placeholder { color: rgba(255, 255, 255, 0.25); }
-  &[type="date"] { color-scheme: dark; }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
 `;
 
 const Select = styled.select`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 14px 18px;
   color: #FFFFFF;
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Outfit', sans-serif;
   font-size: 15px;
-  width: 100%;
+  font-weight: 500;
+  cursor: pointer;
   transition: all 0.2s;
+  width: 100%;
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
   background-position: right 16px center;
   background-size: 16px;
-  &:focus-visible {
+
+  &:focus {
     outline: none;
     border-color: #60A5FA;
-    box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.2);
   }
-  & option { background: #0A0A0A; color: #FFFFFF; }
-  & optgroup { background: #0A0A0A; color: #60A5FA; font-weight: 600; }
+
+  option {
+    background: #0A0A0A;
+    color: #FFFFFF;
+  }
+  
+  optgroup {
+    background: #0A0A0A;
+    color: #60A5FA;
+    font-weight: 600;
+  }
 `;
 
 const ToggleLink = styled.button`
@@ -165,69 +190,87 @@ const ToggleLink = styled.button`
   border: none;
   color: #60A5FA;
   font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   padding: 0;
-  text-transform: uppercase;
   &:hover { text-decoration: underline; }
-  &:focus-visible { outline: 2px solid #60A5FA; outline-offset: 2px; border-radius: 4px; }
 `;
 
 const Divider = styled.div`
   height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-  margin: 4px 0;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 16px 0;
+  width: 100%;
 `;
 
-const SectionLabel = styled.p`
-  font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.3);
-  margin: 0;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 12px;
-  margin-top: 8px;
-`;
-
-const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
   font-weight: 500;
-  padding: 15px 24px;
+  padding: 14px 24px;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  flex: 1;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-bottom: 12px;
   gap: 8px;
 
-  &:focus-visible { outline: 2px solid #60A5FA; outline-offset: 2px; }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
+  &:last-of-type {
+    margin-bottom: 0;
+  }
 
   ${({ $variant = 'primary' }) =>
     $variant === 'primary' &&
-    `background: linear-gradient(135deg, #2563EB, #3B82F6); color: #FFFFFF;
-     &:hover:not(:disabled) { background: linear-gradient(135deg, #1D4ED8, #2563EB); transform: translateY(-1px); box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4); }`}
+    `
+    background: #FFFFFF;
+    color: #000000;
+    &:hover:not(:disabled) {
+      background: #2563EB;
+      color: #FFFFFF;
+    }
+  `}
 
   ${({ $variant }) =>
     $variant === 'secondary' &&
-    `background: transparent; color: #60A5FA;
-     border: 1px solid rgba(255, 255, 255, 0.15);
-     &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.06); }`}
+    `
+    background: transparent;
+    color: #60A5FA;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  `}
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
 
-// Success State
+const AdvancedToggle = styled.button`
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #FFFFFF;
+  }
+`;
+
 const SuccessWrapper = styled(motion.div)`
   display: flex;
   flex-direction: column;
@@ -235,18 +278,19 @@ const SuccessWrapper = styled(motion.div)`
   text-align: center;
   gap: 20px;
   padding: 20px 0;
+  width: 100%;
 `;
 
 const SuccessIcon = styled.div`
   width: 72px;
   height: 72px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(96, 165, 250, 0.1));
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60A5FA;
+  color: #22C55E;
 `;
 
 const SuccessId = styled.div`
@@ -258,6 +302,7 @@ const SuccessId = styled.div`
   border-radius: 10px;
   padding: 10px 16px;
   word-break: break-all;
+  width: 100%;
 `;
 
 const ErrorBanner = styled.div`
@@ -268,6 +313,7 @@ const ErrorBanner = styled.div`
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   color: #FCA5A5;
+  width: 100%;
 `;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -287,6 +333,7 @@ export function PaymentRequestModal({
   const [isChoosingContact, setIsChoosingContact] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const defaultMint = Object.keys(tokenRegistry)[0] ?? '';
 
@@ -308,6 +355,7 @@ export function PaymentRequestModal({
       setSuccessId(null);
       setSelectedContact(null);
       setIsChoosingContact(false);
+      setShowAdvanced(false);
       setForm({
         payerWallet: '',
         businessName: '',
@@ -321,8 +369,6 @@ export function PaymentRequestModal({
       });
     }
   }, [isOpen, defaultMint]);
-
-  if (!isOpen) return null;
 
   const handleContactChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const contact = contactsData?.data.find(c => c.id === e.target.value) ?? null;
@@ -404,254 +450,261 @@ export function PaymentRequestModal({
 
   return (
     <AnimatePresence>
-      <Overlay
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-      >
-        <ModalContent
-          onClick={e => e.stopPropagation()}
-          initial={{ opacity: 0, scale: 0.95, y: 24 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 24 }}
-          transition={{ type: 'spring', bounce: 0.35, duration: 0.6 }}
+      {isOpen && (
+        <Overlay
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
         >
-          <CloseButton type="button" onClick={onClose} aria-label="Close">
-            <X size={16} />
-          </CloseButton>
+          <ModalContent
+            onClick={e => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            transition={{ type: 'spring', bounce: 0.4, duration: 0.6 }}
+          >
+            <CloseButton type="button" onClick={onClose} aria-label="Close">
+              <X size={18} />
+            </CloseButton>
 
-          {successId ? (
-            <SuccessWrapper
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ type: 'spring', bounce: 0.4, duration: 0.7 }}
-            >
-              <SuccessIcon>
-                <CheckCircle size={36} />
-              </SuccessIcon>
-              <div>
-                <Title style={{ fontSize: '28px', marginBottom: '8px' }}>Request Sent!</Title>
-                <Subtitle style={{ marginBottom: '0' }}>
-                  Your payment request has been created and the payer will be notified.
+            {successId ? (
+              <SuccessWrapper
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'spring', bounce: 0.4, duration: 0.7 }}
+              >
+                <SuccessIcon>
+                  <CheckCircle size={36} />
+                </SuccessIcon>
+                <div>
+                  <Title>Request Sent!</Title>
+                  <Subtitle>
+                    Your payment request has been created and the payer will be notified.
+                  </Subtitle>
+                </div>
+                <SuccessId>{successId}</SuccessId>
+                <ActionButton $variant="primary" type="button" onClick={onClose} style={{ marginTop: '24px' }}>
+                  Done
+                </ActionButton>
+              </SuccessWrapper>
+            ) : (
+              <>
+                <Title>Ask for a Payment</Title>
+                <Subtitle>
+                  Request a payment from another Solana wallet. The payer will receive a
+                  notification with the payment details.
                 </Subtitle>
-              </div>
-              <SuccessId>{successId}</SuccessId>
-              <Button $variant="primary" type="button" onClick={onClose} style={{ maxWidth: '240px' }}>
-                Done
-              </Button>
-            </SuccessWrapper>
-          ) : (
-            <>
-              <Eyebrow>New Feature</Eyebrow>
-              <Title>Ask for a Payment</Title>
-              <Subtitle>
-                Request a payment from another Solana wallet. The payer will receive a
-                notification with the payment details.
-              </Subtitle>
 
-              {isError && errorMessage && (
-                <ErrorBanner style={{ marginBottom: '20px' }}>{errorMessage}</ErrorBanner>
-              )}
-
-              <Form onSubmit={handleSubmit}>
-                {/* ── PAYER WALLET ── */}
-                <FormGroup>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Label htmlFor="pr-payerWallet">Payer Wallet *</Label>
-                    <ToggleLink
-                      type="button"
-                      onClick={() => {
-                        setIsChoosingContact(v => !v);
-                        setSelectedContact(null);
-                        setForm(prev => ({ ...prev, payerWallet: '', businessName: '' }));
-                      }}
-                    >
-                      {isChoosingContact ? 'Enter manually' : 'Use contact'}
-                    </ToggleLink>
-                  </div>
-                  {isChoosingContact ? (
-                    <Select
-                      id="pr-contact-select"
-                      value={selectedContact?.id ?? ''}
-                      onChange={handleContactChange}
-                      required
-                    >
-                      <option value="" disabled>Select a contact…</option>
-                      {isLoadingContacts ? (
-                        <option disabled>Loading contacts…</option>
-                      ) : (
-                        contactsData?.data.map(c => (
-                          <option key={c.id} value={c.id}>
-                            {c.nickname || c.walletAddress}
-                          </option>
-                        ))
-                      )}
-                    </Select>
-                  ) : (
-                    <Input
-                      id="pr-payerWallet"
-                      name="payerWallet"
-                      value={form.payerWallet}
-                      onChange={handleChange}
-                      placeholder="Payer's Solana wallet address"
-                      required
-                    />
-                  )}
-                </FormGroup>
-
-                {/* ── BUSINESS NAME ── */}
-                <FormGroup>
-                  <Label htmlFor="pr-businessName">Business Name (Optional)</Label>
-                  <Input
-                    id="pr-businessName"
-                    name="businessName"
-                    value={form.businessName}
-                    onChange={handleChange}
-                    placeholder="e.g. Acme Corp"
-                  />
-                </FormGroup>
-
-                <Divider />
-                <SectionLabel>Payment Details</SectionLabel>
-
-                {/* ── ASSET MINT ── */}
-                <FormGroup>
-                  <Label htmlFor="pr-assetMint">Asset *</Label>
-                  <Select
-                    id="pr-assetMint"
-                    name="assetMint"
-                    value={form.assetMint}
-                    onChange={handleChange}
-                    required
-                  >
-                    <optgroup label={isDev ? 'Devnet Tokens' : 'Mainnet Tokens'}>
-                      {Object.entries(tokenRegistry).map(([mint, symbol]) => (
-                        <option key={mint} value={mint}>{symbol} — {mint.slice(0, 8)}…</option>
-                      ))}
-                    </optgroup>
-                  </Select>
-                </FormGroup>
-
-                {/* ── AMOUNT ── */}
-                <FormGroup>
-                  <Label htmlFor="pr-amount">Amount *</Label>
-                  <Input
-                    id="pr-amount"
-                    name="amount"
-                    type="number"
-                    step="any"
-                    min="0"
-                    value={form.amount}
-                    onChange={handleChange}
-                    placeholder="0.00"
-                    required
-                  />
-                </FormGroup>
-
-                {/* ── REFERENCE ── */}
-                <FormGroup>
-                  <Label htmlFor="pr-reference">Reference / Concept (Optional)</Label>
-                  <Input
-                    id="pr-reference"
-                    name="reference"
-                    value={form.reference}
-                    onChange={handleChange}
-                    placeholder="e.g. Invoice #1042 — Web dev services"
-                  />
-                </FormGroup>
-
-                <Divider />
-                <SectionLabel>Notification</SectionLabel>
-
-                {/* ── NOTIFICATION TYPE ── */}
-                <FormGroup>
-                  <Label htmlFor="pr-notificationType">Notify Payer Via</Label>
-                  <Select
-                    id="pr-notificationType"
-                    name="notificationType"
-                    value={form.notificationType}
-                    onChange={handleChange}
-                  >
-                    <option value="NONE">None (no notification)</option>
-                    <option value="EMAIL">Email</option>
-                    <option value="PHONE">Phone / SMS</option>
-                    <option value="PUSH">Push Notification</option>
-                  </Select>
-                </FormGroup>
-
-                {/* ── TARGET NOTIFICATION ── */}
-                {needsNotificationInput && (
-                  <FormGroup>
-                    <Label htmlFor="pr-targetNotification">
-                      {form.notificationType === 'EMAIL' ? 'Email Address *' : 'Phone Number *'}
-                    </Label>
-                    <Input
-                      id="pr-targetNotification"
-                      name="targetNotification"
-                      type={form.notificationType === 'EMAIL' ? 'email' : 'tel'}
-                      value={form.targetNotification}
-                      onChange={handleChange}
-                      placeholder={
-                        form.notificationType === 'EMAIL'
-                          ? 'payer@example.com'
-                          : '+1 555 000 0000'
-                      }
-                      required
-                    />
-                  </FormGroup>
+                {isError && errorMessage && (
+                  <ErrorBanner style={{ marginBottom: '20px' }}>{errorMessage}</ErrorBanner>
                 )}
 
-                <Divider />
-                <SectionLabel>Optional Details</SectionLabel>
+                <Form onSubmit={handleSubmit}>
+                  {/* ── PAYER WALLET ── */}
+                  <FieldGroup>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                      <FieldLabel style={{ marginBottom: 0 }}>Payer Wallet *</FieldLabel>
+                      <ToggleLink
+                        type="button"
+                        onClick={() => {
+                          setIsChoosingContact(v => !v);
+                          setSelectedContact(null);
+                          setForm(prev => ({ ...prev, payerWallet: '', businessName: '' }));
+                        }}
+                      >
+                        {isChoosingContact ? 'Enter manually' : 'Use contact'}
+                      </ToggleLink>
+                    </div>
+                    {isChoosingContact ? (
+                      <Select
+                        id="pr-contact-select"
+                        value={selectedContact?.id ?? ''}
+                        onChange={handleContactChange}
+                        required
+                      >
+                        <option value="" disabled>Select a contact…</option>
+                        {isLoadingContacts ? (
+                          <option disabled>Loading contacts…</option>
+                        ) : (
+                          contactsData?.data.map(c => (
+                            <option key={c.id} value={c.id}>
+                              {c.nickname || c.walletAddress}
+                            </option>
+                          ))
+                        )}
+                      </Select>
+                    ) : (
+                      <TextInput
+                        id="pr-payerWallet"
+                        name="payerWallet"
+                        value={form.payerWallet}
+                        onChange={handleChange}
+                        placeholder="Payer's Solana wallet address"
+                        required
+                      />
+                    )}
+                  </FieldGroup>
 
-                {/* ── NUMERICAL REFERENCE ── */}
-                <FormGroup>
-                  <Label htmlFor="pr-numericalReference">Numerical Reference (6 digits, optional)</Label>
-                  <Input
-                    id="pr-numericalReference"
-                    name="numericalReference"
-                    type="number"
-                    min="100000"
-                    max="999999"
-                    value={form.numericalReference}
-                    onChange={handleChange}
-                    placeholder="e.g. 104200"
-                  />
-                </FormGroup>
+                  {/* ── ASSET & AMOUNT ── */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                    <FieldGroup>
+                      <FieldLabel>Asset *</FieldLabel>
+                      <Select
+                        id="pr-assetMint"
+                        name="assetMint"
+                        value={form.assetMint}
+                        onChange={handleChange}
+                        required
+                      >
+                        <optgroup label={isDev ? 'Devnet Tokens' : 'Mainnet Tokens'}>
+                          {Object.entries(tokenRegistry).map(([mint, symbol]) => (
+                            <option key={mint} value={mint}>{symbol}</option>
+                          ))}
+                        </optgroup>
+                      </Select>
+                    </FieldGroup>
+                    
+                    <FieldGroup>
+                      <FieldLabel>Amount *</FieldLabel>
+                      <TextInput
+                        id="pr-amount"
+                        name="amount"
+                        type="text"
+                        inputMode="decimal"
+                        value={form.amount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (/^[0-9]*\.?[0-9]*$/.test(val)) {
+                            handleChange(e);
+                          }
+                        }}
+                        placeholder="0.00"
+                        required
+                      />
+                    </FieldGroup>
+                  </div>
 
-                {/* ── EXPIRATION DATE ── */}
-                <FormGroup>
-                  <Label htmlFor="pr-expirationDate">Expiration Date (Optional)</Label>
-                  <Input
-                    id="pr-expirationDate"
-                    name="expirationDate"
-                    type="date"
-                    value={form.expirationDate}
-                    onChange={handleChange}
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </FormGroup>
+                  {/* ── NOTIFICATION TYPE ── */}
+                  <FieldGroup>
+                    <FieldLabel>Notify Payer Via</FieldLabel>
+                    <Select
+                      id="pr-notificationType"
+                      name="notificationType"
+                      value={form.notificationType}
+                      onChange={handleChange}
+                    >
+                      <option value="NONE">None (no notification)</option>
+                      <option value="EMAIL">Email</option>
+                      <option value="PHONE">Phone / SMS</option>
+                      <option value="PUSH">Push Notification</option>
+                    </Select>
+                  </FieldGroup>
 
-                <ButtonGroup>
-                  <Button $variant="secondary" type="button" onClick={onClose} disabled={isLoading}>
-                    Cancel
-                  </Button>
-                  <Button
-                    $variant="primary"
-                    type="submit"
-                    disabled={isLoading}
-                    aria-busy={isLoading}
-                  >
-                    <Send size={16} />
-                    {isLoading ? 'Sending…' : 'Send Request'}
-                  </Button>
-                </ButtonGroup>
-              </Form>
-            </>
-          )}
-        </ModalContent>
-      </Overlay>
+                  {/* ── TARGET NOTIFICATION ── */}
+                  {needsNotificationInput && (
+                    <FieldGroup>
+                      <FieldLabel>
+                        {form.notificationType === 'EMAIL' ? 'Email Address *' : 'Phone Number *'}
+                      </FieldLabel>
+                      <TextInput
+                        id="pr-targetNotification"
+                        name="targetNotification"
+                        type={form.notificationType === 'EMAIL' ? 'email' : 'tel'}
+                        value={form.targetNotification}
+                        onChange={handleChange}
+                        placeholder={
+                          form.notificationType === 'EMAIL'
+                            ? 'payer@example.com'
+                            : '+1 555 000 0000'
+                        }
+                        required
+                      />
+                    </FieldGroup>
+                  )}
+
+                  <Divider />
+
+                  <AdvancedToggle type="button" onClick={() => setShowAdvanced(!showAdvanced)}>
+                    {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    Advanced Options
+                  </AdvancedToggle>
+
+                  {showAdvanced && (
+                    <>
+                      {/* ── BUSINESS NAME ── */}
+                      <FieldGroup>
+                        <FieldLabel>Business Name (Optional)</FieldLabel>
+                        <TextInput
+                          id="pr-businessName"
+                          name="businessName"
+                          value={form.businessName}
+                          onChange={handleChange}
+                          placeholder="e.g. Acme Corp"
+                        />
+                      </FieldGroup>
+
+                      {/* ── REFERENCE ── */}
+                      <FieldGroup>
+                        <FieldLabel>Reference / Concept (Optional)</FieldLabel>
+                        <TextInput
+                          id="pr-reference"
+                          name="reference"
+                          value={form.reference}
+                          onChange={handleChange}
+                          placeholder="e.g. Invoice #1042"
+                        />
+                      </FieldGroup>
+
+                      {/* ── NUMERICAL REFERENCE ── */}
+                      <FieldGroup>
+                        <FieldLabel>Numerical Reference (6 digits, optional)</FieldLabel>
+                        <TextInput
+                          id="pr-numericalReference"
+                          name="numericalReference"
+                          type="number"
+                          min="100000"
+                          max="999999"
+                          value={form.numericalReference}
+                          onChange={handleChange}
+                          placeholder="e.g. 104200"
+                        />
+                      </FieldGroup>
+
+                      {/* ── EXPIRATION DATE ── */}
+                      <FieldGroup>
+                        <FieldLabel>Expiration Date (Optional)</FieldLabel>
+                        <TextInput
+                          id="pr-expirationDate"
+                          name="expirationDate"
+                          type="date"
+                          value={form.expirationDate}
+                          onChange={handleChange}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </FieldGroup>
+                    </>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '16px' }}>
+                    <ActionButton
+                      $variant="primary"
+                      type="submit"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? <span className="loader" style={{width: 16, height: 16}} /> : <Send size={16} />}
+                      {isLoading ? 'Sending…' : 'Send Request'}
+                    </ActionButton>
+                    <ActionButton $variant="secondary" type="button" onClick={onClose} disabled={isLoading}>
+                      Cancel
+                    </ActionButton>
+                  </div>
+                </Form>
+              </>
+            )}
+          </ModalContent>
+        </Overlay>
+      )}
     </AnimatePresence>
   );
 }

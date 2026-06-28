@@ -4,13 +4,19 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
+import { useRouter } from 'next/navigation';
+import { buildOpenAmountQrUrl } from '@/lib/solana-pay-url';
 import { Copy, Check, HandCoins } from 'lucide-react';
 
 interface ReceiveModalProps {
   isOpen: boolean;
   onClose: () => void;
   merchantWallet: string | null;
+  title?: string;
+  subtitle?: string;
+  showCreateLinkButton?: boolean;
   onAskForPayment?: () => void;
+  qrValue?: string;
 }
 
 const Overlay = styled(motion.div)`
@@ -37,105 +43,107 @@ const ModalContent = styled(motion.div)`
   max-width: 440px;
   padding: 40px;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
 `;
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 24px;
   font-weight: 500;
-  letter-spacing: -1px;
   color: #FFFFFF;
   margin: 0 0 8px 0;
+  text-align: center;
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.6);
   margin: 0 0 32px 0;
+  text-align: center;
+  line-height: 1.5;
 `;
 
 const QrContainer = styled.div`
   background: #FFFFFF;
   padding: 24px;
-  border-radius: 24px;
-  margin-bottom: 24px;
+  border-radius: 32px;
+  width: fit-content;
+  margin: 0 auto 32px auto;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.4);
   display: flex;
-  align-items: center;
   justify-content: center;
-  box-shadow: 0 16px 32px rgba(0,0,0,0.5);
+  align-items: center;
 `;
 
 const AddressLabel = styled.span`
+  display: block;
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #60A5FA;
   margin-bottom: 8px;
-  text-transform: uppercase;
+  text-align: center;
 `;
 
 const AddressWrapper = styled.div`
-  width: 100%;
-  margin-bottom: 28px;
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 12px 16px;
+  margin-bottom: 32px;
 `;
 
-const Address = styled.div`
+const Address = styled.span`
   font-family: monospace;
-  font-size: 14px;
-  color: #60A5FA;
-  word-break: break-all;
-  background: rgba(96, 165, 250, 0.08);
-  padding: 12px 48px 12px 16px;
-  border-radius: 12px;
-  border: 1px dashed rgba(96, 165, 250, 0.3);
-  text-align: left;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
 `;
 
-const CopyButton = styled.button<{ $copied: boolean }>`
-  position: absolute;
-  top: 50%;
-  right: 10px;
-  transform: translateY(-50%);
-  background: ${({ $copied }) => $copied ? 'rgba(34, 197, 94, 0.15)' : 'rgba(96, 165, 250, 0.1)'};
-  border: 1px solid ${({ $copied }) => $copied ? 'rgba(34, 197, 94, 0.3)' : 'rgba(96, 165, 250, 0.2)'};
-  border-radius: 9999px;
-  width: 30px;
-  height: 30px;
+const CopyButton = styled.button<{ $copied?: boolean }>`
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: ${({ $copied }) => ($copied ? '#10B981' : '#FFFFFF')};
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${({ $copied }) => $copied ? '#4ADE80' : '#60A5FA'};
   cursor: pointer;
   transition: all 0.2s;
-  &:hover { background: rgba(96, 165, 250, 0.2); }
-  &:focus-visible { outline: 2px solid #60A5FA; outline-offset: 2px; }
+  flex-shrink: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: 100%;
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
-  font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  padding: 14px 24px;
+  width: 100%;
+  padding: 14px;
   border-radius: 9999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
   border: none;
   cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  width: 100%;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -168,10 +176,22 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   `}
 `;
 
-export function ReceiveModal({ isOpen, onClose, merchantWallet, onAskForPayment }: ReceiveModalProps) {
+export function ReceiveModal({
+  isOpen,
+  onClose,
+  merchantWallet,
+  title = 'Receive Funds',
+  subtitle = 'Show this QR code to accept direct payments.',
+  showCreateLinkButton = true,
+  onAskForPayment,
+  qrValue,
+}: ReceiveModalProps) {
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
+
+  const solanaPayUri = qrValue ?? (merchantWallet ? buildOpenAmountQrUrl(merchantWallet, title) : null);
 
   const handleCopy = () => {
     if (!merchantWallet) return;
@@ -179,6 +199,11 @@ export function ReceiveModal({ isOpen, onClose, merchantWallet, onAskForPayment 
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
+  };
+
+  const handleCreateLink = () => {
+    onClose();
+    router.push('/dashboard/links');
   };
 
   const handleAskForPayment = () => {
@@ -198,17 +223,17 @@ export function ReceiveModal({ isOpen, onClose, merchantWallet, onAskForPayment 
           onClick={(e) => e.stopPropagation()}
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          exit={{ opacity: 0, scale: 0.95, y: 0 }}
           transition={{ type: "spring", bounce: 0.4, duration: 0.6 }}
         >
-          <Title>Receive Funds</Title>
-          <Subtitle>Show this QR code to accept direct payments.</Subtitle>
+          <Title>{title}</Title>
+          <Subtitle>{subtitle}</Subtitle>
 
-          {merchantWallet ? (
+          {merchantWallet && solanaPayUri ? (
             <>
               <QrContainer>
                 <QRCodeSVG 
-                  value={merchantWallet} 
+                  value={solanaPayUri} 
                   size={200}
                   level="H"
                   includeMargin={false}
@@ -236,8 +261,13 @@ export function ReceiveModal({ isOpen, onClose, merchantWallet, onAskForPayment 
           )}
 
           <ButtonGroup>
+            {showCreateLinkButton && (
+              <Button type="button" $variant="primary" onClick={handleCreateLink}>
+                Create Payment Link
+              </Button>
+            )}
             <Button type="button" $variant="primary" onClick={handleAskForPayment}>
-              <HandCoins size={18} style={{ flexShrink: 0 }} />
+              <HandCoins size={18} style={{ marginRight: '8px', flexShrink: 0 }} />
               Ask for a Payment
             </Button>
             <Button type="button" $variant="secondary" onClick={onClose}>

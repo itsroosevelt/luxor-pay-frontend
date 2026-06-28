@@ -12,6 +12,7 @@ import {
   updatePaymentRequest,
 } from '@/lib/payment-requests-api';
 import { sendTransfer } from '@/lib/transfers-api';
+import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import { getTokenSymbol } from '@/lib/token-registry';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import {
@@ -1289,6 +1290,7 @@ type TabId = 'inbox' | 'sent';
 export default function PaymentRequestsPage() {
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('inbox');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const network = getLuxorEnv() === 'development' ? 'devnet' : 'mainnet-beta';
 
   useEffect(() => {
@@ -1323,13 +1325,27 @@ export default function PaymentRequestsPage() {
         borderBottom: '1px solid rgba(255,255,255,0.05)',
         background: 'rgba(255,255,255,0.01)',
       }}>
-        <div style={{ maxWidth: '860px', margin: '0 auto' }}>
-          <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 600, color: '#FFFFFF', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
-            Payment Requests
-          </h1>
-          <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', fontWeight: 300, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
-            Track payments you've requested and payments others are asking from you.
-          </p>
+        <div style={{ maxWidth: '860px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 600, color: '#FFFFFF', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
+              Payment Requests
+            </h1>
+            <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', fontWeight: 300, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+              Track payments you've requested and payments others are asking from you.
+            </p>
+          </div>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '10px 20px', borderRadius: '9999px',
+              background: '#FFFFFF', color: '#000000',
+              fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 500,
+              border: 'none', cursor: 'pointer', transition: 'all 0.2s',
+            }}
+          >
+            <Send size={16} /> Create Request
+          </button>
         </div>
       </header>
 
@@ -1392,6 +1408,12 @@ export default function PaymentRequestsPage() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      <PaymentRequestModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        requesterWallet={merchantWallet}
+      />
     </>
   );
 }

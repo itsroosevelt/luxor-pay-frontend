@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { sendTransfer, getPaymentLink } from '@/lib/payments-api';
+import { sendTransfer, getPaymentLink, createPaymentFromLink } from '@/lib/payments-api';
 import { TOKEN_REGISTRY } from '@/lib/token-registry';
 import { PaymentLink } from '@luxor/contracts';
 import styled from 'styled-components';
@@ -10,6 +10,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { CheckCircle } from 'lucide-react';
+import { Decimal } from 'decimal.js';
+import { useTokenPrice } from '@/hooks/useTokenPrice';
 const PageWrapper = styled.div`
   min-height: 100vh;
   background: #000000;
@@ -161,6 +163,19 @@ export default function PayLinkPage() {
   const [user, setUser] = useState<User | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(link?.currency);
+
+  const getUsdEquivalent = () => {
+    if (!link || !link.amount || usdRate === null) return null;
+    try {
+      return new Decimal(link.amount).mul(usdRate).toNumber();
+    } catch {
+      return null;
+    }
+  };
+
+  const usdAmount = getUsdEquivalent();
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -175,11 +190,16 @@ export default function PayLinkPage() {
 
   useEffect(() => {
     if (!id) return;
-    getPaymentLink(id)
-      .then(setLink)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Link not found'))
-      .finally(() => setLoading(false));
-  }, [id]);
+    setLoading(true);
+    createPaymentFromLink(id)
+      .then((order) => {
+        router.replace(`/pay/${order.reference}`);
+      })
+      .catch((e) => {
+        setError(e instanceof Error ? e.message : 'Failed to initialize payment');
+        setLoading(false);
+      });
+  }, [id, router]);
 
   const handlePay = async () => {
     if (!user) {
@@ -270,8 +290,18 @@ export default function PayLinkPage() {
               <BusinessName>{link.businessName || 'Merchant Checkout'}</BusinessName>
               <ProductName>{link.name}</ProductName>
               
-              <AmountText>{link.amount}</AmountText>
-              <CurrencyText>{link.currency}</CurrencyText>
+              <AmountText>
+                {usdAmount !== null ? (
+                  `$${usdAmount.toFixed(2)}`
+                ) : isPriceLoading ? (
+                  '$...'
+                ) : (
+                  `$${(parseFloat(String(link.amount || '0')) * (usdRate ?? 0)).toFixed(2)}`
+                )}
+              </AmountText>
+              <CurrencyText>
+                {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 9 : 2)} {link.currency}
+              </CurrencyText>
 
               {error && (
                 <div className="mb-4 text-red-400 text-sm">

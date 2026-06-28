@@ -9,19 +9,58 @@ export interface CreateMerchantDto {
   solanaToken?: string;
 }
 
-export async function getMerchantProfile(token: string): Promise<MerchantProfile | null> {
-  const res = await fetch(apiUrl('/merchants/me'), {
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-  });
+export interface PublicMerchantProfile {
+  businessName?: string;
+  merchantWallet?: string;
+}
+
+/** Public merchant lookup by wallet (no auth). Returns null when not found or unavailable. */
+export async function getMerchantProfileByWallet(
+  wallet: string,
+): Promise<PublicMerchantProfile | null> {
+  const trimmed = wallet.trim();
+  if (!trimmed) return null;
+
+  let res: Response;
+  try {
+    res = await fetch(
+      apiUrl(`/merchants/wallet/${encodeURIComponent(trimmed)}`),
+      { headers: { 'Content-Type': 'application/json' } },
+    );
+  } catch {
+    return null;
+  }
 
   if (res.status === 404) {
     return null;
   }
 
-  const json = await res.json();
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    return null;
+  }
+
+  return (json.data ?? json) as PublicMerchantProfile;
+}
+
+export async function getMerchantProfile(token: string): Promise<MerchantProfile | null> {
+  let res: Response;
+  try {
+    res = await fetch(apiUrl('/merchants/me'), {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    });
+  } catch {
+    return null;
+  }
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status >= 500) {
-      throw new Error(json.message ?? 'Failed to fetch merchant profile');
+      return null;
     }
     return null;
   }
@@ -30,13 +69,18 @@ export async function getMerchantProfile(token: string): Promise<MerchantProfile
 }
 
 export async function createMerchantProfile(token: string, data: CreateMerchantDto): Promise<MerchantProfile> {
-  const res = await fetch(apiUrl('/merchants'), {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  let res: Response;
+  try {
+    res = await fetch(apiUrl('/merchants'), {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } catch {
+    throw new Error('Unable to reach API');
+  }
 
-  const json = await res.json();
+  const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(json.message ?? 'Failed to create merchant profile');
   }
@@ -44,19 +88,23 @@ export async function createMerchantProfile(token: string, data: CreateMerchantD
   return (json.data ?? json) as MerchantProfile;
 }
 
-export async function ensureMerchantProfile(token: string, email: string): Promise<MerchantProfile> {
-  let profile = await getMerchantProfile(token);
-  
-  if (!profile) {
-    profile = await createMerchantProfile(token, {
-      email,
-      businessName: '',
-      merchantWallet: '',
-      solanaToken: '',
-    });
+export async function ensureMerchantProfile(token: string, email: string): Promise<MerchantProfile | null> {
+  try {
+    let profile = await getMerchantProfile(token);
+
+    if (!profile) {
+      profile = await createMerchantProfile(token, {
+        email,
+        businessName: '',
+        merchantWallet: '',
+        solanaToken: '',
+      });
+    }
+
+    return profile;
+  } catch {
+    return null;
   }
-  
-  return profile;
 }
 
 export interface UpdateMerchantDto {
@@ -67,13 +115,18 @@ export interface UpdateMerchantDto {
 }
 
 export async function updateMerchantProfile(token: string, data: UpdateMerchantDto): Promise<MerchantProfile> {
-  const res = await fetch(apiUrl('/merchants/me'), {
-    method: 'PATCH',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  let res: Response;
+  try {
+    res = await fetch(apiUrl('/merchants/me'), {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  } catch {
+    throw new Error('Unable to reach API');
+  }
 
-  const json = await res.json();
+  const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(json.message ?? 'Failed to update merchant profile');
   }
