@@ -22,3 +22,5 @@ npm run dev:frontend   # desde la raíz del monorepo
 
 Variables: `frontend/.env.local` (plantilla en `config/env/web.development.example`).
 
+# Notes for testing
+this is the phone to try sms sends, it is virtual  +1 8777804236

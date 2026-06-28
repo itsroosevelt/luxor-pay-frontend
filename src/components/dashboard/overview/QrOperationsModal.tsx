@@ -12,7 +12,7 @@ import {
 import { generatePaymentReference, encodeSolanaPayUrl, getMintForSymbol } from '@/lib/solana-pay-url';
 import { routeScannedPaymentContent } from '@/lib/qr-scan-routing';
 import { QrCameraScanner } from '@/components/qr/QrCameraScanner';
-import { Camera, QrCode, ArrowLeft, X, Copy, Check, ExternalLink } from 'lucide-react';
+import { Camera, QrCode, ArrowLeft, X, Copy, Check, ExternalLink, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 
 interface QrOperationsModalProps {
@@ -21,6 +21,7 @@ interface QrOperationsModalProps {
   merchantWallet: string | null;
   recipientLabel?: string | null;
   initialMode?: 'select' | 'receive' | 'scan';
+  onCreatePaymentRequest?: () => void;
 }
 
 const Overlay = styled(motion.div)`
@@ -36,6 +37,10 @@ const Overlay = styled(motion.div)`
   align-items: center;
   justify-content: center;
   padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
 `;
 
 const ModalContent = styled(motion.div)<{ $wide?: boolean }>`
@@ -52,6 +57,11 @@ const ModalContent = styled(motion.div)<{ $wide?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: ${({ $wide }) => ($wide ? 'stretch' : 'center')};
+
+  @media (max-width: 768px) {
+    padding: 24px;
+    border-radius: 24px;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -166,7 +176,8 @@ const ReceiveLayout = styled.div`
   align-items: start;
 
   @media (max-width: 768px) {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
     gap: 24px;
   }
 `;
@@ -179,6 +190,7 @@ const ReceiveHeader = styled.div`
 
   @media (max-width: 768px) {
     order: 1;
+    width: 100%;
   }
 `;
 
@@ -191,8 +203,7 @@ const ReceiveConfigSection = styled.div`
 
   @media (max-width: 768px) {
     order: 5;
-    grid-column: auto;
-    grid-row: auto;
+    width: 100%;
   }
 `;
 
@@ -206,9 +217,9 @@ const ReceiveVisualWrapper = styled.div`
   grid-row: 2;
 
   @media (max-width: 768px) {
-    display: contents;
-    grid-column: auto;
-    grid-row: auto;
+    display: flex;
+    order: 2;
+    gap: 24px;
   }
 `;
 
@@ -217,10 +228,6 @@ const ReceiveQrSection = styled.div`
   flex-direction: column;
   align-items: center;
   width: 100%;
-
-  @media (max-width: 768px) {
-    order: 2;
-  }
 `;
 
 const ReceiveInfoSection = styled.div`
@@ -231,8 +238,7 @@ const ReceiveInfoSection = styled.div`
   margin-bottom: 24px;
 
   @media (max-width: 768px) {
-    order: 3;
-    margin-bottom: 16px;
+    margin-bottom: 0;
   }
 `;
 
@@ -284,10 +290,6 @@ const ReceiveAddressSection = styled.div`
   flex-direction: column;
   align-items: center;
   width: 100%;
-
-  @media (max-width: 768px) {
-    order: 4;
-  }
 `;
 
 const ReceiveTitle = styled(Title)`
@@ -310,6 +312,11 @@ const QrContainer = styled.div`
   box-shadow: 0 16px 32px rgba(0,0,0,0.5);
   width: 100%;
   max-width: 380px;
+
+  @media (max-width: 768px) {
+    padding: 20px;
+    border-radius: 20px;
+  }
 `;
 
 const AddressLabel = styled.span`
@@ -611,12 +618,41 @@ const ContactSelect = styled.select`
   }
 `;
 
+const AdvancedToggle = styled.button`
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px 0;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #FFFFFF;
+  }
+`;
+
+const NoteText = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+`;
+
 export function QrOperationsModal({
   isOpen,
   onClose,
   merchantWallet,
   recipientLabel,
   initialMode = 'select',
+  onCreatePaymentRequest,
 }: QrOperationsModalProps) {
   const router = useRouter();
   const [mode, setMode] = useState<'select' | 'receive' | 'scan'>('select');
@@ -630,6 +666,7 @@ export function QrOperationsModal({
     typeof window !== 'undefined' ? window.location.origin : '',
   );
   const [expiryDuration, setExpiryDuration] = useState('never');
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -862,6 +899,21 @@ export function QrOperationsModal({
                   <OptionDesc>Scan charge codes to pay instantly</OptionDesc>
                 </OptionTextWrapper>
               </OptionButton>
+
+              {onCreatePaymentRequest && (
+                <OptionButton onClick={() => {
+                  onClose();
+                  onCreatePaymentRequest();
+                }}>
+                  <IconWrapper>
+                    <Send size={28} />
+                  </IconWrapper>
+                  <OptionTextWrapper>
+                    <OptionTitle>Create a payment request</OptionTitle>
+                    <OptionDesc>Send a payment request to a user</OptionDesc>
+                  </OptionTextWrapper>
+                </OptionButton>
+              )}
             </>
           )}
 
@@ -912,14 +964,14 @@ export function QrOperationsModal({
                           $active={qrType === 'link'}
                           onClick={() => setQrType('link')}
                         >
-                          Payment Link
+                          Universal Link
                         </QrTypeButton>
                         <QrTypeButton
                           type="button"
                           $active={qrType === 'wallet'}
                           onClick={() => setQrType('wallet')}
                         >
-                          Direct Wallet (Phantom)
+                          Solana Native (Fastest)
                         </QrTypeButton>
                       </QrTypeSelector>
 
@@ -930,6 +982,7 @@ export function QrOperationsModal({
                           size={320}
                           level="H"
                           includeMargin={false}
+                          style={{ width: '100%', height: 'auto', maxWidth: '320px' }}
                         />
                       </QrContainer>
                     </ReceiveQrSection>
@@ -938,12 +991,12 @@ export function QrOperationsModal({
                       <ReceiveInfoSection>
                         <InfoBox>
                           <InfoRow>
-                            <InfoLabel>Monto en USD</InfoLabel>
+                            <InfoLabel>Amount in USD</InfoLabel>
                             <InfoValue>${parseFloat(amount).toFixed(2)}</InfoValue>
                           </InfoRow>
                           <InfoDivider />
                           <InfoRow>
-                            <InfoLabel>Escanea y paga</InfoLabel>
+                            <InfoLabel>Scan and pay</InfoLabel>
                             <InfoValueBlue>
                               {tokenAmount ? `${tokenAmount} ${currency}` : `... ${currency}`}
                             </InfoValueBlue>
@@ -990,7 +1043,7 @@ export function QrOperationsModal({
                   )}
 
                   <FieldGroup>
-                    <FieldLabel>Amount in USD (optional)</FieldLabel>
+                    <FieldLabel>Amount in USD</FieldLabel>
                     <TextInput
                       type="text"
                       inputMode="decimal"
@@ -1006,7 +1059,7 @@ export function QrOperationsModal({
                   </FieldGroup>
 
                   <FieldGroup>
-                    <FieldLabel>Se paga en</FieldLabel>
+                    <FieldLabel>Pay in</FieldLabel>
                     <InputRow>
                       <AmountInput
                         type="text"
@@ -1026,34 +1079,44 @@ export function QrOperationsModal({
                         <option value="LXR">LXR</option>
                       </TokenSelect>
                     </InputRow>
+                    <NoteText>This is the current equivalent value. Cryptocurrency prices fluctuate.</NoteText>
                   </FieldGroup>
 
-                  <FieldGroup>
-                    <FieldLabel>Description (optional)</FieldLabel>
-                    <TextInput
-                      type="text"
-                      placeholder="Charge description"
-                      value={chargeNote}
-                      onChange={(e) => setChargeNote(e.target.value)}
-                      maxLength={120}
-                      aria-label="Charge description"
-                    />
-                  </FieldGroup>
+                  <AdvancedToggle type="button" onClick={() => setShowAdvanced(!showAdvanced)}>
+                    {showAdvanced ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    Advanced Options
+                  </AdvancedToggle>
 
-                  <FieldGroup>
-                    <FieldLabel>Expiration Time</FieldLabel>
-                    <ContactSelect
-                      value={expiryDuration}
-                      onChange={(e) => setExpiryDuration(e.target.value)}
-                      aria-label="Select Expiration"
-                    >
-                      <option value="never">Never Expires</option>
-                      <option value="5m">5 Minutes</option>
-                      <option value="15m">15 Minutes</option>
-                      <option value="1h">1 Hour</option>
-                      <option value="1d">1 Day</option>
-                    </ContactSelect>
-                  </FieldGroup>
+                  {showAdvanced && (
+                    <>
+                      <FieldGroup>
+                        <FieldLabel>Description (optional)</FieldLabel>
+                        <TextInput
+                          type="text"
+                          placeholder="Charge description"
+                          value={chargeNote}
+                          onChange={(e) => setChargeNote(e.target.value)}
+                          maxLength={120}
+                          aria-label="Charge description"
+                        />
+                      </FieldGroup>
+
+                      <FieldGroup>
+                        <FieldLabel>Expiration Time</FieldLabel>
+                        <ContactSelect
+                          value={expiryDuration}
+                          onChange={(e) => setExpiryDuration(e.target.value)}
+                          aria-label="Select Expiration"
+                        >
+                          <option value="never">Never Expires</option>
+                          <option value="5m">5 Minutes</option>
+                          <option value="15m">15 Minutes</option>
+                          <option value="1h">1 Hour</option>
+                          <option value="1d">1 Day</option>
+                        </ContactSelect>
+                      </FieldGroup>
+                    </>
+                  )}
                 </ConfigFields>
 
                 {!(recipientWallet && receivePaymentLinkUrl) && (
@@ -1069,7 +1132,7 @@ export function QrOperationsModal({
                     onClick={handleOpenPaymentPage}
                     disabled={!receiveCheckoutPath}
                   >
-                    Create
+                    Open Payment Link
                   </ActionButton>
                   <ActionButton type="button" $variant="secondary" onClick={exitReceiveMode}>
                     Cancel

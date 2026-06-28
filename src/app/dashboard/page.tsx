@@ -78,14 +78,14 @@ export default function DashboardOverviewPage() {
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
-            <QrCode size={18} /> Charge with QR
+            <QrCode size={18} /> Receive
           </button>
           <button 
             onClick={() => setIsTransferModalOpen(true)}
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-colors"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
-            <Send size={18} /> Transfer
+            <Send size={18} /> Send
           </button>
         </div>
       </header>
@@ -202,6 +202,7 @@ export default function DashboardOverviewPage() {
         merchantWallet={merchantWallet}
         recipientLabel={businessName}
         initialMode="select"
+        onCreatePaymentRequest={() => setIsPaymentRequestModalOpen(true)}
       />
 
     </>

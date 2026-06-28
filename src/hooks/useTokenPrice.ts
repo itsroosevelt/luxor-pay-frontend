@@ -63,7 +63,8 @@ export function useTokenPrice(currency?: string | null): UseTokenPriceReturn {
         throw new Error(`Token mint not found for currency: ${currency}`);
       }
 
-      const response = await fetch(`https://api.jup.ag/price/v3?ids=${mint}`);
+      const jupiterApiUrl = process.env.NEXT_PUBLIC_JUPITER_API_URL || 'https://api.jup.ag/price/v3';
+      const response = await fetch(`${jupiterApiUrl}?ids=${mint}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch price from Jupiter: ${response.statusText}`);
       }
