@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
@@ -11,16 +11,19 @@ import { getLuxorEnv } from '@/lib/luxor-env';
 import { Link as LinkIcon, Terminal, Code2, ArrowRight, Send, QrCode, Bell } from 'lucide-react';
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
-import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
 import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import { Transfer } from '@/lib/transfers-api';
+import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
+import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string | null>(null);
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
   const [pendingInboxCount, setPendingInboxCount] = useState(0);
@@ -29,7 +32,7 @@ export default function DashboardOverviewPage() {
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (!user) return;
       try {
         const token = await user.getIdToken();
@@ -45,6 +48,7 @@ export default function DashboardOverviewPage() {
           hasWallet: Boolean(wallet),
         });
         setMerchantWallet(wallet);
+        setBusinessName(profile?.businessName?.trim() || null);
 
         if (wallet) {
           const env = getLuxorEnv();
@@ -68,9 +72,9 @@ export default function DashboardOverviewPage() {
             Your Solana payment platform — links, POS, and API in one place.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button 
-            onClick={() => setIsReceiveModalOpen(true)}
+            onClick={() => setIsQrModalOpen(true)}
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
@@ -81,7 +85,7 @@ export default function DashboardOverviewPage() {
             className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-colors"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
-            <Send size={18} /> Transfer
+            <Send size={18} /> Send
           </button>
         </div>
       </header>
@@ -186,12 +190,21 @@ export default function DashboardOverviewPage() {
         onClose={() => setIsPaymentRequestModalOpen(false)}
         requesterWallet={merchantWallet}
       />
-
       <TransferSuccessModal
         isOpen={isTransferSuccessModalOpen}
         onClose={() => setIsTransferSuccessModalOpen(false)}
         transferData={transferSuccessData}
       />
+
+      <QrOperationsModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        merchantWallet={merchantWallet}
+        recipientLabel={businessName}
+        initialMode="select"
+        onCreatePaymentRequest={() => setIsPaymentRequestModalOpen(true)}
+      />
+
     </>
   );
 }
