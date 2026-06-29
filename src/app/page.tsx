@@ -1,31 +1,176 @@
 'use client';
 
+import { ChevronDown, Globe } from 'lucide-react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { HeroBackground } from '@/components/HeroBackground';
 
+const PRODUCTS = [
+  { name: 'Web Gateway (eCommerce)', desc: 'Integrate API, Shopify or WooCommerce checkout.' },
+  { name: 'Point of Sale (POS)', desc: 'Smart physical POS terminals & mobile apps.' },
+  { name: 'Recurring Payments', desc: 'Automated subscription and billing engines.' },
+  { name: 'Ecosystem & Tokenization', desc: 'Hybrid Web3 payments & asset support.' }
+];
+
+const SOLUTIONS = [
+  {
+    title: 'By Size',
+    items: ['Startups', 'SMBs', 'Enterprises']
+  },
+  {
+    title: 'By Industry',
+    items: ['Retail & Physical Stores', 'eCommerce & Digital', 'Marketplaces', 'Local Businesses']
+  }
+];
+
+const DEVELOPERS = [
+  { name: 'Documentation', desc: 'Full API Reference and developer guides.' },
+  { name: 'SDKs & Plugins', desc: 'Prebuilt code modules and plugins.' },
+  { name: 'Sandbox / Testnet', desc: 'Risk-free environment for Solana integration.' }
+];
+
+const RESOURCES = [
+  { name: 'Blog', desc: 'Insights on Web3 commerce and platform updates.' },
+  { name: 'Help Center', desc: '24/7 customer support and docs.' },
+  { name: 'Governance / DAO', desc: 'Active proposal voting and tokenomics.' }
+];
+
 export default function LandingPage() {
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
   return (
     <div className="min-h-screen bg-black text-white selection:bg-primary/30 font-sans">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full flex items-center justify-between px-8 py-6 z-50 backdrop-blur-md border-b border-white/5">
-        <div className="text-xl font-bold tracking-tight">
-          Luxor <span className="text-primary">Pay</span>
+      <nav className="fixed top-0 w-full flex items-center justify-between px-8 py-5 z-50 backdrop-blur-md border-b border-white/5">
+        <div className="flex items-center gap-12">
+          <Link href="/" className="text-xl font-normal tracking-tight flex items-center gap-2 hover:opacity-90 transition-opacity">
+            <img src="/logo.jpg" alt="Logo" className="h-10 w-10 object-contain" />
+            <span>Luxor <span className="text-primary">Pay</span></span>
+          </Link>
+
+          {/* Desktop Menu */}
+          <div className="hidden md:flex gap-6 text-sm font-normal text-gray-400 items-center">
+            {/* Products Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveDropdown('products')}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button className="flex items-center gap-1 hover:text-white py-2 transition-colors">
+                Products <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === 'products' ? 'rotate-180' : ''}`} />
+              </button>
+              {activeDropdown === 'products' && (
+                <div className="absolute top-full left-0 mt-1 w-80 rounded-2xl border border-white/10 bg-black/95 p-4 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="grid gap-4">
+                    {PRODUCTS.map((p, idx) => (
+                      <Link href="#features" key={idx} className="group block rounded-lg p-2 hover:bg-white/5 transition-colors">
+                        <div className="text-sm font-medium text-white group-hover:text-primary transition-colors">{p.name}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">{p.desc}</div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Solutions Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveDropdown('solutions')}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button className="flex items-center gap-1 hover:text-white py-2 transition-colors">
+                Solutions <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === 'solutions' ? 'rotate-180' : ''}`} />
+              </button>
+              {activeDropdown === 'solutions' && (
+                <div className="absolute top-full left-0 mt-1 w-96 rounded-2xl border border-white/10 bg-black/95 p-5 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="grid grid-cols-2 gap-4">
+                    {SOLUTIONS.map((section, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <div className="text-xs font-normal text-gray-500 uppercase tracking-wider">{section.title}</div>
+                        <div className="grid gap-1">
+                          {section.items.map((item, i) => (
+                            <Link href="#features" key={i} className="text-sm text-gray-300 hover:text-white transition-colors block py-1">
+                              {item}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Developers Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveDropdown('developers')}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button className="flex items-center gap-1 hover:text-white py-2 transition-colors">
+                Developers <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === 'developers' ? 'rotate-180' : ''}`} />
+              </button>
+              {activeDropdown === 'developers' && (
+                <div className="absolute top-full left-0 mt-1 w-80 rounded-2xl border border-white/10 bg-black/95 p-4 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="grid gap-4">
+                    {DEVELOPERS.map((d, idx) => (
+                      <Link href="#developers" key={idx} className="group block rounded-lg p-2 hover:bg-white/5 transition-colors">
+                        <div className="text-sm font-medium text-white group-hover:text-primary transition-colors">{d.name}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">{d.desc}</div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Pricing */}
+            <Link href="#pricing" className="hover:text-white transition-colors py-2">
+              Pricing
+            </Link>
+
+            {/* Resources Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setActiveDropdown('resources')}
+              onMouseLeave={() => setActiveDropdown(null)}
+            >
+              <button className="flex items-center gap-1 hover:text-white py-2 transition-colors">
+                Resources <ChevronDown size={14} className={`transition-transform duration-200 ${activeDropdown === 'resources' ? 'rotate-180' : ''}`} />
+              </button>
+              {activeDropdown === 'resources' && (
+                <div className="absolute top-full right-0 mt-1 w-80 rounded-2xl border border-white/10 bg-black/95 p-4 shadow-xl backdrop-blur-xl animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="grid gap-4">
+                    {RESOURCES.map((r, idx) => (
+                      <Link href="#features" key={idx} className="group block rounded-lg p-2 hover:bg-white/5 transition-colors">
+                        <div className="text-sm font-medium text-white group-hover:text-primary transition-colors">{r.name}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">{r.desc}</div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-        <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
-          <Link href="#features" className="hover:text-white transition-colors">Features</Link>
-          <Link href="#developers" className="hover:text-white transition-colors">Developers</Link>
-          <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
-        </div>
-        <div className="flex gap-4">
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-4">
+          <button className="text-gray-400 hover:text-white transition-colors p-2 flex items-center justify-center">
+            <Globe size={18} />
+          </button>
+          
           <Link href="/login">
-            <button className="px-5 py-2 text-sm font-medium text-white hover:text-primary transition-colors">
-              Login
+            <button className="px-6 py-1 text-sm font-normal text-white bg-transparent border border-white/20 rounded-full hover:bg-white/5 transition-colors">
+              Sign In
             </button>
           </Link>
+          
           <Link href="/login?register=true">
-            <button className="px-5 py-2 text-sm font-medium bg-white text-black rounded-full hover:bg-gray-200 transition-colors">
-              Get Started
+            <button className="px-6 py-1 text-sm font-normal bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full transition-colors shadow-lg shadow-blue-500/20">
+              Sign Up
             </button>
           </Link>
         </div>
