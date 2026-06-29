@@ -48,7 +48,7 @@ export function useTokenPrice(currency?: string | null): UseTokenPriceReturn {
     try {
       const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'devnet';
       const registry = TOKEN_REGISTRY[network] || {};
-      
+
       let mint = '';
       if (upperCurrency === 'SOL') {
         mint = 'So11111111111111111111111111111111111111112'; // wSOL

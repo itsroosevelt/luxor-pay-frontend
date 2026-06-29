@@ -12,6 +12,7 @@ import {
   updatePaymentRequest,
 } from '@/lib/payment-requests-api';
 import { sendTransfer } from '@/lib/transfers-api';
+import { useGeolocation } from '@/context/GeolocationContext';
 import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import { getTokenSymbol } from '@/lib/token-registry';
 import { getLuxorEnv } from '@/lib/luxor-env';
@@ -153,6 +154,7 @@ function PaymentModal({
 }) {
   const [step, setStep] = useState<PayStep>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const { latitude, longitude } = useGeolocation();
 
   const formattedAmount = formatAmount(request.amount, request.assetMint, network);
   const symbol = getTokenSymbol(request.assetMint, network) || 'SPL';
@@ -174,6 +176,7 @@ function PaymentModal({
         reference: request.reference,
         transactionTypeId: 'Request',
         paymentRequestId: request.id,
+        ...(latitude !== null && longitude !== null ? { latitude, longitude } : {}),
       });
 
       setStep('success');

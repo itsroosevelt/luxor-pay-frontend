@@ -474,88 +474,88 @@ export default function PaymentLinksPage() {
               transition={{ duration: 0.3 }}
             >
               <form onSubmit={handleCreate}>
-            <FormHeader>
-              <Plus size={24} /> New Link
-            </FormHeader>
-            <InputGrid>
-              <InputGroup>
-                <Label>Product or Service Name</Label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Premium Subscription"
-                  required
-                />
-              </InputGroup>
-              <InputGroup>
-                <Label>Business Name</Label>
-                <Input
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="e.g. Acme Corp"
-                  required
-                />
-              </InputGroup>
-              <InputGroup>
-                <Label>Amount</Label>
-                <Input
-                  type="number"
-                  step="any"
-                  min="0.000001"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00"
-                  required
-                />
-              </InputGroup>
-              <InputGroup>
-                <Label>Currency</Label>
-                <Select
-                  value={currency}
-                  onChange={(e) => setCurrency(e.target.value)}
-                >
-                  <option value="SOL">Solana (SOL)</option>
-                  <option value="USDC">USDC</option>
-                  <option value="USDT">USDT</option>
-                  <option value="EURC">EURC</option>
-                  {isDev ? (
-                    <optgroup label="Devnet Tokens">
-                      {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
-                        <option key={symbol} value={symbol}>
-                          {symbol}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ) : (
-                    <optgroup label="Mainnet Beta Tokens">
-                      {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
-                        <option key={symbol} value={symbol}>
-                          {symbol}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </Select>
-              </InputGroup>
-            </InputGrid>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-              <Button type="button" $variant="secondary" onClick={() => setIsFormOpen(false)} disabled={creating}>
-                Cancel
-              </Button>
-              <Button type="submit" $variant="primary" disabled={creating}>
-                {creating ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" /> Creating...
-                  </>
-                ) : (
-                  <>
-                    <Plus size={18} /> Create Link
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </GlassCard>
+                <FormHeader>
+                  <Plus size={24} /> New Link
+                </FormHeader>
+                <InputGrid>
+                  <InputGroup>
+                    <Label>Product or Service Name</Label>
+                    <Input
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Premium Subscription"
+                      required
+                    />
+                  </InputGroup>
+                  <InputGroup>
+                    <Label>Business Name</Label>
+                    <Input
+                      value={businessName}
+                      onChange={(e) => setBusinessName(e.target.value)}
+                      placeholder="e.g. Acme Corp"
+                      required
+                    />
+                  </InputGroup>
+                  <InputGroup>
+                    <Label>Amount</Label>
+                    <Input
+                      type="number"
+                      step="any"
+                      min="0.000001"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      placeholder="0.00"
+                      required
+                    />
+                  </InputGroup>
+                  <InputGroup>
+                    <Label>Currency</Label>
+                    <Select
+                      value={currency}
+                      onChange={(e) => setCurrency(e.target.value)}
+                    >
+                      <option value="SOL">Solana (SOL)</option>
+                      <option value="USDC">USDC</option>
+                      <option value="USDT">USDT</option>
+                      <option value="EURC">EURC</option>
+                      {isDev ? (
+                        <optgroup label="Devnet Tokens">
+                          {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
+                            <option key={symbol} value={symbol}>
+                              {symbol}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ) : (
+                        <optgroup label="Mainnet Beta Tokens">
+                          {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
+                            <option key={symbol} value={symbol}>
+                              {symbol}
+                            </option>
+                          ))}
+                        </optgroup>
+                      )}
+                    </Select>
+                  </InputGroup>
+                </InputGrid>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <Button type="button" $variant="secondary" onClick={() => setIsFormOpen(false)} disabled={creating}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" $variant="primary" disabled={creating}>
+                    {creating ? (
+                      <>
+                        <Loader2 size={18} className="animate-spin" /> Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={18} /> Create Link
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </GlassCard>
           )}
         </AnimatePresence>
 
