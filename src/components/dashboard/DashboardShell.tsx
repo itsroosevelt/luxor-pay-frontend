@@ -105,8 +105,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {/* Desktop Sidebar */}
       <aside className="w-64 border-r border-white/5 bg-white/[0.02] hidden md:flex flex-col">
         <div className="p-6 border-b border-white/5">
-          <Link href="/dashboard" className="text-xl font-bold tracking-tight font-['Outfit',sans-serif]">
-            Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+          <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
+            <img src="/logo.jpg" alt="Logo" className="h-10 w-10 object-contain" />
+            <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
           </Link>
         </div>
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -128,8 +129,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4 border-b border-white/5 bg-[#0A0A0A]">
-          <Link href="/dashboard" className="text-xl font-bold tracking-tight font-['Outfit',sans-serif]">
-            Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+          <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
+            <img src="/logo.jpg" alt="Logo" className="h-10 w-10 object-contain" />
+            <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
           </Link>
           <button
             type="button"
@@ -149,8 +151,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             />
             <aside className="relative flex flex-col w-72 max-w-[80%] bg-[#0A0A0A] border-r border-white/5 h-full animate-in slide-in-from-left-full duration-200">
               <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                <Link href="/dashboard" className="text-xl font-bold tracking-tight font-['Outfit',sans-serif]" onClick={() => setIsMobileMenuOpen(false)}>
-                  Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+                <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                  <img src="/logo.jpg" alt="Logo" className="h-10 w-10 object-contain" />
+                  <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
                 </Link>
                 <button
                   type="button"

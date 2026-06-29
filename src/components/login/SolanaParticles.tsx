@@ -9,10 +9,9 @@ interface Particle {
   vy: number;
   size: number;
   seed: number;
-  hue: 'green' | 'purple';
 }
 
-/** Animated background — adapted from Roosevelt login, Solana green/purple palette */
+/** Animated background — Blue particle network */
 export function SolanaParticles() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particles = useRef<Particle[]>([]);
@@ -31,14 +30,13 @@ export function SolanaParticles() {
     window.addEventListener('resize', resize);
     resize();
 
-    particles.current = Array.from({ length: 380 }).map((_, i) => ({
+    particles.current = Array.from({ length: 380 }).map(() => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       vx: (Math.random() - 0.5) * 0.2,
       vy: (Math.random() - 0.5) * 0.2,
       size: Math.random() * 1.5 + 0.5,
       seed: Math.random(),
-      hue: i % 2 === 0 ? 'green' : 'purple',
     }));
 
     const animate = () => {
@@ -54,8 +52,7 @@ export function SolanaParticles() {
         if (p.y > canvas.height) p.y = 0;
 
         const opacity = 0.08 + p.seed * 0.28;
-        const rgb =
-          p.hue === 'green' ? `20, 241, 149` : `153, 69, 255`;
+        const rgb = `37, 99, 235`; // Luxor Blue
 
         ctx.fillStyle = `rgba(${rgb}, ${opacity})`;
         ctx.beginPath();

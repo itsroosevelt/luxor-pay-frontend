@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 
 export const HERO_VIDEO_URL =
-  'https://firebasestorage.googleapis.com/v0/b/luxor-pay-gateway.firebasestorage.app/o/circle%20moving.mp4?alt=media&token=eec834d9-349a-4df8-b3b6-4bb268054c83';
+  'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/From%20Klickpin.com-%20Online%20Store%20Ideas%2073%20Ideas%20to%20Copy-pin-id-177610779049999040.mp4?alt=media&token=3e113419-3d2d-41ba-b657-1ca708581420';
 
 export function HeroBackground() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -35,7 +35,7 @@ export function HeroBackground() {
         muted
         playsInline
         preload="auto"
-        className="absolute inset-0 h-full w-full min-h-full min-w-full object-cover object-center scale-105"
+        className="absolute inset-0 h-full w-full object-contain object-center"
       />
 
       {/* Soft overlay so text stays readable — video stays visible */}

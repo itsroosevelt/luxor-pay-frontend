@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Luxor Pay | Solana Payment Gateway",
+  title: "Luxor Pay | Solana Network",
   description: "Next-gen payment gateway for the Solana ecosystem.",
+  icons: {
+    icon: "/logo.jpg",
+  },
 };
 
 export const viewport: Viewport = {
