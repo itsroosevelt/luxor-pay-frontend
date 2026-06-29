@@ -90,7 +90,19 @@ export async function createPosDevice(token: string, data: { name: string, posId
   return json.data as any;
 }
 
-export async function sendTransfer(token: string, payload: { toWallet: string, amount: string, mint?: string, reference?: string }): Promise<any> {
+export async function sendTransfer(
+  token: string,
+  payload: {
+    toWallet: string;
+    amount: string;
+    mint?: string;
+    reference?: string;
+    /** WGS-84 latitude in decimal degrees (-90 to 90). */
+    latitude?: number;
+    /** WGS-84 longitude in decimal degrees (-180 to 180). */
+    longitude?: number;
+  }
+): Promise<any> {
   const res = await fetch(apiUrl('/transfers/send'), {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

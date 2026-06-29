@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -407,6 +407,23 @@ export default function PayQrClient() {
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [paymentDate, setPaymentDate] = useState('');
 
+  /** Best-effort geolocation: resolves with coords or null — never throws. */
+  const getBestEffortCoords = useCallback(
+    (): Promise<{ latitude: number; longitude: number } | null> =>
+      new Promise((resolve) => {
+        if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+          resolve(null);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+          () => resolve(null),
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
+        );
+      }),
+    []
+  );
+
   useEffect(() => {
     setPaymentDate(
       new Date().toLocaleDateString(undefined, {
@@ -599,11 +616,14 @@ export default function PayQrClient() {
         ? `Invoice ${invoiceRef.trim()}: ${label}`
         : `Direct QR payment: ${label}`;
 
+      const coords = await getBestEffortCoords();
+
       const res = await sendTransfer(token, {
         toWallet: recipientAddress,
         amount,
         mint,
         reference: transferRef,
+        ...(coords ?? {}),
       });
 
       const transfer = res.data;
