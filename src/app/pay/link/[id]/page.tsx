@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { sendTransfer, getPaymentLink, createPaymentFromLink } from '@/lib/payments-api';
+import { sendTransfer, getPaymentLink } from '@/lib/payments-api';
 import { TOKEN_REGISTRY } from '@/lib/token-registry';
 import { PaymentLink } from '@luxor/contracts';
 import styled from 'styled-components';
@@ -154,7 +154,7 @@ const PayButton = styled.button`
 export default function PayLinkPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  
+
   const [link, setLink] = useState<PaymentLink | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -164,6 +164,23 @@ export default function PayLinkPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(link?.currency);
+
+  /** Best-effort geolocation: resolves with coords or null — never throws. */
+  const getBestEffortCoords = useCallback(
+    (): Promise<{ latitude: number; longitude: number } | null> =>
+      new Promise((resolve) => {
+        if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+          resolve(null);
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+          () => resolve(null),
+          { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
+        );
+      }),
+    []
+  );
 
   const getUsdEquivalent = () => {
     if (!link || !link.amount || usdRate === null) return null;
@@ -191,15 +208,16 @@ export default function PayLinkPage() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    createPaymentFromLink(id)
-      .then((order) => {
-        router.replace(`/pay/${order.reference}`);
+    getPaymentLink(id)
+      .then((data) => {
+        setLink(data);
+        setLoading(false);
       })
       .catch((e) => {
-        setError(e instanceof Error ? e.message : 'Failed to initialize payment');
+        setError(e instanceof Error ? e.message : 'Failed to load payment link');
         setLoading(false);
       });
-  }, [id, router]);
+  }, [id]);
 
   const handlePay = async () => {
     if (!user) {
@@ -211,10 +229,10 @@ export default function PayLinkPage() {
     setError(null);
     try {
       const token = await user.getIdToken();
-      
+
       const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'devnet';
       const registry = TOKEN_REGISTRY[network];
-      
+
       let mint: string | undefined = undefined;
       if (link.currency !== 'SOL') {
         const entry = Object.entries(registry || {}).find(([m, symbol]) => symbol === link.currency);
@@ -225,13 +243,16 @@ export default function PayLinkPage() {
         }
       }
 
+      const coords = await getBestEffortCoords();
+
       await sendTransfer(token, {
         toWallet: link.merchantWallet,
         amount: link.amount.toString(),
         mint,
-        reference: `Payment for ${link.name}`
+        reference: `Payment for ${link.name}`,
+        ...(coords ?? {}),
       });
-      
+
       setSuccess(true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not execute payment');
@@ -289,7 +310,7 @@ export default function PayLinkPage() {
             >
               <BusinessName>{link.businessName || 'Merchant Checkout'}</BusinessName>
               <ProductName>{link.name}</ProductName>
-              
+
               <AmountText>
                 {usdAmount !== null ? (
                   `$${usdAmount.toFixed(2)}`

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { sendTransfer, SendTransferPayload, Transfer } from '@/lib/transfers-api';
 import { auth } from '@/lib/firebase';
+import { useGeolocation } from '@/context/GeolocationContext';
 
 interface UseSendTransferReturn {
   mutate: (payload: SendTransferPayload) => Promise<{ success: boolean; data?: Transfer; error?: string }>;
@@ -13,6 +14,7 @@ export function useSendTransfer(): UseSendTransferReturn {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { latitude, longitude } = useGeolocation();
 
   const mutate = async (payload: SendTransferPayload) => {
     setIsLoading(true);
@@ -25,8 +27,16 @@ export function useSendTransfer(): UseSendTransferReturn {
         throw new Error('User not authenticated');
       }
 
+      // Attach geolocation coordinates when available
+      const enrichedPayload: SendTransferPayload = {
+        ...payload,
+        ...(latitude !== null && longitude !== null
+          ? { latitude, longitude }
+          : {}),
+      };
+
       const token = await user.getIdToken();
-      const response = await sendTransfer(token, payload);
+      const response = await sendTransfer(token, enrichedPayload);
       
       setIsLoading(false);
       return { success: true, data: response.data };

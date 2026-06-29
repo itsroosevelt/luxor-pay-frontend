@@ -64,6 +64,10 @@ export interface SendTransferPayload {
   reference?: string;
   transactionTypeId?: 'Regular' | 'Request' | 'TopUp';
   paymentRequestId?: string;
+  /** WGS-84 latitude in decimal degrees (-90 to 90). */
+  latitude?: number;
+  /** WGS-84 longitude in decimal degrees (-180 to 180). */
+  longitude?: number;
 }
 
 export async function sendTransfer(token: string, payload: SendTransferPayload): Promise<{ data: Transfer }> {
