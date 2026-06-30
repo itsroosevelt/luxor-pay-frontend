@@ -162,25 +162,29 @@ export default function PayLinkPage() {
   const [success, setSuccess] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [geoCoords, setGeoCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [geoStatus, setGeoStatus] = useState<'loading' | 'granted' | 'denied'>('loading');
 
   const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(link?.currency);
 
-  /** Best-effort geolocation: resolves with coords or null — never throws. */
-  const getBestEffortCoords = useCallback(
-    (): Promise<{ latitude: number; longitude: number } | null> =>
-      new Promise((resolve) => {
-        if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-          resolve(null);
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-          () => resolve(null),
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
-        );
-      }),
-    []
-  );
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      setGeoStatus('denied');
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        setGeoStatus('granted');
+      },
+      (err) => {
+        console.error('Geolocation error:', err);
+        setGeoStatus('denied');
+      },
+      { enableHighAccuracy: true, maximumAge: 60000 }
+    );
+  }, []);
 
   const getUsdEquivalent = () => {
     if (!link || !link.amount || usdRate === null) return null;
@@ -229,8 +233,8 @@ export default function PayLinkPage() {
     setError(null);
     try {
       const token = await user.getIdToken();
-
-      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'devnet';
+      console.log('NEXT_PUBLIC_SOLANA_NETWORK', process.env.NEXT_PUBLIC_SOLANA_NETWORK);
+      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase() as 'mainnet-beta' | 'devnet';
       const registry = TOKEN_REGISTRY[network];
 
       let mint: string | undefined = undefined;
@@ -243,14 +247,16 @@ export default function PayLinkPage() {
         }
       }
 
-      const coords = await getBestEffortCoords();
+      if (geoStatus !== 'granted' || !geoCoords) {
+        throw new Error('Geolocation permission is required to complete this payment.');
+      }
 
       await sendTransfer(token, {
         toWallet: link.merchantWallet,
         amount: link.amount.toString(),
         mint,
         reference: `Payment for ${link.name}`,
-        ...(coords ?? {}),
+        ...geoCoords,
       });
 
       setSuccess(true);
@@ -330,8 +336,14 @@ export default function PayLinkPage() {
                 </div>
               )}
 
-              <PayButton onClick={handlePay} disabled={creating}>
-                {!user ? 'Login to Pay' : creating ? 'Processing Payment...' : 'Pay Now'}
+              {geoStatus === 'denied' && (
+                <div className="mb-4 text-red-400 text-sm">
+                  Location access is required to proceed with this payment. Please allow location access in your browser.
+                </div>
+              )}
+
+              <PayButton onClick={handlePay} disabled={creating || geoStatus !== 'granted'}>
+                {!user ? 'Login to Pay' : creating ? 'Processing Payment...' : geoStatus === 'loading' ? 'Requesting Location...' : geoStatus === 'denied' ? 'Location Required' : 'Pay Now'}
               </PayButton>
             </CheckoutCard>
           ) : (

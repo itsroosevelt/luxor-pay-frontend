@@ -406,23 +406,27 @@ export default function PayQrClient() {
   const [recipientBusinessName, setRecipientBusinessName] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
   const [paymentDate, setPaymentDate] = useState('');
+  const [geoCoords, setGeoCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [geoStatus, setGeoStatus] = useState<'loading' | 'granted' | 'denied'>('loading');
 
-  /** Best-effort geolocation: resolves with coords or null — never throws. */
-  const getBestEffortCoords = useCallback(
-    (): Promise<{ latitude: number; longitude: number } | null> =>
-      new Promise((resolve) => {
-        if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-          resolve(null);
-          return;
-        }
-        navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-          () => resolve(null),
-          { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
-        );
-      }),
-    []
-  );
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
+      setGeoStatus('denied');
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGeoCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+        setGeoStatus('granted');
+      },
+      (err) => {
+        console.error('Geolocation error:', err);
+        setGeoStatus('denied');
+      },
+      { enableHighAccuracy: true, maximumAge: 60000 }
+    );
+  }, []);
 
   useEffect(() => {
     setPaymentDate(
@@ -576,7 +580,7 @@ export default function PayQrClient() {
     try {
 
       const token = await user.getIdToken();
-      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'devnet';
+      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase() as 'mainnet-beta' | 'devnet';
       const registry = TOKEN_REGISTRY[network] || {};
 
       let mint: string | undefined = undefined;
@@ -616,14 +620,16 @@ export default function PayQrClient() {
         ? `Invoice ${invoiceRef.trim()}: ${label}`
         : `Direct QR payment: ${label}`;
 
-      const coords = await getBestEffortCoords();
+      if (geoStatus !== 'granted' || !geoCoords) {
+        throw new Error('Geolocation permission is required to complete this payment.');
+      }
 
       const res = await sendTransfer(token, {
         toWallet: recipientAddress,
         amount,
         mint,
         reference: transferRef,
-        ...(coords ?? {}),
+        ...geoCoords,
       });
 
       const transfer = res.data;
@@ -709,6 +715,13 @@ export default function PayQrClient() {
                 <ErrorBox>
                   <AlertCircle size={20} style={{ flexShrink: 0 }} />
                   <div>{error}</div>
+                </ErrorBox>
+              )}
+
+              {geoStatus === 'denied' && (
+                <ErrorBox>
+                  <AlertCircle size={20} style={{ flexShrink: 0 }} />
+                  <div>Location access is required to proceed with this payment. Please allow location access in your browser.</div>
                 </ErrorBox>
               )}
 
@@ -853,7 +866,7 @@ export default function PayQrClient() {
               <ActionButton
                 type="button"
                 $variant="primary"
-                disabled={isExpired || (user ? loading || parsePaymentAmount(amount) === null : false)}
+                disabled={isExpired || geoStatus !== 'granted' || (user ? loading || parsePaymentAmount(amount) === null : false)}
                 onClick={handlePayment}
               >
                 {!user ? (
@@ -862,6 +875,10 @@ export default function PayQrClient() {
                   <>
                     <Spinner /> Processing...
                   </>
+                ) : geoStatus === 'loading' ? (
+                  'Requesting Location...'
+                ) : geoStatus === 'denied' ? (
+                  'Location Required'
                 ) : (
                   <>
                     Confirm Payment <ArrowRight size={18} />
