@@ -16,6 +16,7 @@ export default function PayByReferencePage() {
   const reference = params.reference as string;
   const { order, loading, error } = usePaymentStatus(reference);
   const [method, setMethod] = useState<'qr' | 'wallet'>('qr');
+  const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(order?.currency);
 
   useEffect(() => {
     if (reference.startsWith('lx_')) {
@@ -41,8 +42,6 @@ export default function PayByReferencePage() {
     );
   }
 
-  const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(order?.currency);
-
   const getUsdEquivalent = () => {
     if (!order || !order.amount || usdRate === null) return null;
     try {
@@ -54,7 +53,7 @@ export default function PayByReferencePage() {
 
   const usdAmount = getUsdEquivalent();
 
-  const displayAmount = order.amount.toFixed(order.currency === 'SOL' ? 9 : 2);
+  const displayAmount = new Decimal(order.amount).toFixed(order.currency === 'SOL' ? 9 : 2);
   const payUrl = order.solanaPayUrl ?? '';
   const isConfirmed = order.status === 'confirmed';
 

@@ -355,15 +355,7 @@ const AddressText = styled.span`
   text-align: left;
 `;
 
-const PaymentLinkActions = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  width: 100%;
-  max-width: 380px;
-  margin-bottom: 16px;
-`;
+
 
 const QrTypeSelector = styled.div`
   display: flex;
@@ -711,13 +703,12 @@ export function QrOperationsModal({
 
   const { data: usdRate } = useTokenPrice(currency);
 
-  const tokenAmount = useMemo(() => {
+  const usdAmount = useMemo(() => {
     if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) return '';
     const rate = usdRate ?? 1.0;
-    const calculated = parseFloat(amount) / rate;
-    const decimals = currency === 'SOL' ? 9 : 2;
-    return calculated.toFixed(decimals);
-  }, [amount, usdRate, currency]);
+    const calculated = parseFloat(amount) * rate;
+    return calculated.toFixed(2);
+  }, [amount, usdRate]);
 
   const chargeRef = useMemo(() => {
     if (amount && parseFloat(amount) > 0) {
@@ -746,11 +737,11 @@ export function QrOperationsModal({
       label: checkoutLabel,
     };
 
-    if (tokenAmount && parseFloat(tokenAmount) > 0) {
-      baseParams.amount = tokenAmount;
+    if (amount && parseFloat(amount) > 0) {
+      baseParams.amount = amount;
       baseParams.currency = currency;
       baseParams.chargeRef = chargeRef;
-      baseParams.usdAmount = amount;
+      baseParams.usdAmount = usdAmount;
     }
 
     if (expiryTimestamp) {
@@ -762,7 +753,7 @@ export function QrOperationsModal({
     }
 
     return baseParams;
-  }, [recipientWallet, checkoutLabel, tokenAmount, currency, chargeRef, expiryTimestamp, amount, chargeNote]);
+  }, [recipientWallet, checkoutLabel, amount, currency, chargeRef, expiryTimestamp, usdAmount, chargeNote]);
 
   const receiveCheckoutPath = useMemo(() => {
     if (!receiveCheckoutParams) return null;
@@ -780,7 +771,7 @@ export function QrOperationsModal({
     try {
       return encodeSolanaPayUrl({
         recipient: recipientWallet,
-        amount: tokenAmount || undefined,
+        amount: amount || undefined,
         splToken: mint,
         label: checkoutLabel,
         message: chargeNote.trim() || undefined,
@@ -790,7 +781,7 @@ export function QrOperationsModal({
       console.error('Error encoding solana pay url:', e);
       return recipientWallet;
     }
-  }, [recipientWallet, tokenAmount, currency, checkoutLabel, chargeNote, chargeRef]);
+  }, [recipientWallet, amount, currency, checkoutLabel, chargeNote, chargeRef]);
 
   if (!isOpen) return null;
 
@@ -937,26 +928,7 @@ export function QrOperationsModal({
                 {recipientWallet && receivePaymentLinkUrl ? (
                   <>
                     <ReceiveQrSection>
-                      <PaymentLinkActions>
-                        <IconButton
-                          type="button"
-                          $copied={linkCopied}
-                          onClick={handleCopyPaymentLink}
-                          title={linkCopied ? 'Copied' : 'Copy link'}
-                          aria-label="Copy payment link"
-                        >
-                          {linkCopied ? <Check size={14} /> : <Copy size={14} />}
-                        </IconButton>
-                        <IconButton
-                          type="button"
-                          onClick={handleOpenPaymentPage}
-                          disabled={!receiveCheckoutPath}
-                          title="Open payment page"
-                          aria-label="Open payment page"
-                        >
-                          <ExternalLink size={14} />
-                        </IconButton>
-                      </PaymentLinkActions>
+
 
                       <QrTypeSelector>
                         <QrTypeButton
@@ -991,16 +963,20 @@ export function QrOperationsModal({
                       <ReceiveInfoSection>
                         <InfoBox>
                           <InfoRow>
-                            <InfoLabel>Amount in USD</InfoLabel>
-                            <InfoValue>${parseFloat(amount).toFixed(2)}</InfoValue>
+                            <InfoLabel>Amount in {currency}</InfoLabel>
+                            <InfoValueBlue>{amount} {currency}</InfoValueBlue>
                           </InfoRow>
-                          <InfoDivider />
-                          <InfoRow>
-                            <InfoLabel>Scan and pay</InfoLabel>
-                            <InfoValueBlue>
-                              {tokenAmount ? `${tokenAmount} ${currency}` : `... ${currency}`}
-                            </InfoValueBlue>
-                          </InfoRow>
+                          {usdAmount && (
+                            <>
+                              <InfoDivider />
+                              <InfoRow>
+                                <InfoLabel>USD Equivalent</InfoLabel>
+                                <InfoValue>
+                                  ${parseFloat(usdAmount).toFixed(2)}
+                                </InfoValue>
+                              </InfoRow>
+                            </>
+                          )}
                         </InfoBox>
                       </ReceiveInfoSection>
                     )}
@@ -1043,31 +1019,20 @@ export function QrOperationsModal({
                   )}
 
                   <FieldGroup>
-                    <FieldLabel>Amount in USD</FieldLabel>
-                    <TextInput
-                      type="text"
-                      inputMode="decimal"
-                      placeholder="0.00"
-                      value={amount}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (/^[0-9]*\.?[0-9]*$/.test(val)) {
-                          setAmount(val);
-                        }
-                      }}
-                    />
-                  </FieldGroup>
-
-                  <FieldGroup>
                     <FieldLabel>Pay in</FieldLabel>
                     <InputRow>
                       <AmountInput
                         type="text"
-                        readOnly
+                        inputMode="decimal"
                         placeholder="0.00"
-                        value={tokenAmount}
-                        style={{ background: 'rgba(255, 255, 255, 0.02)', color: 'rgba(255, 255, 255, 0.8)' }}
-                        aria-label="Converted amount"
+                        value={amount}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (/^[0-9]*\.?[0-9]*$/.test(val)) {
+                            setAmount(val);
+                          }
+                        }}
+                        aria-label="Payment amount"
                       />
                       <TokenSelect
                         value={currency}
@@ -1079,7 +1044,11 @@ export function QrOperationsModal({
                         <option value="LXR">LXR</option>
                       </TokenSelect>
                     </InputRow>
-                    <NoteText>This is the current equivalent value. Cryptocurrency prices fluctuate.</NoteText>
+                    {amount && parseFloat(amount) > 0 && usdAmount && (
+                      <NoteText>
+                        Equivalent to ~${parseFloat(usdAmount).toFixed(2)} USD based on current market rates.
+                      </NoteText>
+                    )}
                   </FieldGroup>
 
                   <AdvancedToggle type="button" onClick={() => setShowAdvanced(!showAdvanced)}>
