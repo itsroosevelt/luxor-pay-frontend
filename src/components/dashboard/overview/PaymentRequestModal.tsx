@@ -126,6 +126,16 @@ const FieldLabel = styled.span`
   display: block;
 `;
 
+const FieldHelpText = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.4;
+  margin-top: 4px;
+  display: block;
+`;
+
 const TextInput = styled.input`
   width: 100%;
   background: rgba(0, 0, 0, 0.3);
@@ -374,17 +384,30 @@ export function PaymentRequestModal({
     const contact = contactsData?.data.find(c => c.id === e.target.value) ?? null;
     setSelectedContact(contact);
     if (contact) {
-      setForm(prev => ({
-        ...prev,
-        payerWallet: contact.walletAddress,
-        businessName: prev.businessName || contact.nickname || '',
-        targetNotification:
-          prev.notificationType === 'EMAIL'
-            ? contact.email || ''
-            : prev.notificationType === 'PHONE'
-            ? contact.telephone || ''
-            : prev.targetNotification,
-      }));
+      setForm(prev => {
+        let notificationType = prev.notificationType;
+        let targetNotification = prev.targetNotification;
+
+        if (contact.email) {
+          notificationType = 'EMAIL';
+          targetNotification = contact.email;
+        } else if (contact.telephone) {
+          notificationType = 'PHONE';
+          targetNotification = contact.telephone;
+        } else {
+          notificationType = 'NONE';
+          targetNotification = '';
+        }
+
+        return {
+          ...prev,
+          payerWallet: contact.walletAddress,
+          businessName: prev.businessName || contact.nickname || '',
+          notificationType,
+          targetNotification,
+          assetMint: contact.mint && tokenRegistry[contact.mint] ? contact.mint : prev.assetMint,
+        };
+      });
     }
   };
 
@@ -677,11 +700,15 @@ export function PaymentRequestModal({
                         <TextInput
                           id="pr-expirationDate"
                           name="expirationDate"
-                          type="date"
+                          type="datetime-local"
                           value={form.expirationDate}
                           onChange={handleChange}
-                          min={new Date().toISOString().split('T')[0]}
+                          min={new Date().toISOString().slice(0, 16)}
+                          style={{ colorScheme: 'dark' }}
                         />
+                        <FieldHelpText>
+                          If set, a reminder is sent 1 day before and on the day of expiration. If empty, a reminder is sent 7 days after creation.
+                        </FieldHelpText>
                       </FieldGroup>
                     </>
                   )}
