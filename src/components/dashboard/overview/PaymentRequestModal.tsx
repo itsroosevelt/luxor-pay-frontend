@@ -126,6 +126,16 @@ const FieldLabel = styled.span`
   display: block;
 `;
 
+const FieldHelpText = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.4;
+  margin-top: 4px;
+  display: block;
+`;
+
 const TextInput = styled.input`
   width: 100%;
   background: rgba(0, 0, 0, 0.3);
@@ -344,6 +354,8 @@ export function PaymentRequestModal({
     assetMint: defaultMint,
     notificationType: 'NONE' as NotificationType,
     targetNotification: '',
+    phonePrefix: '+1',
+    phoneNumber: '',
     reference: '',
     numericalReference: '',
     expirationDate: '',
@@ -363,6 +375,8 @@ export function PaymentRequestModal({
         assetMint: defaultMint,
         notificationType: 'NONE',
         targetNotification: '',
+        phonePrefix: '+1',
+        phoneNumber: '',
         reference: '',
         numericalReference: '',
         expirationDate: '',
@@ -374,17 +388,40 @@ export function PaymentRequestModal({
     const contact = contactsData?.data.find(c => c.id === e.target.value) ?? null;
     setSelectedContact(contact);
     if (contact) {
-      setForm(prev => ({
-        ...prev,
-        payerWallet: contact.walletAddress,
-        businessName: prev.businessName || contact.nickname || '',
-        targetNotification:
-          prev.notificationType === 'EMAIL'
-            ? contact.email || ''
-            : prev.notificationType === 'PHONE'
-            ? contact.telephone || ''
-            : prev.targetNotification,
-      }));
+      setForm(prev => {
+        let notificationType = prev.notificationType;
+        let targetNotification = prev.targetNotification;
+        let phonePrefix = prev.phonePrefix;
+        let phoneNumber = prev.phoneNumber;
+
+        if (contact.email) {
+          notificationType = 'EMAIL';
+          targetNotification = contact.email;
+        } else if (contact.telephone) {
+          notificationType = 'PHONE';
+          const match = contact.telephone.match(/^(\+\d{1,4})\s*(.*)$/);
+          if (match) {
+            phonePrefix = match[1];
+            phoneNumber = match[2];
+          } else {
+            phoneNumber = contact.telephone;
+          }
+        } else {
+          notificationType = 'NONE';
+          targetNotification = '';
+        }
+
+        return {
+          ...prev,
+          payerWallet: contact.walletAddress,
+          businessName: prev.businessName || contact.nickname || '',
+          notificationType,
+          targetNotification,
+          phonePrefix,
+          phoneNumber,
+          assetMint: contact.mint && tokenRegistry[contact.mint] ? contact.mint : prev.assetMint,
+        };
+      });
     }
   };
 
@@ -392,21 +429,29 @@ export function PaymentRequestModal({
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
 
-    // Auto-fill notification from contact when type changes
-    if (name === 'notificationType' && selectedContact) {
-      setForm(prev => ({
-        ...prev,
-        notificationType: value as NotificationType,
-        targetNotification:
-          value === 'EMAIL'
-            ? selectedContact.email || ''
-            : value === 'PHONE'
-            ? selectedContact.telephone || ''
-            : '',
-      }));
-    }
+    setForm(prev => {
+      const next = { ...prev, [name]: value };
+
+      // Auto-fill notification from contact when type changes
+      if (name === 'notificationType' && selectedContact) {
+        next.notificationType = value as NotificationType;
+        if (value === 'EMAIL') {
+          next.targetNotification = selectedContact.email || '';
+        } else if (value === 'PHONE') {
+          if (selectedContact.telephone) {
+            const match = selectedContact.telephone.match(/^(\+\d{1,4})\s*(.*)$/);
+            if (match) {
+              next.phonePrefix = match[1];
+              next.phoneNumber = match[2];
+            } else {
+              next.phoneNumber = selectedContact.telephone;
+            }
+          }
+        }
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -428,8 +473,13 @@ export function PaymentRequestModal({
       payerWallet: form.payerWallet,
     };
 
-    if (form.notificationType !== 'NONE' && form.targetNotification) {
-      payload.targetNotification = form.targetNotification;
+    let finalTarget = form.targetNotification;
+    if (form.notificationType === 'PHONE') {
+      finalTarget = `${form.phonePrefix}${form.phoneNumber}`.trim();
+    }
+
+    if (form.notificationType !== 'NONE' && finalTarget) {
+      payload.targetNotification = finalTarget;
     }
     if (form.reference) payload.reference = form.reference;
     if (form.businessName) payload.businessName = form.businessName;
@@ -607,19 +657,50 @@ export function PaymentRequestModal({
                       <FieldLabel>
                         {form.notificationType === 'EMAIL' ? 'Email Address *' : 'Phone Number *'}
                       </FieldLabel>
-                      <TextInput
-                        id="pr-targetNotification"
-                        name="targetNotification"
-                        type={form.notificationType === 'EMAIL' ? 'email' : 'tel'}
-                        value={form.targetNotification}
-                        onChange={handleChange}
-                        placeholder={
-                          form.notificationType === 'EMAIL'
-                            ? 'payer@example.com'
-                            : '+1 555 000 0000'
-                        }
-                        required
-                      />
+                      {form.notificationType === 'EMAIL' ? (
+                        <TextInput
+                          id="pr-targetNotification"
+                          name="targetNotification"
+                          type="email"
+                          value={form.targetNotification}
+                          onChange={handleChange}
+                          placeholder="payer@example.com"
+                          required
+                        />
+                      ) : (
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <Select
+                            name="phonePrefix"
+                            value={form.phonePrefix}
+                            onChange={handleChange}
+                            style={{ width: '140px', flexShrink: 0 }}
+                          >
+                            <option value="+1">+1 (US/CA)</option>
+                            <option value="+44">+44 (UK)</option>
+                            <option value="+52">+52 (MX)</option>
+                            <option value="+34">+34 (ES)</option>
+                            <option value="+57">+57 (CO)</option>
+                            <option value="+54">+54 (AR)</option>
+                            <option value="+55">+55 (BR)</option>
+                            <option value="+56">+56 (CL)</option>
+                            <option value="+51">+51 (PE)</option>
+                            <option value="+49">+49 (DE)</option>
+                            <option value="+33">+33 (FR)</option>
+                            <option value="+81">+81 (JP)</option>
+                            <option value="+61">+61 (AU)</option>
+                          </Select>
+                          <TextInput
+                            id="pr-phoneNumber"
+                            name="phoneNumber"
+                            type="tel"
+                            maxLength={10}
+                            value={form.phoneNumber}
+                            onChange={handleChange}
+                            placeholder="555 000 0000"
+                            required
+                          />
+                        </div>
+                      )}
                     </FieldGroup>
                   )}
 
@@ -677,11 +758,15 @@ export function PaymentRequestModal({
                         <TextInput
                           id="pr-expirationDate"
                           name="expirationDate"
-                          type="date"
+                          type="datetime-local"
                           value={form.expirationDate}
                           onChange={handleChange}
-                          min={new Date().toISOString().split('T')[0]}
+                          min={new Date().toISOString().slice(0, 16)}
+                          style={{ colorScheme: 'dark' }}
                         />
+                        <FieldHelpText>
+                          If set, a reminder is sent 1 day before and on the day of expiration. If empty, a reminder is sent 7 days after creation.
+                        </FieldHelpText>
                       </FieldGroup>
                     </>
                   )}
