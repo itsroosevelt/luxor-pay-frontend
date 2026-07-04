@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Luxor Pay</string>
+    <string name="title_activity_main">Luxor Pay</string>
+    <string name="package_name">com.luxorpay.app</string>
+    <string name="custom_url_scheme">com.luxorpay.app</string>
+</resources>
