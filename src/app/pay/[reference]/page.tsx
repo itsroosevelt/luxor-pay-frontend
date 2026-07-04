@@ -1,5 +1,8 @@
-'use client';
+import PageClient from './PageClient';
 
+export async function generateStaticParams() {
+  return [{ reference: 'dummy' }];
+}
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { usePaymentStatus } from '@/features/checkout/hooks/usePaymentStatus';
@@ -125,10 +128,6 @@ export default function PayByReferencePage() {
           </>
         )}
 
-        {isConfirmed && (
-          <p className="text-center text-primary font-semibold mt-6">Thank you for your payment.</p>
-        )}
-      </div>
-    </div>
-  );
+export default function Page() {
+  return <PageClient />;
 }
