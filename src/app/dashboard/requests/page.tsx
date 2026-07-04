@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { useGetPaymentRequests } from '@/hooks/useGetPaymentRequests';
+import { useGetContacts } from '@/hooks/useGetContacts';
 import {
   PaymentRequest,
   cancelPaymentRequest,
@@ -40,6 +41,7 @@ import {
   Mail,
   Smartphone,
   BellRing,
+  ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -735,6 +737,8 @@ function ResendModal({
 }) {
   const [step, setStep] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showPrefixDropdown, setShowPrefixDropdown] = useState(false);
 
   const existingTarget = request.targetNotification || '';
   const isExistingEmail = existingTarget.includes('@');
@@ -751,6 +755,23 @@ function ResendModal({
   
   const [phonePrefix, setPhonePrefix] = useState(defaultPrefix);
   const [phoneNumber, setPhoneNumber] = useState(defaultPhone);
+  const [extraPrefixes, setExtraPrefixes] = useState<string[]>(() => {
+    const standardPrefixes = ['+1', '+44', '+52', '+34', '+54', '+57', '+55', '+56', '+51', '+593'];
+    if (defaultPrefix && !standardPrefixes.includes(defaultPrefix)) {
+      return [defaultPrefix];
+    }
+    return [];
+  });
+
+  const { data: contactsData } = useGetContacts();
+
+  // Find contact matching the request's payerWallet
+  const matchedContact = useMemo(() => {
+    if (!request.payerWallet || !contactsData?.data) return null;
+    return contactsData.data.find(
+      c => c.walletAddress.toLowerCase() === request.payerWallet.toLowerCase()
+    );
+  }, [request.payerWallet, contactsData]);
 
   const handleResend = async () => {
     let finalTarget = '';
@@ -821,7 +842,6 @@ function ResendModal({
             boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(96,165,250,0.06)',
             width: '100%',
             maxWidth: '420px',
-            overflow: 'hidden',
           }}
         >
           {/* Header */}
@@ -830,6 +850,8 @@ function ResendModal({
             borderBottom: '1px solid rgba(255,255,255,0.06)',
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
             background: 'linear-gradient(135deg, rgba(37,99,235,0.07) 0%, transparent 60%)',
+            borderTopLeftRadius: '27px',
+            borderTopRightRadius: '27px',
           }}>
             <div>
               <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#60A5FA', margin: '0 0 4px 0' }}>
@@ -874,7 +896,7 @@ function ResendModal({
                 return (
                   <button
                     key={t}
-                    onClick={() => { setType(t); setErrorMsg(''); }}
+                    onClick={() => { setType(t); setErrorMsg(''); setShowSuggestions(false); setShowPrefixDropdown(false); }}
                     disabled={isBusy}
                     style={{
                       flex: 1, padding: '12px 0',
@@ -894,69 +916,22 @@ function ResendModal({
               })}
             </div>
 
+
+
             {type === 'EMAIL' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
                 <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
                   Email Address
                 </label>
-                <input
-                  type="email"
-                  value={emailTarget}
-                  onChange={e => setEmailTarget(e.target.value)}
-                  placeholder="payer@example.com"
-                  disabled={isBusy}
-                  style={{
-                    width: '100%', padding: '12px 14px',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: '12px',
-                    color: '#FFFFFF',
-                    fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
-                    outline: 'none', boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-            )}
-
-            {type === 'PHONE' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-                  Phone Number
-                </label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <select
-                    value={phonePrefix}
-                    onChange={e => setPhonePrefix(e.target.value)}
-                    disabled={isBusy}
-                    style={{
-                      padding: '12px',
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      borderRadius: '12px',
-                      color: '#FFFFFF',
-                      fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
-                      outline: 'none',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+52">🇲🇽 +52</option>
-                    <option value="+34">🇪🇸 +34</option>
-                    <option value="+54">🇦🇷 +54</option>
-                    <option value="+57">🇨🇴 +57</option>
-                    <option value="+55">🇧🇷 +55</option>
-                    <option value="+56">🇨🇱 +56</option>
-                    <option value="+51">🇵🇪 +51</option>
-                  </select>
+                <div style={{ position: 'relative', width: '100%' }}>
                   <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    placeholder="1234567890"
+                    type="email"
+                    value={emailTarget}
+                    onChange={e => setEmailTarget(e.target.value)}
+                    placeholder="payer@example.com"
                     disabled={isBusy}
                     style={{
-                      flex: 1, padding: '12px 14px',
+                      width: '100%', padding: matchedContact?.email ? '12px 40px 12px 14px' : '12px 14px',
                       background: 'rgba(255,255,255,0.04)',
                       border: '1px solid rgba(255,255,255,0.12)',
                       borderRadius: '12px',
@@ -965,7 +940,295 @@ function ResendModal({
                       outline: 'none', boxSizing: 'border-box',
                     }}
                   />
+                  {matchedContact?.email && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSuggestions(!showSuggestions)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'transparent',
+                        border: 'none',
+                        color: 'rgba(255,255,255,0.4)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: 0,
+                      }}
+                      title="Show contact suggestions"
+                    >
+                      <ChevronDown size={18} style={{ transform: showSuggestions ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                    </button>
+                  )}
                 </div>
+
+                <AnimatePresence>
+                  {showSuggestions && matchedContact?.email && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 10,
+                        marginTop: '4px',
+                        background: '#0F0F0F',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEmailTarget(matchedContact.email);
+                          setShowSuggestions(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#FFFFFF',
+                          fontFamily: 'Montserrat, sans-serif',
+                          fontSize: '13px',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '2px',
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,0.1)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: '10px', color: '#60A5FA', fontFamily: 'Outfit, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          Saved Contact ({matchedContact.nickname})
+                        </span>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{matchedContact.email}</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+
+            {type === 'PHONE' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', position: 'relative' }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+                  Phone Number
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{ position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowPrefixDropdown(!showPrefixDropdown)}
+                      disabled={isBusy}
+                      style={{
+                        padding: '12px 14px',
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '12px',
+                        color: '#FFFFFF',
+                        fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                        cursor: isBusy ? 'not-allowed' : 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        outline: 'none',
+                      }}
+                    >
+                      <span>
+                        {phonePrefix === '+1' && '🇺🇸 +1'}
+                        {phonePrefix === '+593' && '🇪🇨 +593'}
+                        {phonePrefix === '+44' && '🇬🇧 +44'}
+                        {phonePrefix === '+52' && '🇲🇽 +52'}
+                        {phonePrefix === '+34' && '🇪🇸 +34'}
+                        {phonePrefix === '+54' && '🇦🇷 +54'}
+                        {phonePrefix === '+57' && '🇨🇴 +57'}
+                        {phonePrefix === '+55' && '🇧🇷 +55'}
+                        {phonePrefix === '+56' && '🇨🇱 +56'}
+                        {phonePrefix === '+51' && '🇵🇪 +51'}
+                        {!['+1', '+593', '+44', '+52', '+34', '+54', '+57', '+55', '+56', '+51'].includes(phonePrefix) && `🌍 ${phonePrefix}`}
+                      </span>
+                      <ChevronDown size={14} style={{ transform: showPrefixDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', opacity: 0.6 }} />
+                    </button>
+
+                    <AnimatePresence>
+                      {showPrefixDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: 0,
+                            zIndex: 20,
+                            marginTop: '6px',
+                            background: '#0F0F0F',
+                            border: '1px solid rgba(255,255,255,0.15)',
+                            borderRadius: '12px',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                            maxHeight: '220px',
+                            overflowY: 'auto',
+                            width: '120px',
+                          }}
+                        >
+                          {[
+                            { value: '+1', label: '🇺🇸 +1' },
+                            { value: '+593', label: '🇪🇨 +593' },
+                            { value: '+44', label: '🇬🇧 +44' },
+                            { value: '+52', label: '🇲🇽 +52' },
+                            { value: '+34', label: '🇪🇸 +34' },
+                            { value: '+54', label: '🇦🇷 +54' },
+                            { value: '+57', label: '🇨🇴 +57' },
+                            { value: '+55', label: '🇧🇷 +55' },
+                            { value: '+56', label: '🇨🇱 +56' },
+                            { value: '+51', label: '🇵🇪 +51' },
+                            ...extraPrefixes.map(p => ({ value: p, label: `🌍 ${p}` })),
+                          ].map(item => (
+                            <button
+                              key={item.value}
+                              type="button"
+                              onClick={() => {
+                                setPhonePrefix(item.value);
+                                setShowPrefixDropdown(false);
+                              }}
+                              style={{
+                                width: '100%',
+                                padding: '10px 12px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#FFFFFF',
+                                fontFamily: 'Montserrat, sans-serif',
+                                fontSize: '13px',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                                transition: 'background 0.2s',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,0.1)'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <input
+                      type="tel"
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value)}
+                      placeholder="1234567890"
+                      disabled={isBusy}
+                      style={{
+                        width: '100%', padding: matchedContact?.telephone ? '12px 40px 12px 14px' : '12px 14px',
+                        background: 'rgba(255,255,255,0.04)',
+                        border: '1px solid rgba(255,255,255,0.12)',
+                        borderRadius: '12px',
+                        color: '#FFFFFF',
+                        fontFamily: 'Montserrat, sans-serif', fontSize: '14px',
+                        outline: 'none', boxSizing: 'border-box',
+                      }}
+                    />
+                    {matchedContact?.telephone && (
+                      <button
+                        type="button"
+                        onClick={() => setShowSuggestions(!showSuggestions)}
+                        style={{
+                          position: 'absolute',
+                          right: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'rgba(255,255,255,0.4)',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: 0,
+                        }}
+                        title="Show contact suggestions"
+                      >
+                        <ChevronDown size={18} style={{ transform: showSuggestions ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {showSuggestions && matchedContact?.telephone && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 10,
+                        marginTop: '4px',
+                        background: '#0F0F0F',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        borderRadius: '12px',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const phone = matchedContact.telephone;
+                          const prefixMatch = phone.match(/^(\+\d{1,3})/);
+                          if (prefixMatch) {
+                            const prefix = prefixMatch[1];
+                            const standardPrefixes = ['+1', '+44', '+52', '+34', '+54', '+57', '+55', '+56', '+51', '+593'];
+                            if (!standardPrefixes.includes(prefix) && !extraPrefixes.includes(prefix)) {
+                              setExtraPrefixes(prev => [...prev, prefix]);
+                            }
+                            setPhonePrefix(prefix);
+                            setPhoneNumber(phone.replace(/^(\+\d{1,3})/, '').trim());
+                          } else {
+                            setPhoneNumber(phone);
+                          }
+                          setShowSuggestions(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#FFFFFF',
+                          fontFamily: 'Montserrat, sans-serif',
+                          fontSize: '13px',
+                          textAlign: 'left',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '2px',
+                          transition: 'background 0.2s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(96,165,250,0.1)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      >
+                        <span style={{ fontSize: '10px', color: '#60A5FA', fontFamily: 'Outfit, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          Saved Contact ({matchedContact.nickname})
+                        </span>
+                        <span>{matchedContact.telephone}</span>
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             )}
 
@@ -1017,6 +1280,7 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
   const formattedAmount = formatAmount(request.amount, request.assetMint, network);
   const expDate = formatDate(request.expirationDate);
   const createdDate = formatDate(request.createdAt);
+  const lastRemindedDate = formatDate(request.lastNotificationDate);
 
   return (
     <motion.div
@@ -1090,6 +1354,14 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
           <MetaItem icon={<Calendar size={13} />} label="Expires">
             <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
               {expDate}
+            </span>
+          </MetaItem>
+        )}
+
+        {lastRemindedDate && (
+          <MetaItem icon={<Bell size={13} />} label="Last Reminded">
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
+              {lastRemindedDate}
             </span>
           </MetaItem>
         )}

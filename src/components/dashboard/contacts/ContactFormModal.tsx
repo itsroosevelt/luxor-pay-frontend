@@ -211,6 +211,36 @@ const ErrorText = styled.p`
   margin: 0;
 `;
 
+const COUNTRY_CODES = [
+  { code: '+1', country: 'US/CA' },
+  { code: '+34', country: 'ES' },
+  { code: '+51', country: 'PE' },
+  { code: '+52', country: 'MX' },
+  { code: '+53', country: 'CU' },
+  { code: '+54', country: 'AR' },
+  { code: '+55', country: 'BR' },
+  { code: '+56', country: 'CL' },
+  { code: '+57', country: 'CO' },
+  { code: '+58', country: 'VE' },
+  { code: '+502', country: 'GT' },
+  { code: '+503', country: 'SV' },
+  { code: '+504', country: 'HN' },
+  { code: '+505', country: 'NI' },
+  { code: '+506', country: 'CR' },
+  { code: '+507', country: 'PA' },
+  { code: '+591', country: 'BO' },
+  { code: '+593', country: 'EC' },
+  { code: '+595', country: 'PY' },
+  { code: '+598', country: 'UY' },
+];
+
+const PhoneInputGroup = styled.div`
+  display: grid;
+  grid-template-columns: 125px 1fr;
+  gap: 12px;
+  width: 100%;
+`;
+
 export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: ContactFormModalProps) {
   const { mutate: createMutate, isLoading: isCreating, isError: isCreateError, errorMessage: createError } = useCreateContact();
   const { mutate: updateMutate, isLoading: isUpdating, isError: isUpdateError, errorMessage: updateError } = useUpdateContact();
@@ -218,6 +248,9 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
   const isLoading = isCreating || isUpdating;
   const isError = isCreateError || isUpdateError;
   const errorMessage = createError || updateError;
+
+  const [countryCode, setCountryCode] = useState('+1');
+  const [phoneNum, setPhoneNum] = useState('');
 
   const [formData, setFormData] = useState<CreateContactPayload>({
     nickname: '',
@@ -232,6 +265,23 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
   React.useEffect(() => {
     if (isOpen) {
       if (initialData) {
+        const telephone = initialData.telephone || '';
+        let matchedCode = '+1';
+        let matchedNum = telephone;
+
+        if (telephone.startsWith('+')) {
+          const sortedCodes = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length);
+          for (const item of sortedCodes) {
+            if (telephone.startsWith(item.code)) {
+              matchedCode = item.code;
+              matchedNum = telephone.slice(item.code.length);
+              break;
+            }
+          }
+        }
+        setCountryCode(matchedCode);
+        setPhoneNum(matchedNum);
+
         setFormData({
           nickname: initialData.nickname || '',
           walletAddress: initialData.walletAddress || '',
@@ -242,6 +292,8 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
           isFavorite: initialData.isFavorite || false,
         });
       } else {
+        setCountryCode('+1');
+        setPhoneNum('');
         setFormData({
           nickname: '',
           walletAddress: '',
@@ -254,6 +306,14 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
       }
     }
   }, [isOpen, initialData]);
+
+  React.useEffect(() => {
+    if (phoneNum) {
+      setFormData(prev => ({ ...prev, telephone: `${countryCode}${phoneNum}` }));
+    } else {
+      setFormData(prev => ({ ...prev, telephone: '' }));
+    }
+  }, [countryCode, phoneNum]);
 
   const env = getLuxorEnv();
   const isDev = env === 'development';
@@ -374,13 +434,27 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
 
             <FormGroup>
               <Label>PHONE (OPTIONAL)</Label>
-              <Input 
-                name="telephone"
-                value={formData.telephone}
-                onChange={handleChange}
-                placeholder="+1234567890"
-                disabled={isLoading}
-              />
+              <PhoneInputGroup>
+                <Select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  disabled={isLoading}
+                  style={{ padding: '14px 12px' }}
+                >
+                  {COUNTRY_CODES.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.code} ({item.country})
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  type="tel"
+                  value={phoneNum}
+                  onChange={(e) => setPhoneNum(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123456789"
+                  disabled={isLoading}
+                />
+              </PhoneInputGroup>
             </FormGroup>
 
             <FormGroup>
