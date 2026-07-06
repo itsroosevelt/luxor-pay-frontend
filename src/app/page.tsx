@@ -42,10 +42,10 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-white selection:bg-primary/30 font-sans">
       {/* Navigation */}
-      <nav className="fixed top-0 w-full flex items-center justify-between px-8 py-5 z-50 backdrop-blur-md border-b border-white/5">
+      <nav className="fixed top-0 w-full flex items-center justify-between px-8 py-3 z-50 backdrop-blur-md border-b border-white/5">
         <div className="flex items-center gap-12">
           <Link href="/" className="text-xl font-normal tracking-tight flex items-center gap-2 hover:opacity-90 transition-opacity">
-            <img src="/logo.jpg" alt="Logo" className="h-10 w-10 object-contain" />
+            <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
             <span>Luxor <span className="text-primary">Pay</span></span>
           </Link>
 
@@ -163,13 +163,13 @@ export default function LandingPage() {
           </button>
           
           <Link href="/login">
-            <button className="px-6 py-1 text-sm font-normal text-white bg-transparent border border-white/20 rounded-full hover:bg-white/5 transition-colors">
+            <button className="px-9 py-1 text-sm font-normal text-white bg-transparent border border-white/20 rounded-full hover:bg-white/5 transition-colors">
               Sign In
             </button>
           </Link>
           
           <Link href="/login?register=true">
-            <button className="px-6 py-1 text-sm font-normal bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full transition-colors shadow-lg shadow-blue-500/20">
+            <button className="px-9 py-1 text-sm font-normal bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full transition-colors shadow-lg shadow-blue-500/20">
               Sign Up
             </button>
           </Link>
@@ -178,36 +178,38 @@ export default function LandingPage() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative isolate pt-40 pb-32 flex flex-col items-center justify-center text-center px-4 min-h-screen overflow-hidden bg-black">
+        <section className="relative isolate pt-40 pb-[2cm] px-[2cm] flex flex-col justify-end min-h-screen overflow-hidden bg-black text-left">
           <HeroBackground />
 
           <div className="pointer-events-none absolute top-1/2 left-1/2 z-[1] h-[min(800px,100vw)] w-[min(800px,100vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[120px] mix-blend-screen" />
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="relative z-10 max-w-4xl mx-auto"
+            transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
+            className="relative z-10 w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-end"
           >
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 leading-tight">
-              The Next-Generation <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                Solana Payment Gateway
+            <div className="md:col-span-8 space-y-6">
+              <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-gray-400 block" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+                Accept global payments in minutes, not days
               </span>
-            </h1>
-            <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-              Accept Solana payments instantly. Create customizable payment links, manage transactions, and integrate hardware POS terminals from a single unified dashboard.
-            </p>
+              <h1 className="text-3xl md:text-[48px] font-normal tracking-tight text-white leading-[1.2]">
+                Welcome to the payment platform <br className="hidden md:inline" />
+                connecting the real world <br className="hidden md:inline" />
+                with <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#60A5FA] to-[#2563EB] font-medium">on-chain technology</span>
+              </h1>
+              <p className="text-base md:text-[16px] font-light text-white/80 leading-relaxed max-w-2xl">
+                A unified global platform that allows you to receive payments anywhere in the world with advanced security, optimized conversion, and integration in minutes for any type of personal, business, web, or custom payment.
+              </p>
+            </div>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="md:col-span-4 flex md:justify-end justify-start mb-[1cm]">
               <Link href="/login?register=true">
-                <button className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-white text-black rounded-full hover:scale-105 transition-transform">
+                <button 
+                  className="px-8 py-2.5 text-base font-normal bg-transparent text-white border border-white/30 rounded-full hover:scale-105 hover:bg-white/5 transition-all shadow-lg"
+                  style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}
+                >
                   Start Accepting Payments
-                </button>
-              </Link>
-              <Link href="#features">
-                <button className="w-full sm:w-auto px-8 py-4 text-base font-semibold bg-white/5 text-white border border-white/10 rounded-full hover:bg-white/10 transition-colors">
-                  Explore Features
                 </button>
               </Link>
             </div>
