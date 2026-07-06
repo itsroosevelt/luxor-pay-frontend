@@ -18,8 +18,6 @@ export function HeroBackground() {
       </video>
 
       {/* Edge gradient overlays for text readability and smooth background transition */}
-      <div className="absolute inset-y-0 left-0 w-[45%] bg-gradient-to-r from-black via-black/60 to-transparent" />
-      <div className="absolute inset-y-0 right-0 w-[30%] bg-gradient-to-l from-black/60 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black to-transparent" />
       <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/70 to-transparent" />
     </div>
