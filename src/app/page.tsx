@@ -1,8 +1,8 @@
 'use client';
 
-import { ChevronDown, Globe } from 'lucide-react';
+import { ChevronDown, Globe, Menu, X } from 'lucide-react';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { HeroBackground } from '@/components/HeroBackground';
 
@@ -38,6 +38,7 @@ const RESOURCES = [
 
 export default function LandingPage() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-black text-white selection:bg-primary/30 font-sans">
@@ -158,23 +159,67 @@ export default function LandingPage() {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-4">
-          <button className="text-gray-400 hover:text-white transition-colors p-2 flex items-center justify-center">
-            <Globe size={18} />
+          <div className="hidden md:flex items-center gap-4">
+            <button className="text-gray-400 hover:text-white transition-colors p-2 flex items-center justify-center">
+              <Globe size={18} />
+            </button>
+            
+            <Link href="/login">
+              <button className="px-9 py-1 text-sm font-normal text-white bg-transparent border border-white/20 rounded-full hover:bg-white/5 transition-colors">
+                Sign In
+              </button>
+            </Link>
+            
+            <Link href="/login?register=true">
+              <button className="px-9 py-1 text-sm font-normal bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full transition-colors shadow-lg shadow-blue-500/20">
+                Sign Up
+              </button>
+            </Link>
+          </div>
+
+          {/* Mobile Hamburger Button */}
+          <button 
+            className="md:hidden text-gray-400 hover:text-white transition-colors p-2 flex items-center justify-center"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
-          
-          <Link href="/login">
-            <button className="px-9 py-1 text-sm font-normal text-white bg-transparent border border-white/20 rounded-full hover:bg-white/5 transition-colors">
-              Sign In
-            </button>
-          </Link>
-          
-          <Link href="/login?register=true">
-            <button className="px-9 py-1 text-sm font-normal bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full transition-colors shadow-lg shadow-blue-500/20">
-              Sign Up
-            </button>
-          </Link>
         </div>
       </nav>
+
+      {/* Mobile Navigation Dropdown Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-x-0 top-[60px] bg-black/95 border-b border-white/10 backdrop-blur-xl z-40 md:hidden p-6 flex flex-col gap-6"
+          >
+            <div className="flex flex-col gap-4 text-base font-normal text-gray-300">
+              <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors py-2 border-b border-white/5">Products</Link>
+              <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors py-2 border-b border-white/5">Solutions</Link>
+              <Link href="#features" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors py-2 border-b border-white/5">Developers</Link>
+              <Link href="#pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors py-2 border-b border-white/5">Pricing</Link>
+            </div>
+
+            <div className="flex flex-col gap-3 pt-2">
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                <button className="w-full py-2.5 text-sm font-normal text-white bg-transparent border border-white/20 rounded-full hover:bg-white/5 transition-colors">
+                  Sign In
+                </button>
+              </Link>
+              <Link href="/login?register=true" onClick={() => setMobileMenuOpen(false)} className="w-full">
+                <button className="w-full py-2.5 text-sm font-normal bg-[#2563EB] hover:bg-[#1d4ed8] text-white rounded-full transition-colors shadow-lg shadow-blue-500/20">
+                  Sign Up
+                </button>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <main>
         {/* Hero Section */}
