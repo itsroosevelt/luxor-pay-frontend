@@ -410,22 +410,39 @@ export default function PayQrClient() {
   const [geoStatus, setGeoStatus] = useState<'loading' | 'granted' | 'denied'>('loading');
 
   useEffect(() => {
-    if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
-      setGeoStatus('denied');
-      return;
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setGeoCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
-        setGeoStatus('granted');
-      },
-      (err) => {
-        console.error('Geolocation error:', err);
+    import('@capacitor/core').then(({ Capacitor }) => {
+      if (Capacitor.isNativePlatform()) {
+        import('@capacitor/geolocation').then(({ Geolocation }) => {
+          Geolocation.getCurrentPosition({ enableHighAccuracy: true, maximumAge: 60000 })
+            .then(pos => {
+              setGeoCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+              setGeoStatus('granted');
+            })
+            .catch(err => {
+              console.error('Capacitor Geolocation error:', err);
+              setGeoStatus('denied');
+            });
+        });
+        return;
+      }
+      
+      if (typeof navigator === 'undefined' || !('geolocation' in navigator)) {
         setGeoStatus('denied');
-      },
-      { enableHighAccuracy: true, maximumAge: 60000 }
-    );
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setGeoCoords({ latitude: pos.coords.latitude, longitude: pos.coords.longitude });
+          setGeoStatus('granted');
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+          setGeoStatus('denied');
+        },
+        { enableHighAccuracy: true, maximumAge: 60000 }
+      );
+    });
   }, []);
 
   useEffect(() => {

@@ -2,7 +2,7 @@ import { apiUrl } from '@/lib/api-client';
 import type { PaymentOrder } from '@luxor/contracts';
 
 export async function createPaymentFromLink(linkId: string): Promise<PaymentOrder> {
-  const res = await fetch(apiUrl('/api/payments/create'), {
+  const res = await fetch(apiUrl('/payments/create'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ linkId }),
@@ -13,7 +13,7 @@ export async function createPaymentFromLink(linkId: string): Promise<PaymentOrde
 }
 
 export async function fetchPayment(reference: string): Promise<PaymentOrder> {
-  const res = await fetch(apiUrl(`/api/payments/${reference}`));
+  const res = await fetch(apiUrl(`/payments/${reference}`));
   const json = await res.json();
   if (!res.ok) throw new Error(json.error ?? 'Payment not found');
   return json.data as PaymentOrder;
@@ -24,7 +24,7 @@ export async function verifyPayment(reference: string): Promise<{
   confirmed: boolean;
   signature?: string;
 }> {
-  const res = await fetch(apiUrl('/api/payments/verify'), {
+  const res = await fetch(apiUrl('/payments/verify'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ reference }),
@@ -35,7 +35,7 @@ export async function verifyPayment(reference: string): Promise<{
 }
 
 export async function listPayments(token: string): Promise<PaymentOrder[]> {
-  const res = await fetch(apiUrl('/api/payments'), {
+  const res = await fetch(apiUrl('/payments'), {
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await res.json();

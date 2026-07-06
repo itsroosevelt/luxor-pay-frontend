@@ -11,7 +11,8 @@ import React, {
 import styled, { keyframes } from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, ShieldAlert, RefreshCw } from 'lucide-react';
-
+import { Capacitor } from '@capacitor/core';
+import { Geolocation as CapacitorGeolocation } from '@capacitor/geolocation';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type GeolocationStatus = 'idle' | 'requesting' | 'granted' | 'denied';
@@ -318,8 +319,8 @@ export function GeolocationProvider({
   // Avoid duplicate in-flight requests
   const requesting = useRef(false);
 
-  const requestPermission = useCallback(() => {
-    if (!isSupported) {
+  const requestPermission = useCallback(async () => {
+    if (!isSupported && !Capacitor.isNativePlatform()) {
       // If browser doesn't support geolocation, treat as granted with null coords
       // so the app isn't permanently blocked on unsupported environments.
       setStatus('granted');
@@ -329,6 +330,31 @@ export function GeolocationProvider({
     if (requesting.current) return;
     requesting.current = true;
     setStatus('requesting');
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const permStatus = await CapacitorGeolocation.checkPermissions();
+        if (permStatus.location !== 'granted') {
+          const reqStatus = await CapacitorGeolocation.requestPermissions();
+          if (reqStatus.location !== 'granted') {
+            requesting.current = false;
+            setStatus('denied');
+            return;
+          }
+        }
+        
+        const pos = await CapacitorGeolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+        requesting.current = false;
+        setLatitude(pos.coords.latitude);
+        setLongitude(pos.coords.longitude);
+        setStatus('granted');
+      } catch (e) {
+        console.error('Capacitor geolocation error', e);
+        requesting.current = false;
+        setStatus('denied');
+      }
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
