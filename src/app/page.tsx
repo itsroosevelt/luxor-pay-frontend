@@ -178,7 +178,7 @@ export default function LandingPage() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative isolate pt-40 pb-[2cm] px-[2cm] flex flex-col justify-end min-h-screen overflow-hidden bg-black text-left">
+        <section className="relative isolate pt-28 pb-8 px-6 md:pt-36 md:pb-16 md:px-12 lg:pt-40 lg:pb-[2cm] lg:px-[2cm] flex flex-col justify-end min-h-screen overflow-hidden bg-black text-left">
           <HeroBackground />
 
           <div className="pointer-events-none absolute top-1/2 left-1/2 z-[1] h-[min(800px,100vw)] w-[min(800px,100vw)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/15 blur-[120px] mix-blend-screen" />
@@ -187,9 +187,9 @@ export default function LandingPage() {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
-            className="relative z-10 w-full mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 items-end"
+            className="relative z-10 w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-end"
           >
-            <div className="md:col-span-8 space-y-6">
+            <div className="lg:col-span-8 space-y-6">
               <span className="text-[10px] font-bold tracking-[0.4em] uppercase text-gray-400 block" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
                 Accept global payments in minutes, not days
               </span>
@@ -203,7 +203,7 @@ export default function LandingPage() {
               </p>
             </div>
             
-            <div className="md:col-span-4 flex md:justify-end justify-start mb-[1cm]">
+            <div className="lg:col-span-4 flex lg:justify-end justify-start lg:mb-[1cm] mb-4">
               <Link href="/login?register=true">
                 <button 
                   className="px-8 py-2.5 text-base font-normal bg-transparent text-white border border-white/30 rounded-full hover:scale-105 hover:bg-white/5 transition-all shadow-lg"
