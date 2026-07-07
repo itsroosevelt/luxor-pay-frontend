@@ -1,9 +1,13 @@
 export type Currency = string;
 
 export interface MerchantProfile {
+  id?: string;
   email: string;
   businessName?: string;
   merchantWallet?: string;
+  solanaToken?: string;
+  kyc?: boolean;
+  kycStatus?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -19,6 +19,10 @@ import {
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
+import { useMerchant } from '@/context/MerchantContext';
+import { KycModal } from './KycModal';
+import { KycVerificationBanner } from './KycVerificationBanner';
+import { KycResultModal } from './KycResultModal';
 import { clsx } from 'clsx';
 
 const nav = [
@@ -38,6 +42,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -48,14 +53,24 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       setUser(currentUser);
       try {
         const token = await currentUser.getIdToken();
-        await ensureMerchantProfile(token, currentUser.email ?? '');
+        const p = await ensureMerchantProfile(token, currentUser.email ?? '');
+        setProfile(p);
+        
+        if (p && !p.kyc && !sessionStorage.getItem('luxor_kyc_dismissed')) {
+          setIsKycModalOpen(true);
+        }
       } catch (e) {
         console.error(e);
       }
       setLoading(false);
     });
     return () => unsubscribe();
-  }, [router]);
+  }, [router, setProfile]);
+
+  const handleCloseKyc = () => {
+    setIsKycModalOpen(false);
+    sessionStorage.setItem('luxor_kyc_dismissed', 'true');
+  };
 
   useEffect(() => {
     // Close mobile menu on route change
@@ -63,6 +78,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   const handleSignOut = async () => {
+    sessionStorage.removeItem('luxor_kyc_dismissed');
+    sessionStorage.removeItem('luxor_merchant_profile');
     await signOut(auth);
     router.push('/');
   };
@@ -185,6 +202,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      <KycModal isOpen={isKycModalOpen} onClose={handleCloseKyc} />
+      <KycVerificationBanner />
+      <KycResultModal />
     </div>
   );
 }

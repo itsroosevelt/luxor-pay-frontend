@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import styled, { createGlobalStyle, keyframes } from "styled-components";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, AlertCircle, RefreshCw, Coins } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, RefreshCw, Coins, ShieldAlert } from "lucide-react";
 import { WalletBalanceData } from "@/lib/solana-api";
 
 // --- Global Fonts Injection (Outfit & Montserrat) ---
@@ -271,6 +271,99 @@ const ControlsContainer = styled.div`
   gap: 8px;
 `;
 
+const KycAlertBanner = styled(motion.div)`
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+  font-family: 'Montserrat', sans-serif;
+  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @media (min-width: 768px) {
+    border-radius: 24px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    margin-top: 24px;
+  }
+`;
+
+const KycInfo = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+`;
+
+const AlertTitle = styled.h4`
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+  margin: 0 0 4px 0;
+`;
+
+const AlertDesc = styled.p`
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+  line-height: 1.4;
+`;
+
+const VerifyButton = styled.button`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #000000;
+  background: #FFFFFF;
+  border: none;
+  border-radius: 9999px;
+  padding: 8px 18px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease-in-out;
+  align-self: flex-start;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    background: #2563EB;
+    color: #FFFFFF;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 768px) {
+    align-self: center;
+    font-size: 14px;
+    padding: 10px 22px;
+  }
+`;
+
 // --- Interfaces ---
 
 interface WalletBalanceViewProps {
@@ -281,6 +374,8 @@ interface WalletBalanceViewProps {
   refetch: () => Promise<void>;
   isPrivacyMode: boolean;
   togglePrivacyMode: () => void;
+  isKycVerified: boolean;
+  onVerifyClick: () => void;
 }
 
 // --- Component ---
@@ -293,6 +388,8 @@ export function WalletBalanceView({
   refetch,
   isPrivacyMode,
   togglePrivacyMode,
+  isKycVerified,
+  onVerifyClick,
 }: WalletBalanceViewProps) {
   // Prevent hydration mismatch for privacy mode
   const [mounted, setMounted] = useState(false);
@@ -387,6 +484,27 @@ export function WalletBalanceView({
           )}
         </ContentWrapper>
       </CardContainer>
+
+      {!isKycVerified && (
+        <KycAlertBanner
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+        >
+          <KycInfo>
+            <ShieldAlert size={20} className="text-blue-400" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <AlertTitle>Verify your identity to unlock all features</AlertTitle>
+              <AlertDesc>
+                Get access to top up your wallet with fiat money, convert crypto to fiat money, and more.
+              </AlertDesc>
+            </div>
+          </KycInfo>
+          <VerifyButton onClick={onVerifyClick} type="button">
+            Start Verification
+          </VerifyButton>
+        </KycAlertBanner>
+      )}
     </>
   );
 }
