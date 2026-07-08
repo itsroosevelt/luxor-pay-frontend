@@ -1,0 +1,8 @@
+{
+	"appId": "com.luxorpay.app",
+	"appName": "Luxor Pay",
+	"webDir": "out",
+	"packageClassList": [
+		"GeolocationPlugin"
+	]
+}

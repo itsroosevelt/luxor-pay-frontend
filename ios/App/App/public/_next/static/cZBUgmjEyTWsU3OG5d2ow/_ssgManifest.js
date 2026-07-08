@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fdashboard\u002Flinks\u002Fpreview\u002F[id]","\u002Fpay\u002F[reference]","\u002Fpay\u002Flink\u002F[id]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
