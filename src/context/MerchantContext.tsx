@@ -5,7 +5,7 @@ import type { MerchantProfile } from '@luxor/contracts';
 
 interface MerchantContextType {
   profile: MerchantProfile | null;
-  setProfile: (profile: MerchantProfile | null) => void;
+  setProfile: (profile: MerchantProfile | null | ((prev: MerchantProfile | null) => MerchantProfile | null)) => void;
   isKycModalOpen: boolean;
   setIsKycModalOpen: (open: boolean) => void;
 }
@@ -33,13 +33,16 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setProfile = useCallback((newProfile: MerchantProfile | null) => {
-    setProfileState(newProfile);
-    if (newProfile) {
-      sessionStorage.setItem('luxor_merchant_profile', JSON.stringify(newProfile));
-    } else {
-      sessionStorage.removeItem('luxor_merchant_profile');
-    }
+  const setProfile = useCallback((newProfile: MerchantProfile | null | ((prev: MerchantProfile | null) => MerchantProfile | null)) => {
+    setProfileState((prev) => {
+      const resolved = typeof newProfile === 'function' ? newProfile(prev) : newProfile;
+      if (resolved) {
+        sessionStorage.setItem('luxor_merchant_profile', JSON.stringify(resolved));
+      } else {
+        sessionStorage.removeItem('luxor_merchant_profile');
+      }
+      return resolved;
+    });
   }, []);
   
   return (

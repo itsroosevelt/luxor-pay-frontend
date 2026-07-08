@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { getApiBaseUrl } from '@/lib/api-client';
+import { useMerchant } from '@/context/MerchantContext';
 
 /* ─── Types ────────────────────────────────────────────────────────────── */
 
@@ -58,6 +59,7 @@ const KycSocketContext = createContext<KycSocketContextType>({
 /* ─── Provider ──────────────────────────────────────────────────────────── */
 
 export function KycSocketProvider({ children }: { children: ReactNode }) {
+  const { setProfile } = useMerchant();
   const socketRef = useRef<Socket | null>(null);
   const joinedRoomRef = useRef<string | null>(null);
 
@@ -127,6 +129,16 @@ export function KycSocketProvider({ children }: { children: ReactNode }) {
       socket.on('kyc_status_updated', (payload: KycStatusPayload) => {
         setKycPayload(payload);
 
+        // Update the merchant profile in the parent context in real-time
+        setProfile((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            kyc: payload.status === 'success',
+            kycStatus: payload.status.toUpperCase(),
+          };
+        });
+
         if (payload.status === 'success' || payload.status === 'failed' || payload.status === 'canceled') {
           // Terminal state: hide banner, show result modal, disconnect
           setVerificationActive(false);
@@ -141,7 +153,7 @@ export function KycSocketProvider({ children }: { children: ReactNode }) {
         // 'processing' keeps the banner visible — no state change needed
       });
     },
-    [],
+    [setProfile],
   );
 
   // Cleanup on unmount
