@@ -3,12 +3,14 @@
 import React from "react";
 import { WalletBalanceView } from "./WalletBalanceView";
 import { useGetBalance } from "@/hooks/useGetBalance";
+import { useMerchant } from "@/context/MerchantContext";
 
 interface WalletBalanceContainerProps {
   merchantWallet?: string | null;
 }
 
 export function WalletBalanceContainer({ merchantWallet }: WalletBalanceContainerProps) {
+  const { profile, setIsKycModalOpen } = useMerchant();
   const {
     data,
     isLoading,
@@ -19,12 +21,11 @@ export function WalletBalanceContainer({ merchantWallet }: WalletBalanceContaine
     togglePrivacyMode,
   } = useGetBalance(merchantWallet);
 
-  // If there's no merchant wallet configured, we might not want to render the balance section at all,
-  // or we render it in an empty state. Since the dashboard already shows a warning alert if !hasWallet,
-  // we can safely just return null or an empty state here when there is no wallet.
   if (!merchantWallet) {
     return null;
   }
+
+  const isKycVerified = profile?.kyc ?? false;
 
   return (
     <WalletBalanceView
@@ -35,6 +36,8 @@ export function WalletBalanceContainer({ merchantWallet }: WalletBalanceContaine
       refetch={refetch}
       isPrivacyMode={isPrivacyMode}
       togglePrivacyMode={togglePrivacyMode}
+      isKycVerified={isKycVerified}
+      onVerifyClick={() => setIsKycModalOpen(true)}
     />
   );
 }

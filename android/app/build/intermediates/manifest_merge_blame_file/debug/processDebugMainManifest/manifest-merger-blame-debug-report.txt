@@ -1,0 +1,189 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.luxorpay.app"
+4    android:versionCode="1"
+5    android:versionName="1.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="23"
+9        android:targetSdkVersion="35" />
+10
+11    <!-- Permissions -->
+12
+13    <uses-permission android:name="android.permission.INTERNET" />
+13-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:40:5-67
+13-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:40:22-64
+14    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+14-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:41:5-81
+14-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:41:22-78
+15    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+15-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:42:5-79
+15-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:42:22-76
+16
+17    <uses-feature android:name="android.hardware.location.gps" />
+17-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:43:5-66
+17-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:43:19-63
+18
+19    <uses-permission android:name="android.permission.CAMERA" />
+19-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:44:5-65
+19-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:44:22-62
+20    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+20-->[io.ionic.libs:iongeolocation-android:2.2.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/df94157242539c8a13f14b75b873a3ab/transformed/iongeolocation-android-2.2.0/AndroidManifest.xml:7:5-79
+20-->[io.ionic.libs:iongeolocation-android:2.2.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/df94157242539c8a13f14b75b873a3ab/transformed/iongeolocation-android-2.2.0/AndroidManifest.xml:7:22-76
+21
+22    <permission
+22-->[androidx.core:core:1.15.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/5f51ed623ec66baebfa6a053fe8a8b2a/transformed/core-1.15.0/AndroidManifest.xml:22:5-24:47
+23        android:name="com.luxorpay.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+23-->[androidx.core:core:1.15.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/5f51ed623ec66baebfa6a053fe8a8b2a/transformed/core-1.15.0/AndroidManifest.xml:23:9-81
+24        android:protectionLevel="signature" />
+24-->[androidx.core:core:1.15.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/5f51ed623ec66baebfa6a053fe8a8b2a/transformed/core-1.15.0/AndroidManifest.xml:24:9-44
+25
+26    <uses-permission android:name="com.luxorpay.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+26-->[androidx.core:core:1.15.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/5f51ed623ec66baebfa6a053fe8a8b2a/transformed/core-1.15.0/AndroidManifest.xml:26:5-97
+26-->[androidx.core:core:1.15.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/5f51ed623ec66baebfa6a053fe8a8b2a/transformed/core-1.15.0/AndroidManifest.xml:26:22-94
+27
+28    <application
+28-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:4:5-36:19
+29        android:allowBackup="true"
+29-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:5:9-35
+30        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+30-->[androidx.core:core:1.15.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/5f51ed623ec66baebfa6a053fe8a8b2a/transformed/core-1.15.0/AndroidManifest.xml:28:18-86
+31        android:debuggable="true"
+32        android:extractNativeLibs="false"
+33        android:icon="@mipmap/ic_launcher"
+33-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:6:9-43
+34        android:label="@string/app_name"
+34-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:7:9-41
+35        android:roundIcon="@mipmap/ic_launcher_round"
+35-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:8:9-54
+36        android:supportsRtl="true"
+36-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:9:9-35
+37        android:theme="@style/AppTheme" >
+37-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:10:9-40
+38        <activity
+38-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:12:9-25:20
+39            android:name="com.luxorpay.app.MainActivity"
+39-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:14:13-41
+40            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation"
+40-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:13:13-140
+41            android:exported="true"
+41-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:18:13-36
+42            android:label="@string/title_activity_main"
+42-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:15:13-56
+43            android:launchMode="singleTask"
+43-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:17:13-44
+44            android:theme="@style/AppTheme.NoActionBarLaunch" >
+44-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:16:13-62
+45            <intent-filter>
+45-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:20:13-23:29
+46                <action android:name="android.intent.action.MAIN" />
+46-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:21:17-69
+46-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:21:25-66
+47
+48                <category android:name="android.intent.category.LAUNCHER" />
+48-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:22:17-77
+48-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:22:27-74
+49            </intent-filter>
+50        </activity>
+51
+52        <provider
+53            android:name="androidx.core.content.FileProvider"
+53-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:28:13-62
+54            android:authorities="com.luxorpay.app.fileprovider"
+54-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:29:13-64
+55            android:exported="false"
+55-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:30:13-37
+56            android:grantUriPermissions="true" >
+56-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:31:13-47
+57            <meta-data
+57-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:32:13-34:64
+58                android:name="android.support.FILE_PROVIDER_PATHS"
+58-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:33:17-67
+59                android:resource="@xml/file_paths" />
+59-->/Users/kevinmorales/luxor-pay-frontend/android/app/src/main/AndroidManifest.xml:34:17-51
+60        </provider>
+61
+62        <activity
+62-->[com.google.android.gms:play-services-base:18.5.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/3897ee7a3a7e64eb47ff9b7bb8256b24/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:9-173
+63            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+63-->[com.google.android.gms:play-services-base:18.5.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/3897ee7a3a7e64eb47ff9b7bb8256b24/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:19-85
+64            android:exported="false"
+64-->[com.google.android.gms:play-services-base:18.5.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/3897ee7a3a7e64eb47ff9b7bb8256b24/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:146-170
+65            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+65-->[com.google.android.gms:play-services-base:18.5.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/3897ee7a3a7e64eb47ff9b7bb8256b24/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:86-145
+66
+67        <provider
+67-->[androidx.emoji2:emoji2:1.3.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/455628e39230ce08b70f281b4ac99c3c/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+68            android:name="androidx.startup.InitializationProvider"
+68-->[androidx.emoji2:emoji2:1.3.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/455628e39230ce08b70f281b4ac99c3c/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+69            android:authorities="com.luxorpay.app.androidx-startup"
+69-->[androidx.emoji2:emoji2:1.3.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/455628e39230ce08b70f281b4ac99c3c/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+70            android:exported="false" >
+70-->[androidx.emoji2:emoji2:1.3.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/455628e39230ce08b70f281b4ac99c3c/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+71            <meta-data
+71-->[androidx.emoji2:emoji2:1.3.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/455628e39230ce08b70f281b4ac99c3c/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+72                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+72-->[androidx.emoji2:emoji2:1.3.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/455628e39230ce08b70f281b4ac99c3c/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+73                android:value="androidx.startup" />
+73-->[androidx.emoji2:emoji2:1.3.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/455628e39230ce08b70f281b4ac99c3c/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+74            <meta-data
+74-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/2086035d7e747a32c2be40e6ed7f404e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
+75                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+75-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/2086035d7e747a32c2be40e6ed7f404e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
+76                android:value="androidx.startup" />
+76-->[androidx.lifecycle:lifecycle-process:2.6.2] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/2086035d7e747a32c2be40e6ed7f404e/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
+77            <meta-data
+77-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:29:13-31:52
+78                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+78-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:30:17-85
+79                android:value="androidx.startup" />
+79-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:31:17-49
+80        </provider>
+81
+82        <meta-data
+82-->[com.google.android.gms:play-services-basement:18.4.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/697a983ff8b6be23efe7df3e3bbc5a94/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:9-122
+83            android:name="com.google.android.gms.version"
+83-->[com.google.android.gms:play-services-basement:18.4.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/697a983ff8b6be23efe7df3e3bbc5a94/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:20-65
+84            android:value="@integer/google_play_services_version" />
+84-->[com.google.android.gms:play-services-basement:18.4.0] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/697a983ff8b6be23efe7df3e3bbc5a94/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:66-119
+85
+86        <receiver
+86-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:34:9-52:20
+87            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+87-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:35:13-76
+88            android:directBootAware="false"
+88-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:36:13-44
+89            android:enabled="true"
+89-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:37:13-35
+90            android:exported="true"
+90-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:38:13-36
+91            android:permission="android.permission.DUMP" >
+91-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:39:13-57
+92            <intent-filter>
+92-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:40:13-42:29
+93                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:17-91
+93-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:41:25-88
+94            </intent-filter>
+95            <intent-filter>
+95-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:43:13-45:29
+96                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:17-85
+96-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:44:25-82
+97            </intent-filter>
+98            <intent-filter>
+98-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:46:13-48:29
+99                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:17-88
+99-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:47:25-85
+100            </intent-filter>
+101            <intent-filter>
+101-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:49:13-51:29
+102                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+102-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:17-95
+102-->[androidx.profileinstaller:profileinstaller:1.3.1] /Users/kevinmorales/.gradle/caches/8.11.1/transforms/0f3d68271fd414f74f11a6a9c308b287/transformed/profileinstaller-1.3.1/AndroidManifest.xml:50:25-92
+103            </intent-filter>
+104        </receiver>
+105    </application>
+106
+107</manifest>
