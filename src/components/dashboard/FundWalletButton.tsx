@@ -110,7 +110,7 @@ export function FundWalletButton({ merchantWallet }: FundWalletButtonProps) {
             <Banknote size={14} color="#60A5FA" />
           </ButtonIconCircle>
           <div style={{ flex: 1, textAlign: 'left' }}>
-            <ButtonLabel>Fund with Fiat</ButtonLabel>
+            <ButtonLabel>Top up Wallet</ButtonLabel>
             <br />
             <ButtonSub>Buy SOL instantly · Card, Bank</ButtonSub>
           </div>

@@ -284,6 +284,8 @@ export function OnrampModal({ isOpen, onClose, merchantWallet }: OnrampModalProp
 
   const { createSession, errorMessage } = useOnrampSession();
 
+  const { onrampPayload, startOnrampTracking } = useOnrampSocket();
+
   // ── Reset when modal opens/closes ──────────────────────────────────────────
   useEffect(() => {
     if (!isOpen) {
@@ -311,10 +313,11 @@ export function OnrampModal({ isOpen, onClose, merchantWallet }: OnrampModalProp
 
     setRedirectUrl(session.redirect_url);
     setView("redirected");
+    startOnrampTracking(session.session_id);
 
     // Attempt to open the link in a new tab automatically
     window.open(session.redirect_url, "_blank");
-  }, [merchantWallet, createSession]);
+  }, [merchantWallet, createSession, startOnrampTracking]);
 
   // ── Auto-start when modal opens ────────────────────────────────────────────
   useEffect(() => {
@@ -323,13 +326,12 @@ export function OnrampModal({ isOpen, onClose, merchantWallet }: OnrampModalProp
     }
   }, [isOpen, view, startSession]);
 
-  // ── WebSocket: listen for stripe.redirectToOnrampSession ───────────────────
-  useOnrampSocket({
-    enabled: isOpen && (view === "redirected" || view === "loading"),
-    onRedirect: () => {
+  // ── Sync with global onramp socket payload status ──────────────────────────
+  useEffect(() => {
+    if (isOpen && onrampPayload?.status === "fulfillment_complete") {
       setView("success");
-    },
-  });
+    }
+  }, [isOpen, onrampPayload]);
 
   return (
     <>

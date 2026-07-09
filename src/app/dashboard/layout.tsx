@@ -3,6 +3,7 @@ import { Toaster } from 'sonner';
 import { GeolocationProvider } from '@/context/GeolocationContext';
 import { MerchantProvider } from '@/context/MerchantContext';
 import { KycSocketProvider } from '@/context/KycSocketContext';
+import { OnrampSocketProvider } from '@/context/OnrampSocketContext';
 
 export default function DashboardLayout({
   children,
@@ -13,10 +14,12 @@ export default function DashboardLayout({
     <GeolocationProvider>
       <MerchantProvider>
         <KycSocketProvider>
-          <DashboardShell>
-            <Toaster theme="dark" position="top-right" />
-            {children}
-          </DashboardShell>
+          <OnrampSocketProvider>
+            <DashboardShell>
+              <Toaster theme="dark" position="top-right" />
+              {children}
+            </DashboardShell>
+          </OnrampSocketProvider>
         </KycSocketProvider>
       </MerchantProvider>
     </GeolocationProvider>
