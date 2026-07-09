@@ -72,10 +72,7 @@ export function BlueParticles({ variant = 'fixed', className = '' }: BlueParticl
       window.addEventListener('resize', resize);
     }
 
-    let isIntersecting = false;
-
     const animate = () => {
-      if (!isIntersecting) return;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       particles.current.forEach((p) => {
@@ -98,33 +95,13 @@ export function BlueParticles({ variant = 'fixed', className = '' }: BlueParticl
       animationFrame.current = requestAnimationFrame(animate);
     };
 
-    const intersectionObserver = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        const nextIntersecting = entry ? entry.isIntersecting : false;
-
-        if (nextIntersecting && !isIntersecting) {
-          isIntersecting = true;
-          animate();
-        } else if (!nextIntersecting && isIntersecting) {
-          isIntersecting = false;
-          if (animationFrame.current) {
-            cancelAnimationFrame(animationFrame.current);
-            animationFrame.current = undefined;
-          }
-        }
-      },
-      { threshold: 0.01 }
-    );
-
-    intersectionObserver.observe(canvas);
+    animate();
 
     return () => {
       if (variant === 'fixed') {
         window.removeEventListener('resize', resize);
       }
       resizeObserver?.disconnect();
-      intersectionObserver.disconnect();
       if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
     };
   }, [variant]);

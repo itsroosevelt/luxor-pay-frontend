@@ -17,7 +17,7 @@ function GlobalParticles({ activeShape, mousePos, isVisible }: { activeShape: Sh
 
         let animationFrameId: number;
         let particles: Particle[] = [];
-        const particleCount = 1500; // Optimizado para un balance perfecto entre rendimiento y densidad visual
+        const particleCount = 4500; // Aún más partículas para una densidad extrema
 
         const generateShapePoints = (w: number, h: number, type: ShapeType) => {
             const points: { x: number, y: number }[] = [];
@@ -34,7 +34,7 @@ function GlobalParticles({ activeShape, mousePos, isVisible }: { activeShape: Sh
                     for (let i = 0; i <= count; i++) {
                         const cx = x1 + dx * (i / count);
                         const cy = y1 + dy * (i / count);
-                        for (let j = 0; j < 6; j++) {
+                        for (let j = 0; j < 18; j++) {
                             const r = Math.sqrt(Math.random()) * 45; // Grosor del trazo 90px
                             const angle = Math.random() * Math.PI * 2;
                             points.push({
@@ -52,7 +52,7 @@ function GlobalParticles({ activeShape, mousePos, isVisible }: { activeShape: Sh
                         const t = startAngle + (endAngle - startAngle) * (i / count);
                         const bx = cx + Math.cos(t) * rPath;
                         const by = cy + Math.sin(t) * rPath;
-                        for (let j = 0; j < 6; j++) {
+                        for (let j = 0; j < 18; j++) {
                             const r = Math.sqrt(Math.random()) * 45; // Grosor en arcos idéntico
                             const angle = Math.random() * Math.PI * 2;
                             points.push({
@@ -82,7 +82,7 @@ function GlobalParticles({ activeShape, mousePos, isVisible }: { activeShape: Sh
                     const count = Math.max(2, Math.floor(len * density));
                     for (let i = 0; i <= count; i++) {
                         // Trazo grueso en la línea idéntico al pincel del corazón
-                        for (let j = 0; j < 2; j++) {
+                        for (let j = 0; j < 6; j++) {
                             const r = Math.sqrt(Math.random()) * 40; // Cepillo circular sólido
                             const angle = Math.random() * Math.PI * 2;
                             points.push({
@@ -145,7 +145,7 @@ function GlobalParticles({ activeShape, mousePos, isVisible }: { activeShape: Sh
 
                     for (let t = 0; t < Math.PI * 2; t += 0.05) {
                         // Trazo grueso circular para las esferas
-                        for (let j = 0; j < 1; j++) {
+                        for (let j = 0; j < 4; j++) {
                             const r = Math.sqrt(Math.random()) * 30; // Grosor sólido aumentado
                             const jitterAngle = Math.random() * Math.PI * 2;
                             const jx = Math.cos(jitterAngle) * r;
