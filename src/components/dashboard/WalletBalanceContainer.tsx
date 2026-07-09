@@ -2,6 +2,7 @@
 
 import React from "react";
 import { WalletBalanceView } from "./WalletBalanceView";
+import { FundWalletButton } from "./FundWalletButton";
 import { useGetBalance } from "@/hooks/useGetBalance";
 import { useMerchant } from "@/context/MerchantContext";
 
@@ -28,16 +29,21 @@ export function WalletBalanceContainer({ merchantWallet }: WalletBalanceContaine
   const isKycVerified = profile?.kyc ?? false;
 
   return (
-    <WalletBalanceView
-      data={data}
-      isLoading={isLoading}
-      isError={isError}
-      errorMessage={errorMessage}
-      refetch={refetch}
-      isPrivacyMode={isPrivacyMode}
-      togglePrivacyMode={togglePrivacyMode}
-      isKycVerified={isKycVerified}
-      onVerifyClick={() => setIsKycModalOpen(true)}
-    />
+    <>
+      <WalletBalanceView
+        data={data}
+        isLoading={isLoading}
+        isError={isError}
+        errorMessage={errorMessage}
+        refetch={refetch}
+        isPrivacyMode={isPrivacyMode}
+        togglePrivacyMode={togglePrivacyMode}
+        isKycVerified={isKycVerified}
+        onVerifyClick={() => setIsKycModalOpen(true)}
+      />
+      {isKycVerified && (
+        <FundWalletButton merchantWallet={merchantWallet} />
+      )}
+    </>
   );
 }

@@ -23,6 +23,8 @@ import { useMerchant } from '@/context/MerchantContext';
 import { KycModal } from './KycModal';
 import { KycVerificationBanner } from './KycVerificationBanner';
 import { KycResultModal } from './KycResultModal';
+import { OnrampProgressBanner } from './OnrampProgressBanner';
+import { OnrampResultModal } from './OnrampResultModal';
 import { clsx } from 'clsx';
 
 const nav = [
@@ -206,6 +208,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <KycModal isOpen={isKycModalOpen} onClose={handleCloseKyc} />
       <KycVerificationBanner />
       <KycResultModal />
+      <OnrampProgressBanner />
+      <OnrampResultModal />
     </div>
   );
 }
