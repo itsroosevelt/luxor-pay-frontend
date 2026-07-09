@@ -50,6 +50,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 // I'll import RefreshCw too
 import Image from 'next/image';
 import { RefreshCw } from 'lucide-react';
+import { BlueParticles } from '@/components/shared/BlueParticles';
 
 export function InfoSection({ 
     title, 
@@ -66,7 +67,8 @@ export function InfoSection({
 }: CommonSectionProps) {
     
     return (
-        <section className="py-32 md:py-48 px-6 md:px-12 bg-black relative overflow-hidden">
+        <section className="py-32 md:py-48 px-6 md:px-12 bg-transparent relative overflow-hidden">
+            <BlueParticles variant="section" />
             {/* Background Glow */}
             <div className={`absolute top-1/2 ${imageRight ? 'right-0' : 'left-0'} -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-br ${gradient} blur-[120px] opacity-30 pointer-events-none`} />
 

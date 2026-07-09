@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { Globe, Cpu, Zap } from 'lucide-react';
+import { BlueParticles } from '@/components/shared/BlueParticles';
 
 export function PillarsSection() {
     const items = [
@@ -19,7 +20,8 @@ export function PillarsSection() {
     ];
 
     return (
-        <section className="py-32 md:py-48 px-4 md:px-8 bg-black border-t border-white/5">
+        <section className="py-32 md:py-48 px-4 md:px-8 bg-transparent border-t border-white/5 relative overflow-hidden">
+            <BlueParticles variant="section" />
             <motion.div 
                 initial={{ opacity: 0, scale: 0.85, y: 40 }}
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}

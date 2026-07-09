@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Globe, Heart, ChevronDown } from 'lucide-react';
 import { getSocialLinks } from '@/lib/social-links';
+import { BlueParticles } from '@/components/shared/BlueParticles';
 
 export default function Footer() {
     const socialLinks = getSocialLinks('Docs');
@@ -174,7 +175,8 @@ export default function Footer() {
     ];
 
     return (
-        <footer className="bg-black text-white pt-24 pb-12 overflow-hidden border-t border-white/5 font-sans w-full">
+        <footer className="bg-transparent text-white pt-24 pb-12 overflow-hidden border-t border-white/5 font-sans w-full relative">
+            <BlueParticles variant="section" />
             <div className="w-full px-6 md:px-12 lg:px-20">
 
                 {/* 1. Header Row - Follow Us & Newsletter */}
