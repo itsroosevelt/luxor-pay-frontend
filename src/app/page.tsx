@@ -5,6 +5,17 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { HeroBackground } from '@/components/HeroBackground';
+import { InnovationSection } from '@/components/home/InnovationSection';
+import { PhilosophySection } from '@/components/home/PhilosophySection';
+import { ArchitectureSection } from '@/components/home/ArchitectureSection';
+import BracketsSectionClient from '@/components/home/BracketsSectionClient';
+import { JoinSection } from '@/components/home/JoinSection';
+import { ShowcaseSection } from '@/components/home/ShowcaseSection';
+import { PillarsSection } from '@/components/home/PillarsSection';
+import { GiantsSection } from '@/components/home/GiantsSection';
+import { CTASection } from '@/components/home/CTASection';
+import { ReviewsSection } from '@/components/home/ReviewsSection';
+import Footer from '@/components/home/Footer';
 
 const PRODUCTS = [
   { name: 'Web Gateway (eCommerce)', desc: 'Integrate API, Shopify or WooCommerce checkout.' },
@@ -260,29 +271,21 @@ export default function LandingPage() {
             </div>
           </motion.div>
         </section>
-
-        {/* Feature Highlights */}
-        <section className="relative py-24 bg-black px-4" id="features">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto w-full text-left"
-          >
-            {[
-              { title: "Instant Settlements", desc: "No more waiting for days. Receive funds instantly in your wallet with Solana's blazing speed." },
-              { title: "Hardware Ready", desc: "Connect our POS terminals out-of-the-box. Support for QR displays and NFC crypto cards." },
-              { title: "Zero Setup Fees", desc: "Start generating links instantly. Only pay network fees and minimal processing fees." }
-            ].map((feature, i) => (
-              <div key={i} className="glass-panel p-8 rounded-3xl hover:bg-white/5 transition-colors border border-white/5">
-                <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                <p className="text-gray-400 leading-relaxed text-sm">{feature.desc}</p>
-              </div>
-            ))}
-          </motion.div>
-        </section>
+        {/* Basic highlights removed, replaced with new dynamic sections */}
+        <InnovationSection />
+        <PhilosophySection />
+        <ArchitectureSection />
+        <BracketsSectionClient />
+        <JoinSection />
+        <ShowcaseSection />
+        <PillarsSection />
+        <GiantsSection />
+        <CTASection />
+        <ReviewsSection />
       </main>
+      
+      <Footer />
     </div>
   );
 }
+
