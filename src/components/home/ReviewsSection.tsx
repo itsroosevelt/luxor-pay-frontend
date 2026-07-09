@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useEffect } from 'react';
 import { Star } from 'lucide-react';
+import { BlueParticles } from '@/components/shared/BlueParticles';
 
 const REVIEWS = [
     { name: 'Sarah Jenkins', initial: 'S', color: 'bg-emerald-500', text: "An absolute game-changer. Luxor's infrastructure has seamlessly connected our operations across North and South America.", time: '2 days ago' },
@@ -17,7 +18,8 @@ const REVIEWS = [
 
 export function ReviewsSection() {
     return (
-        <section className="py-32 md:py-48 bg-black border-t border-white/5 relative overflow-hidden">
+        <section className="py-32 md:py-48 bg-transparent border-t border-white/5 relative overflow-hidden">
+            <BlueParticles variant="section" />
             <div className="w-full max-w-[1800px] mx-auto px-6 md:px-12">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 md:mb-24 gap-6">
                     <div>
