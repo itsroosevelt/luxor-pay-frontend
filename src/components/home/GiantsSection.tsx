@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { PlaylistSection } from './PlaylistSection';
+import { BlueParticles } from '@/components/shared/BlueParticles';
 
 export function GiantsSection() {
     const items = [
@@ -37,7 +38,8 @@ export function GiantsSection() {
     ];
 
     return (
-        <section className="py-32 md:py-48 px-6 md:px-12 bg-black border-t border-white/5 relative">
+        <section className="py-32 md:py-48 px-6 md:px-12 bg-transparent border-t border-white/5 relative overflow-hidden">
+            <BlueParticles variant="section" />
             <motion.div 
                 initial={{ opacity: 0, scale: 0.85, y: 40 }}
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}

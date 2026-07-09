@@ -2,6 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useInView, motion } from 'framer-motion';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { BlueParticles } from '@/components/shared/BlueParticles';
 
 function ShowcaseVideo({ src, className }: { src: string, className: string }) {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -56,7 +57,8 @@ export function ShowcaseSection() {
     const prevSlide = () => setActiveIdx((prev) => (prev - 1 + items.length) % items.length);
 
     return (
-        <section className="py-32 md:py-48 px-6 md:px-12 bg-black overflow-hidden border-t border-white/5">
+        <section className="py-32 md:py-48 px-6 md:px-12 bg-transparent overflow-hidden border-t border-white/5 relative">
+            <BlueParticles variant="section" />
             <div className="max-w-[1600px] mx-auto">
                 {/* Header Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 md:mb-32 items-start">

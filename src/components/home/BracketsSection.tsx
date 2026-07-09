@@ -1,6 +1,7 @@
 'use client';
 import { motion, useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { BlueParticles } from '@/components/shared/BlueParticles';
 
 type ShapeType = 'heart' | 'brackets' | 'circle' | null;
 
@@ -326,12 +327,14 @@ export function BracketsSection() {
     return (
         <section
             ref={sectionRef}
-            className="py-32 md:py-48 px-6 md:px-16 bg-black border-t border-white/5 relative overflow-hidden min-h-[600px] flex items-center"
+            className="py-32 md:py-48 px-6 md:px-16 bg-transparent border-t border-white/5 relative overflow-hidden min-h-[600px] flex items-center"
             onMouseLeave={() => {
                 setHoveredSide(null);
                 setCenterPos(null);
             }}
         >
+
+            <BlueParticles variant="section" />
 
             {/* Canvas global de fondo para TODA la sección */}
             <GlobalParticles activeShape={activeShape} mousePos={centerPos} isVisible={isVisible} />
