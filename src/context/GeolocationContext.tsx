@@ -63,12 +63,11 @@ const Overlay = styled(motion.div)`
 `;
 
 const Card = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: 40px;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.7);
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   padding: 56px 48px;
   width: 100%;
   max-width: 480px;
@@ -97,7 +96,7 @@ const GlowRing = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px;
+  margin-bottom: 12px;
   position: relative;
   animation: ${float} 3s ease-in-out infinite;
 
@@ -251,7 +250,9 @@ function GeolocationBlockingModal({
           exit={{ opacity: 0, y: 20, scale: 0.96 }}
           transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
         >
-          <MapPin size={32} strokeWidth={1.5} className="text-white mb-6" />
+          <GlowRing>
+            <MapPin size={32} strokeWidth={1.5} className="text-white" />
+          </GlowRing>
 
           <Eyebrow>Location Required</Eyebrow>
 
@@ -295,7 +296,14 @@ function GeolocationBlockingModal({
               </div>
             ) : (
               <>
-                <RefreshCw size={18} />
+                <video
+                  src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Floading.mp4?alt=media&token=b786c876-fc50-4d96-9da3-5914f964a61d"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-5 h-5 object-cover"
+                />
                 Allow Location &amp; Continue
               </>
             )}
@@ -360,19 +368,22 @@ export function GeolocationProvider({
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        requesting.current = false;
-        setLatitude(pos.coords.latitude);
-        setLongitude(pos.coords.longitude);
-        setStatus('granted');
-      },
-      () => {
-        requesting.current = false;
-        setStatus('denied');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
+    // Add a short delay so the UI registers the 'requesting' state and plays the loading video
+    setTimeout(() => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          requesting.current = false;
+          setLatitude(pos.coords.latitude);
+          setLongitude(pos.coords.longitude);
+          setStatus('granted');
+        },
+        () => {
+          requesting.current = false;
+          setStatus('denied');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }, 1500);
   }, [isSupported]);
 
   // Auto-request on mount (triggers the browser permission dialog once)
