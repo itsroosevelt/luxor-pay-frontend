@@ -30,7 +30,7 @@ const GeolocationContext = createContext<GeolocationContextValue>({
   latitude: null,
   longitude: null,
   status: 'idle',
-  requestPermission: () => {},
+  requestPermission: () => { },
 });
 
 export function useGeolocation(): GeolocationContextValue {
@@ -251,14 +251,7 @@ function GeolocationBlockingModal({
           exit={{ opacity: 0, y: 20, scale: 0.96 }}
           transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
         >
-          <video
-            src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Floading.mp4?alt=media&token=b786c876-fc50-4d96-9da3-5914f964a61d"
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-16 h-16 object-cover mb-6"
-          />
+          <MapPin size={32} strokeWidth={1.5} className="text-white mb-6" />
 
           <Eyebrow>Location Required</Eyebrow>
 
@@ -289,10 +282,17 @@ function GeolocationBlockingModal({
             aria-disabled={isRequesting}
           >
             {isRequesting ? (
-              <>
-                <RefreshCw size={18} className="animate-spin" />
-                Requesting access…
-              </>
+              <div className="flex items-center justify-center gap-2">
+                <video
+                  src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Floading.mp4?alt=media&token=b786c876-fc50-4d96-9da3-5914f964a61d"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-5 h-5 object-cover"
+                />
+                <span>Requesting access…</span>
+              </div>
             ) : (
               <>
                 <RefreshCw size={18} />
@@ -346,7 +346,7 @@ export function GeolocationProvider({
             return;
           }
         }
-        
+
         const pos = await CapacitorGeolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
         requesting.current = false;
         setLatitude(pos.coords.latitude);
