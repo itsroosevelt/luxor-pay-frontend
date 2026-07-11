@@ -290,7 +290,7 @@ function GeolocationBlockingModal({
                   loop
                   muted
                   playsInline
-                  className="w-5 h-5 object-cover"
+                  className="w-auto h-5"
                 />
                 <span>Requesting access…</span>
               </div>
@@ -302,7 +302,7 @@ function GeolocationBlockingModal({
                   loop
                   muted
                   playsInline
-                  className="w-5 h-5 object-cover"
+                  className="w-auto h-5"
                 />
                 Allow Location &amp; Continue
               </>
