@@ -64,13 +64,11 @@ const Overlay = styled(motion.div)`
 
 const Card = styled(motion.div)`
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
   border-radius: 40px;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(37, 99, 235, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.7);
   padding: 56px 48px;
   width: 100%;
   max-width: 480px;
@@ -78,6 +76,7 @@ const Card = styled(motion.div)`
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 20px;
 
   @media (max-width: 768px) {
     padding: 40px 28px;
@@ -91,8 +90,8 @@ const GlowRing = styled.div`
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.25) 0%,
-    rgba(37, 99, 235, 0.05) 60%,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 60%,
     transparent 100%
   );
   display: flex;
@@ -107,7 +106,7 @@ const GlowRing = styled.div`
     position: absolute;
     inset: -8px;
     border-radius: 50%;
-    border: 1px solid rgba(37, 99, 235, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     animation: ${pulse} 2s ease-in-out infinite;
   }
 `;
@@ -116,12 +115,14 @@ const IconWrap = styled.div`
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #60A5FA);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.05);
 `;
 
 const Eyebrow = styled.span`
@@ -131,7 +132,7 @@ const Eyebrow = styled.span`
   letter-spacing: 0.4em;
   text-transform: uppercase;
   color: #60A5FA;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 `;
 
 const Heading = styled.h2`
@@ -140,7 +141,7 @@ const Heading = styled.h2`
   font-weight: 500;
   letter-spacing: -1px;
   color: #ffffff;
-  margin: 0 0 16px 0;
+  margin: 0;
 
   @media (min-width: 768px) {
     font-size: 36px;
@@ -153,18 +154,19 @@ const Body = styled.p`
   font-weight: 300;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.6;
-  margin: 0 0 12px 0;
+  margin: 0;
 `;
 
 const WarningNote = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: rgba(249, 115, 22, 0.08);
-  border: 1px solid rgba(249, 115, 22, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 14px 18px;
-  margin-bottom: 32px;
+  margin-top: 8px;
+  margin-bottom: 12px;
   text-align: left;
 `;
 
@@ -172,7 +174,7 @@ const WarningText = styled.span`
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   font-weight: 300;
-  color: rgba(255, 165, 80, 0.9);
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.5;
 `;
 
@@ -180,7 +182,7 @@ const AllowButton = styled.button`
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
   font-weight: 500;
-  padding: 16px 40px;
+  padding: 11px 40px;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
@@ -251,9 +253,7 @@ function GeolocationBlockingModal({
           transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
         >
           <GlowRing>
-            <IconWrap>
-              <MapPin size={24} strokeWidth={2} />
-            </IconWrap>
+            <MapPin size={32} strokeWidth={1.5} className="text-white" />
           </GlowRing>
 
           <Eyebrow>Location Required</Eyebrow>
@@ -269,7 +269,7 @@ function GeolocationBlockingModal({
           <WarningNote>
             <ShieldAlert
               size={16}
-              color="rgba(249, 115, 22, 0.9)"
+              color="rgba(255, 255, 255, 0.8)"
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <WarningText>
