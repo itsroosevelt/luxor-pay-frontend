@@ -126,9 +126,9 @@ const IconWrap = styled.div`
 `;
 
 const Eyebrow = styled.span`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 300;
   letter-spacing: 0.4em;
   text-transform: uppercase;
   color: #60A5FA;
@@ -136,9 +136,9 @@ const Eyebrow = styled.span`
 `;
 
 const Heading = styled.h2`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  font-weight: 500;
+  font-weight: 300;
   letter-spacing: -1px;
   color: #ffffff;
   margin: 0;
@@ -179,9 +179,9 @@ const WarningText = styled.span`
 `;
 
 const AllowButton = styled.button`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 300;
   padding: 11px 40px;
   border-radius: 9999px;
   border: none;
