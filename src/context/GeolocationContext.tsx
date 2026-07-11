@@ -184,22 +184,21 @@ const AllowButton = styled.button`
   font-weight: 300;
   padding: 11px 40px;
   border-radius: 9999px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
-  background: #ffffff;
-  color: #000000;
+  background: transparent;
+  color: #ffffff;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   transition: all 0.25s ease-in-out;
-  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 
   &:hover:not(:disabled) {
-    background: #2563EB;
-    color: #ffffff;
-    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
+    background: transparent;
+    border-color: #ffffff;
     transform: translateY(-1px);
   }
 
@@ -252,9 +251,14 @@ function GeolocationBlockingModal({
           exit={{ opacity: 0, y: 20, scale: 0.96 }}
           transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
         >
-          <GlowRing>
-            <MapPin size={32} strokeWidth={1.5} className="text-white" />
-          </GlowRing>
+          <video
+            src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Floading.mp4?alt=media&token=b786c876-fc50-4d96-9da3-5914f964a61d"
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-16 h-16 object-cover mb-6"
+          />
 
           <Eyebrow>Location Required</Eyebrow>
 
@@ -286,7 +290,7 @@ function GeolocationBlockingModal({
           >
             {isRequesting ? (
               <>
-                <RequestingSpinner />
+                <RefreshCw size={18} className="animate-spin" />
                 Requesting access…
               </>
             ) : (
