@@ -38,4 +38,7 @@ declare module 'firebase/auth' {
     displayName: string | null;
     uid: string;
   }
+  export class OAuthProvider {
+    constructor(providerId: string);
+  }
 }
