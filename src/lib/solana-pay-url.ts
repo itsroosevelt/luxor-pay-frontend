@@ -1,39 +1,14 @@
 import { Keypair } from '@solana/web3.js';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
 
 export type SolanaNetwork = 'mainnet-beta' | 'devnet';
-
-const TOKEN_DECIMALS: Record<string, number> = {
-  SOL: 9,
-  USDC: 6,
-  USDT: 6,
-  LXR: 6,
-  EURC: 6,
-  WSOL: 9,
-};
 
 export function getSolanaNetwork(): SolanaNetwork {
   const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet';
   return network === 'mainnet-beta' ? 'mainnet-beta' : 'devnet';
 }
 
-export function getMintForSymbol(symbol: string): string | null {
-  const upper = symbol.trim().toUpperCase();
-  if (upper === 'SOL') return null;
-
-  const network = getSolanaNetwork();
-  const registry = TOKEN_REGISTRY[network] ?? {};
-  const entry = Object.entries(registry).find(([, sym]) => sym.toUpperCase() === upper);
-  return entry?.[0] ?? null;
-}
-
-export function getTokenDecimals(symbol: string): number {
-  return TOKEN_DECIMALS[symbol.trim().toUpperCase()] ?? 6;
-}
-
 /** Decimal string suitable for Solana Pay `amount` query param. */
-export function formatAmountForSolanaPay(amount: number, currency: string): string {
-  const decimals = getTokenDecimals(currency);
+export function formatAmountForSolanaPay(amount: number, decimals: number): string {
   return toUiAndRawAmount(amount, decimals).uiAmount;
 }
 
@@ -120,22 +95,22 @@ export function buildOpenAmountQrUrl(recipient: string, label = 'Luxor Pay'): st
 export function buildPaymentQrUrl(params: {
   recipient: string;
   amount?: number;
-  currency: string;
+  splToken?: string | null;
+  decimals: number;
   reference?: string;
   label?: string;
   message?: string;
   memo?: string;
 }): string {
-  const amount =
+  const amountStr =
     params.amount != null
-      ? formatAmountForSolanaPay(params.amount, params.currency)
+      ? formatAmountForSolanaPay(params.amount, params.decimals)
       : undefined;
-  const splToken = getMintForSymbol(params.currency);
 
   return encodeSolanaPayUrl({
     recipient: params.recipient,
-    amount,
-    splToken,
+    amount: amountStr,
+    splToken: params.splToken,
     reference: params.reference,
     label: params.label ?? 'Luxor Pay',
     message: params.message,

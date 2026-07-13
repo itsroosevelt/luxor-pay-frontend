@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import { toast } from 'sonner';
 import { extractWalletAddressFromScan } from '@/lib/qr-scan-routing';
@@ -265,6 +265,8 @@ export function ScanChargeModal({
   const [processing, setProcessing] = useState(false);
   const [scannerKey, setScannerKey] = useState(0);
 
+  const { tokens, getMintForSymbol, getTokenSymbol } = useTokenRegistry();
+
   const env = getLuxorEnv();
   const isDev = env === 'development';
 
@@ -275,9 +277,7 @@ export function ScanChargeModal({
         // Resolve defaultToken if it's a symbol to its mint address
         let resolvedToken = defaultToken;
         if (defaultToken !== 'SOL') {
-          const network = isDev ? 'devnet' : 'mainnet-beta';
-          const registry = TOKEN_REGISTRY[network] || {};
-          const foundMint = Object.keys(registry).find(mint => registry[mint] === defaultToken);
+          const foundMint = getMintForSymbol(defaultToken);
           if (foundMint) {
             resolvedToken = foundMint;
           }
@@ -297,7 +297,7 @@ export function ScanChargeModal({
       }
       setClientWallet('');
     }
-  }, [isOpen, defaultAmount, defaultToken, isDev]);
+  }, [isOpen, defaultAmount, defaultToken, getMintForSymbol]);
 
   if (!isOpen) return null;
 
@@ -347,8 +347,7 @@ export function ScanChargeModal({
 
   const getSelectedTokenSymbol = () => {
     if (formData.token === 'SOL') return 'SOL';
-    const network = isDev ? 'devnet' : 'mainnet-beta';
-    return TOKEN_REGISTRY[network][formData.token] || 'Token';
+    return getTokenSymbol(formData.token) || 'Token';
   };
 
   return (
@@ -396,23 +395,13 @@ export function ScanChargeModal({
                     required
                   >
                     <option value="SOL">Solana (SOL)</option>
-                    {isDev ? (
-                      <optgroup label="Devnet Tokens">
-                        {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
-                          <option key={mint} value={mint}>
-                            {symbol}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ) : (
-                      <optgroup label="Mainnet Beta Tokens">
-                        {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
-                          <option key={mint} value={mint}>
-                            {symbol}
-                          </option>
-                        ))}
-                      </optgroup>
-                    )}
+                    <optgroup label="Available Tokens">
+                      {tokens.map((token) => (
+                        <option key={token.mint} value={token.mint}>
+                          {token.symbol}
+                        </option>
+                      ))}
+                    </optgroup>
                   </Select>
                 </FormGroup>
 

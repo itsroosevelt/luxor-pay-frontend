@@ -5,7 +5,7 @@ import { useMerchant } from "@/context/MerchantContext";
 import { useGetBalance } from "@/hooks/useGetBalance";
 import { useSwap } from "@/hooks/useSwap";
 import { SwapView } from "./SwapView";
-import { TOKEN_REGISTRY } from "@/lib/token-registry";
+import { useTokenRegistry } from "@/context/TokenRegistryContext";
 
 const INPUT_MINT = "So11111111111111111111111111111111111111112"; // SOL
 
@@ -16,12 +16,18 @@ export function SwapContainer() {
   const { data: balanceData, isLoading: isBalanceLoading } = useGetBalance(merchantWallet);
   const { quote, execute, quoteData, isQuoting, isExecuting, isError, errorMessage, reset } = useSwap();
 
-  const env = process.env.NEXT_PUBLIC_LUXOR_ENV || "development";
-  const network = env === "development" ? "devnet" : "mainnet-beta";
-  const catalogTokens = Object.entries(TOKEN_REGISTRY[network] || {}).map(([mint, symbol]) => ({ mint, symbol }));
+  const { tokens } = useTokenRegistry();
+  const catalogTokens = tokens.map(t => ({ mint: t.mint, symbol: t.symbol }));
 
   const [amount, setAmount] = useState<string>("");
   const [outputMint, setOutputMint] = useState<string>(catalogTokens.length > 0 ? catalogTokens[0].mint : "");
+
+  useEffect(() => {
+    if (!outputMint && catalogTokens.length > 0) {
+      setOutputMint(catalogTokens[0].mint);
+    }
+  }, [catalogTokens, outputMint]);
+
   const [showQuoteChangeWarning, setShowQuoteChangeWarning] = useState(false);
   const [pendingQuote, setPendingQuote] = useState<any>(null);
 

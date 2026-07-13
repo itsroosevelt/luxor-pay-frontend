@@ -12,7 +12,7 @@ import { isGenericCheckoutLabel } from '@/lib/luxor-pay-checkout-url';
 import { getMerchantProfile, getMerchantProfileByWallet } from '@/lib/merchants-api';
 import { getWalletBalance } from '@/lib/solana-api';
 import { getTransferErrorMessage, parsePaymentAmount } from '@/lib/transfer-errors';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import {
   PaymentSuccessModal,
   PaymentSuccessData,
@@ -471,6 +471,7 @@ export default function PayQrClient() {
   const amount = hasFixedAmount ? (fixedAmount ?? '') : editableAmount;
   const currency = hasFixedAmount ? fixedCurrency : editableCurrency;
 
+  const { tokens, getMintForSymbol } = useTokenRegistry();
   const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(currency);
 
   const getUsdEquivalent = () => {
@@ -597,14 +598,11 @@ export default function PayQrClient() {
     try {
 
       const token = await user.getIdToken();
-      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase() as 'mainnet-beta' | 'devnet';
-      const registry = TOKEN_REGISTRY[network] || {};
-
       let mint: string | undefined = undefined;
       if (currency !== 'SOL') {
-        const entry = Object.entries(registry).find(([, sym]) => sym === currency);
-        if (entry) {
-          mint = entry[0];
+        const foundMint = getMintForSymbol(currency);
+        if (foundMint) {
+          mint = foundMint;
         } else {
           setError('Currency not available on this network');
           return;
@@ -801,8 +799,9 @@ export default function PayQrClient() {
                         onChange={(e) => setEditableCurrency(e.target.value)}
                       >
                         <option value="SOL">SOL</option>
-                        <option value="USDC">USDC</option>
-                        <option value="LXR">LXR</option>
+                        {tokens.map((t) => (
+                          <option key={t.mint} value={t.symbol}>{t.symbol}</option>
+                        ))}
                       </DropdownSelect>
                     </InputWrapper>
                     {usdAmount !== null && parseFloat(amount || '0') > 0 && (

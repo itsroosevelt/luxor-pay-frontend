@@ -27,7 +27,10 @@ export function extractWalletAddressFromScan(raw: string): string | null {
 }
 
 /** Map a scanned QR string to a Luxor Pay checkout route (or wallet-only detection). */
-export function routeScannedPaymentContent(raw: string): ScannedPaymentRoute {
+export function routeScannedPaymentContent(
+  raw: string,
+  getTokenSymbol?: (mint: string, network?: 'mainnet-beta' | 'devnet') => string | null
+): ScannedPaymentRoute {
   const trimmed = raw.trim();
 
   // Si la URL escaneada contiene nuestro checkout directo (/pay/qr)
@@ -66,7 +69,7 @@ export function routeScannedPaymentContent(raw: string): ScannedPaymentRoute {
     if (parsed && BASE58_ADDRESS.test(parsed.recipient)) {
       return {
         type: 'qr_direct',
-        url: buildLuxorPayCheckoutPathFromSolanaPay(parsed),
+        url: buildLuxorPayCheckoutPathFromSolanaPay(parsed, getTokenSymbol),
       };
     }
   }

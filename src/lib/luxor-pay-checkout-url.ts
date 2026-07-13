@@ -1,5 +1,5 @@
 import { getSolanaNetwork, type ParsedSolanaPayUrl } from '@/lib/solana-pay-url';
-import { getTokenSymbol } from '@/lib/token-registry';
+
 
 const GENERIC_CHECKOUT_LABELS = new Set(['luxor pay', '']);
 
@@ -121,9 +121,12 @@ export function parseLuxorPayCheckoutParams(
 }
 
 /** Map a Solana Pay transfer-request QR into a Luxor checkout route. */
-export function buildLuxorPayCheckoutPathFromSolanaPay(parsed: ParsedSolanaPayUrl): string {
+export function buildLuxorPayCheckoutPathFromSolanaPay(
+  parsed: ParsedSolanaPayUrl,
+  getTokenSymbol?: (mint: string, network?: 'mainnet-beta' | 'devnet') => string | null
+): string {
   let currency = 'SOL';
-  if (parsed.splToken) {
+  if (parsed.splToken && getTokenSymbol) {
     currency = getTokenSymbol(parsed.splToken, getSolanaNetwork()) ?? 'SOL';
   }
 
