@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 
 interface UseTokenPriceReturn {
   data: number | null;
@@ -14,6 +14,8 @@ export function useTokenPrice(currency?: string | null): UseTokenPriceReturn {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const { getMintForSymbol } = useTokenRegistry();
 
   const fetchPrice = useCallback(async () => {
     if (!currency) {
@@ -46,17 +48,11 @@ export function useTokenPrice(currency?: string | null): UseTokenPriceReturn {
     setErrorMessage(null);
 
     try {
-      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK as 'mainnet-beta' | 'devnet') || 'devnet';
-      const registry = TOKEN_REGISTRY[network] || {};
-
       let mint = '';
       if (upperCurrency === 'SOL') {
         mint = 'So11111111111111111111111111111111111111112'; // wSOL
       } else {
-        const entry = Object.entries(registry).find(([, sym]) => sym === upperCurrency);
-        if (entry) {
-          mint = entry[0];
-        }
+        mint = getMintForSymbol(upperCurrency) || '';
       }
 
       if (!mint) {
@@ -94,7 +90,7 @@ export function useTokenPrice(currency?: string | null): UseTokenPriceReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [currency]);
+  }, [currency, getMintForSymbol]);
 
   useEffect(() => {
     fetchPrice();

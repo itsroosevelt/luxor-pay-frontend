@@ -1,5 +1,5 @@
 import { Connection, PublicKey } from '@solana/web3.js';
-import { getMintForSymbol, getTokenDecimals, toUiAndRawAmount } from '@/lib/solana-pay-url';
+import { toUiAndRawAmount } from '@/lib/solana-pay-url';
 
 const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
 const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
@@ -103,14 +103,13 @@ export async function findOnChainPaymentSignature(params: {
   reference: string;
   recipient: string;
   amount: number;
-  currency: string;
+  decimals: number;
+  mint: string | null;
+  isSol: boolean;
 }): Promise<OnChainPaymentMatch | null> {
-  const { rpcUrl, reference, recipient, amount, currency } = params;
+  const { rpcUrl, reference, recipient, amount, decimals, mint, isSol } = params;
   const connection = new Connection(rpcUrl, 'confirmed');
-  const decimals = getTokenDecimals(currency);
   const { rawAmount } = toUiAndRawAmount(amount, decimals);
-  const mint = getMintForSymbol(currency);
-  const isSol = currency.trim().toUpperCase() === 'SOL';
 
   const signatures = await connection.getSignaturesForAddress(new PublicKey(reference), { limit: 10 });
 

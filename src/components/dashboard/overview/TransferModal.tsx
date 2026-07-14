@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import { useGetContacts } from '@/hooks/useGetContacts';
 import { useSendTransfer } from '@/hooks/useSendTransfer';
@@ -205,6 +205,7 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
   const { mutate: sendMutate, isLoading: isSending, isError, errorMessage } = useSendTransfer();
   
   const [isChoosingContact, setIsChoosingContact] = useState(false);
+  const { tokens } = useTokenRegistry();
 
   const [formData, setFormData] = useState({
     walletAddress: '',
@@ -340,23 +341,13 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
                 required
               >
                 <option value="SOL">Solana (SOL)</option>
-                {isDev ? (
-                  <optgroup label="Devnet Tokens">
-                    {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
-                      <option key={mint} value={mint}>
-                        {symbol}
-                      </option>
-                    ))}
-                  </optgroup>
-                ) : (
-                  <optgroup label="Mainnet Beta Tokens">
-                    {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
-                      <option key={mint} value={mint}>
-                        {symbol}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
+                <optgroup label="Available Tokens">
+                  {tokens.map((token) => (
+                    <option key={token.mint} value={token.mint}>
+                      {token.symbol}
+                    </option>
+                  ))}
+                </optgroup>
               </Select>
             </FormGroup>
 
