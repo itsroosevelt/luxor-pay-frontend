@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ArrowLeftRight,
+  UserCircle,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -34,6 +35,7 @@ const nav = [
   { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
   { href: '/dashboard/pos', label: 'POS Devices', icon: Terminal },
   { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
+  { href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
   { href: '/dashboard/developers', label: 'Developers', icon: Code2 },
   { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];

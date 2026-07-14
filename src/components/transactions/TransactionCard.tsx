@@ -132,6 +132,7 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit',
+    timeZone: 'UTC',
   });
 
   // Nickname logic: if sent, show toNickname or toWallet. If received, we only have fromWallet.
