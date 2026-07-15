@@ -30,7 +30,7 @@ const GeolocationContext = createContext<GeolocationContextValue>({
   latitude: null,
   longitude: null,
   status: 'idle',
-  requestPermission: () => {},
+  requestPermission: () => { },
 });
 
 export function useGeolocation(): GeolocationContextValue {
@@ -63,14 +63,11 @@ const Overlay = styled(motion.div)`
 `;
 
 const Card = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(40px);
-  -webkit-backdrop-filter: blur(40px);
-  border-radius: 40px;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.7),
-    0 0 0 1px rgba(37, 99, 235, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: transparent;
+  border: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   padding: 56px 48px;
   width: 100%;
   max-width: 480px;
@@ -78,6 +75,7 @@ const Card = styled(motion.div)`
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 20px;
 
   @media (max-width: 768px) {
     padding: 40px 28px;
@@ -91,14 +89,14 @@ const GlowRing = styled.div`
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.25) 0%,
-    rgba(37, 99, 235, 0.05) 60%,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.02) 60%,
     transparent 100%
   );
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px;
+  margin-bottom: 12px;
   position: relative;
   animation: ${float} 3s ease-in-out infinite;
 
@@ -107,7 +105,7 @@ const GlowRing = styled.div`
     position: absolute;
     inset: -8px;
     border-radius: 50%;
-    border: 1px solid rgba(37, 99, 235, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     animation: ${pulse} 2s ease-in-out infinite;
   }
 `;
@@ -116,31 +114,33 @@ const IconWrap = styled.div`
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #60A5FA);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.05);
 `;
 
 const Eyebrow = styled.span`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 300;
   letter-spacing: 0.4em;
   text-transform: uppercase;
   color: #60A5FA;
-  margin-bottom: 12px;
+  margin-bottom: 4px;
 `;
 
 const Heading = styled.h2`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 28px;
-  font-weight: 500;
+  font-weight: 300;
   letter-spacing: -1px;
   color: #ffffff;
-  margin: 0 0 16px 0;
+  margin: 0;
 
   @media (min-width: 768px) {
     font-size: 36px;
@@ -153,18 +153,19 @@ const Body = styled.p`
   font-weight: 300;
   color: rgba(255, 255, 255, 0.7);
   line-height: 1.6;
-  margin: 0 0 12px 0;
+  margin: 0;
 `;
 
 const WarningNote = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: rgba(249, 115, 22, 0.08);
-  border: 1px solid rgba(249, 115, 22, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   padding: 14px 18px;
-  margin-bottom: 32px;
+  margin-top: 8px;
+  margin-bottom: 12px;
   text-align: left;
 `;
 
@@ -172,32 +173,31 @@ const WarningText = styled.span`
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   font-weight: 300;
-  color: rgba(255, 165, 80, 0.9);
+  color: rgba(255, 255, 255, 0.8);
   line-height: 1.5;
 `;
 
 const AllowButton = styled.button`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Montserrat', sans-serif;
   font-size: 16px;
-  font-weight: 500;
-  padding: 16px 40px;
+  font-weight: 300;
+  padding: 11px 40px;
   border-radius: 9999px;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
-  background: #ffffff;
-  color: #000000;
+  background: transparent;
+  color: #ffffff;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 10px;
   transition: all 0.25s ease-in-out;
-  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 
   &:hover:not(:disabled) {
-    background: #2563EB;
-    color: #ffffff;
-    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
+    background: transparent;
+    border-color: #ffffff;
     transform: translateY(-1px);
   }
 
@@ -251,9 +251,7 @@ function GeolocationBlockingModal({
           transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
         >
           <GlowRing>
-            <IconWrap>
-              <MapPin size={24} strokeWidth={2} />
-            </IconWrap>
+            <MapPin size={32} strokeWidth={1.5} className="text-white" />
           </GlowRing>
 
           <Eyebrow>Location Required</Eyebrow>
@@ -269,7 +267,7 @@ function GeolocationBlockingModal({
           <WarningNote>
             <ShieldAlert
               size={16}
-              color="rgba(249, 115, 22, 0.9)"
+              color="rgba(255, 255, 255, 0.8)"
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <WarningText>
@@ -285,13 +283,27 @@ function GeolocationBlockingModal({
             aria-disabled={isRequesting}
           >
             {isRequesting ? (
-              <>
-                <RequestingSpinner />
-                Requesting access…
-              </>
+              <div className="flex items-center justify-center gap-2">
+                <video
+                  src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Floading.mp4?alt=media&token=b786c876-fc50-4d96-9da3-5914f964a61d"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-auto h-5"
+                />
+                <span>Requesting access…</span>
+              </div>
             ) : (
               <>
-                <RefreshCw size={18} />
+                <video
+                  src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Floading.mp4?alt=media&token=b786c876-fc50-4d96-9da3-5914f964a61d"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-auto h-5"
+                />
                 Allow Location &amp; Continue
               </>
             )}
@@ -342,7 +354,7 @@ export function GeolocationProvider({
             return;
           }
         }
-        
+
         const pos = await CapacitorGeolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
         requesting.current = false;
         setLatitude(pos.coords.latitude);
@@ -356,19 +368,22 @@ export function GeolocationProvider({
       return;
     }
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        requesting.current = false;
-        setLatitude(pos.coords.latitude);
-        setLongitude(pos.coords.longitude);
-        setStatus('granted');
-      },
-      () => {
-        requesting.current = false;
-        setStatus('denied');
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-    );
+    // Add a short delay so the UI registers the 'requesting' state and plays the loading video
+    setTimeout(() => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          requesting.current = false;
+          setLatitude(pos.coords.latitude);
+          setLongitude(pos.coords.longitude);
+          setStatus('granted');
+        },
+        () => {
+          requesting.current = false;
+          setStatus('denied');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      );
+    }, 1500);
   }, [isSupported]);
 
   // Auto-request on mount (triggers the browser permission dialog once)
