@@ -57,14 +57,18 @@ export default function TreasuryPage() {
     if (merchantWallet) {
       setAccounts(prev => prev.map(acc => {
         if (acc.isGenesis) {
-          const solAmount = balanceData ? parseFloat(balanceData.solBalance).toFixed(4) : '0.0000';
-          // Assuming SOL is around $140 USD for the visual conversion
-          const usdVal = balanceData ? (parseFloat(balanceData.solBalance) * 140).toFixed(2) : '0.00';
+          // Real on-chain values only — no fabricated USD conversion.
+          const sol = balanceData ? parseFloat(balanceData.solBalance) : 0;
+          const solAmount = balanceData
+            ? sol.toLocaleString('en-US', { maximumFractionDigits: 4 })
+            : '0';
+          const coins = String((sol > 0 ? 1 : 0) + (balanceData?.tokens.length ?? 0));
           return {
             ...acc,
             address: merchantWallet,
-            balance: `$${usdVal}`,
-            solAmount: solAmount
+            balance: solAmount,
+            solAmount,
+            coins,
           };
         }
         return acc;
@@ -123,12 +127,12 @@ export default function TreasuryPage() {
         id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `acc-${Date.now()}`,
         name: newAccName.trim(),
         address: newAccAddress.trim(),
-        balance: '$0.00',
+        balance: '0',
         weight: '0%',
         coins: '0',
         stakes: '0',
         nfts: '0',
-        solAmount: '0.0000'
+        solAmount: '0'
       }
     ]);
     setNewAccName('');
@@ -222,8 +226,13 @@ export default function TreasuryPage() {
                   <div className="text-5xl font-light text-white tracking-tight font-sans">
                     {selectedAccountDetails.isGenesis && (genesisPending || balanceLoading) ? (
                       <LoadingVideo className="w-auto h-10" />
+                    ) : parseFloat(selectedAccountDetails.solAmount) > 0 ? (
+                      <>
+                        {selectedAccountDetails.solAmount}
+                        <span className="text-2xl text-gray-400 ml-2">SOL</span>
+                      </>
                     ) : (
-                      selectedAccountDetails.balance
+                      <span className="text-gray-600">—</span>
                     )}
                   </div>
                 </div>
@@ -275,14 +284,14 @@ export default function TreasuryPage() {
                 </div>
                 <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-2xl font-light text-white">{selectedAccountDetails.stakes}</div>
+                    <div className="text-2xl font-light text-gray-600">—</div>
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider font-body">Stakes</div>
                   </div>
                   <Layers size={20} className="text-purple-400 opacity-60" />
                 </div>
                 <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-4 flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-2xl font-light text-white">{selectedAccountDetails.nfts}</div>
+                    <div className="text-2xl font-light text-gray-600">—</div>
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider font-body">NFTs</div>
                   </div>
                   <Sparkles size={20} className="text-emerald-400 opacity-60" />
@@ -362,7 +371,7 @@ export default function TreasuryPage() {
                           </div>
                         </td>
                         <td className="py-4 text-sm font-light text-white font-mono">{selectedAccountDetails.solAmount}</td>
-                        <td className="py-4 text-sm font-light text-white">{selectedAccountDetails.balance}</td>
+                        <td className="py-4 text-sm font-light text-gray-600">—</td>
                         <td className="py-4 w-40">
                           <div className="space-y-1.5">
                             <span className="text-xs text-white font-mono">100%</span>
@@ -383,20 +392,11 @@ export default function TreasuryPage() {
                         </td>
                       </tr>
 
-                      {/* Staked Row */}
-                      <tr className="border-b border-white/5 last:border-0 hover:bg-white/[0.01] transition-colors">
-                        <td className="py-4 text-sm font-light text-gray-400 pl-4">Staked</td>
-                        <td className="py-4 text-sm font-light text-gray-400 font-mono">0 SOL</td>
-                        <td className="py-4 text-sm font-light text-gray-400">$0.00</td>
-                        <td className="py-4 text-sm font-light text-gray-400 font-mono">0%</td>
-                        <td className="py-4"></td>
-                      </tr>
-
-                      {/* Unstaked Row */}
+                      {/* Unstaked Row (all funds are liquid — staking not tracked yet) */}
                       <tr className="border-b border-white/5 last:border-0 hover:bg-white/[0.01] transition-colors">
                         <td className="py-4 text-sm font-light text-gray-400 pl-4">Unstaked</td>
                         <td className="py-4 text-sm font-light text-gray-400 font-mono">{selectedAccountDetails.solAmount} SOL</td>
-                        <td className="py-4 text-sm font-light text-gray-400">{selectedAccountDetails.balance}</td>
+                        <td className="py-4 text-sm font-light text-gray-600">—</td>
                         <td className="py-4 text-sm font-light text-gray-400 font-mono">100%</td>
                         <td className="py-4"></td>
                       </tr>
@@ -497,18 +497,20 @@ export default function TreasuryPage() {
                         <td className="py-4">
                           {acc.isGenesis && (genesisPending || balanceLoading) ? (
                             <LoadingVideo className="w-auto h-5" />
-                          ) : (
+                          ) : parseFloat(acc.solAmount) > 0 ? (
                             <div className="flex items-center gap-1.5">
                               <span className="text-sm font-light text-white">{acc.balance}</span>
                               <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-1.5 py-0.5 rounded font-mono">SOL</span>
                             </div>
+                          ) : (
+                            <span className="text-sm font-light text-gray-600">—</span>
                           )}
                         </td>
                         <td className="py-4 w-40">
                           <div className="space-y-1.5">
-                            <span className="text-xs text-white font-mono">{acc.weight}</span>
+                            <span className="text-xs text-gray-600 font-mono">—</span>
                             <div className="w-full bg-white/10 h-1 rounded-full overflow-hidden">
-                              <div className="bg-[#60A5FA] h-full" style={{ width: acc.weight }} />
+                              <div className="bg-[#60A5FA] h-full" style={{ width: '0%' }} />
                             </div>
                           </div>
                         </td>
