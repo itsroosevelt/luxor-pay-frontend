@@ -21,6 +21,7 @@ import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequ
 import { Transfer } from '@/lib/transfers-api';
 import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
+import { FundWalletButton } from '@/components/dashboard/FundWalletButton';
 import { clsx } from 'clsx';
 
 export default function DashboardOverviewPage() {
@@ -53,15 +54,15 @@ export default function DashboardOverviewPage() {
     !kycVerified &&
     ['processing', 'pending', 'submitted', 'requires_input', 'in_review', 'reviewing'].includes(kycStatusRaw);
 
-  // Genesis balance is derived from the on-chain data of the merchant wallet.
-  // Until the backend provides the wallet/balance, we show the loading indicator.
-  const SOL_USD = 140;
+  // Balance comes straight from on-chain data for the Genesis wallet. We never
+  // fabricate values: while it loads we show the indicator, and if the wallet is
+  // empty we show nothing (—) instead of a made-up amount.
   const genesisPending = !merchantWallet;
   const genesisLoading = genesisPending || balanceLoading;
-  const genesisUsd = balanceData ? parseFloat(balanceData.solBalance) * SOL_USD : 0;
+  const genesisSol = balanceData ? parseFloat(balanceData.solBalance) : null;
 
-  const parseUsd = (value: string) => parseFloat(value.replace(/[^0-9.-]/g, '')) || 0;
-  const formatUsd = (value: number) => `$${value.toFixed(2)}`;
+  const formatSol = (value: number) =>
+    value.toLocaleString('en-US', { maximumFractionDigits: 4 });
 
   const accountOptions = [{ id: 'total', name: 'Total' }, ...accounts];
   const selectedOption = accountOptions.find((o) => o.id === selectedAccountId) ?? accountOptions[0];
@@ -72,13 +73,10 @@ export default function DashboardOverviewPage() {
     (selectedAccountId === 'total' && genesisLoading) ||
     (Boolean(selectedAccount?.isGenesis) && genesisLoading);
 
-  // Numeric value to display for the selected account (when not loading).
-  const selectedBalanceValue =
-    selectedAccountId === 'total'
-      ? genesisUsd + accounts.filter((a) => !a.isGenesis).reduce((sum, a) => sum + parseUsd(a.balance), 0)
-      : selectedAccount?.isGenesis
-        ? genesisUsd
-        : parseUsd(selectedAccount?.balance ?? '$0.00');
+  // Real SOL balance for the selected account. Only the Genesis wallet has an
+  // on-chain balance from the backend; other accounts have none yet (null).
+  const selectedSol =
+    selectedAccountId === 'total' || selectedAccount?.isGenesis ? genesisSol : null;
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
@@ -262,8 +260,13 @@ export default function DashboardOverviewPage() {
                 <div className="text-4xl md:text-5xl font-light text-white tracking-tight font-sans">
                   {balanceIsLoading ? (
                     <LoadingVideo className="w-auto h-10" />
+                  ) : selectedSol && selectedSol > 0 ? (
+                    <>
+                      {formatSol(selectedSol)}
+                      <span className="text-2xl text-gray-400 ml-2">SOL</span>
+                    </>
                   ) : (
-                    formatUsd(selectedBalanceValue)
+                    <span className="text-gray-600">—</span>
                   )}
                 </div>
               </div>
@@ -331,6 +334,12 @@ export default function DashboardOverviewPage() {
                   <ArrowLeftRight size={14} /> Trade
                 </button>
               </div>
+
+              {/* Top up Wallet (fiat on-ramp). Available once KYC is verified,
+                  matching the previous WalletBalanceContainer behavior. */}
+              {kycVerified && merchantWallet && (
+                <FundWalletButton merchantWallet={merchantWallet} />
+              )}
             </div>
           </div>
 
