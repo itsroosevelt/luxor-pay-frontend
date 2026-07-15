@@ -575,7 +575,7 @@ export default function TreasuryPage() {
                     Auto-provisioned
                   </div>
                   <p className="text-xs text-gray-500 leading-relaxed">
-                    Your Genesis wallet is generated and secured automatically on the Solana mainnet — no manual setup required.
+                    Your Genesis wallet is generated and secured automatically on Solana — no manual setup required.
                   </p>
                 </div>
 
