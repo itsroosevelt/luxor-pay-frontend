@@ -18,7 +18,6 @@ import {
   ArrowLeftRight,
   CreditCard,
   Coins,
-  TrendingUp,
   ChevronDown,
   Copy,
   ExternalLink,
@@ -50,8 +49,6 @@ const navGroups = [
     items: [
       { href: '/dashboard/treasury', label: 'Treasury', icon: Coins },
       { href: '/dashboard/swap', label: 'Swap', icon: Repeat },
-      { href: '/dashboard/trade', label: 'Trade', icon: ArrowLeftRight },
-      { href: '/dashboard/stake', label: 'Stake', icon: TrendingUp },
     ]
   },
   {
@@ -67,7 +64,6 @@ const navGroups = [
   {
     title: 'Management',
     items: [
-      { href: '/dashboard/members', label: 'Members', icon: Users },
       { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
     ]
   },
