@@ -21,6 +21,7 @@ import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequ
 import { Transfer } from '@/lib/transfers-api';
 import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
+import { FundWalletButton } from '@/components/dashboard/FundWalletButton';
 import { clsx } from 'clsx';
 
 export default function DashboardOverviewPage() {
@@ -331,6 +332,12 @@ export default function DashboardOverviewPage() {
                   <ArrowLeftRight size={14} /> Trade
                 </button>
               </div>
+
+              {/* Top up Wallet (fiat on-ramp). Available once KYC is verified,
+                  matching the previous WalletBalanceContainer behavior. */}
+              {kycVerified && merchantWallet && (
+                <FundWalletButton merchantWallet={merchantWallet} />
+              )}
             </div>
           </div>
 
