@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCreateContact } from '@/hooks/useCreateContact';
 import { useUpdateContact } from '@/hooks/useUpdateContact';
 import { CreateContactPayload, Contact } from '@/lib/contacts-api';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 
 interface ContactFormModalProps {
@@ -244,6 +244,7 @@ const PhoneInputGroup = styled.div`
 export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: ContactFormModalProps) {
   const { mutate: createMutate, isLoading: isCreating, isError: isCreateError, errorMessage: createError } = useCreateContact();
   const { mutate: updateMutate, isLoading: isUpdating, isError: isUpdateError, errorMessage: updateError } = useUpdateContact();
+  const { tokens } = useTokenRegistry();
   
   const isLoading = isCreating || isUpdating;
   const isError = isCreateError || isUpdateError;
@@ -400,23 +401,13 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
                 disabled={isLoading}
               >
                 <option value="" disabled>Select a preferred token...</option>
-                {isDev ? (
-                  <optgroup label="Devnet">
-                    {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
-                      <option key={mint} value={mint}>
-                        {symbol} ({mint.slice(0, 4)}...{mint.slice(-4)})
+                  <optgroup label="Available Tokens">
+                    {tokens.map((token) => (
+                      <option key={token.mint} value={token.mint}>
+                        {token.symbol} ({token.mint.slice(0, 4)}...{token.mint.slice(-4)})
                       </option>
                     ))}
                   </optgroup>
-                ) : (
-                  <optgroup label="Mainnet Beta">
-                    {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
-                      <option key={mint} value={mint}>
-                        {symbol} ({mint.slice(0, 4)}...{mint.slice(-4)})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
               </Select>
             </FormGroup>
 

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import { useGetContacts } from '@/hooks/useGetContacts';
 import { useCreatePaymentRequest } from '@/hooks/useCreatePaymentRequest';
@@ -335,7 +335,7 @@ export function PaymentRequestModal({
 }: PaymentRequestModalProps) {
   const env = getLuxorEnv();
   const isDev = env === 'development';
-  const tokenRegistry = isDev ? TOKEN_REGISTRY['devnet'] : TOKEN_REGISTRY['mainnet-beta'];
+  const { tokens } = useTokenRegistry();
 
   const { data: contactsData, isLoading: isLoadingContacts } = useGetContacts();
   const { mutate, isLoading, isError, errorMessage } = useCreatePaymentRequest();
@@ -345,7 +345,7 @@ export function PaymentRequestModal({
   const [successId, setSuccessId] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const defaultMint = Object.keys(tokenRegistry)[0] ?? '';
+  const defaultMint = tokens.length > 0 ? tokens[0].mint : '';
 
   const [form, setForm] = useState({
     payerWallet: '',
@@ -419,7 +419,7 @@ export function PaymentRequestModal({
           targetNotification,
           phonePrefix,
           phoneNumber,
-          assetMint: contact.mint && tokenRegistry[contact.mint] ? contact.mint : prev.assetMint,
+          assetMint: contact.mint && tokens.some(t => t.mint === contact.mint) ? contact.mint : prev.assetMint,
         };
       });
     }
@@ -607,9 +607,9 @@ export function PaymentRequestModal({
                         onChange={handleChange}
                         required
                       >
-                        <optgroup label={isDev ? 'Devnet Tokens' : 'Mainnet Tokens'}>
-                          {Object.entries(tokenRegistry).map(([mint, symbol]) => (
-                            <option key={mint} value={mint}>{symbol}</option>
+                        <optgroup label="Available Tokens">
+                          {tokens.map((token) => (
+                            <option key={token.mint} value={token.mint}>{token.symbol}</option>
                           ))}
                         </optgroup>
                       </Select>

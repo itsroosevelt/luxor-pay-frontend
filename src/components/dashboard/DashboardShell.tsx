@@ -25,6 +25,7 @@ import {
   ExternalLink,
   Link2Off,
   Check,
+  Repeat,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -49,6 +50,7 @@ const navGroups = [
     title: 'Finance',
     items: [
       { href: '/dashboard/treasury', label: 'Treasury', icon: Coins },
+      { href: '/dashboard/swap', label: 'Swap', icon: Repeat },
       { href: '/dashboard/trade', label: 'Trade', icon: ArrowLeftRight },
       { href: '/dashboard/stake', label: 'Stake', icon: TrendingUp },
     ]
@@ -120,7 +122,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         const token = await currentUser.getIdToken();
         const p = await ensureMerchantProfile(token, currentUser.email ?? '');
         setProfile(p);
-        
+
         if (p && !p.kyc && !sessionStorage.getItem('luxor_kyc_dismissed')) {
           setIsKycModalOpen(true);
         }
