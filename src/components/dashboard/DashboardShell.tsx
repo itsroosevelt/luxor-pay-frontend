@@ -10,7 +10,7 @@ import {
   Receipt,
   Terminal,
   Code2,
-  Settings,
+  FileText,
   LogOut,
   Users,
   Menu,
@@ -19,7 +19,6 @@ import {
   CreditCard,
   Coins,
   TrendingUp,
-  Crown,
   ChevronDown,
   Copy,
   ExternalLink,
@@ -61,6 +60,7 @@ const navGroups = [
       { href: '/dashboard/requests', label: 'Payment Requests', icon: ArrowLeftRight },
       { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
       { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
+      { href: '/dashboard/documents', label: 'Documents', icon: FileText },
       { href: '/dashboard/pos', label: 'POS Devices', icon: Terminal },
     ]
   },
@@ -86,7 +86,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
   const { publicKey, disconnect } = useWallet();
   const [isMockDisconnected, setIsMockDisconnected] = useState(false);
@@ -140,8 +140,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    // Close mobile menu on route change
+    // Close menus on route change
     setIsMobileMenuOpen(false);
+    setIsAccountMenuOpen(false);
   }, [pathname]);
 
   const handleSignOut = async () => {
@@ -161,47 +162,62 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
+  // Account identity used by the top-right avatar menu. The photo comes from the
+  // Google account used to sign in (Firebase user.photoURL); we fall back to an
+  // initials avatar when there is no photo.
+  const displayName =
+    profile?.businessName?.trim() || user.displayName || user.email?.split('@')[0] || 'Account';
+  const avatarUrl = user.photoURL;
+  const avatarInitial = (displayName || user.email || 'A').charAt(0).toUpperCase();
+  const kycVerified =
+    profile?.kyc === true || (profile?.kycStatus || '').toLowerCase() === 'verified';
+
+  const renderAvatar = (size: number) =>
+    avatarUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={displayName}
+        referrerPolicy="no-referrer"
+        className="rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    ) : (
+      <div
+        className="rounded-full bg-gradient-to-br from-[#60A5FA] to-[#2563EB] text-white flex items-center justify-center"
+        style={{ width: size, height: size, fontFamily: 'Outfit, sans-serif', fontSize: size * 0.4, fontWeight: 500 }}
+      >
+        {avatarInitial}
+      </div>
+    );
+
   const NavLinks = ({ onClick, collapsed }: { onClick?: () => void; collapsed?: boolean }) => (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-6">
       {navGroups.map((group) => (
-        <div key={group.title} className="space-y-1">
-          {/* Group Title */}
-          {!collapsed && (
-            <h4 className="text-[10px] text-gray-600 font-body uppercase tracking-[0.2em] px-4 pt-2">
-              {group.title}
-            </h4>
-          )}
-          {collapsed && group.title !== 'Core' && (
-            <div className="border-t border-white/5 my-2 w-8 mx-auto" />
-          )}
-          <div className="space-y-1">
-            {group.items.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={onClick}
-                  title={collapsed ? label : undefined}
-                  className={clsx(
-                    'w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-light transition-all duration-300',
-                    active
-                      ? 'bg-white/10 text-white'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5',
-                    collapsed && 'justify-center px-0'
-                  )}
-                >
-                  <Icon size={18} className="flex-shrink-0" />
-                  <span className={clsx(
-                    'transition-all duration-300 whitespace-nowrap',
-                    collapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                  )}>
-                    {label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+        // Groups are only used to keep spacing between sections (no visible title).
+        // Vertical metrics stay identical when collapsed so icons don't move.
+        <div key={group.title} className="flex flex-col gap-1.5">
+          {group.items.map(({ href, label, icon: Icon }) => {
+            const active = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClick}
+                title={collapsed ? label : undefined}
+                className={clsx(
+                  'flex items-center gap-3 rounded-xl text-sm font-light transition-all duration-300 py-2.5',
+                  collapsed ? 'justify-center px-2' : 'px-3',
+                  active
+                    ? 'bg-white/10 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5',
+                )}
+              >
+                <Icon size={18} className="flex-shrink-0" />
+                {!collapsed && <span className="whitespace-nowrap">{label}</span>}
+              </Link>
+            );
+          })}
         </div>
       ))}
     </div>
@@ -223,154 +239,40 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className={clsx(
-          "border-b border-white/5 flex flex-col gap-4 transition-all duration-300",
-          isCollapsed ? "p-4" : "p-6"
+          "relative h-20 flex items-center shrink-0 transition-all duration-300",
+          isCollapsed ? "px-4 justify-center" : "px-6 justify-center"
         )}>
-          {/* Header Row: Always visible when expanded */}
           {!isCollapsed ? (
-            <div className="w-full flex items-center justify-between">
-              {/* Logo + Toggle Arrow */}
-              <button
-                type="button"
-                onClick={() => setIsProfileOpen(!isProfileOpen)}
-                className="flex items-center gap-1.5 hover:opacity-80 transition-all"
-              >
-                <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain flex-shrink-0" />
-                <ChevronDown 
-                  size={14} 
-                  className={clsx(
-                    "text-gray-500 transition-transform duration-300",
-                    isProfileOpen && "rotate-180"
-                  )} 
-                />
-              </button>
+            <>
+              <Link href="/dashboard" className="absolute left-6 top-1/2 -translate-y-1/2 hover:opacity-80 transition-all">
+                <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-8 w-8 object-contain flex-shrink-0" />
+              </Link>
 
-              {/* Collapse Button */}
+              <span className="text-base font-light tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+              </span>
+
               <button
                 type="button"
                 onClick={() => setIsCollapsed(true)}
-                className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex-shrink-0"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex-shrink-0"
                 title="Collapse sidebar"
               >
                 <Menu size={18} />
               </button>
-            </div>
+            </>
           ) : (
-            /* Collapsed State: Logo + Sign Out */
-            <div className="flex flex-col items-center gap-4">
-              <button 
-                type="button"
-                onClick={() => setIsCollapsed(false)}
-                className="flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:scale-105"
-                title="Expand sidebar"
-              >
-                <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-              </button>
-              <button
-                type="button"
-                onClick={handleSignOut}
-                className="p-1.5 text-red-400/80 hover:text-red-400 transition-colors rounded-lg hover:bg-white/5"
-                title="Sign out"
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
-          )}
-
-          {/* Collapsible Profile Section (Only when expanded & isProfileOpen is true) */}
-          {!isCollapsed && isProfileOpen && (
-            <div className="flex flex-col items-center text-center pb-2 w-full animate-in slide-in-from-top-4 duration-300 border-t border-white/5 pt-4">
-              <Link 
-                href="/dashboard" 
-                className="text-xl font-light tracking-tight font-['Outfit',sans-serif] flex flex-col items-center gap-1.5"
-              >
-                <span className="whitespace-nowrap">Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
-              </Link>
-              <p className="text-xs text-gray-500 font-mono mt-1.5 select-none max-w-[240px] truncate">
-                {user.email}
-              </p>
-
-              {/* Wallet Capsule */}
-              {walletAddress ? (
-                <div className="flex items-center gap-2 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsWalletSettingsOpen(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-300 font-light hover:bg-white/10 transition-colors font-mono cursor-pointer"
-                  >
-                    <CreditCard size={14} className="text-gray-400" />
-                    <span>{formatWallet(walletAddress)}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCopyWallet}
-                    className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-                    title="Copy address"
-                  >
-                    {copiedAddress ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
-                  </button>
-                  <a
-                    href={
-                      explorer === 'Solscan' 
-                        ? `https://solscan.io/account/${walletAddress}` 
-                        : explorer === 'Solana Explorer'
-                        ? `https://explorer.solana.com/address/${walletAddress}`
-                        : `https://orb.club/address/${walletAddress}`
-                    }
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-                    title="View on Explorer"
-                  >
-                    <ExternalLink size={14} />
-                  </a>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMockDisconnected(false);
-                    setIsWalletSettingsOpen(true);
-                  }}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-gray-500 font-light mt-2 hover:bg-white/10 transition-colors font-mono cursor-pointer"
-                >
-                  <CreditCard size={14} className="text-gray-600 animate-pulse" />
-                  <span>Wallet disconnected</span>
-                </button>
-              )}
-
-              {/* Action buttons row */}
-              <div className="flex items-center justify-center gap-3 mt-3">
-                <Link
-                  href="/dashboard/subscription"
-                  className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-                  title="Subscription"
-                >
-                  <Crown size={16} />
-                </Link>
-                <Link
-                  href="/dashboard/settings"
-                  className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"
-                  title="Settings"
-                >
-                  <Settings size={16} />
-                </Link>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="p-1.5 text-red-400/80 hover:text-red-400 transition-colors rounded-lg hover:bg-white/5"
-                  title="Sign out"
-                >
-                  <LogOut size={16} />
-                </button>
-              </div>
-            </div>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(false)}
+              className="flex items-center justify-center flex-shrink-0 transition-all duration-300 hover:scale-105"
+              title="Expand sidebar"
+            >
+              <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-8 w-8 object-contain" />
+            </button>
           )}
         </div>
-        <nav className={clsx(
-          "flex-1 space-y-1 overflow-y-auto transition-all duration-300",
-          isCollapsed ? "p-2" : "p-4"
-        )}>
+        <nav className="flex-1 overflow-y-auto p-4 transition-all duration-300">
           <NavLinks collapsed={isCollapsed} />
         </nav>
 
@@ -387,13 +289,24 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
             <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
           </Link>
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
-          >
-            <Menu size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAccountMenuOpen((v) => !v)}
+              className="rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all"
+              title="Account"
+              aria-label="Open account menu"
+            >
+              {renderAvatar(32)}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+            >
+              <Menu size={24} />
+            </button>
+          </div>
         </header>
 
         {/* Mobile Menu Overlay */}
@@ -439,6 +352,118 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* Account avatar (desktop, top-right corner) */}
+      <button
+        type="button"
+        onClick={() => setIsAccountMenuOpen((v) => !v)}
+        className="hidden md:flex fixed top-8 right-8 z-40 rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all shadow-lg"
+        title="Account"
+        aria-label="Open account menu"
+      >
+        {renderAvatar(40)}
+      </button>
+
+      {/* Account dropdown menu (Google-style) — shared for desktop + mobile */}
+      {isAccountMenuOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
+          <div
+            style={{
+              background: 'rgba(15,15,15,0.98)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(40px)',
+              borderRadius: '28px',
+              boxShadow: '0 32px 64px -16px rgba(0,0,0,0.8)',
+            }}
+            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-5 text-[#EDEDED] font-body animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <p className="text-center text-xs text-gray-400 font-mono truncate mb-4">{user.email}</p>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="rounded-full ring-2 ring-white/10">{renderAvatar(72)}</div>
+              <h3 className="mt-3 text-lg font-light text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                Hi, {displayName}!
+              </h3>
+              {profile?.businessName && (
+                <p className="text-xs text-gray-500 mt-0.5">{profile.businessName}</p>
+              )}
+
+              <div className="mt-2">
+                {kycVerified ? (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Check size={11} /> Verified
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setIsAccountMenuOpen(false); setIsKycModalOpen(true); }}
+                    className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                  >
+                    Verify identity
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Wallet capsule */}
+            {walletAddress && (
+              <div className="mt-4 flex items-center gap-2 bg-white/5 border border-white/10 rounded-2xl px-3 py-2">
+                <button
+                  type="button"
+                  onClick={() => { setIsAccountMenuOpen(false); setIsWalletSettingsOpen(true); }}
+                  className="flex items-center gap-2 flex-1 min-w-0 text-xs text-gray-300 font-mono hover:text-white transition-colors"
+                  title="Wallet settings"
+                >
+                  <CreditCard size={14} className="text-gray-400 flex-shrink-0" />
+                  <span className="truncate">{formatWallet(walletAddress)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyWallet}
+                  className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex-shrink-0"
+                  title="Copy address"
+                >
+                  {copiedAddress ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+                </button>
+                <a
+                  href={
+                    explorer === 'Solscan'
+                      ? `https://solscan.io/account/${walletAddress}`
+                      : explorer === 'Solana Explorer'
+                      ? `https://explorer.solana.com/address/${walletAddress}`
+                      : `https://orb.club/address/${walletAddress}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex-shrink-0"
+                  title="View on Explorer"
+                >
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+            )}
+
+            {/* Manage account */}
+            <Link
+              href="/dashboard/account"
+              onClick={() => setIsAccountMenuOpen(false)}
+              className="mt-4 w-full flex items-center justify-center gap-2 px-6 py-2.5 rounded-full border border-white/15 text-sm text-white hover:bg-white/5 transition-all"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
+            >
+              Manage account
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors text-sm"
+            >
+              <LogOut size={16} /> Sign out
+            </button>
+          </div>
+        </>
+      )}
 
       <KycModal isOpen={isKycModalOpen} onClose={handleCloseKyc} />
       <KycVerificationBanner />
