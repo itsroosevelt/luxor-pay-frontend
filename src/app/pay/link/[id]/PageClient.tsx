@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { sendTransfer, getPaymentLink } from '@/lib/payments-api';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { PaymentLink } from '@luxor/contracts';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -165,6 +165,7 @@ export default function PayLinkPage() {
   const [geoCoords, setGeoCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [geoStatus, setGeoStatus] = useState<'loading' | 'granted' | 'denied'>('loading');
 
+  const { getMintForSymbol } = useTokenRegistry();
   const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(link?.currency);
 
   useEffect(() => {
@@ -250,17 +251,13 @@ export default function PayLinkPage() {
     setError(null);
     try {
       const token = await user.getIdToken();
-      console.log('NEXT_PUBLIC_SOLANA_NETWORK', process.env.NEXT_PUBLIC_SOLANA_NETWORK);
-      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase() as 'mainnet-beta' | 'devnet';
-      const registry = TOKEN_REGISTRY[network];
-
       let mint: string | undefined = undefined;
       if (link.currency !== 'SOL') {
-        const entry = Object.entries(registry || {}).find(([m, symbol]) => symbol === link.currency);
-        if (entry) {
-          mint = entry[0];
+        const foundMint = getMintForSymbol(link.currency);
+        if (foundMint) {
+          mint = foundMint;
         } else {
-          throw new Error(`Currency ${link.currency} is not supported on ${network}`);
+          throw new Error(`Currency ${link.currency} is not supported`);
         }
       }
 

@@ -8,7 +8,7 @@ import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
 import { Transfer } from "@/lib/transfers-api";
 import { getExplorerTxUrl } from "@/web3/config/network";
-import { getTokenSymbol } from "@/lib/token-registry";
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 
 const Overlay = styled(motion.div)`
   position: fixed;
@@ -147,6 +147,7 @@ export function TransactionDetailModal({ transfer, onClose, merchantWallet }: Tr
   if (!transfer) return null;
 
   const isSent = merchantWallet ? transfer.fromWallet === merchantWallet : false;
+  const { getTokenSymbol } = useTokenRegistry();
   const symbol = getTokenSymbol(transfer.mint) || transfer.symbol || 'SOL';
 
   const copyToClipboard = (text: string) => {

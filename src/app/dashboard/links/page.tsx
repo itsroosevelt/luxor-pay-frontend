@@ -8,7 +8,7 @@ import type { PaymentLink } from '@luxor/contracts';
 import { Copy, Link as LinkIcon, Plus, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { TOKEN_REGISTRY } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -384,6 +384,7 @@ export default function PaymentLinksPage() {
   const [currency, setCurrency] = useState<string>('USDC');
   const [creating, setCreating] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const { tokens } = useTokenRegistry();
 
   const env = getLuxorEnv();
   const isDev = env === 'development';
@@ -514,27 +515,13 @@ export default function PaymentLinksPage() {
                       value={currency}
                       onChange={(e) => setCurrency(e.target.value)}
                     >
-                      <option value="SOL">Solana (SOL)</option>
-                      <option value="USDC">USDC</option>
-                      <option value="USDT">USDT</option>
-                      <option value="EURC">EURC</option>
-                      {isDev ? (
-                        <optgroup label="Devnet Tokens">
-                          {Object.entries(TOKEN_REGISTRY['devnet']).map(([mint, symbol]) => (
-                            <option key={symbol} value={symbol}>
-                              {symbol}
-                            </option>
-                          ))}
-                        </optgroup>
-                      ) : (
-                        <optgroup label="Mainnet Beta Tokens">
-                          {Object.entries(TOKEN_REGISTRY['mainnet-beta']).map(([mint, symbol]) => (
-                            <option key={symbol} value={symbol}>
-                              {symbol}
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
+                      <optgroup label="Available Tokens">
+                        {tokens.map((token) => (
+                          <option key={token.symbol} value={token.symbol}>
+                            {token.symbol}
+                          </option>
+                        ))}
+                      </optgroup>
                     </Select>
                   </InputGroup>
                 </InputGrid>

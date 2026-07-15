@@ -16,6 +16,7 @@ import {
   Menu,
   X,
   ArrowLeftRight,
+  Repeat,
   UserCircle,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
@@ -30,6 +31,7 @@ import { clsx } from 'clsx';
 
 const nav = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
+  { href: '/dashboard/swap', label: 'Swap', icon: Repeat },
   { href: '/dashboard/requests', label: 'Payment Requests', icon: ArrowLeftRight },
   { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
   { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
@@ -59,7 +61,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         const token = await currentUser.getIdToken();
         const p = await ensureMerchantProfile(token, currentUser.email ?? '');
         setProfile(p);
-        
+
         if (p && !p.kyc && !sessionStorage.getItem('luxor_kyc_dismissed')) {
           setIsKycModalOpen(true);
         }

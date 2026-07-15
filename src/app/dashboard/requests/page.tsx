@@ -15,7 +15,7 @@ import {
 import { sendTransfer } from '@/lib/transfers-api';
 import { useGeolocation } from '@/context/GeolocationContext';
 import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
-import { getTokenSymbol } from '@/lib/token-registry';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import {
   Inbox,
@@ -54,8 +54,8 @@ function shortenWallet(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
-function formatAmount(amount: string, mint: string, network: 'mainnet-beta' | 'devnet') {
-  const symbol = getTokenSymbol(mint, network) || 'SPL';
+function formatAmount(amount: string, mint: string, network: 'mainnet-beta' | 'devnet', getTokenSymbol: (mint: string | null | undefined) => string | null) {
+  const symbol = getTokenSymbol(mint) || 'SPL';
   return `${amount} ${symbol}`;
 }
 
@@ -158,8 +158,9 @@ function PaymentModal({
   const [errorMsg, setErrorMsg] = useState('');
   const { latitude, longitude } = useGeolocation();
 
-  const formattedAmount = formatAmount(request.amount, request.assetMint, network);
-  const symbol = getTokenSymbol(request.assetMint, network) || 'SPL';
+  const { getTokenSymbol } = useTokenRegistry();
+  const formattedAmount = formatAmount(request.amount, request.assetMint, network, getTokenSymbol);
+  const symbol = getTokenSymbol(request.assetMint) || 'SPL';
   const expDate = formatDate(request.expirationDate);
   const createdDate = formatDate(request.createdAt);
 
@@ -1277,7 +1278,8 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
   const isPending = request.status === 'PENDING';
   const isExpired = request.status === 'EXPIRED';
   const showActions = isPending || (isExpired && perspective === 'requester');
-  const formattedAmount = formatAmount(request.amount, request.assetMint, network);
+  const { getTokenSymbol } = useTokenRegistry();
+  const formattedAmount = formatAmount(request.amount, request.assetMint, network, getTokenSymbol);
   const expDate = formatDate(request.expirationDate);
   const createdDate = formatDate(request.createdAt);
   const lastRemindedDate = formatDate(request.lastNotificationDate);

@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { motion } from "framer-motion";
 import { ArrowUpRight, ArrowDownLeft, Clock } from "lucide-react";
 import { Transfer } from "@/lib/transfers-api";
-import { getTokenSymbol } from "@/lib/token-registry";
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 
 const CardWrapper = styled(motion.div)<{ $type: 'sent' | 'received' }>`
   background: rgba(255, 255, 255, 0.05);
@@ -123,6 +123,7 @@ interface TransactionCardProps {
 export function TransactionCard({ transfer, merchantWallet, onClick, index }: TransactionCardProps) {
   const isSent = merchantWallet ? transfer.fromWallet === merchantWallet : false;
   const type = isSent ? 'sent' : 'received';
+  const { getTokenSymbol } = useTokenRegistry();
   const symbol = getTokenSymbol(transfer.mint) || transfer.symbol || 'SOL';
   
   // Format Date

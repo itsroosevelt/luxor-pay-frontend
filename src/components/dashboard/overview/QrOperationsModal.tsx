@@ -9,11 +9,12 @@ import { toast } from 'sonner';
 import {
   buildLuxorPayCheckoutPath,
 } from '@/lib/luxor-pay-checkout-url';
-import { generatePaymentReference, encodeSolanaPayUrl, getMintForSymbol } from '@/lib/solana-pay-url';
+import { generatePaymentReference, encodeSolanaPayUrl } from '@/lib/solana-pay-url';
 import { routeScannedPaymentContent } from '@/lib/qr-scan-routing';
 import { QrCameraScanner } from '@/components/qr/QrCameraScanner';
 import { Camera, QrCode, ArrowLeft, X, Copy, Check, ExternalLink, Send, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { useTokenRegistry } from '@/context/TokenRegistryContext';
 
 interface QrOperationsModalProps {
   isOpen: boolean;
@@ -660,6 +661,8 @@ export function QrOperationsModal({
   const [expiryDuration, setExpiryDuration] = useState('never');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  const { getMintForSymbol, tokens, getTokenSymbol } = useTokenRegistry();
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       setOrigin(window.location.origin);
@@ -786,7 +789,7 @@ export function QrOperationsModal({
   if (!isOpen) return null;
 
   function handleScannedResult(result: string): void {
-    const route = routeScannedPaymentContent(result);
+    const route = routeScannedPaymentContent(result, getTokenSymbol);
 
     switch (route.type) {
       case 'qr_direct':
@@ -1039,9 +1042,12 @@ export function QrOperationsModal({
                         onChange={(e) => setCurrency(e.target.value)}
                         aria-label="Currency"
                       >
-                        <option value="USDC">USDC</option>
+                        {tokens.map((token) => (
+                          <option key={token.mint} value={token.symbol}>
+                            {token.symbol}
+                          </option>
+                        ))}
                         <option value="SOL">SOL</option>
-                        <option value="LXR">LXR</option>
                       </TokenSelect>
                     </InputRow>
                     {amount && parseFloat(amount) > 0 && usdAmount && (

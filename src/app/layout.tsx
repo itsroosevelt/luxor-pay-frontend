@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Montserrat, Outfit } from "next/font/google";
 import "./globals.css";
 import { SolanaProvider } from '@/web3/providers/SolanaProvider';
+import { TokenRegistryProvider } from '@/context/TokenRegistryContext';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -77,9 +78,11 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${outfit.variable} antialiased`}
       >
-        <SolanaProvider>
-          {children}
-        </SolanaProvider>
+        <TokenRegistryProvider>
+          <SolanaProvider>
+            {children}
+          </SolanaProvider>
+        </TokenRegistryProvider>
       </body>
     </html>
   );
