@@ -18,6 +18,8 @@ import {
   ArrowLeftRight,
   CreditCard,
   Coins,
+  TrendingUp,
+  Lock,
   ChevronDown,
   Copy,
   ExternalLink,
@@ -36,7 +38,14 @@ import { OnrampProgressBanner } from './OnrampProgressBanner';
 import { OnrampResultModal } from './OnrampResultModal';
 import { clsx } from 'clsx';
 
-const navGroups = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  locked?: boolean;
+};
+
+const navGroups: { title: string; items: NavItem[] }[] = [
   {
     title: 'Core',
     items: [
@@ -49,6 +58,8 @@ const navGroups = [
     items: [
       { href: '/dashboard/treasury', label: 'Treasury', icon: Coins },
       { href: '/dashboard/swap', label: 'Swap', icon: Repeat },
+      { href: '/dashboard/trade', label: 'Trade', icon: ArrowLeftRight, locked: true },
+      { href: '/dashboard/stake', label: 'Stake', icon: TrendingUp, locked: true },
     ]
   },
   {
@@ -64,6 +75,7 @@ const navGroups = [
   {
     title: 'Management',
     items: [
+      { href: '/dashboard/members', label: 'Members', icon: Users, locked: true },
       { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
     ]
   },
@@ -193,8 +205,32 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         // Groups are only used to keep spacing between sections (no visible title).
         // Vertical metrics stay identical when collapsed so icons don't move.
         <div key={group.title} className="flex flex-col gap-1.5">
-          {group.items.map(({ href, label, icon: Icon }) => {
+          {group.items.map(({ href, label, icon: Icon, locked }) => {
             const active = pathname === href;
+
+            // Locked items stay visible but are not navigable yet (coming soon).
+            if (locked) {
+              return (
+                <div
+                  key={href}
+                  aria-disabled="true"
+                  title={collapsed ? `${label} (coming soon)` : undefined}
+                  className={clsx(
+                    'flex items-center gap-3 rounded-xl text-sm font-light py-2.5 cursor-not-allowed text-gray-600 select-none',
+                    collapsed ? 'justify-center px-2' : 'px-3',
+                  )}
+                >
+                  <Icon size={18} className="flex-shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="whitespace-nowrap">{label}</span>
+                      <Lock size={13} className="ml-auto flex-shrink-0 text-gray-600" />
+                    </>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={href}
