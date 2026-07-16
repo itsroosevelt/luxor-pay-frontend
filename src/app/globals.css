@@ -6,7 +6,7 @@
 }
 
 :root {
-  --background: #000000;
+  --background: #0a0a0a;
   --foreground: #ededed;
   --primary: #14f195; /* Solana Green */
   --secondary: #9945ff; /* Solana Purple */
@@ -15,7 +15,7 @@
 
 @layer base {
   body {
-    background: #000000;
+    background: radial-gradient(circle at top left, #1a1a1a, #0a0a0a);
     color: var(--foreground);
     min-height: 100vh;
   }
@@ -36,36 +36,4 @@
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-/* Custom Premium Scrollbar for ALL elements */
-*::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-*::-webkit-scrollbar-track {
-  background: transparent !important;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12) !important;
-  border-radius: 999px !important;
-}
-
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25) !important;
-}
-
-/* Hide scrollbar arrow buttons completely */
-*::-webkit-scrollbar-button {
-  display: none !important;
-  width: 0;
-  height: 0;
-}
-
-/* Firefox scrollbar compatibility */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }

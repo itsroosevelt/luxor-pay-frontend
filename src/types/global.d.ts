@@ -36,10 +36,6 @@ declare module 'firebase/auth' {
     getIdToken(forceRefresh?: boolean): Promise<string>;
     email: string | null;
     displayName: string | null;
-    photoURL: string | null;
     uid: string;
-  }
-  export class OAuthProvider {
-    constructor(providerId: string);
   }
 }
