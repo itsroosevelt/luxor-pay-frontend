@@ -172,7 +172,6 @@ export function TransactionsView({
   onSetLimit,
   onSetStatus,
 }: TransactionsViewProps) {
-
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = data?.totalPages || 1;
   const hasNext = currentPage < totalPages;

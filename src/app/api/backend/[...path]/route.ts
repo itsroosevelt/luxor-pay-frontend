@@ -30,13 +30,20 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
 
   try {
     const res = await fetch(target.toString(), init);
-    const body = await res.text();
+
+    // Read the raw bytes so binary payloads (e.g. application/pdf statements)
+    // are proxied intact. Text/JSON responses are unaffected since the client
+    // decodes them the same way regardless of how the body was buffered here.
+    const body = await res.arrayBuffer();
+
+    const responseHeaders = new Headers();
+    responseHeaders.set('Content-Type', res.headers.get('Content-Type') ?? 'application/json');
+    const disposition = res.headers.get('Content-Disposition');
+    if (disposition) responseHeaders.set('Content-Disposition', disposition);
 
     return new NextResponse(body, {
       status: res.status,
-      headers: {
-        'Content-Type': res.headers.get('Content-Type') ?? 'application/json',
-      },
+      headers: responseHeaders,
     });
   } catch {
     return NextResponse.json({ message: 'Backend unavailable' }, { status: 502 });
