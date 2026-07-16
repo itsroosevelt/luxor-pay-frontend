@@ -6,6 +6,7 @@ import { TransactionsView } from "./TransactionsView";
 import { TransactionDetailModal } from "./TransactionDetailModal";
 import { Transfer } from "@/lib/transfers-api";
 
+
 interface TransactionsContainerProps {
   merchantWallet: string | null;
 }
@@ -69,6 +70,7 @@ export function TransactionsContainer({ merchantWallet }: TransactionsContainerP
         onSetLimit={handleSetLimit}
         onSetStatus={handleSetStatus}
       />
+
 
       <TransactionDetailModal
         transfer={selectedTransfer}
