@@ -4,7 +4,6 @@ import { GeolocationProvider } from '@/context/GeolocationContext';
 import { MerchantProvider } from '@/context/MerchantContext';
 import { KycSocketProvider } from '@/context/KycSocketContext';
 import { OnrampSocketProvider } from '@/context/OnrampSocketContext';
-import { TreasuryAccountsProvider } from '@/context/TreasuryAccountsContext';
 
 export default function DashboardLayout({
   children,
@@ -16,12 +15,10 @@ export default function DashboardLayout({
       <MerchantProvider>
         <KycSocketProvider>
           <OnrampSocketProvider>
-            <TreasuryAccountsProvider>
-              <DashboardShell>
-                <Toaster theme="dark" position="top-right" />
-                {children}
-              </DashboardShell>
-            </TreasuryAccountsProvider>
+            <DashboardShell>
+              <Toaster theme="dark" position="top-right" />
+              {children}
+            </DashboardShell>
           </OnrampSocketProvider>
         </KycSocketProvider>
       </MerchantProvider>

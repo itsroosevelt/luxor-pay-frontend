@@ -8,77 +8,28 @@ import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
 import { listPaymentRequests } from '@/lib/payment-requests-api';
 import { getLuxorEnv } from '@/lib/luxor-env';
-import { ArrowRight, Send, QrCode, Bell, ArrowLeftRight, ChevronDown, Copy, Check, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
-import { buildOpenAmountQrUrl } from '@/lib/solana-pay-url';
-import { useGetBalance } from '@/hooks/useGetBalance';
-import { useTreasuryAccounts } from '@/context/TreasuryAccountsContext';
-import { useMerchant } from '@/context/MerchantContext';
-import { LoadingVideo } from '@/components/shared/LoadingVideo';
+import { Link as LinkIcon, Terminal, Code2, ArrowRight, Send, QrCode, Bell } from 'lucide-react';
+import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
 import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import { Transfer } from '@/lib/transfers-api';
 import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
-import { clsx } from 'clsx';
 
 export default function DashboardOverviewPage() {
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState<string | null>(null);
-  const [selectedAccountId, setSelectedAccountId] = useState('total');
-  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isReceiveModalOpen, setIsReceiveModalOpen] = useState(false);
   const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
   const [pendingInboxCount, setPendingInboxCount] = useState(0);
-  const [walletCopied, setWalletCopied] = useState(false);
 
   const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
-
-  // Shared treasury accounts (Genesis + any user-created wallet).
-  const { accounts } = useTreasuryAccounts();
-  const { data: balanceData, isLoading: balanceLoading } = useGetBalance(merchantWallet);
-
-  // KYC state comes from the shared MerchantContext (populated by the backend
-  // via ensureMerchantProfile). We reuse the global KycModal for the flow.
-  const { profile, setIsKycModalOpen } = useMerchant();
-  const kycStatusRaw = (profile?.kycStatus || '').toLowerCase();
-  const kycVerified = profile?.kyc === true || kycStatusRaw === 'verified';
-  const kycProcessing =
-    !kycVerified &&
-    ['processing', 'pending', 'submitted', 'requires_input', 'in_review', 'reviewing'].includes(kycStatusRaw);
-
-  // Genesis balance is derived from the on-chain data of the merchant wallet.
-  // Until the backend provides the wallet/balance, we show the loading indicator.
-  const SOL_USD = 140;
-  const genesisPending = !merchantWallet;
-  const genesisLoading = genesisPending || balanceLoading;
-  const genesisUsd = balanceData ? parseFloat(balanceData.solBalance) * SOL_USD : 0;
-
-  const parseUsd = (value: string) => parseFloat(value.replace(/[^0-9.-]/g, '')) || 0;
-  const formatUsd = (value: number) => `$${value.toFixed(2)}`;
-
-  const accountOptions = [{ id: 'total', name: 'Total' }, ...accounts];
-  const selectedOption = accountOptions.find((o) => o.id === selectedAccountId) ?? accountOptions[0];
-  const selectedAccount = accounts.find((a) => a.id === selectedAccountId);
-
-  // Whether the currently selected balance should render the loading indicator.
-  const balanceIsLoading =
-    (selectedAccountId === 'total' && genesisLoading) ||
-    (Boolean(selectedAccount?.isGenesis) && genesisLoading);
-
-  // Numeric value to display for the selected account (when not loading).
-  const selectedBalanceValue =
-    selectedAccountId === 'total'
-      ? genesisUsd + accounts.filter((a) => !a.isGenesis).reduce((sum, a) => sum + parseUsd(a.balance), 0)
-      : selectedAccount?.isGenesis
-        ? genesisUsd
-        : parseUsd(selectedAccount?.balance ?? '$0.00');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
@@ -112,251 +63,47 @@ export default function DashboardOverviewPage() {
     return () => unsubscribe();
   }, []);
 
-  const handleCopyWallet = () => {
-    if (!merchantWallet) return;
-    navigator.clipboard.writeText(merchantWallet).then(() => {
-      setWalletCopied(true);
-      setTimeout(() => setWalletCopied(false), 2000);
-    });
-  };
-
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5 bg-white/[0.01]">
+      <header className="p-6 md:p-10 border-b border-white/5 bg-white/[0.01] flex flex-col md:flex-row md:justify-between md:items-end gap-4">
         <div>
-          <h1 className="text-2xl font-light mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Overview</h1>
+          <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Overview</h1>
+          <p className="text-gray-400 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Your Solana payment platform — links, POS, and API in one place.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button 
+            onClick={() => setIsQrModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
+            style={{ fontFamily: 'Outfit, sans-serif' }}
+          >
+            <QrCode size={18} /> Receive
+          </button>
+          <button 
+            onClick={() => setIsTransferModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-colors"
+            style={{ fontFamily: 'Outfit, sans-serif' }}
+          >
+            <Send size={18} /> Send
+          </button>
         </div>
       </header>
 
-      <div className="p-6 md:p-10 w-full space-y-8">
+      <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
         {!stats.hasWallet && (
           <div className="glass-panel p-4 border border-amber-500/30 bg-amber-500/5 text-sm">
             <p className="text-amber-200">
-              Your Genesis wallet is set up in{' '}
-              <Link href="/dashboard/treasury" className="underline font-medium">
-                Treasury
+              Add your Solana wallet in{' '}
+              <Link href="/dashboard/settings" className="underline font-medium">
+                Settings
               </Link>{' '}
               to accept payments on links and POS.
             </p>
           </div>
         )}
 
-        {/* Identity verification (KYC) — opens the global KycModal, which runs
-            the real backend flow (initKyc → Stripe). Shown in all states so the
-            option is always available and clearly organized. */}
-        <div
-          className="glass-panel p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-          style={{ borderColor: kycVerified ? 'rgba(16,185,129,0.25)' : 'rgba(96,165,250,0.25)' }}
-        >
-          <div className="flex items-start gap-4">
-            <div className={clsx(
-              "p-3 rounded-2xl shrink-0",
-              kycVerified ? "bg-emerald-500/10 text-emerald-400" : "bg-blue-500/10 text-[#60A5FA]"
-            )}>
-              {kycVerified ? <CheckCircle2 size={22} /> : <ShieldCheck size={22} />}
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h3 className="text-base font-light text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                  {kycVerified ? 'Identity verified' : kycProcessing ? 'Verification in progress' : 'Verify your identity'}
-                </h3>
-                {kycVerified ? (
-                  <span className="text-[10px] uppercase tracking-wider font-body px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    Verified
-                  </span>
-                ) : kycProcessing ? (
-                  <span className="text-[10px] uppercase tracking-wider font-body px-2 py-0.5 rounded-full bg-blue-500/10 text-[#60A5FA] border border-blue-500/20">
-                    In review
-                  </span>
-                ) : (
-                  <span className="text-[10px] uppercase tracking-wider font-body px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                    Action required
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 leading-relaxed max-w-md">
-                {kycVerified
-                  ? 'You have full access to fiat top-ups, crypto-to-fiat conversions and premium liquidity.'
-                  : kycProcessing
-                    ? 'We are reviewing your documents. This can take a few minutes — you can keep using the dashboard meanwhile.'
-                    : 'Complete KYC to unlock fiat top-ups, crypto-to-fiat conversions and premium liquidity. It takes about 2 minutes.'}
-              </p>
-            </div>
-          </div>
-
-          {kycProcessing ? (
-            <span className="shrink-0 flex items-center gap-2 text-xs text-[#60A5FA] font-body">
-              <Loader2 size={14} className="animate-spin" /> Reviewing…
-            </span>
-          ) : !kycVerified ? (
-            <button
-              type="button"
-              onClick={() => setIsKycModalOpen(true)}
-              className="shrink-0 flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-white text-black font-light text-sm hover:bg-[#2563EB] hover:text-white transition-all"
-              style={{ fontFamily: 'Outfit, sans-serif' }}
-            >
-              <ShieldCheck size={16} /> Start verification
-            </button>
-          ) : null}
-        </div>
-
-        {/* Top Section: Balance & Chart Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
-          {/* Total Balance Card (1 Column on Large screens) */}
-          <div 
-            style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(40px)',
-              borderRadius: '32px',
-              boxShadow: '0 32px 64px -16px rgba(0,0,0,0.6)',
-            }}
-            className="p-8 flex flex-col justify-between space-y-6 h-full"
-          >
-            <div className="space-y-2">
-              <span className="text-[10px] text-gray-500 uppercase tracking-widest font-body block">Account Balance</span>
-              <div className="flex items-center justify-between gap-4 mt-2 w-full flex-wrap">
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
-                    className="flex items-center justify-between w-40 px-5 py-2 rounded-full bg-white/5 border border-white/10 text-xs text-gray-300 font-light hover:bg-white/10 hover:text-white transition-all font-body"
-                  >
-                    <span>{selectedOption.name}</span>
-                    <ChevronDown size={12} className={clsx("transition-transform duration-300", isAccountDropdownOpen && "rotate-180")} />
-                  </button>
-                  
-                  {isAccountDropdownOpen && (
-                    <div 
-                      style={{
-                        background: 'rgba(10, 10, 10, 0.95)',
-                        border: '1px solid rgba(255, 255, 255, 0.08)',
-                        backdropFilter: 'blur(20px)',
-                        borderRadius: '16px',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-                      }}
-                      className="absolute left-0 mt-2 w-44 z-40 overflow-hidden py-1"
-                    >
-                      {accountOptions.map((acc) => (
-                        <button
-                          key={acc.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedAccountId(acc.id);
-                            setIsAccountDropdownOpen(false);
-                          }}
-                          className={clsx(
-                            "w-full text-left px-4 py-2 text-xs transition-colors",
-                            selectedAccountId === acc.id
-                              ? "bg-white/10 text-white font-medium"
-                              : "text-gray-400 hover:text-white hover:bg-white/5"
-                          )}
-                        >
-                          {acc.name}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-4xl md:text-5xl font-light text-white tracking-tight font-sans">
-                  {balanceIsLoading ? (
-                    <LoadingVideo className="w-auto h-10" />
-                  ) : (
-                    formatUsd(selectedBalanceValue)
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col gap-4">
-              {/* Receive: direct QR to the Genesis wallet + address + copy.
-                  Tapping the QR still opens advanced options (charge with an
-                  amount, scan a QR, request a payment) so nothing is lost. */}
-              {merchantWallet ? (
-                <div className="flex flex-col items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsQrModalOpen(true)}
-                    title="Scan to pay this wallet · tap for charge & scan options"
-                    className="bg-white p-3 rounded-2xl shadow-lg hover:opacity-90 transition-opacity"
-                  >
-                    <QRCodeSVG
-                      value={buildOpenAmountQrUrl(merchantWallet, businessName || 'Luxor Pay')}
-                      size={132}
-                      level="H"
-                      includeMargin={false}
-                    />
-                  </button>
-                  <span className="flex items-center gap-1.5 text-[10px] text-gray-500 uppercase tracking-widest font-body">
-                    <QrCode size={12} /> Genesis wallet
-                  </span>
-                  <div className="flex items-center gap-2 w-full bg-white/5 border border-white/10 rounded-full px-4 py-2">
-                    <span className="flex-1 text-xs text-gray-300 font-mono truncate" title={merchantWallet}>
-                      {merchantWallet}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleCopyWallet}
-                      title={walletCopied ? 'Copied!' : 'Copy address'}
-                      aria-label="Copy wallet address"
-                      className={clsx(
-                        "flex items-center justify-center w-8 h-8 rounded-full border transition-all shrink-0",
-                        walletCopied
-                          ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
-                          : "border-white/10 text-white bg-white/5 hover:bg-white/10"
-                      )}
-                    >
-                      {walletCopied ? <Check size={14} /> : <Copy size={14} />}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center gap-2 py-4 text-gray-500 text-xs">
-                  <LoadingVideo className="w-auto h-10" />
-                  <span>Generating Genesis wallet…</span>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-3">
-                <button 
-                  onClick={() => setIsTransferModalOpen(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-white text-black font-light hover:bg-white/90 transition-all font-sans text-xs shadow-md"
-                  style={{ fontFamily: 'Outfit, sans-serif' }}
-                >
-                  <Send size={14} /> Send
-                </button>
-                <button 
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-white text-black font-light hover:bg-white/90 transition-all font-sans text-xs shadow-md"
-                  style={{ fontFamily: 'Outfit, sans-serif' }}
-                >
-                  <ArrowLeftRight size={14} /> Trade
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Chart Card (2 Columns on Large screens) */}
-          <div 
-            style={{
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              backdropFilter: 'blur(40px)',
-              borderRadius: '32px',
-              boxShadow: '0 32px 64px -16px rgba(0,0,0,0.6)',
-            }}
-            className="p-8 lg:col-span-2 flex flex-col justify-between h-full min-h-[300px]"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs text-gray-500 uppercase tracking-wider font-body">Account Performance</span>
-            </div>
-            
-            {/* Chart data comes from the backend. While it is unavailable we
-                show the loading indicator instead of any generic data. */}
-            <div className="relative flex-1 w-full min-h-[180px] mt-2 flex flex-col items-center justify-center gap-3 text-gray-500 text-sm">
-              <LoadingVideo className="w-auto h-10" />
-              <span>Loading chart data…</span>
-            </div>
-          </div>
-        </div>
+        <WalletBalanceContainer merchantWallet={merchantWallet} />
 
         {pendingInboxCount > 0 && (
           <Link
@@ -394,6 +141,32 @@ export default function DashboardOverviewPage() {
           <StatCard label="POS devices" value={stats.pos} href="/dashboard/pos" />
           <StatCard label="API" value="Ready" href="/dashboard/developers" isText />
         </div>
+
+        
+
+        <section>
+          <h2 className="text-lg font-semibold mb-4">Quick start</h2>
+          <div className="grid gap-3">
+            <QuickLink
+              href="/dashboard/links"
+              icon={LinkIcon}
+              title="Create a payment link"
+              description="Share a checkout URL on your website or social media."
+            />
+            <QuickLink
+              href="/dashboard/pos"
+              icon={Terminal}
+              title="Connect a POS terminal"
+              description="Register hardware and charge with your API key."
+            />
+            <QuickLink
+              href="/dashboard/developers"
+              icon={Code2}
+              title="Get API keys"
+              description="Integrate Luxor Pay like Stripe — REST on the same domain."
+            />
+          </div>
+        </section>
       </div>
 
       <TransferModal 
@@ -451,6 +224,36 @@ function StatCard({
     <Link href={href} className="glass-panel p-6 hover:bg-white/[0.04] transition-colors block">
       <p className="text-gray-400 text-sm mb-2">{label}</p>
       <p className={isText ? 'text-xl font-bold text-primary' : 'text-3xl font-bold'}>{value}</p>
+    </Link>
+  );
+}
+
+function QuickLink({
+  href,
+  icon: Icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: typeof LinkIcon;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="glass-panel p-5 flex items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors"
+    >
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+          <Icon size={20} />
+        </div>
+        <div>
+          <p className="font-semibold">{title}</p>
+          <p className="text-sm text-gray-400">{description}</p>
+        </div>
+      </div>
+      <ArrowRight className="text-gray-500 shrink-0" size={18} />
     </Link>
   );
 }
