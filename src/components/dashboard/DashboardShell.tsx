@@ -45,21 +45,6 @@ type NavItem = {
   locked?: boolean;
 };
 
-// Explorer links must respect the configured Solana cluster so they show the
-// correct data on devnet/testnet (mainnet-beta needs no cluster param).
-function buildExplorerAddressUrl(explorer: string, address: string): string {
-  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet';
-  const cluster = network === 'mainnet-beta' ? '' : `?cluster=${network}`;
-  switch (explorer) {
-    case 'Solscan':
-      return `https://solscan.io/account/${address}${cluster}`;
-    case 'Solana Explorer':
-      return `https://explorer.solana.com/address/${address}${cluster}`;
-    default:
-      return `https://orb.club/address/${address}${cluster}`;
-  }
-}
-
 const navGroups: { title: string; items: NavItem[] }[] = [
   {
     title: 'Core',
@@ -474,7 +459,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   {copiedAddress ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
                 </button>
                 <a
-                  href={buildExplorerAddressUrl(explorer, walletAddress)}
+                  href={
+                    explorer === 'Solscan'
+                      ? `https://solscan.io/account/${walletAddress}`
+                      : explorer === 'Solana Explorer'
+                      ? `https://explorer.solana.com/address/${walletAddress}`
+                      : `https://orb.club/address/${walletAddress}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5 flex-shrink-0"
@@ -543,7 +534,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   {copiedAddress ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
                 </button>
                 <a
-                  href={buildExplorerAddressUrl(explorer, walletAddress)}
+                  href={
+                    explorer === 'Solscan' 
+                      ? `https://solscan.io/account/${walletAddress}` 
+                      : explorer === 'Solana Explorer'
+                      ? `https://explorer.solana.com/address/${walletAddress}`
+                      : `https://orb.club/address/${walletAddress}` // Orb fallback
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/5"

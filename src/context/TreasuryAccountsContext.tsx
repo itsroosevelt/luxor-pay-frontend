@@ -18,7 +18,7 @@ export type TreasuryAccount = {
 // Only the Genesis wallet exists by default (auto-created with the account).
 // Any additional wallet is added by the user from the Treasury tab.
 const defaultAccounts: TreasuryAccount[] = [
-  { id: 'genesys', name: 'GENESYS', address: '', balance: '0', weight: '0%', coins: '0', stakes: '0', nfts: '0', solAmount: '0', isGenesis: true },
+  { id: 'genesys', name: 'GENESYS', address: '', balance: '$0.00', weight: '0%', coins: '0', stakes: '0', nfts: '0', solAmount: '0.0000', isGenesis: true },
 ];
 
 interface TreasuryAccountsContextValue {
