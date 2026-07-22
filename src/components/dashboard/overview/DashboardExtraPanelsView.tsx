@@ -1,8 +1,6 @@
-"use client";
-
 import React from "react";
 import styled from "styled-components";
-import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, TrendingUp } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, TrendingUp, AlertCircle } from "lucide-react";
 
 const Container = styled.div`
   display: flex;
@@ -113,24 +111,43 @@ const FlowSubtitle = styled.span`
 
 const COLOR_SENT = "#EF4444";
 const COLOR_RECEIVED = "#10B981";
+const COLOR_FAILED = "#F59E0B";
 
-const FlowIconBadge = styled.div<{ $type: 'in' | 'out' }>`
+const FlowIconBadge = styled.div<{ $visualType: 'in' | 'out' | 'failed' }>`
   width: 26px;
   height: 26px;
   border-radius: 8px;
-  background: ${({ $type }) => ($type === 'in' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)')};
-  color: ${({ $type }) => ($type === 'in' ? COLOR_RECEIVED : COLOR_SENT)};
+  background: ${({ $visualType }) => (
+    $visualType === 'failed'
+      ? 'rgba(245, 158, 11, 0.15)'
+      : $visualType === 'in'
+      ? 'rgba(16, 185, 129, 0.1)'
+      : 'rgba(239, 68, 68, 0.1)'
+  )};
+  color: ${({ $visualType }) => (
+    $visualType === 'failed'
+      ? COLOR_FAILED
+      : $visualType === 'in'
+      ? COLOR_RECEIVED
+      : COLOR_SENT
+  )};
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 `;
 
-const FlowAmount = styled.span<{ $type: 'in' | 'out' }>`
+const FlowAmount = styled.span<{ $visualType: 'in' | 'out' | 'failed' }>`
   font-family: monospace;
   font-size: 13px;
   font-weight: 600;
-  color: ${({ $type }) => ($type === 'in' ? COLOR_RECEIVED : COLOR_SENT)};
+  color: ${({ $visualType }) => (
+    $visualType === 'failed'
+      ? COLOR_FAILED
+      : $visualType === 'in'
+      ? COLOR_RECEIVED
+      : COLOR_SENT
+  )};
 `;
 
 const FlowAddress = styled.span`
@@ -153,6 +170,7 @@ export interface OutflowInflow {
   party: string;
   timeStr: string;
   dateKey: string;
+  status?: string;
 }
 
 interface DashboardExtraPanelsViewProps {
@@ -175,29 +193,40 @@ export function DashboardExtraPanelsView({ flows }: DashboardExtraPanelsViewProp
               <div key={group.dateKey}>
                 <DateHeader>{group.dateKey}</DateHeader>
                 <FlowGrid>
-                  {group.items.map((flow) => (
-                    <FlowRow key={flow.id}>
-                      <BadgeAndName>
-                        <FlowIconBadge $type={flow.type === 'Send' ? 'out' : 'in'}>
-                          {flow.type === 'Send' ? <ArrowUpRight size={14} /> : <ArrowDownLeft size={14} />}
-                        </FlowIconBadge>
-                        <FlowCell>
-                          <FlowTitle>{flow.type}</FlowTitle>
-                          <FlowSubtitle>Type</FlowSubtitle>
-                        </FlowCell>
-                      </BadgeAndName>
+                  {group.items.map((flow) => {
+                    const statusUpper = (flow.status || '').toUpperCase();
+                    const isFailed = statusUpper === 'FAILED' || statusUpper === 'REJECTED' || statusUpper === 'ERROR' || statusUpper === 'REVERTED' || statusUpper === 'CANCELLED';
+                    const visualType: 'in' | 'out' | 'failed' = isFailed ? 'failed' : flow.type === 'Send' ? 'out' : 'in';
 
-                      <BadgeAndName>
-                        <TokenCircle $symbol={flow.symbol}>
-                          {flow.symbol.slice(0, 2)}
-                        </TokenCircle>
-                        <FlowCell>
-                          <FlowAmount $type={flow.type === 'Send' ? 'out' : 'in'}>
-                            {flow.type === 'Send' ? '-' : '+'}{flow.amount} {flow.symbol}
-                          </FlowAmount>
-                          <FlowSubtitle>Amount</FlowSubtitle>
-                        </FlowCell>
-                      </BadgeAndName>
+                    return (
+                      <FlowRow key={flow.id}>
+                        <BadgeAndName>
+                          <FlowIconBadge $visualType={visualType}>
+                            {visualType === 'failed' ? (
+                              <AlertCircle size={14} />
+                            ) : visualType === 'out' ? (
+                              <ArrowUpRight size={14} />
+                            ) : (
+                              <ArrowDownLeft size={14} />
+                            )}
+                          </FlowIconBadge>
+                          <FlowCell>
+                            <FlowTitle>{flow.type}{isFailed ? ' (Failed)' : ''}</FlowTitle>
+                            <FlowSubtitle>Type</FlowSubtitle>
+                          </FlowCell>
+                        </BadgeAndName>
+
+                        <BadgeAndName>
+                          <TokenCircle $symbol={flow.symbol}>
+                            {flow.symbol.slice(0, 2)}
+                          </TokenCircle>
+                          <FlowCell>
+                            <FlowAmount $visualType={visualType}>
+                              {flow.type === 'Send' ? '-' : '+'}{flow.amount} {flow.symbol}
+                            </FlowAmount>
+                            <FlowSubtitle>Amount</FlowSubtitle>
+                          </FlowCell>
+                        </BadgeAndName>
 
                       <FlowCell>
                         <FlowAddress>{flow.party}</FlowAddress>
@@ -209,7 +238,8 @@ export function DashboardExtraPanelsView({ flows }: DashboardExtraPanelsViewProp
                         <FlowSubtitle>Time</FlowSubtitle>
                       </FlowCell>
                     </FlowRow>
-                  ))}
+                  );
+                })}
                 </FlowGrid>
               </div>
             ))}

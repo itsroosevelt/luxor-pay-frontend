@@ -25,6 +25,10 @@ const Header = styled.header`
   padding: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(255, 255, 255, 0.01);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
 
   @media (min-width: 768px) {
     padding: 32px 40px;
@@ -38,6 +42,7 @@ const Title = styled.h1`
   color: #FFFFFF;
   margin: 0 0 4px 0;
   letter-spacing: -0.025em;
+  text-align: left;
 
   @media (min-width: 768px) {
     font-size: 30px;
@@ -50,6 +55,7 @@ const Subtitle = styled.p`
   font-weight: 300;
   color: rgba(255, 255, 255, 0.6);
   margin: 0;
+  text-align: left;
 `;
 
 const ContentLayout = styled.div`
@@ -182,9 +188,9 @@ const Select = styled.select`
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   font-family: 'Outfit', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 14px 28px;
+  padding: 9px 20px;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
@@ -192,7 +198,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 6px;
 
   &:disabled {
     opacity: 0.5;
@@ -462,9 +468,9 @@ export default function PaymentLinksPage() {
 
       <ContentLayout>
         {!isFormOpen && (
-          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button $variant="primary" onClick={() => setIsFormOpen(true)}>
-              <Plus size={16} /> Create Link
+              <Plus size={15} /> Create Link
             </Button>
           </div>
         )}

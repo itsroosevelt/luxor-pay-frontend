@@ -23,7 +23,6 @@ export function DashboardExtraPanelsContainer() {
 
     // Process Outbound / Inbound transfers (Transaction)
     (transfersData?.data || []).forEach((tx) => {
-      if (tx.status !== 'CONFIRMED') return;
       const isSent = (tx.fromWallet || "").toLowerCase() === walletLower;
       const isReceived = (tx.toWallet || "").toLowerCase() === walletLower;
       const dateVal = tx.createdAt || tx.confirmedAt;
@@ -45,6 +44,7 @@ export function DashboardExtraPanelsContainer() {
         party,
         timeStr,
         dateKey,
+        status: tx.status,
       });
     });
 

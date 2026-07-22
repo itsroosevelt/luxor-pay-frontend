@@ -77,6 +77,7 @@ const Title = styled.h1`
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
+  text-align: left;
 
   @media (min-width: 768px) {
     font-size: 32px;
@@ -89,15 +90,17 @@ const Subtitle = styled.p`
   font-weight: 300;
   color: rgba(255, 255, 255, 0.6);
   margin: 4px 0 0 0;
+  text-align: left;
 `;
 
 const TopHeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: 16px;
   width: 100%;
+  text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   padding-bottom: 20px;
 `;

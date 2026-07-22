@@ -10,9 +10,9 @@ const ViewContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 460px; /* Reduced from 600px for a more compact design */
+  max-width: 460px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 0;
   font-family: 'Montserrat', sans-serif;
 `;
 

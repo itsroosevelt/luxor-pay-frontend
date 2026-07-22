@@ -100,9 +100,9 @@ function EmptyState({ label }: { label: string }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
       style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', padding: '64px 24px', gap: '12px',
-        textAlign: 'center',
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+        justifyContent: 'flex-start', padding: '48px 0', gap: '12px',
+        textAlign: 'left',
       }}
     >
       <div style={{
@@ -113,7 +113,7 @@ function EmptyState({ label }: { label: string }) {
       }}>
         <Inbox size={24} />
       </div>
-      <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '16px', fontWeight: 500, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+      <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '16px', fontWeight: 500, color: 'rgba(255,255,255,0.5)', margin: 0, textAlign: 'left' }}>
         {label}
       </p>
     </motion.div>
@@ -1474,7 +1474,7 @@ function RequestsPanel({
 
   if (!walletAddress) {
     return (
-      <div style={{ padding: '40px 0', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'Montserrat, sans-serif', fontSize: '14px' }}>
+      <div style={{ padding: '40px 0', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontFamily: 'Montserrat, sans-serif', fontSize: '14px' }}>
         Configure your wallet in{' '}
         <Link href="/dashboard/settings" style={{ color: '#60A5FA', textDecoration: 'underline' }}>
           Settings
@@ -1598,7 +1598,7 @@ export default function PaymentRequestsPage() {
       `}</style>
 
       <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
-        <div className="w-full max-w-7xl mx-auto">
+        <div>
           <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
             Payment Requests
           </h1>
@@ -1608,7 +1608,7 @@ export default function PaymentRequestsPage() {
         </div>
       </header>
 
-      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto">
+      <div className="p-6 md:p-10 w-full">
 
         {/* Tab Bar and Action Button Row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -1646,10 +1646,10 @@ export default function PaymentRequestsPage() {
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-all shadow-md focus-visible:outline-2 focus-visible:outline-blue-400 focus-visible:outline-offset-2 self-start sm:self-auto"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-all shadow-md focus-visible:outline-2 focus-visible:outline-blue-400 focus-visible:outline-offset-2 self-start sm:self-auto text-xs"
             style={{ fontFamily: 'Outfit, sans-serif' }}
           >
-            <Send size={16} /> Create Request
+            <Send size={14} /> Create Request
           </button>
         </div>
 

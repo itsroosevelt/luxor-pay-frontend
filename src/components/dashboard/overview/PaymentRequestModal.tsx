@@ -52,7 +52,8 @@ const ModalContent = styled(motion.div)<{ $wide?: boolean }>`
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  align-items: ${({ $wide }) => ($wide ? 'stretch' : 'center')};
+  align-items: stretch;
+  text-align: left;
 
   @media (max-width: 768px) {
     padding: 24px;
@@ -89,7 +90,7 @@ const Title = styled.h2`
   letter-spacing: -1px;
   color: #FFFFFF;
   margin: 0 0 8px 0;
-  text-align: center;
+  text-align: left;
 `;
 
 const Subtitle = styled.p`
@@ -98,7 +99,7 @@ const Subtitle = styled.p`
   font-weight: 300;
   color: rgba(255, 255, 255, 0.7);
   margin: 0 0 32px 0;
-  text-align: center;
+  text-align: left;
   line-height: 1.5;
 `;
 
@@ -284,8 +285,8 @@ const AdvancedToggle = styled.button`
 const SuccessWrapper = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  text-align: left;
   gap: 20px;
   padding: 20px 0;
   width: 100%;

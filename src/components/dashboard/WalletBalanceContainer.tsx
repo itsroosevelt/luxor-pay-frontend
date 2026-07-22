@@ -3,7 +3,7 @@
 import React from "react";
 import styled from "styled-components";
 import { WalletBalanceView } from "./WalletBalanceView";
-import { FundWalletButton } from "./FundWalletButton";
+
 import { OverviewChart } from "./overview/OverviewChart";
 import { AccountsTable } from "./overview/AccountsTable";
 import { DashboardExtraPanelsContainer } from "./overview/DashboardExtraPanelsContainer";
@@ -86,9 +86,7 @@ export function WalletBalanceContainer({
             onTradeClick={onTradeClick}
             merchantWallet={merchantWallet}
           />
-          {isKycVerified && (
-            <FundWalletButton merchantWallet={merchantWallet} />
-          )}
+
         </LeftColumn>
 
         {/* Right Column: Statistics Chart Box */}

@@ -153,8 +153,8 @@ export default function DashboardOverviewPage() {
 
         <div className="grid md:grid-cols-3 gap-4">
           <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />
-          <StatCard label="POS devices" value={stats.pos} href="/dashboard/pos" />
-          <StatCard label="API" value="Ready" href="/dashboard/developers" isText />
+          <StatCard label="POS devices" value={stats.pos} href="/dashboard/settings?tab=pos" />
+          <StatCard label="API" value="Ready" href="/dashboard/settings?tab=developers" isText />
         </div>
 
         <section>
@@ -167,13 +167,13 @@ export default function DashboardOverviewPage() {
               description="Share a checkout URL on your website or social media."
             />
             <QuickLink
-              href="/dashboard/pos"
+              href="/dashboard/settings?tab=pos"
               icon={Terminal}
               title="Connect a POS terminal"
               description="Register hardware and charge with your API key."
             />
             <QuickLink
-              href="/dashboard/developers"
+              href="/dashboard/settings?tab=developers"
               icon={Code2}
               title="Get API keys"
               description="Integrate Luxor Pay like Stripe — REST on the same domain."

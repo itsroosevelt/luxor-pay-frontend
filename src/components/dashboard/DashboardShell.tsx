@@ -20,6 +20,7 @@ import {
   UserCircle,
   Lock,
   Check,
+  ChevronDown,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -39,11 +40,14 @@ const nav = [
   { href: '/dashboard/requests', label: 'Payment Requests', icon: ArrowLeftRight },
   { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
   { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
-  { href: '/dashboard/pos', label: 'POS Devices', icon: Terminal },
   { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
   { href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
-  { href: '/dashboard/developers', label: 'Developers', icon: Code2 },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+];
+
+const settingsSubNav = [
+  { href: '/dashboard/settings?tab=general', label: 'General', icon: Settings, tab: 'general' },
+  { href: '/dashboard/settings?tab=pos', label: 'POS Devices', icon: Terminal, tab: 'pos' },
+  { href: '/dashboard/settings?tab=developers', label: 'Developers', icon: Code2, tab: 'developers' },
 ];
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -53,7 +57,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(() => pathname.startsWith('/dashboard/settings'));
   const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
+
+  useEffect(() => {
+    if (pathname.startsWith('/dashboard/settings')) {
+      setIsSettingsOpen(true);
+    }
+  }, [pathname]);
 
   const displayName =
     profile?.businessName?.trim() || (user as any)?.displayName || user?.email?.split('@')[0] || 'Account';
@@ -146,31 +157,102 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  const NavLinks = ({ onClick, collapsed }: { onClick?: () => void; collapsed?: boolean }) => (
-    <>
-      {nav.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href;
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onClick}
-            title={collapsed ? label : undefined}
+  const NavLinks = ({ onClick, collapsed }: { onClick?: () => void; collapsed?: boolean }) => {
+    const isSettingsActive = pathname.startsWith('/dashboard/settings');
+    let currentTab: string | null = null;
+    if (typeof window !== 'undefined') {
+      currentTab = new URLSearchParams(window.location.search).get('tab');
+    }
+
+    return (
+      <div className="space-y-1">
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={onClick}
+              title={collapsed ? label : undefined}
+              className={clsx(
+                'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-xl',
+                collapsed ? 'justify-center p-3 text-center' : 'gap-3 px-4 py-3',
+                active
+                  ? 'bg-white/10 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              )}
+            >
+              <Icon size={18} className="shrink-0" />
+              {!collapsed && <span className="truncate">{label}</span>}
+            </Link>
+          );
+        })}
+
+        {/* Settings Dropdown Accordion */}
+        <div className="w-full pt-1">
+          <button
+            type="button"
+            onClick={() => {
+              if (collapsed) {
+                router.push('/dashboard/settings');
+                if (onClick) onClick();
+              } else {
+                setIsSettingsOpen((prev) => !prev);
+              }
+            }}
+            title={collapsed ? 'Settings' : undefined}
             className={clsx(
-              'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-xl',
-              collapsed ? 'justify-center p-3 text-center' : 'gap-3 px-4 py-3',
-              active
+              'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-xl select-none cursor-pointer',
+              collapsed ? 'justify-center p-3 text-center' : 'justify-between px-4 py-3',
+              isSettingsActive
                 ? 'bg-white/10 text-white shadow-sm'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             )}
           >
-            <Icon size={18} className="shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </Link>
-        );
-      })}
-    </>
-  );
+            <div className="flex items-center gap-3 min-w-0">
+              <Settings size={18} className="shrink-0" />
+              {!collapsed && <span className="truncate">Settings</span>}
+            </div>
+            {!collapsed && (
+              <ChevronDown
+                size={16}
+                className={clsx(
+                  'shrink-0 text-gray-400 transition-transform duration-200',
+                  isSettingsOpen && 'rotate-180 text-white'
+                )}
+              />
+            )}
+          </button>
+
+          {/* Submenu Items */}
+          {isSettingsOpen && !collapsed && (
+            <div className="mt-1 ml-4 pl-3 border-l border-white/10 space-y-1">
+              {settingsSubNav.map(({ href, label, icon: SubIcon, tab }) => {
+                const isTabActive =
+                  isSettingsActive && (currentTab === tab || (!currentTab && tab === 'general'));
+                return (
+                  <Link
+                    key={href}
+                    href={href}
+                    onClick={onClick}
+                    className={clsx(
+                      'w-full flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-lg transition-all',
+                      isTabActive
+                        ? 'bg-[#2563EB]/20 text-[#60A5FA] font-semibold'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    )}
+                  >
+                    <SubIcon size={14} className="shrink-0" />
+                    <span className="truncate">{label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#EDEDED] selection:bg-[#2563EB]/30 flex font-['Montserrat',sans-serif]">
@@ -209,7 +291,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <NavLinks collapsed={isCollapsed} />
         </nav>
         <div className="p-3 border-t border-white/5">
-          {!isCollapsed && <p className="text-xs text-gray-500 truncate px-4 mb-3">{user.email}</p>}
+
           <button
             type="button"
             onClick={handleSignOut}

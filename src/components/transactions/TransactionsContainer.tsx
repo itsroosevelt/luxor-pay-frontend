@@ -9,14 +9,16 @@ import { Transfer } from "@/lib/transfers-api";
 
 interface TransactionsContainerProps {
   merchantWallet: string | null;
+  onTransferClick?: () => void;
 }
 
-export function TransactionsContainer({ merchantWallet }: TransactionsContainerProps) {
+export function TransactionsContainer({ merchantWallet, onTransferClick }: TransactionsContainerProps) {
   const {
     data,
     isLoading,
     isError,
     errorMessage,
+    refetch,
     offset,
     limit,
     status,
@@ -69,6 +71,8 @@ export function TransactionsContainer({ merchantWallet }: TransactionsContainerP
         onSelectTransaction={handleSelectTransaction}
         onSetLimit={handleSetLimit}
         onSetStatus={handleSetStatus}
+        onRefresh={refetch}
+        onTransferClick={onTransferClick}
       />
 
 

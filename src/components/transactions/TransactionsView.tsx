@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { Transfer, TransfersResponse } from "@/lib/transfers-api";
 import { TransactionCard } from "./TransactionCard";
-import { AlertCircle, ChevronLeft, ChevronRight, Inbox } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Inbox, RotateCw, Send } from "lucide-react";
 
 const ViewWrapper = styled.div`
   position: relative;
@@ -90,6 +90,88 @@ const StyledSelect = styled.select`
   option {
     background: #0A0A0A;
     color: #FFFFFF;
+  }
+`;
+
+const TransferButton = styled.button`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 18px;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  color: #000000;
+  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.15);
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #2563EB;
+    color: #FFFFFF;
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
+`;
+
+const ReloadButton = styled.button<{ $isLoading?: boolean }>`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 9999px; /* Pill shape Rule 3 */
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: #FFFFFF;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(12px);
+  transition: all 0.2s ease-in-out;
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
+
+  svg {
+    transition: transform 0.4s ease;
+    ${({ $isLoading }) => $isLoading && `animation: spin 0.8s linear infinite;`}
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 `;
 
@@ -219,6 +301,8 @@ interface TransactionsViewProps {
   onSelectTransaction: (transfer: Transfer) => void;
   onSetLimit: (limit: number) => void;
   onSetStatus: (status: string | undefined) => void;
+  onRefresh?: () => void;
+  onTransferClick?: () => void;
 }
 
 export function TransactionsView({
@@ -235,6 +319,8 @@ export function TransactionsView({
   onSelectTransaction,
   onSetLimit,
   onSetStatus,
+  onRefresh,
+  onTransferClick,
 }: TransactionsViewProps) {
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = data?.totalPages || 1;
@@ -296,6 +382,24 @@ export function TransactionsView({
               <option value={10}>10 per page</option>
               <option value={20}>20 per page</option>
             </StyledSelect>
+            {onRefresh && (
+              <ReloadButton
+                type="button"
+                onClick={onRefresh}
+                disabled={isLoading}
+                $isLoading={isLoading}
+                title="Reload transactions"
+              >
+                <RotateCw size={14} />
+                Reload
+              </ReloadButton>
+            )}
+            {onTransferClick && (
+              <TransferButton onClick={onTransferClick}>
+                <Send size={14} />
+                Transfer Funds
+              </TransferButton>
+            )}
           </SelectorsRow>
         </ControlsHeader>
 

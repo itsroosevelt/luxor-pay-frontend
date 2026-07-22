@@ -3,19 +3,24 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpRight, ArrowDownLeft, ChevronDown, ChevronUp, Copy, ExternalLink, Check, CheckCircle2, CircleDot, Clock } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, ChevronDown, ChevronUp, Copy, ExternalLink, Check, CheckCircle2, CircleDot, Clock, XCircle, AlertCircle, Download } from "lucide-react";
 import { Transfer } from "@/lib/transfers-api";
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
+import { downloadTransactionReceipt } from '@/lib/pdf-generator';
+import { getExplorerTxUrl } from "@/web3/config/network";
 
 const COLOR_SENT = "#EF4444";
 const COLOR_RECEIVED = "#10B981";
+const COLOR_FAILED = "#F59E0B";
 
-const ItemContainer = styled(motion.div)<{ $type: 'sent' | 'received' }>`
+const ItemContainer = styled(motion.div)<{ $visualType: 'sent' | 'received' | 'failed' }>`
   display: flex;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
-  border-left: 3px solid ${({ $type }) => ($type === 'sent' ? COLOR_SENT : COLOR_RECEIVED)};
+  border-left: 3px solid ${({ $visualType }) => (
+    $visualType === 'failed' ? COLOR_FAILED : $visualType === 'sent' ? COLOR_SENT : COLOR_RECEIVED
+  )};
   backdrop-filter: blur(20px);
   border-radius: 20px;
   overflow: hidden;
@@ -25,7 +30,9 @@ const ItemContainer = styled(motion.div)<{ $type: 'sent' | 'received' }>`
   &:hover {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(255, 255, 255, 0.12);
-    border-left-color: ${({ $type }) => ($type === 'sent' ? COLOR_SENT : COLOR_RECEIVED)};
+    border-left-color: ${({ $visualType }) => (
+      $visualType === 'failed' ? COLOR_FAILED : $visualType === 'sent' ? COLOR_SENT : COLOR_RECEIVED
+    )};
     box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.6);
   }
 `;
@@ -80,24 +87,34 @@ const AmountAndStatus = styled.div`
   gap: 6px;
 `;
 
-const IconBadge = styled.div<{ $type: 'sent' | 'received' }>`
+const IconBadge = styled.div<{ $visualType: 'sent' | 'received' | 'failed' }>`
   width: 38px;
   height: 38px;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${({ $type }) => 
-    $type === 'sent' 
+  background: ${({ $visualType }) => 
+    $visualType === 'failed' 
+      ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.18))' 
+      : $visualType === 'sent' 
       ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.15))' 
       : 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15))'};
-  color: ${({ $type }) => 
-    $type === 'sent' ? COLOR_SENT : COLOR_RECEIVED};
-  border: 1px solid ${({ $type }) => 
-    $type === 'sent' ? 'rgba(239, 68, 68, 0.25)' : 'rgba(16, 185, 129, 0.25)'};
+  color: ${({ $visualType }) => 
+    $visualType === 'failed' ? COLOR_FAILED : $visualType === 'sent' ? COLOR_SENT : COLOR_RECEIVED};
+  border: 1px solid ${({ $visualType }) => 
+    $visualType === 'failed' 
+      ? 'rgba(245, 158, 11, 0.3)' 
+      : $visualType === 'sent' 
+      ? 'rgba(239, 68, 68, 0.25)' 
+      : 'rgba(16, 185, 129, 0.25)'};
   flex-shrink: 0;
-  box-shadow: ${({ $type }) =>
-    $type === 'sent' ? '0 0 12px rgba(239, 68, 68, 0.1)' : '0 0 12px rgba(16, 185, 129, 0.1)'};
+  box-shadow: ${({ $visualType }) =>
+    $visualType === 'failed' 
+      ? '0 0 12px rgba(245, 158, 11, 0.15)' 
+      : $visualType === 'sent' 
+      ? '0 0 12px rgba(239, 68, 68, 0.1)' 
+      : '0 0 12px rgba(16, 185, 129, 0.1)'};
 `;
 
 const TokenCircle = styled.span<{ $symbol?: string }>`
@@ -144,24 +161,32 @@ const StatusPill = styled.div<{ $status: string }>`
   text-transform: uppercase;
 
   ${({ $status }) => {
-    if ($status === 'CONFIRMED' || $status === 'EXECUTED') {
+    const statusUpper = ($status || '').toUpperCase();
+    if (statusUpper === 'CONFIRMED' || statusUpper === 'EXECUTED' || statusUpper === 'SUCCESS' || statusUpper === 'COMPLETED') {
       return `
         background: rgba(16, 185, 129, 0.1);
         color: #34D399;
         border: 1px solid rgba(16, 185, 129, 0.2);
       `;
     }
-    if ($status === 'FAILED') {
+    if (statusUpper === 'FAILED' || statusUpper === 'REJECTED' || statusUpper === 'ERROR' || statusUpper === 'REVERTED') {
       return `
         background: rgba(239, 68, 68, 0.1);
         color: #FCA5A5;
         border: 1px solid rgba(239, 68, 68, 0.2);
       `;
     }
+    if (statusUpper === 'PENDING' || statusUpper === 'PROCESSING' || statusUpper === 'SUBMITTED' || statusUpper === 'AWAITING_SIGNATURE') {
+      return `
+        background: rgba(59, 130, 246, 0.1);
+        color: #60A5FA;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+      `;
+    }
     return `
-      background: rgba(59, 130, 246, 0.1);
-      color: #60A5FA;
-      border: 1px solid rgba(59, 130, 246, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     `;
   }}
 `;
@@ -316,8 +341,18 @@ const TimelineDot = styled.div<{ $status?: string }>`
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: ${({ $status }) => ($status === 'done' ? 'rgba(52, 211, 153, 0.15)' : 'rgba(255, 255, 255, 0.08)')};
-  color: ${({ $status }) => ($status === 'done' ? '#34D399' : 'rgba(255, 255, 255, 0.4)')};
+  background: ${({ $status }) => {
+    if ($status === 'done') return 'rgba(52, 211, 153, 0.15)';
+    if ($status === 'failed') return 'rgba(239, 68, 68, 0.15)';
+    if ($status === 'pending') return 'rgba(59, 130, 246, 0.15)';
+    return 'rgba(255, 255, 255, 0.08)';
+  }};
+  color: ${({ $status }) => {
+    if ($status === 'done') return '#34D399';
+    if ($status === 'failed') return '#FCA5A5';
+    if ($status === 'pending') return '#60A5FA';
+    return 'rgba(255, 255, 255, 0.4)';
+  }};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -449,10 +484,45 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
     ? (transfer.toNickname || (toAddress ? `${toAddress.slice(0, 4)}...${toAddress.slice(-4)}` : "External Wallet"))
     : (fromAddress ? `${fromAddress.slice(0, 4)}...${fromAddress.slice(-4)}` : "External Wallet");
 
-  const statusDisplay = transfer.status === 'CONFIRMED' ? 'Confirmed' : transfer.status;
-  const solscanUrl = transfer.signature 
-    ? `https://solscan.io/tx/${transfer.signature}` 
-    : `https://solscan.io/account/${merchantWallet || ''}`;
+  const statusUpper = (transfer.status || '').toUpperCase();
+  const isConfirmed = statusUpper === 'CONFIRMED' || statusUpper === 'EXECUTED' || statusUpper === 'SUCCESS' || statusUpper === 'COMPLETED';
+  const isFailed = statusUpper === 'FAILED' || statusUpper === 'REJECTED' || statusUpper === 'ERROR' || statusUpper === 'REVERTED';
+  const isPending = statusUpper === 'PENDING' || statusUpper === 'PROCESSING' || statusUpper === 'SUBMITTED' || statusUpper === 'AWAITING_SIGNATURE';
+  const isCancelled = statusUpper === 'CANCELLED';
+
+  const statusDisplay = isConfirmed 
+    ? 'Confirmed' 
+    : isFailed 
+    ? (statusUpper === 'REJECTED' ? 'Rejected' : 'Failed') 
+    : isPending 
+    ? 'Pending' 
+    : isCancelled 
+    ? 'Cancelled' 
+    : transfer.status;
+
+  const explorerUrl = transfer.signature 
+    ? getExplorerTxUrl(transfer.signature) 
+    : `https://explorer.solana.com/address/${merchantWallet || ''}?cluster=devnet`;
+
+  const executedOnDisplay = isConfirmed
+    ? (transfer.confirmedAt
+        ? new Date(transfer.confirmedAt).toLocaleString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        : fullDateFormatted)
+    : isFailed
+    ? 'Failed'
+    : isPending
+    ? 'Pending'
+    : isCancelled
+    ? 'Cancelled'
+    : 'N/A';
+
+  const visualType: 'sent' | 'received' | 'failed' = (isFailed || isCancelled) ? 'failed' : type;
 
   const copyText = (e: React.MouseEvent, text: string, keyName: string) => {
     e.stopPropagation();
@@ -468,7 +538,7 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
 
   return (
     <ItemContainer
-      $type={type}
+      $visualType={visualType}
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ scale: 1.012 }}
@@ -476,8 +546,14 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
     >
       <MainRow onClick={handleToggleExpand}>
         <LeftSection>
-          <IconBadge $type={type}>
-            {type === 'sent' ? <ArrowUpRight size={20} /> : <ArrowDownLeft size={20} />}
+          <IconBadge $visualType={visualType}>
+            {visualType === 'failed' ? (
+              <AlertCircle size={20} />
+            ) : visualType === 'sent' ? (
+              <ArrowUpRight size={20} />
+            ) : (
+              <ArrowDownLeft size={20} />
+            )}
           </IconBadge>
           <PartyAndDate>
             <PartyTitle>
@@ -591,14 +667,14 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
 
               <DetailRow>
                 <DetailKey>Executed on</DetailKey>
-                <DetailVal>{fullDateFormatted}</DetailVal>
+                <DetailVal>{executedOnDisplay}</DetailVal>
               </DetailRow>
 
               <DetailRow>
                 <DetailKey>Transaction Hash</DetailKey>
                 <DetailVal>
-                  <LinkButton href={solscanUrl} target="_blank" rel="noopener noreferrer" className="notranslate" translate="no">
-                    <span>{transfer.signature ? `${transfer.signature.slice(0, 6)}...${transfer.signature.slice(-6)}` : 'Solscan'}</span>
+                  <LinkButton href={explorerUrl} target="_blank" rel="noopener noreferrer" className="notranslate" translate="no">
+                    <span>{transfer.signature ? `${transfer.signature.slice(0, 6)}...${transfer.signature.slice(-6)}` : 'Solana Explorer'}</span>
                     <ExternalLink size={12} />
                   </LinkButton>
                   {transfer.signature && (
@@ -618,8 +694,17 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
                 <DrawerButton type="button" $variant="primary" onClick={onClick}>
                   See details
                 </DrawerButton>
-                <DrawerButton type="button" $variant="secondary">
-                  Reclaim rent
+                <DrawerButton
+                  type="button"
+                  $variant="secondary"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    downloadTransactionReceipt(transfer, symbol, merchantWallet);
+                  }}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Download size={13} />
+                  Download PDF
                 </DrawerButton>
               </DrawerButtonGroup>
             </DrawerPanel>
@@ -630,6 +715,7 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
 
               <ProgressGrid>
                 <TimelineContainer>
+                  {/* Step 1: Created */}
                   <TimelineStep>
                     <TimelineDot $status="done">
                       <CheckCircle2 size={12} />
@@ -640,48 +726,134 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
                     </TimelineInfo>
                   </TimelineStep>
 
+                  {/* Step 2: Solana Confirmation Status */}
                   <TimelineStep>
-                    <TimelineDot $status="done">
-                      <CircleDot size={12} />
+                    <TimelineDot $status={isConfirmed ? 'done' : isFailed || isCancelled ? 'failed' : 'pending'}>
+                      {isConfirmed ? (
+                        <CheckCircle2 size={12} />
+                      ) : isFailed || isCancelled ? (
+                        <XCircle size={12} />
+                      ) : (
+                        <Clock size={12} />
+                      )}
                     </TimelineDot>
                     <TimelineInfo>
-                      <TimelineText>Confirmed on Solana</TimelineText>
-                      <TimelineSub>1/1 signatures approved</TimelineSub>
+                      <TimelineText>
+                        {isConfirmed
+                          ? 'Confirmed on Solana'
+                          : isFailed
+                          ? (statusUpper === 'REJECTED' ? 'Rejected on Solana' : 'Failed on Solana')
+                          : isCancelled
+                          ? 'Cancelled'
+                          : 'Processing on Solana'}
+                      </TimelineText>
+                      <TimelineSub>
+                        {isConfirmed
+                          ? '1/1 signatures approved'
+                          : isFailed || isCancelled
+                          ? (transfer.errorMessage || 'Signature rejected or transaction reverted')
+                          : 'Awaiting block confirmation'}
+                      </TimelineSub>
                     </TimelineInfo>
                   </TimelineStep>
 
+                  {/* Step 3: Final Execution Status */}
                   <TimelineStep>
-                    <TimelineDot $status="done">
-                      <CheckCircle2 size={12} />
+                    <TimelineDot $status={isConfirmed ? 'done' : isFailed || isCancelled ? 'failed' : 'pending'}>
+                      {isConfirmed ? (
+                        <CheckCircle2 size={12} />
+                      ) : isFailed || isCancelled ? (
+                        <XCircle size={12} />
+                      ) : (
+                        <CircleDot size={12} />
+                      )}
                     </TimelineDot>
                     <TimelineInfo>
-                      <TimelineText>Executed</TimelineText>
-                      <TimelineSub>{fullDateFormatted}</TimelineSub>
+                      <TimelineText>
+                        {isConfirmed
+                          ? 'Executed'
+                          : isFailed
+                          ? 'Execution Failed'
+                          : isCancelled
+                          ? 'Cancelled'
+                          : 'Pending Execution'}
+                      </TimelineText>
+                      <TimelineSub>
+                        {isConfirmed
+                          ? executedOnDisplay
+                          : isFailed
+                          ? 'Transaction could not be completed'
+                          : isCancelled
+                          ? 'Transaction aborted'
+                          : 'Waiting for network completion'}
+                      </TimelineSub>
                     </TimelineInfo>
                   </TimelineStep>
                 </TimelineContainer>
 
+                {/* Signers Box */}
                 <SignersBox>
                   <SignerTitle>
                     <span>Confirmed</span>
-                    <strong className="text-green-400">1</strong>
+                    {isConfirmed ? (
+                      <strong className="text-green-400">1</strong>
+                    ) : (
+                      <span className="text-gray-500">0</span>
+                    )}
                   </SignerTitle>
 
-                  {fromAddress && (
-                    <SignerItem className="notranslate" translate="no">
-                      <span className="text-gray-500">From:</span> {fromAddress.slice(0, 4)}...{fromAddress.slice(-4)}
-                    </SignerItem>
+                  {isConfirmed && (
+                    <>
+                      {fromAddress && (
+                        <SignerItem className="notranslate" translate="no">
+                          <span className="text-gray-500">From:</span> {fromAddress.slice(0, 4)}...{fromAddress.slice(-4)}
+                        </SignerItem>
+                      )}
+                      {toAddress && (
+                        <SignerItem className="notranslate" translate="no">
+                          <span className="text-gray-500">To:</span> {toAddress.slice(0, 4)}...{toAddress.slice(-4)}
+                        </SignerItem>
+                      )}
+                    </>
                   )}
-                  {toAddress && (
-                    <SignerItem className="notranslate" translate="no">
-                      <span className="text-gray-500">To:</span> {toAddress.slice(0, 4)}...{toAddress.slice(-4)}
-                    </SignerItem>
+
+                  {isPending && (
+                    <>
+                      <SignerTitle style={{ marginTop: '8px' }}>
+                        <span>Pending</span>
+                        <strong className="text-blue-400">1</strong>
+                      </SignerTitle>
+                      {fromAddress && (
+                        <SignerItem className="notranslate" translate="no">
+                          <span className="text-blue-400/70">From:</span> {fromAddress.slice(0, 4)}...{fromAddress.slice(-4)}
+                        </SignerItem>
+                      )}
+                    </>
                   )}
 
                   <SignerTitle style={{ marginTop: '8px' }}>
                     <span>Rejected</span>
-                    <span>0</span>
+                    {isFailed || isCancelled ? (
+                      <strong className="text-red-400">1</strong>
+                    ) : (
+                      <span className="text-gray-500">0</span>
+                    )}
                   </SignerTitle>
+
+                  {(isFailed || isCancelled) && (
+                    <>
+                      {fromAddress && (
+                        <SignerItem className="notranslate" translate="no">
+                          <span className="text-red-400/70">From:</span> {fromAddress.slice(0, 4)}...{fromAddress.slice(-4)}
+                        </SignerItem>
+                      )}
+                      {toAddress && (
+                        <SignerItem className="notranslate" translate="no">
+                          <span className="text-red-400/70">To:</span> {toAddress.slice(0, 4)}...{toAddress.slice(-4)}
+                        </SignerItem>
+                      )}
+                    </>
+                  )}
                 </SignersBox>
               </ProgressGrid>
             </DrawerPanel>
