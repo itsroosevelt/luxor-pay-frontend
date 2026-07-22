@@ -50,16 +50,18 @@ export default function ProfilePage() {
 
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5">
-        <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
-          Profile
-        </h1>
-        <p className="text-gray-400 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-          Your account details and monthly account statements.
-        </p>
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            Profile
+          </h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Your account details and monthly account statements.
+          </p>
+        </div>
       </header>
 
-      <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-6">
+      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto space-y-6">
         {loading ? (
           <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             Loading…

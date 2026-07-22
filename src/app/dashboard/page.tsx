@@ -2,14 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
 import { listPaymentRequests } from '@/lib/payment-requests-api';
 import { getLuxorEnv } from '@/lib/luxor-env';
-import { Link as LinkIcon, Terminal, Code2, ArrowRight, Send, QrCode, Bell } from 'lucide-react';
+import { Link as LinkIcon, Terminal, Code2, ArrowRight, RefreshCw, Bell } from 'lucide-react';
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
+import { TopWalletBar } from '@/components/dashboard/TopWalletBar';
+import { useGetBalance } from '@/hooks/useGetBalance';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
 import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
@@ -18,6 +21,7 @@ import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsM
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 
 export default function DashboardOverviewPage() {
+  const router = useRouter();
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState<string | null>(null);
@@ -30,6 +34,8 @@ export default function DashboardOverviewPage() {
 
   const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
+
+  const { data: balanceData, isLoading: isBalanceLoading, refetch: refetchBalance } = useGetBalance(merchantWallet);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
@@ -65,34 +71,36 @@ export default function DashboardOverviewPage() {
 
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5 bg-white/[0.01] flex flex-col md:flex-row md:justify-between md:items-end gap-4">
+      {/* Top Header Row with Dashboard title & Top Wallet Bar */}
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01] flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Overview</h1>
-          <p className="text-gray-400 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>Overview</h1>
+            <button
+              type="button"
+              onClick={() => refetchBalance()}
+              title="Refresh dashboard data"
+              className="p-1.5 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5 focus-visible:outline-2 focus-visible:outline-blue-400"
+            >
+              <RefreshCw size={16} className={isBalanceLoading ? "animate-spin" : ""} />
+            </button>
+          </div>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
             Your Solana payment platform — links, POS, and API in one place.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
-          <button 
-            onClick={() => setIsQrModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full border border-blue-400/30 text-blue-400 font-medium hover:bg-white/5 transition-colors"
-            style={{ fontFamily: 'Outfit, sans-serif' }}
-          >
-            <QrCode size={18} /> Receive
-          </button>
-          <button 
-            onClick={() => setIsTransferModalOpen(true)}
-            className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-colors"
-            style={{ fontFamily: 'Outfit, sans-serif' }}
-          >
-            <Send size={18} /> Send
-          </button>
-        </div>
+
+        {/* Top Wallet Bar at top right */}
+        <TopWalletBar
+          merchantWallet={merchantWallet}
+          solBalance={balanceData?.solBalance}
+          isLoading={isBalanceLoading}
+        />
       </header>
 
-      <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
+      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto space-y-8">
         {!stats.hasWallet && (
-          <div className="glass-panel p-4 border border-amber-500/30 bg-amber-500/5 text-sm">
+          <div className="glass-panel p-4 border border-amber-500/30 bg-amber-500/5 text-sm rounded-2xl">
             <p className="text-amber-200">
               Add your Solana wallet in{' '}
               <Link href="/dashboard/settings" className="underline font-medium">
@@ -103,7 +111,12 @@ export default function DashboardOverviewPage() {
           </div>
         )}
 
-        <WalletBalanceContainer merchantWallet={merchantWallet} />
+        <WalletBalanceContainer
+          merchantWallet={merchantWallet}
+          onSendClick={() => setIsTransferModalOpen(true)}
+          onDepositClick={() => setIsQrModalOpen(true)}
+          onTradeClick={() => router.push('/dashboard/swap')}
+        />
 
         {pendingInboxCount > 0 && (
           <Link
@@ -142,10 +155,8 @@ export default function DashboardOverviewPage() {
           <StatCard label="API" value="Ready" href="/dashboard/developers" isText />
         </div>
 
-        
-
         <section>
-          <h2 className="text-lg font-semibold mb-4">Quick start</h2>
+          <h2 className="text-lg font-semibold mb-4 text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>Quick start</h2>
           <div className="grid gap-3">
             <QuickLink
               href="/dashboard/links"
@@ -204,7 +215,6 @@ export default function DashboardOverviewPage() {
         initialMode="select"
         onCreatePaymentRequest={() => setIsPaymentRequestModalOpen(true)}
       />
-
     </>
   );
 }
@@ -221,9 +231,9 @@ function StatCard({
   isText?: boolean;
 }) {
   return (
-    <Link href={href} className="glass-panel p-6 hover:bg-white/[0.04] transition-colors block">
-      <p className="text-gray-400 text-sm mb-2">{label}</p>
-      <p className={isText ? 'text-xl font-bold text-primary' : 'text-3xl font-bold'}>{value}</p>
+    <Link href={href} className="glass-panel p-6 hover:bg-white/[0.04] transition-colors block rounded-2xl border border-white/5">
+      <p className="text-gray-400 text-sm mb-2 font-['Montserrat',sans-serif]">{label}</p>
+      <p className={isText ? 'text-xl font-bold text-blue-400 font-["Outfit",sans-serif]' : 'text-3xl font-bold font-["Outfit",sans-serif]'}>{value}</p>
     </Link>
   );
 }
@@ -242,15 +252,15 @@ function QuickLink({
   return (
     <Link
       href={href}
-      className="glass-panel p-5 flex items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors"
+      className="glass-panel p-5 flex items-center justify-between gap-4 hover:bg-white/[0.04] transition-colors rounded-2xl border border-white/5"
     >
       <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-400 border border-blue-500/20">
           <Icon size={20} />
         </div>
         <div>
-          <p className="font-semibold">{title}</p>
-          <p className="text-sm text-gray-400">{description}</p>
+          <p className="font-semibold text-white font-['Outfit',sans-serif]">{title}</p>
+          <p className="text-sm text-gray-400 font-['Montserrat',sans-serif]">{description}</p>
         </div>
       </div>
       <ArrowRight className="text-gray-500 shrink-0" size={18} />

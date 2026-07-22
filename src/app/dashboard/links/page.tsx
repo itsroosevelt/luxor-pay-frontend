@@ -22,35 +22,39 @@ const PageContainer = styled.div`
 `;
 
 const Header = styled.header`
-  padding: 32px 40px;
+  padding: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(255, 255, 255, 0.01);
 
-  @media (max-width: 768px) {
-    padding: 24px;
+  @media (min-width: 768px) {
+    padding: 32px 40px;
   }
 `;
 
 const Title = styled.h1`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
-  font-weight: 600;
+  font-size: 24px;
+  font-weight: 500;
   color: #FFFFFF;
-  margin: 0 0 8px 0;
-  letter-spacing: -1px;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.025em;
+
+  @media (min-width: 768px) {
+    font-size: 30px;
+  }
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.6);
   margin: 0;
 `;
 
 const ContentLayout = styled.div`
   padding: 40px;
-  max-width: 1024px;
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
   display: flex;

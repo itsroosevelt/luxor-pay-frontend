@@ -55,41 +55,45 @@ export default function SettingsPage() {
 
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5">
-        <h1 className="text-2xl font-bold mb-1">Settings</h1>
-        <p className="text-gray-400 text-sm">Business profile and Solana wallet for receiving payments.</p>
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Settings</h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>Business profile and Solana wallet for receiving payments.</p>
+        </div>
       </header>
 
-      <div className="p-6 md:p-10 max-w-xl">
+      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto">
         {loading ? (
-          <p className="text-gray-500 text-sm">Loading…</p>
+          <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>Loading…</p>
         ) : (
-          <form onSubmit={handleSave} className="glass-panel p-6 space-y-4">
+          <form onSubmit={handleSave} className="glass-panel p-6 space-y-4 max-w-2xl">
             <div>
-              <label className="text-sm text-gray-400 block mb-1">Business name</label>
+              <label className="text-sm text-gray-400 block mb-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>Business name</label>
               <input
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm"
+                style={{ fontFamily: 'Montserrat, sans-serif' }}
                 placeholder="My Store"
               />
             </div>
             <div>
-              <label className="text-sm text-gray-400 block mb-1">Solana wallet address</label>
+              <label className="text-sm text-gray-400 block mb-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>Solana wallet address</label>
               <input
                 value={merchantWallet}
                 onChange={(e) => setMerchantWallet(e.target.value)}
-                className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm font-mono"
+                className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono"
                 placeholder="Your pubkey for USDC / SOL"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'Montserrat, sans-serif' }}>
                 Used on payment links, QR codes, and POS charges.
               </p>
             </div>
             <button
               type="submit"
               disabled={saving}
-              className="px-5 py-2.5 bg-white text-black font-semibold text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50"
+              className="px-6 py-2.5 bg-white text-black font-medium text-sm rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50 shadow-md focus-visible:outline-2 focus-visible:outline-blue-400 focus-visible:outline-offset-2"
+              style={{ fontFamily: 'Outfit, sans-serif' }}
             >
               {saving ? 'Saving…' : 'Save profile'}
             </button>

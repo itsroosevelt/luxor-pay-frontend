@@ -20,47 +20,45 @@ const PageContainer = styled(motion.div)`
   flex-direction: column;
   gap: 32px;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding-bottom: 64px;
+  padding: 32px 40px 64px 40px;
+
+  @media (max-width: 768px) {
+    padding: 24px 24px 64px 24px;
+  }
 `;
 
 const HeaderContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 24px;
 
   @media (min-width: 768px) {
     flex-direction: row;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
   }
 `;
 
 const Title = styled.h1`
   font-family: 'Outfit', sans-serif;
-  font-size: 48px;
+  font-size: 32px;
   font-weight: 500;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.02em;
   color: #FFFFFF;
-  margin: 0;
-
-  @media (min-width: 1024px) {
-    font-size: 60px;
-  }
+  margin: 0 0 4px 0;
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.5;
   margin: 0;
-
-  @media (min-width: 1024px) {
-    font-size: 16px;
-  }
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`

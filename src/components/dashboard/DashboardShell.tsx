@@ -78,6 +78,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     sessionStorage.setItem('luxor_kyc_dismissed', 'true');
   };
 
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('luxor_sidebar_collapsed') === 'true';
+    }
+    return false;
+  });
+
+  const toggleSidebar = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      localStorage.setItem('luxor_sidebar_collapsed', String(next));
+      return next;
+    });
+  };
+
   useEffect(() => {
     // Close mobile menu on route change
     setIsMobileMenuOpen(false);
@@ -100,7 +115,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  const NavLinks = ({ onClick }: { onClick?: () => void }) => (
+  const NavLinks = ({ onClick, collapsed }: { onClick?: () => void; collapsed?: boolean }) => (
     <>
       {nav.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
@@ -109,14 +124,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             key={href}
             href={href}
             onClick={onClick}
+            title={collapsed ? label : undefined}
             className={clsx(
-              'w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors',
+              'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-xl',
+              collapsed ? 'justify-center p-3 text-center' : 'gap-3 px-4 py-3',
               active
-                ? 'bg-white/10 text-white'
+                ? 'bg-white/10 text-white shadow-sm'
                 : 'text-gray-400 hover:text-white hover:bg-white/5'
             )}
           >
-            <Icon size={18} /> {label}
+            <Icon size={18} className="shrink-0" />
+            {!collapsed && <span className="truncate">{label}</span>}
           </Link>
         );
       })}
@@ -125,25 +143,54 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#EDEDED] selection:bg-[#2563EB]/30 flex font-['Montserrat',sans-serif]">
-      {/* Desktop Sidebar */}
-      <aside className="w-64 border-r border-white/5 bg-white/[0.02] hidden md:flex flex-col">
-        <div className="p-6 border-b border-white/5">
-          <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
-            <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-            <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
-          </Link>
+      {/* Desktop Sidebar (Retractable) */}
+      <aside
+        className={clsx(
+          'border-r border-white/5 bg-white/[0.02] hidden md:flex flex-col transition-all duration-300 ease-in-out relative shrink-0',
+          isCollapsed ? 'w-20' : 'w-64'
+        )}
+      >
+        <div
+          onClick={toggleSidebar}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') toggleSidebar();
+          }}
+          title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
+          className={clsx(
+            'p-4 border-b border-white/5 flex items-center cursor-pointer select-none transition-colors hover:bg-white/[0.03]',
+            isCollapsed ? 'justify-center py-5' : 'justify-start gap-3 px-5'
+          )}
+        >
+          <img
+            src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
+            alt="Logo"
+            className="h-10 w-10 object-contain shrink-0"
+          />
+          {!isCollapsed && (
+            <span className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] whitespace-nowrap">
+              Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+            </span>
+          )}
         </div>
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          <NavLinks />
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          <NavLinks collapsed={isCollapsed} />
         </nav>
-        <div className="p-4 border-t border-white/5">
-          <p className="text-xs text-gray-500 truncate px-4 mb-3">{user.email}</p>
+        <div className="p-3 border-t border-white/5">
+          {!isCollapsed && <p className="text-xs text-gray-500 truncate px-4 mb-3">{user.email}</p>}
           <button
             type="button"
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors font-['Outfit',sans-serif]"
+            title={isCollapsed ? 'Sign out' : undefined}
+            style={{ fontFamily: 'Outfit, sans-serif' }}
+            className={clsx(
+              "w-full flex items-center text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors",
+              isCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3'
+            )}
           >
-            <LogOut size={18} /> Sign out
+            <LogOut size={18} className="shrink-0" />
+            {!isCollapsed && <span>Sign out</span>}
           </button>
         </div>
       </aside>

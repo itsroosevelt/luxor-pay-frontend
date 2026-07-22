@@ -3,45 +3,35 @@
 import React, { useEffect, useState } from "react";
 import styled, { createGlobalStyle, keyframes } from "styled-components";
 import { motion } from "framer-motion";
-import { Eye, EyeOff, AlertCircle, RefreshCw, Coins, ShieldAlert } from "lucide-react";
+import { Eye, EyeOff, AlertCircle, RefreshCw, Coins, ArrowUp, ArrowDown, ArrowLeftRight, ShieldAlert } from "lucide-react";
 import { WalletBalanceData } from "@/lib/solana-api";
 
-// --- Global Fonts Injection (Outfit & Montserrat) ---
 const FontStyles = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Outfit:wght@400;500;700&display=swap');
 `;
 
-// --- Styled Components ---
-
 const CardContainer = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(40px);
   border-radius: 24px;
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
-  padding: 16px 20px;
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+  padding: 20px 24px;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 16px;
   position: relative;
   overflow: hidden;
-
-  @media (min-width: 768px) {
-    border-radius: 40px;
-    box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
-    padding: 24px 32px;
-    gap: 24px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
+  height: 100%;
 
   &::before {
     content: '';
     position: absolute;
     top: -50%;
-    left: -50%;
+    right: -50%;
     width: 200%;
     height: 200%;
-    background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 40%);
+    background: radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 45%);
     pointer-events: none;
     z-index: 0;
   }
@@ -50,6 +40,9 @@ const CardContainer = styled(motion.div)`
 const ContentWrapper = styled.div`
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const HeaderRow = styled.div`
@@ -60,43 +53,38 @@ const HeaderRow = styled.div`
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
-  letter-spacing: 0.02em;
-  color: rgba(255, 255, 255, 0.6);
+  color: #FFFFFF;
   margin: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+`;
 
-  @media (min-width: 768px) {
-    font-size: 24px;
-    font-weight: 500;
-    letter-spacing: -0.5px;
-    color: #FFFFFF;
-    text-transform: none;
-    gap: 12px;
-  }
+const ControlsContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
 `;
 
 const IconButton = styled.button`
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 9999px;
   width: 32px;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: #60A5FA;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    color: #60A5FA;
-    background: rgba(96, 165, 250, 0.1);
+    background: rgba(37, 99, 235, 0.25);
+    color: #FFFFFF;
+    border-color: rgba(96, 165, 250, 0.3);
   }
 
   &:focus-visible {
@@ -108,35 +96,22 @@ const IconButton = styled.button`
     opacity: 0.4;
     cursor: not-allowed;
   }
+`;
 
-  @media (min-width: 768px) {
-    width: 40px;
-    height: 40px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #60A5FA;
-    &:hover:not(:disabled) {
-      background: rgba(37, 99, 235, 0.2);
-      color: #FFFFFF;
-    }
-  }
+const BalanceSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const BalanceLabel = styled.p`
   font-family: 'Montserrat', sans-serif;
   font-size: 11px;
-  font-weight: 400;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.4);
-  margin: 0 0 4px 0;
+  margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-
-  @media (min-width: 768px) {
-    font-size: 15px;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 0 0 8px 0;
-    letter-spacing: 0.1em;
-  }
+  letter-spacing: 0.08em;
 `;
 
 const PrimaryBalance = styled.div`
@@ -150,22 +125,50 @@ const PrimaryBalance = styled.div`
   line-height: 1.1;
 
   @media (min-width: 768px) {
-    font-size: 48px;
-    letter-spacing: -1px;
-    line-height: 1;
+    font-size: 32px;
+  }
+`;
+
+const ActionButtonsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+`;
+
+const ActionButton = styled.button`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: #000000;
+  background: #FFFFFF;
+  border: none;
+  border-radius: 9999px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #2563EB;
+    color: #FFFFFF;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
   }
 `;
 
 const TokenList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: 12px;
-
-  @media (min-width: 768px) {
-    gap: 12px;
-    margin-top: 16px;
-  }
+  gap: 8px;
+  border-t: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 12px;
 `;
 
 const TokenRow = styled.div`
@@ -173,15 +176,12 @@ const TokenRow = styled.div`
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 
-  @media (min-width: 768px) {
-    padding: 12px 16px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
   }
 `;
 
@@ -189,67 +189,46 @@ const TokenInfo = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-
-  @media (min-width: 768px) {
-    gap: 12px;
-  }
 `;
 
 const TokenIconCircle = styled.div`
   width: 24px;
   height: 24px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.15), rgba(37, 99, 235, 0.15));
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(37, 99, 235, 0.2));
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  font-size: 9px;
+  font-size: 10px;
   color: #60A5FA;
-
-  @media (min-width: 768px) {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-    background: linear-gradient(135deg, rgba(96, 165, 250, 0.2), rgba(37, 99, 235, 0.2));
-  }
 `;
 
 const TokenSymbol = styled.span`
   font-family: 'Outfit', sans-serif;
   font-weight: 500;
   font-size: 13px;
-  color: rgba(237, 237, 237, 0.85);
-
-  @media (min-width: 768px) {
-    font-size: 16px;
-    color: #EDEDED;
-  }
+  color: #EDEDED;
 `;
 
 const TokenAmount = styled.span`
   font-family: monospace;
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-
-  @media (min-width: 768px) {
-    font-size: 16px;
-    color: #FFFFFF;
-  }
+  color: #FFFFFF;
 `;
 
 const ErrorContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
+  gap: 10px;
+  padding: 12px 14px;
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 20px;
+  border-radius: 14px;
   color: #FCA5A5;
   font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
 `;
 
 const shimmer = keyframes`
@@ -266,105 +245,29 @@ const SkeletonBox = styled.div<{ $width?: string; $height?: string; $borderRadiu
   animation: ${shimmer} 2s infinite;
 `;
 
-const ControlsContainer = styled.div`
-  display: flex;
-  gap: 8px;
-`;
-
 const KycAlertBanner = styled(motion.div)`
   background: rgba(37, 99, 235, 0.1);
   border: 1px solid rgba(96, 165, 250, 0.2);
   border-radius: 16px;
-  padding: 16px;
-  margin-top: 16px;
+  padding: 12px 16px;
+  margin-top: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   align-items: flex-start;
-  font-family: 'Montserrat', sans-serif;
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.4);
-  position: relative;
-  overflow: hidden;
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at center, rgba(37, 99, 235, 0.1) 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-  }
 
   @media (min-width: 768px) {
-    border-radius: 24px;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
-    margin-top: 24px;
   }
 `;
 
 const KycInfo = styled.div`
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  position: relative;
-  z-index: 1;
+  align-items: center;
+  gap: 10px;
 `;
-
-const AlertTitle = styled.h4`
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #FFFFFF;
-  margin: 0 0 4px 0;
-`;
-
-const AlertDesc = styled.p`
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-  line-height: 1.4;
-`;
-
-const VerifyButton = styled.button`
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: #000000;
-  background: #FFFFFF;
-  border: none;
-  border-radius: 9999px;
-  padding: 8px 18px;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease-in-out;
-  align-self: flex-start;
-  position: relative;
-  z-index: 1;
-
-  &:hover {
-    background: #2563EB;
-    color: #FFFFFF;
-  }
-
-  &:focus-visible {
-    outline: 2px solid #60A5FA;
-    outline-offset: 2px;
-  }
-
-  @media (min-width: 768px) {
-    align-self: center;
-    font-size: 14px;
-    padding: 10px 22px;
-  }
-`;
-
-// --- Interfaces ---
 
 interface WalletBalanceViewProps {
   data: WalletBalanceData | null;
@@ -376,9 +279,11 @@ interface WalletBalanceViewProps {
   togglePrivacyMode: () => void;
   isKycVerified: boolean;
   onVerifyClick: () => void;
+  onSendClick?: () => void;
+  onDepositClick?: () => void;
+  onTradeClick?: () => void;
+  merchantWallet?: string | null;
 }
-
-// --- Component ---
 
 export function WalletBalanceView({
   data,
@@ -390,8 +295,10 @@ export function WalletBalanceView({
   togglePrivacyMode,
   isKycVerified,
   onVerifyClick,
+  onSendClick,
+  onDepositClick,
+  onTradeClick,
 }: WalletBalanceViewProps) {
-  // Prevent hydration mismatch for privacy mode
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -403,21 +310,19 @@ export function WalletBalanceView({
     return isPrivacyMode ? "••••••••" : amount;
   };
 
-  const animationProps = {
-    initial: { opacity: 0, y: 40 },
-    animate: { opacity: 1, y: 0 },
-    transition: { type: "spring" as const, bounce: 0.4, duration: 0.8 },
-  };
-
   return (
     <>
       <FontStyles />
-      <CardContainer {...animationProps}>
+      <CardContainer
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
+      >
         <ContentWrapper>
           <HeaderRow>
             <Title>
-              <Coins size={14} className="text-blue-400" style={{ opacity: 0.7 }} />
-              Wallet Balance
+              <Coins size={18} className="text-blue-400 opacity-80" />
+              <span>Wallet Balance</span>
             </Title>
             <ControlsContainer>
               <IconButton
@@ -425,7 +330,7 @@ export function WalletBalanceView({
                 aria-label={isPrivacyMode ? "Show balance" : "Hide balance"}
                 title="Toggle Privacy Mode"
               >
-                {isPrivacyMode ? <EyeOff size={18} /> : <Eye size={18} />}
+                {isPrivacyMode ? <EyeOff size={16} /> : <Eye size={16} />}
               </IconButton>
               <IconButton
                 onClick={refetch}
@@ -434,18 +339,18 @@ export function WalletBalanceView({
                 title="Refresh balance"
                 aria-busy={isLoading}
               >
-                <RefreshCw size={18} className={isLoading ? "animate-spin" : ""} />
+                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
               </IconButton>
             </ControlsContainer>
           </HeaderRow>
 
-          <div style={{ marginTop: '14px' }}>
+          <BalanceSection>
             <BalanceLabel>Total Solana</BalanceLabel>
             {isLoading ? (
-              <SkeletonBox $width="160px" $height="32px" $borderRadius="8px" />
+              <SkeletonBox $width="180px" $height="36px" $borderRadius="10px" />
             ) : isError ? (
               <ErrorContainer>
-                <AlertCircle size={20} />
+                <AlertCircle size={18} />
                 <span>{errorMessage || "Unable to load balance."}</span>
               </ErrorContainer>
             ) : (
@@ -453,11 +358,28 @@ export function WalletBalanceView({
                 {formatBalance(data?.solBalance || "0.00")} SOL
               </PrimaryBalance>
             )}
-          </div>
+          </BalanceSection>
 
+          {/* Action Buttons */}
+          <ActionButtonsGrid>
+            <ActionButton type="button" onClick={onSendClick}>
+              <ArrowUp size={14} />
+              <span>Send</span>
+            </ActionButton>
+            <ActionButton type="button" onClick={onDepositClick}>
+              <ArrowDown size={14} />
+              <span>Deposit</span>
+            </ActionButton>
+            <ActionButton type="button" onClick={onTradeClick}>
+              <ArrowLeftRight size={14} />
+              <span>Trade</span>
+            </ActionButton>
+          </ActionButtonsGrid>
+
+          {/* Tokens section */}
           {!isLoading && !isError && data?.tokens && data.tokens.length > 0 && (
             <TokenList>
-              <BalanceLabel style={{ marginTop: '16px' }}>Tokens</BalanceLabel>
+              <BalanceLabel>Tokens</BalanceLabel>
               {data.tokens.map((token, index) => {
                 const symbol = token.symbol || "SPL";
                 return (
@@ -477,8 +399,7 @@ export function WalletBalanceView({
 
           {isLoading && (
             <TokenList>
-              <BalanceLabel style={{ marginTop: '8px' }}>Tokens</BalanceLabel>
-              <SkeletonBox $height="36px" $borderRadius="10px" />
+              <BalanceLabel>Tokens</BalanceLabel>
               <SkeletonBox $height="36px" $borderRadius="10px" />
             </TokenList>
           )}
@@ -487,22 +408,27 @@ export function WalletBalanceView({
 
       {!isKycVerified && (
         <KycAlertBanner
-          initial={{ opacity: 0, y: 15 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
         >
           <KycInfo>
-            <ShieldAlert size={20} className="text-blue-400" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <ShieldAlert size={18} className="text-blue-400 shrink-0" />
             <div>
-              <AlertTitle>Verify your identity to unlock all features</AlertTitle>
-              <AlertDesc>
-                Get access to top up your wallet with fiat money, convert crypto to fiat money, and more.
-              </AlertDesc>
+              <h4 className="font-['Outfit',sans-serif] font-medium text-white text-xs">
+                Verify your identity to unlock all features
+              </h4>
+              <p className="font-['Montserrat',sans-serif] text-[11px] text-gray-400">
+                Get access to top up your wallet with fiat money and more.
+              </p>
             </div>
           </KycInfo>
-          <VerifyButton onClick={onVerifyClick} type="button">
+          <ActionButton
+            type="button"
+            onClick={onVerifyClick}
+            style={{ width: 'auto', padding: '6px 14px', fontSize: '12px' }}
+          >
             Start Verification
-          </VerifyButton>
+          </ActionButton>
         </KycAlertBanner>
       )}
     </>

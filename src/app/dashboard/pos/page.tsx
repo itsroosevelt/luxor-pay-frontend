@@ -61,16 +61,18 @@ export default function PosDevicesPage() {
 
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5">
-        <h1 className="text-2xl font-bold mb-1">POS Devices</h1>
-        <p className="text-gray-400 text-sm">
-          Register terminals, then charge with your API key.
-        </p>
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>POS Devices</h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Register terminals, then charge with your API key.
+          </p>
+        </div>
       </header>
 
-      <div className="p-6 md:p-10 max-w-5xl mx-auto space-y-8">
+      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto space-y-8">
         <form onSubmit={handleCreate} className="glass-panel p-6 space-y-4">
-          <h2 className="font-semibold flex items-center gap-2">
+          <h2 className="font-semibold flex items-center gap-2" style={{ fontFamily: 'Outfit, sans-serif' }}>
             <Plus size={18} className="text-primary" /> Register device
           </h2>
           <div className="grid md:grid-cols-2 gap-3">
@@ -78,19 +80,22 @@ export default function PosDevicesPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Store counter #1"
-              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
+              className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
             />
             <input
               value={posId}
               onChange={(e) => setPosId(e.target.value)}
               placeholder="POS ID (serial or label)"
-              className="bg-black/40 border border-white/10 rounded-lg px-4 py-2.5 text-sm"
+              className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm"
+              style={{ fontFamily: 'Montserrat, sans-serif' }}
             />
           </div>
           <button
             type="submit"
             disabled={creating}
-            className="px-5 py-2.5 bg-white text-black font-semibold text-sm rounded-lg hover:bg-gray-200 disabled:opacity-50"
+            className="px-6 py-2.5 bg-white text-black font-medium text-sm rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50 shadow-md focus-visible:outline-2 focus-visible:outline-blue-400 focus-visible:outline-offset-2"
+            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             {creating ? 'Saving…' : 'Register POS'}
           </button>
