@@ -86,10 +86,11 @@ const ButtonSub = styled.span`
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface FundWalletButtonProps {
   merchantWallet?: string | null;
+  onTrigger?: () => void;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export function FundWalletButton({ merchantWallet }: FundWalletButtonProps) {
+export function FundWalletButton({ merchantWallet, onTrigger }: FundWalletButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
@@ -102,7 +103,10 @@ export function FundWalletButton({ merchantWallet }: FundWalletButtonProps) {
         <FundButton
           id="fund-wallet-btn"
           type="button"
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => {
+            setIsModalOpen(true);
+            if (onTrigger) onTrigger();
+          }}
           whileTap={{ scale: 0.98 }}
           aria-label="Fund wallet with fiat money"
         >

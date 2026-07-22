@@ -456,20 +456,18 @@ export default function PaymentLinksPage() {
   return (
     <PageContainer>
       <Header>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <Title>Payment Links</Title>
-            <Subtitle>Checkout URLs for your website, email, or social.</Subtitle>
-          </div>
-          {!isFormOpen && (
-            <Button $variant="primary" onClick={() => setIsFormOpen(true)}>
-              <Plus size={16} /> Create Link
-            </Button>
-          )}
-        </div>
+        <Title>Payment Links</Title>
+        <Subtitle>Checkout URLs for your website, email, or social.</Subtitle>
       </Header>
 
       <ContentLayout>
+        {!isFormOpen && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+            <Button $variant="primary" onClick={() => setIsFormOpen(true)}>
+              <Plus size={16} /> Create Link
+            </Button>
+          </div>
+        )}
         <AnimatePresence>
           {isFormOpen && (
             <GlassCard

@@ -90,12 +90,14 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        {/* Top Wallet Bar at top right */}
-        <TopWalletBar
-          merchantWallet={merchantWallet}
-          solBalance={balanceData?.solBalance}
-          isLoading={isBalanceLoading}
-        />
+        {/* Top Wallet Bar at top right (mobile only here, desktop is global) */}
+        <div className="md:hidden">
+          <TopWalletBar
+            merchantWallet={merchantWallet}
+            solBalance={balanceData?.solBalance}
+            isLoading={isBalanceLoading}
+          />
+        </div>
       </header>
 
       <div className="p-6 md:p-10 w-full max-w-7xl mx-auto space-y-8">

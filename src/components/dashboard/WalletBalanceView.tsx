@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import styled, { createGlobalStyle, keyframes } from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { motion } from "framer-motion";
 import { Eye, EyeOff, AlertCircle, RefreshCw, Coins, ArrowUp, ArrowDown, ArrowLeftRight, ShieldAlert } from "lucide-react";
 import { WalletBalanceData } from "@/lib/solana-api";
 
-const FontStyles = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Outfit:wght@400;500;700&display=swap');
-`;
+
 
 const CardContainer = styled(motion.div)`
   background: rgba(255, 255, 255, 0.03);
@@ -312,7 +310,7 @@ export function WalletBalanceView({
 
   return (
     <>
-      <FontStyles />
+
       <CardContainer
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}

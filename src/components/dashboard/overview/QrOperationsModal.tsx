@@ -1117,7 +1117,7 @@ export function QrOperationsModal({
             </ReceiveLayout>
           )}
 
-          {/* MODE 3: SCAN / LEER PAGOS */}
+          {/* MODE 3: SCAN / READ PAYMENTS */}
           {mode === 'scan' && (
             <>
               {initialMode !== 'scan' && (

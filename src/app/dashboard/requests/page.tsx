@@ -1598,15 +1598,52 @@ export default function PaymentRequestsPage() {
       `}</style>
 
       <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
-        <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
-              Payment Requests
-            </h1>
-            <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-              Track payments you've requested and payments others are asking from you.
-            </p>
+        <div className="w-full max-w-7xl mx-auto">
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            Payment Requests
+          </h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Track payments you've requested and payments others are asking from you.
+          </p>
+        </div>
+      </header>
+
+      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto">
+
+        {/* Tab Bar and Action Button Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div style={{
+            display: 'flex', gap: '4px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: '16px',
+            padding: '4px',
+            width: 'fit-content',
+          }}>
+            {tabs.map(({ id, label, Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '9px 18px', borderRadius: '12px', border: 'none',
+                    background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+                    fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: isActive ? 500 : 400,
+                    cursor: 'pointer', transition: 'all 0.2s',
+                    boxShadow: isActive ? '0 1px 8px rgba(0,0,0,0.3)' : 'none',
+                  }}
+                >
+                  <Icon size={15} />
+                  {label}
+                </button>
+              );
+            })}
           </div>
+
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-all shadow-md focus-visible:outline-2 focus-visible:outline-blue-400 focus-visible:outline-offset-2 self-start sm:self-auto"
@@ -1614,43 +1651,6 @@ export default function PaymentRequestsPage() {
           >
             <Send size={16} /> Create Request
           </button>
-        </div>
-      </header>
-
-      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto">
-
-        {/* Tab Bar */}
-        <div style={{
-          display: 'flex', gap: '4px',
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: '16px',
-          padding: '4px',
-          marginBottom: '24px',
-          width: 'fit-content',
-        }}>
-          {tabs.map(({ id, label, Icon }) => {
-            const isActive = activeTab === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveTab(id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '9px 18px', borderRadius: '12px', border: 'none',
-                  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
-                  fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: isActive ? 500 : 400,
-                  cursor: 'pointer', transition: 'all 0.2s',
-                  boxShadow: isActive ? '0 1px 8px rgba(0,0,0,0.3)' : 'none',
-                }}
-              >
-                <Icon size={15} />
-                {label}
-              </button>
-            );
-          })}
         </div>
 
         {/* Tab Description */}

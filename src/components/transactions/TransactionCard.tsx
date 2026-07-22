@@ -423,12 +423,12 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
 
   const dateObj = new Date(transfer.createdAt);
   
-  // Date and Time formatting (e.g. "7 jul, 23:53")
-  const dateFormatted = dateObj.toLocaleDateString('es-ES', {
+  // Date and Time formatting (e.g. "Jul 7, 11:53 PM")
+  const dateFormatted = dateObj.toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
   });
-  const timeFormatted = dateObj.toLocaleTimeString('es-ES', {
+  const timeFormatted = dateObj.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
   });

@@ -671,7 +671,7 @@ export default function PreviewPaymentLinkPage() {
 
   const usdAmount = getUsdEquivalent();
 
-  // En dispositivos móviles, forzamos la vista a móvil.
+  // On mobile devices, force mobile view.
   useEffect(() => {
     const checkMobile = () => {
       if (window.innerWidth < 768) {
@@ -825,7 +825,7 @@ export default function PreviewPaymentLinkPage() {
               <span>Created At</span>
             </DetailLabel>
             <DetailValue style={{ fontSize: '13px' }}>
-              {new Date(link.createdAt).toLocaleString('es-ES', {
+              {new Date(link.createdAt).toLocaleString('en-US', {
                 day: 'numeric',
                 month: 'short',
                 year: 'numeric',

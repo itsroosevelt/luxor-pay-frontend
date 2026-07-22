@@ -18,6 +18,8 @@ import {
   ArrowLeftRight,
   Repeat,
   UserCircle,
+  Lock,
+  Check,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -28,6 +30,8 @@ import { KycResultModal } from './KycResultModal';
 import { OnrampProgressBanner } from './OnrampProgressBanner';
 import { OnrampResultModal } from './OnrampResultModal';
 import { clsx } from 'clsx';
+import { TopWalletBar } from './TopWalletBar';
+import { FundWalletButton } from './FundWalletButton';
 
 const nav = [
   { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
@@ -48,7 +52,34 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
+
+  const displayName =
+    profile?.businessName?.trim() || (user as any)?.displayName || user?.email?.split('@')[0] || 'Account';
+  const avatarUrl = (user as any)?.photoURL;
+  const avatarInitial = (displayName || user?.email || 'A').charAt(0).toUpperCase();
+  const kycVerified =
+    profile?.kyc === true || (profile?.kycStatus || '').toLowerCase() === 'verified';
+
+  const renderAvatar = (size: number) =>
+    avatarUrl ? (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt={displayName}
+        referrerPolicy="no-referrer"
+        className="rounded-full object-cover"
+        style={{ width: size, height: size }}
+      />
+    ) : (
+      <div
+        className="rounded-full bg-gradient-to-br from-[#60A5FA] to-[#2563EB] text-white flex items-center justify-center font-semibold"
+        style={{ width: size, height: size, fontFamily: 'Outfit, sans-serif', fontSize: size * 0.4 }}
+      >
+        {avatarInitial}
+      </div>
+    );
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -203,13 +234,24 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
             <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
           </Link>
-          <button
-            type="button"
-            onClick={() => setIsMobileMenuOpen(true)}
-            className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
-          >
-            <Menu size={24} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsAccountMenuOpen((v) => !v)}
+              className="rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all flex-shrink-0"
+              title="Account"
+              aria-label="Open account menu"
+            >
+              {renderAvatar(32)}
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+            >
+              <Menu size={24} />
+            </button>
+          </div>
         </header>
 
         {/* Mobile Menu Overlay */}
@@ -251,7 +293,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="relative flex-1 overflow-auto">
+          {/* Top Header Controls (Desktop only) */}
+          <div className="hidden md:flex items-center gap-3 absolute top-6 right-10 z-30">
+            <TopWalletBar merchantWallet={profile?.merchantWallet} />
+            <button
+              type="button"
+              onClick={() => setIsAccountMenuOpen((v) => !v)}
+              className="rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all shadow-lg flex-shrink-0"
+              title="Account"
+              aria-label="Open account menu"
+            >
+              {renderAvatar(36)}
+            </button>
+          </div>
           {children}
         </div>
       </main>
@@ -261,6 +316,68 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <KycResultModal />
       <OnrampProgressBanner />
       <OnrampResultModal />
+
+      {/* Account dropdown menu (Google-style) — shared for desktop + mobile */}
+      {isAccountMenuOpen && user && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
+          <div
+            style={{
+              background: 'rgba(15,15,15,0.98)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              backdropFilter: 'blur(40px)',
+              borderRadius: '28px',
+              boxShadow: '0 32px 64px -16px rgba(0,0,0,0.8)',
+            }}
+            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-5 text-[#EDEDED] font-body animate-in fade-in slide-in-from-top-2 duration-200"
+          >
+            <p className="text-center text-xs text-gray-400 font-mono truncate mb-4">{user.email}</p>
+
+            <div className="flex flex-col items-center text-center">
+              <div className="rounded-full ring-2 ring-white/10">{renderAvatar(72)}</div>
+              <h3 className="mt-3 text-lg font-light text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                Hi, {displayName}!
+              </h3>
+              {profile?.businessName && (
+                <p className="text-xs text-gray-500 mt-0.5">{profile.businessName}</p>
+              )}
+
+              <div className="mt-2">
+                {kycVerified ? (
+                  <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Check size={11} /> Verified
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setIsAccountMenuOpen(false); setIsKycModalOpen(true); }}
+                    className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 hover:bg-amber-500/20 transition-colors"
+                  >
+                    Verify identity
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {kycVerified && (
+              <div className="mt-4 w-full">
+                <FundWalletButton
+                  merchantWallet={profile?.merchantWallet}
+                  onTrigger={() => setIsAccountMenuOpen(false)}
+                />
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="mt-6 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors text-sm"
+            >
+              <LogOut size={16} /> Sign out
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 }

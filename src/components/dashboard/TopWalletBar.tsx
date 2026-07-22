@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { Wallet, AlertTriangle, Check, Copy } from "lucide-react";
+import { Wallet, Check, Copy } from "lucide-react";
 
 const Container = styled(motion.div)`
   display: flex;
@@ -37,25 +37,6 @@ const BadgeBase = styled.div`
   }
 `;
 
-const StatusBadge = styled(BadgeBase)`
-  color: rgba(255, 255, 255, 0.7);
-`;
-
-const GreenDot = styled.span`
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background: #22C55E;
-  box-shadow: 0 0 8px #22C55E;
-  display: inline-block;
-`;
-
-const BalanceBadge = styled(BadgeBase)<{ $isLow?: boolean }>`
-  background: ${({ $isLow }) => ($isLow ? 'rgba(245, 158, 11, 0.1)' : 'rgba(255, 255, 255, 0.05)')};
-  border-color: ${({ $isLow }) => ($isLow ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255, 255, 255, 0.12)')};
-  color: #FFFFFF;
-`;
-
 const WalletBadge = styled(BadgeBase)`
   cursor: pointer;
 
@@ -82,16 +63,12 @@ interface TopWalletBarProps {
   isLoading?: boolean;
 }
 
-export function TopWalletBar({ merchantWallet, solBalance, isLoading }: TopWalletBarProps) {
+export function TopWalletBar({ merchantWallet }: TopWalletBarProps) {
   const [copied, setCopied] = useState(false);
 
   const truncatedAddress = merchantWallet
     ? `${merchantWallet.slice(0, 4)}...${merchantWallet.slice(-4)}`
     : null;
-
-  const numBalance = solBalance ? parseFloat(solBalance) : 0;
-  // Threshold for low SOL gas fees warning (e.g. less than 0.005 SOL)
-  const isLowBalance = numBalance < 0.005;
 
   const handleCopy = () => {
     if (!merchantWallet) return;
@@ -106,19 +83,7 @@ export function TopWalletBar({ merchantWallet, solBalance, isLoading }: TopWalle
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <StatusBadge>
-        <span>Network Status</span>
-        <GreenDot />
-      </StatusBadge>
 
-      <BalanceBadge
-        $isLow={isLowBalance}
-        title={isLowBalance ? "Bajo saldo de SOL para comisiones de red" : "Balance de SOL disponible"}
-      >
-        <span style={{ fontWeight: 600, color: '#60A5FA' }}>≡</span>
-        <span>{isLoading ? "..." : `${solBalance || "0.00"} SOL`}</span>
-        {isLowBalance && <AlertTriangle size={14} className="text-amber-400" />}
-      </BalanceBadge>
 
       {truncatedAddress ? (
         <WalletBadge
