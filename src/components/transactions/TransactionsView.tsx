@@ -4,11 +4,13 @@ import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { Transfer, TransfersResponse } from "@/lib/transfers-api";
 import { TransactionCard } from "./TransactionCard";
-import { AlertCircle, ChevronLeft, ChevronRight, Inbox, RotateCw, Send } from "lucide-react";
+import { AlertCircle, ChevronLeft, ChevronRight, Inbox, ListFilter, RotateCw, Send } from "lucide-react";
 
 const ViewWrapper = styled.div`
   position: relative;
   width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 `;
 
 const AmbientGlow = styled.div`
@@ -41,6 +43,8 @@ const ViewContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
+  min-width: 0;
 `;
 
 const ControlsHeader = styled.div`
@@ -54,12 +58,63 @@ const ControlsHeader = styled.div`
   border-radius: 20px;
   padding: 12px 20px;
   backdrop-filter: blur(20px);
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 767px) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 14px;
+    gap: 12px;
+  }
 `;
 
 const SelectorsRow = styled.div`
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
+  align-items: center;
+
+  @media (max-width: 767px) {
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 8px;
+    width: 100%;
+  }
+`;
+
+const ButtonLabel = styled.span`
+  @media (max-width: 767px) {
+    display: none;
+  }
+`;
+
+const StatusSelectWrapper = styled.div`
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  @media (max-width: 767px) {
+    width: 40px;
+    height: 40px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+`;
+
+const StatusSelectIcon = styled.div`
+  display: none;
+  pointer-events: none;
+  color: #FFFFFF;
+
+  @media (max-width: 767px) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 `;
 
 const StyledSelect = styled.select`
@@ -90,6 +145,30 @@ const StyledSelect = styled.select`
   option {
     background: #0A0A0A;
     color: #FFFFFF;
+  }
+`;
+
+const StatusSelect = styled(StyledSelect)`
+  @media (max-width: 767px) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    min-width: 0;
+    box-shadow: none;
+  }
+`;
+
+const PageSizeSelect = styled(StyledSelect)`
+  @media (max-width: 767px) {
+    font-size: 12px;
+    padding: 8px 12px;
+    flex-shrink: 1;
+    min-width: 0;
   }
 `;
 
@@ -124,6 +203,14 @@ const TransferButton = styled.button`
   &:focus-visible {
     outline: 2px solid #60A5FA;
     outline-offset: 2px;
+  }
+
+  @media (max-width: 767px) {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
   }
 `;
 
@@ -173,6 +260,14 @@ const ReloadButton = styled.button<{ $isLoading?: boolean }>`
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
   }
+
+  @media (max-width: 767px) {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 `;
 
 const DateGroupHeader = styled.h3`
@@ -188,6 +283,8 @@ const ListContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
+  min-width: 0;
 `;
 
 const shimmer = keyframes`
@@ -245,6 +342,12 @@ const PageInfo = styled.span`
   font-size: 13px;
   color: rgba(255, 255, 255, 0.5);
   font-weight: 400;
+  min-width: 0;
+
+  @media (max-width: 767px) {
+    font-size: 12px;
+    line-height: 1.4;
+  }
 `;
 
 const ButtonGroup = styled.div`
@@ -365,23 +468,30 @@ export function TransactionsView({
             {data !== null ? `Showing ${data.data.length} of ${data.total} transactions` : 'Loading...'}
           </PageInfo>
           <SelectorsRow>
-            <StyledSelect
-              value={status || ""}
-              onChange={(e) => onSetStatus(e.target.value || undefined)}
-            >
-              <option value="">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="CONFIRMED">Confirmed</option>
-              <option value="FAILED">Failed</option>
-            </StyledSelect>
-            <StyledSelect
+            <StatusSelectWrapper title={status ? `Status: ${status}` : 'All Statuses'}>
+              <StatusSelectIcon aria-hidden>
+                <ListFilter size={18} />
+              </StatusSelectIcon>
+              <StatusSelect
+                value={status || ""}
+                onChange={(e) => onSetStatus(e.target.value || undefined)}
+                aria-label="Filter by status"
+              >
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="FAILED">Failed</option>
+              </StatusSelect>
+            </StatusSelectWrapper>
+            <PageSizeSelect
               value={limit}
               onChange={(e) => onSetLimit(Number(e.target.value))}
+              aria-label="Results per page"
             >
               <option value={5}>5 per page</option>
               <option value={10}>10 per page</option>
               <option value={20}>20 per page</option>
-            </StyledSelect>
+            </PageSizeSelect>
             {onRefresh && (
               <ReloadButton
                 type="button"
@@ -389,15 +499,16 @@ export function TransactionsView({
                 disabled={isLoading}
                 $isLoading={isLoading}
                 title="Reload transactions"
+                aria-label="Reload transactions"
               >
-                <RotateCw size={14} />
-                Reload
+                <RotateCw size={16} />
+                <ButtonLabel>Reload</ButtonLabel>
               </ReloadButton>
             )}
             {onTransferClick && (
-              <TransferButton onClick={onTransferClick}>
-                <Send size={14} />
-                Transfer Funds
+              <TransferButton onClick={onTransferClick} title="Transfer Funds" aria-label="Transfer Funds">
+                <Send size={16} />
+                <ButtonLabel>Transfer Funds</ButtonLabel>
               </TransferButton>
             )}
           </SelectorsRow>

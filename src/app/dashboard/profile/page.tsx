@@ -127,9 +127,36 @@ export default function ProfilePage() {
         ) : (
           <>
             {/* ── Merchant Profile Card ── */}
-            <section className="glass-panel overflow-hidden">
-              {/* Top: Avatar + identity + Edit Button */}
-              <div className="relative px-6 pt-6 pb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <section className="glass-panel overflow-hidden relative">
+              {!isEditing ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="absolute top-5 right-5 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[#60A5FA] transition-all focus-visible:outline-2 focus-visible:outline-[#60A5FA] focus-visible:outline-offset-2"
+                  aria-label="Edit Profile"
+                  title="Edit Profile"
+                >
+                  <Pencil size={16} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditBusinessName(profile?.businessName || '');
+                    setEditMerchantWallet(profile?.merchantWallet || '');
+                  }}
+                  disabled={saving}
+                  className="absolute top-5 right-5 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-all focus-visible:outline-2 focus-visible:outline-[#60A5FA] focus-visible:outline-offset-2 disabled:opacity-50"
+                  aria-label="Cancel editing"
+                  title="Cancel"
+                >
+                  <X size={16} />
+                </button>
+              )}
+
+              {/* Top: Avatar + identity */}
+              <div className="relative px-6 pt-6 pb-6 pr-16 flex flex-col sm:flex-row sm:items-center gap-5">
                 {/* Subtle gradient accent */}
                 <div
                   aria-hidden
@@ -164,20 +191,6 @@ export default function ProfilePage() {
                       </div>
                     )}
 
-                    {/* KYC badge */}
-                    <div
-                      className="absolute -bottom-1.5 -right-1.5 rounded-full p-1"
-                      style={{
-                        background: kycVerified ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
-                        border: `1px solid ${kycVerified ? 'rgba(16,185,129,0.35)' : 'rgba(245,158,11,0.35)'}`,
-                      }}
-                      title={kycVerified ? 'Identity verified' : 'Identity not yet verified'}
-                    >
-                      {kycVerified
-                        ? <ShieldCheck size={15} color="#10B981" />
-                        : <ShieldAlert size={15} color="#F59E0B" />
-                      }
-                    </div>
                   </div>
 
                   {/* Identity text */}
@@ -227,31 +240,6 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Right: Edit Button */}
-                {!isEditing ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditing(true)}
-                    className="relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-white text-xs font-medium transition-all focus-visible:outline-2 focus-visible:outline-[#60A5FA] focus-visible:outline-offset-2 self-start sm:self-center shrink-0"
-                    style={{ fontFamily: 'Outfit, sans-serif' }}
-                  >
-                    <Pencil size={14} className="text-[#60A5FA]" /> Edit Profile
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsEditing(false);
-                      setEditBusinessName(profile?.businessName || '');
-                      setEditMerchantWallet(profile?.merchantWallet || '');
-                    }}
-                    disabled={saving}
-                    className="relative z-10 inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white text-xs font-medium transition-all focus-visible:outline-2 focus-visible:outline-[#60A5FA] self-start sm:self-center shrink-0"
-                    style={{ fontFamily: 'Outfit, sans-serif' }}
-                  >
-                    <X size={14} /> Cancel
-                  </button>
-                )}
               </div>
 
               {/* ── Edit Form or Info Grid ── */}

@@ -94,15 +94,23 @@ const ModalBox = styled(motion.div)`
   background: rgba(10, 10, 10, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8);
-  border-radius: 40px;
+  border-radius: 28px;
   width: 100%;
-  max-width: 680px;
-  padding: 40px;
+  max-width: 400px;
+  padding: 24px 28px;
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   @media (max-width: 768px) {
-    padding: 24px;
+    padding: 20px;
     border-radius: 24px;
+    max-width: 100%;
   }
 `;
 
@@ -130,13 +138,14 @@ const ModalCloseButton = styled.button`
 
 const FormHeader = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
   color: #FFFFFF;
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin: 0 0 24px 0;
+  gap: 10px;
+  margin: 0 0 20px 0;
+  padding-right: 36px;
 
   svg {
     color: #60A5FA;
@@ -146,8 +155,8 @@ const FormHeader = styled.h2`
 const InputGrid = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 14px;
+  margin-bottom: 20px;
 `;
 
 const InputGroup = styled.div`
@@ -168,11 +177,11 @@ const Label = styled.label`
 const Input = styled.input`
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 14px 18px;
+  border-radius: 14px;
+  padding: 12px 16px;
   color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   transition: all 0.2s;
   width: 100%;
@@ -192,11 +201,11 @@ const Input = styled.input`
 const Select = styled.select`
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 14px 18px;
+  border-radius: 14px;
+  padding: 12px 16px;
   color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   transition: all 0.2s;
   width: 100%;
@@ -445,6 +454,15 @@ export default function PaymentLinksPage() {
   const env = getLuxorEnv();
   const isDev = env === 'development';
 
+  const parsedAmount = parseFloat(amount);
+  const isFormValid =
+    name.trim().length > 0 &&
+    businessName.trim().length > 0 &&
+    amount.trim().length > 0 &&
+    !Number.isNaN(parsedAmount) &&
+    parsedAmount > 0 &&
+    Boolean(currency);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
@@ -539,7 +557,7 @@ export default function PaymentLinksPage() {
 
               <form onSubmit={handleCreate}>
                 <FormHeader>
-                  <Plus size={22} /> New Link
+                  <Plus size={20} /> New Link
                 </FormHeader>
                 <InputGrid>
                   <InputGroup>
@@ -592,7 +610,7 @@ export default function PaymentLinksPage() {
                   <Button type="button" $variant="secondary" onClick={() => setIsFormOpen(false)} disabled={creating}>
                     Cancel
                   </Button>
-                  <Button type="submit" $variant="primary" disabled={creating}>
+                  <Button type="submit" $variant="primary" disabled={creating || !isFormValid}>
                     {creating ? (
                       <>
                         <Loader2 size={16} className="animate-spin" /> Creating...

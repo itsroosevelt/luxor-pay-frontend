@@ -3,7 +3,7 @@
 import React from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
-import { Pencil, Trash2, Plus, User } from 'lucide-react';
+import { Pencil, Trash2, Plus, User, Star } from 'lucide-react';
 import { Contact } from '@/lib/contacts-api';
 
 interface ContactsViewProps {
@@ -13,6 +13,8 @@ interface ContactsViewProps {
   onAddContactClick: () => void;
   onEditContactClick: (contact: Contact) => void;
   onDeleteContactClick: (id: string) => void;
+  onToggleFavoriteClick: (contact: Contact) => void;
+  togglingFavoriteId?: string | null;
 }
 
 const spin = keyframes`to { transform: rotate(360deg); }`;
@@ -236,6 +238,23 @@ const IconButton = styled.button<{ $danger?: boolean }>`
   }
 `;
 
+const FavoriteButton = styled(IconButton)<{ $active?: boolean }>`
+  color: ${({ $active }) => ($active ? '#FBBF24' : 'rgba(255, 255, 255, 0.5)')};
+  background: ${({ $active }) => ($active ? 'rgba(251, 191, 36, 0.12)' : 'rgba(255, 255, 255, 0.05)')};
+  border-color: ${({ $active }) => ($active ? 'rgba(251, 191, 36, 0.35)' : 'rgba(255, 255, 255, 0.08)')};
+
+  &:hover {
+    color: #FBBF24;
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
 const Divider = styled.div`
   height: 1px;
   background: rgba(255, 255, 255, 0.06);
@@ -341,6 +360,8 @@ export function ContactsView({
   onAddContactClick,
   onEditContactClick,
   onDeleteContactClick,
+  onToggleFavoriteClick,
+  togglingFavoriteId,
 }: ContactsViewProps) {
   return (
     <PageContainer
@@ -396,6 +417,16 @@ export function ContactsView({
                     </NameBadgeGroup>
                   </AvatarNameGroup>
                   <ActionsContainer>
+                    <FavoriteButton
+                      type="button"
+                      $active={contact.isFavorite}
+                      onClick={() => onToggleFavoriteClick(contact)}
+                      disabled={togglingFavoriteId === contact.id}
+                      aria-label={contact.isFavorite ? `Remove ${contact.nickname} from favorites` : `Mark ${contact.nickname} as favorite`}
+                      title={contact.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
+                    >
+                      <Star size={13} fill={contact.isFavorite ? 'currentColor' : 'none'} />
+                    </FavoriteButton>
                     <IconButton
                       onClick={() => onEditContactClick(contact)}
                       aria-label={`Edit ${contact.nickname}`}

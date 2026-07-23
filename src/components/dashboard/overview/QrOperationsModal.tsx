@@ -58,6 +58,11 @@ const ModalContent = styled(motion.div)<{ $wide?: boolean }>`
   display: flex;
   flex-direction: column;
   align-items: ${({ $wide }) => ($wide ? 'stretch' : 'center')};
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   @media (max-width: 768px) {
     padding: 24px;

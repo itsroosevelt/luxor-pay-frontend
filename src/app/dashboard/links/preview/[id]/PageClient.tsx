@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
@@ -10,6 +10,8 @@ import { ArrowLeft, Monitor, Smartphone, ShoppingBag, Store, Wallet, Calendar, D
 import { toast } from 'sonner';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { Decimal } from 'decimal.js';
+
+const DESKTOP_PREVIEW_WIDTH = 900;
 
 const PageContainer = styled(motion.div)`
   padding: 16px;
@@ -107,10 +109,40 @@ const TopHeaderRow = styled.div`
 `;
 
 const ControlsRow = styled.div`
-  display: flex;
+  display: none;
   justify-content: space-between;
   align-items: center;
   width: 100%;
+
+  @media (min-width: 768px) {
+    display: flex;
+  }
+`;
+
+const MobileBackRow = styled.div`
+  display: flex;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+`;
+
+const PreviewColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+`;
+
+const MobilePreviewControls = styled.div`
+  display: flex;
+  width: 100%;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
 `;
 
 const CreateLinkButton = styled.button`
@@ -279,9 +311,42 @@ const CopyButton = styled.button`
 const PreviewArea = styled(motion.div)`
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   position: relative;
   width: 100%;
+  min-width: 0;
+`;
+
+const DesktopPreviewFit = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+`;
+
+const DesktopPreviewInner = styled.div<{ $scale: number; $scaledHeight?: number }>`
+  @media (max-width: 767px) {
+    width: ${({ $scale }) => `${DESKTOP_PREVIEW_WIDTH * $scale}px`};
+    height: ${({ $scaledHeight }) => ($scaledHeight ? `${$scaledHeight}px` : 'auto')};
+    overflow: hidden;
+    margin: 0 auto;
+  }
+
+  @media (min-width: 768px) {
+    width: 100%;
+    max-width: ${DESKTOP_PREVIEW_WIDTH}px;
+  }
+`;
+
+const DesktopPreviewCanvas = styled.div<{ $scale: number }>`
+  @media (max-width: 767px) {
+    width: ${DESKTOP_PREVIEW_WIDTH}px;
+    transform: scale(${({ $scale }) => $scale});
+    transform-origin: top left;
+  }
+
+  @media (min-width: 768px) {
+    width: 100%;
+  }
 `;
 
 // Simulator Frames
@@ -296,6 +361,7 @@ const BrowserFrame = styled(motion.div)`
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
+  flex-shrink: 0;
 `;
 
 const BrowserHeader = styled.div`
@@ -442,7 +508,8 @@ const MobileAddressBar = styled.div`
 `;
 
 const MobileFrame = styled(motion.div)`
-  width: 340px;
+  width: 100%;
+  max-width: 340px;
   height: 640px;
   background: #000000;
   border: 12px solid #27272A;
@@ -453,6 +520,8 @@ const MobileFrame = styled(motion.div)`
   flex-direction: column;
   position: relative;
   transition: all 0.3s ease;
+  margin: 0 auto;
+  flex-shrink: 0;
 `;
 
 const MobileStatusBar = styled.div`
@@ -659,8 +728,25 @@ export default function PreviewPaymentLinkPage() {
   
   const [link, setLink] = useState<PaymentLink | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<'desktop' | 'mobile'>('mobile');
+  const [mode, setMode] = useState<'desktop' | 'mobile'>('desktop');
   const [copiedWallet, setCopiedWallet] = useState(false);
+  const desktopFrameRef = useRef<HTMLDivElement>(null);
+  const [desktopPreviewScale, setDesktopPreviewScale] = useState(1);
+  const [desktopPreviewHeight, setDesktopPreviewHeight] = useState<number | undefined>();
+
+  const updateDesktopPreviewScale = useCallback(() => {
+    const frame = desktopFrameRef.current;
+    if (!frame || window.innerWidth >= 768) {
+      setDesktopPreviewScale(1);
+      setDesktopPreviewHeight(undefined);
+      return;
+    }
+
+    const availableWidth = window.innerWidth - 32;
+    const scale = Math.min(1, availableWidth / DESKTOP_PREVIEW_WIDTH);
+    setDesktopPreviewScale(scale);
+    setDesktopPreviewHeight(frame.offsetHeight * scale);
+  }, []);
 
   const { data: usdRate, isLoading: isPriceLoading } = useTokenPrice(link?.currency);
 
@@ -675,17 +761,33 @@ export default function PreviewPaymentLinkPage() {
 
   const usdAmount = getUsdEquivalent();
 
-  // On mobile devices, force mobile view.
-  useEffect(() => {
-    const checkMobile = () => {
-      if (window.innerWidth < 768) {
-        setMode('mobile');
+  useLayoutEffect(() => {
+    if (mode !== 'desktop') return;
+
+    let resizeObserver: ResizeObserver | null = null;
+    let frameId = 0;
+
+    const setup = () => {
+      const frame = desktopFrameRef.current;
+      if (!frame) {
+        frameId = requestAnimationFrame(setup);
+        return;
       }
+
+      updateDesktopPreviewScale();
+      resizeObserver = new ResizeObserver(updateDesktopPreviewScale);
+      resizeObserver.observe(frame);
     };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+
+    setup();
+    window.addEventListener('resize', updateDesktopPreviewScale);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      resizeObserver?.disconnect();
+      window.removeEventListener('resize', updateDesktopPreviewScale);
+    };
+  }, [mode, link, updateDesktopPreviewScale]);
 
   useEffect(() => {
     async function fetchLink() {
@@ -773,6 +875,12 @@ export default function PreviewPaymentLinkPage() {
         </ToggleContainer>
       </ControlsRow>
 
+      <MobileBackRow>
+        <BackButton onClick={() => router.back()}>
+          <ArrowLeft size={16} /> Back
+        </BackButton>
+      </MobileBackRow>
+
       <ContentGrid>
         <MetaCard>
           <MetaCardTitle>
@@ -843,10 +951,32 @@ export default function PreviewPaymentLinkPage() {
           </DetailRow>
         </MetaCard>
 
+        <PreviewColumn>
+          <MobilePreviewControls>
+            <ToggleContainer>
+              <ToggleButton
+                $active={mode === 'desktop'}
+                onClick={() => setMode('desktop')}
+              >
+                <Monitor size={16} /> Desktop
+              </ToggleButton>
+              <ToggleButton
+                $active={mode === 'mobile'}
+                onClick={() => setMode('mobile')}
+              >
+                <Smartphone size={16} /> Mobile
+              </ToggleButton>
+            </ToggleContainer>
+          </MobilePreviewControls>
+
         <PreviewArea>
           <AnimatePresence mode="wait">
             {mode === 'desktop' ? (
+              <DesktopPreviewFit>
+              <DesktopPreviewInner $scale={desktopPreviewScale} $scaledHeight={desktopPreviewHeight}>
+              <DesktopPreviewCanvas $scale={desktopPreviewScale}>
               <BrowserFrame
+                ref={desktopFrameRef}
                 key="desktop"
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -922,6 +1052,9 @@ export default function PreviewPaymentLinkPage() {
                   </SimulatedFooter>
                 </SimulatedPageWrapper>
               </BrowserFrame>
+              </DesktopPreviewCanvas>
+              </DesktopPreviewInner>
+              </DesktopPreviewFit>
             ) : (
               <MobileFrame
                 key="mobile"
@@ -987,6 +1120,7 @@ export default function PreviewPaymentLinkPage() {
             )}
           </AnimatePresence>
         </PreviewArea>
+        </PreviewColumn>
       </ContentGrid>
     </PageContainer>
     </>

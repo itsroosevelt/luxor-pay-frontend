@@ -45,7 +45,7 @@ export default function TransactionsPage() {
         </div>
       </header>
 
-      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto">
+      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto min-w-0 overflow-x-hidden box-border">
         {!loading ? (
           <TransactionsContainer
             merchantWallet={merchantWallet}

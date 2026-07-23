@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { signOut, onAuthStateChanged, type User } from 'firebase/auth';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Link as LinkIcon,
@@ -50,14 +50,17 @@ const settingsSubNav = [
   { href: '/dashboard/settings?tab=developers', label: 'Developers', icon: Code2, tab: 'developers' },
 ];
 
-interface NavLinksProps {
+type NavLinksShellProps = {
   pathname: string;
-  searchParams: ReturnType<typeof useSearchParams>;
   router: ReturnType<typeof useRouter>;
   isSettingsOpen: boolean;
   setIsSettingsOpen: React.Dispatch<React.SetStateAction<boolean>>;
   onClick?: () => void;
   collapsed?: boolean;
+};
+
+interface NavLinksProps extends NavLinksShellProps {
+  searchParams: ReturnType<typeof useSearchParams>;
 }
 
 function NavLinks({
@@ -162,10 +165,24 @@ function NavLinks({
   );
 }
 
+function NavLinksWithSearchParams(props: NavLinksShellProps) {
+  const searchParams = useSearchParams();
+  return <NavLinks {...props} searchParams={searchParams} />;
+}
+
+const staticSearchParams = new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>;
+
+function NavLinksSuspense(props: NavLinksShellProps) {
+  return (
+    <Suspense fallback={<NavLinks {...props} searchParams={staticSearchParams} />}>
+      <NavLinksWithSearchParams {...props} />
+    </Suspense>
+  );
+}
+
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -295,9 +312,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           )}
         </div>
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          <NavLinks
+          <NavLinksSuspense
             pathname={pathname}
-            searchParams={searchParams}
             router={router}
             isSettingsOpen={isSettingsOpen}
             setIsSettingsOpen={setIsSettingsOpen}
@@ -372,9 +388,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
               <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                <NavLinks
+                <NavLinksSuspense
                   pathname={pathname}
-                  searchParams={searchParams}
                   router={router}
                   isSettingsOpen={isSettingsOpen}
                   setIsSettingsOpen={setIsSettingsOpen}
