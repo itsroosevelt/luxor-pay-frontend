@@ -8,6 +8,7 @@ import { useUpdateContact } from '@/hooks/useUpdateContact';
 import { CreateContactPayload, Contact } from '@/lib/contacts-api';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
+import { X } from 'lucide-react';
 
 interface ContactFormModalProps {
   isOpen: boolean;
@@ -28,68 +29,126 @@ const Overlay = styled(motion.div)`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 16px;
+
+  @media (max-width: 767px) {
+    padding: 12px;
+  }
 `;
 
 const ModalContent = styled(motion.div)`
   background: rgba(10, 10, 10, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 32px 64px -16px rgba(0,0,0,0.8);
-  border-radius: 40px;
+  border-radius: 28px;
   width: 100%;
-  max-width: 500px;
-  padding: 40px;
+  max-width: 440px;
+  padding: 28px 24px 24px;
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @media (max-width: 767px) {
+    padding: 24px 18px 18px;
+    border-radius: 24px;
+  }
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 2;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
 `;
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 500;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   color: #FFFFFF;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
+  padding-right: 36px;
+
+  @media (max-width: 767px) {
+    font-size: 20px;
+  }
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.8);
-  margin: 0 0 32px 0;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0 0 20px 0;
+  line-height: 1.45;
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
 `;
 
 const Label = styled.label`
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: uppercase;
 `;
 
 const Input = styled.input`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 16px;
+  padding: 11px 14px;
   color: #FFFFFF;
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   transition: all 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
 
   &:focus-visible {
     outline: none;
@@ -99,6 +158,7 @@ const Input = styled.input`
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.3);
+    font-size: 13px;
   }
 `;
 
@@ -106,16 +166,19 @@ const Select = styled.select`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 16px;
+  padding: 11px 36px 11px 14px;
   color: #FFFFFF;
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   transition: all 0.2s;
   appearance: none;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 16px center;
-  background-size: 16px;
+  background-position: right 12px center;
+  background-size: 14px;
 
   &:focus-visible {
     outline: none;
@@ -143,28 +206,29 @@ const CheckboxGroup = styled.div`
 `;
 
 const Checkbox = styled.input`
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   cursor: pointer;
+  flex-shrink: 0;
 `;
 
 const CheckboxLabel = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
-  color: #FFFFFF;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
 `;
 
 const ButtonGroup = styled.div`
   display: flex;
-  gap: 16px;
-  margin-top: 16px;
+  gap: 10px;
+  margin-top: 8px;
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 14px 24px;
+  padding: 9px 16px;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
@@ -236,9 +300,16 @@ const COUNTRY_CODES = [
 
 const PhoneInputGroup = styled.div`
   display: grid;
-  grid-template-columns: 125px 1fr;
-  gap: 12px;
+  grid-template-columns: minmax(96px, 108px) minmax(0, 1fr);
+  gap: 8px;
   width: 100%;
+  min-width: 0;
+`;
+
+const CountryCodeSelect = styled(Select)`
+  padding: 11px 28px 11px 10px;
+  font-size: 12px;
+  background-position: right 8px center;
 `;
 
 export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: ContactFormModalProps) {
@@ -363,6 +434,9 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: "spring", bounce: 0.4, duration: 0.6 }}
         >
+          <CloseButton type="button" onClick={onClose} disabled={isLoading} aria-label="Close">
+            <X size={16} />
+          </CloseButton>
           <Title>{title}</Title>
           <Subtitle>{subtitle}</Subtitle>
 
@@ -426,18 +500,18 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
             <FormGroup>
               <Label>PHONE (OPTIONAL)</Label>
               <PhoneInputGroup>
-                <Select
+                <CountryCodeSelect
                   value={countryCode}
                   onChange={(e) => setCountryCode(e.target.value)}
                   disabled={isLoading}
-                  style={{ padding: '14px 12px' }}
+                  aria-label="Country code"
                 >
                   {COUNTRY_CODES.map((item) => (
                     <option key={item.code} value={item.code}>
-                      {item.code} ({item.country})
+                      {item.code}
                     </option>
                   ))}
-                </Select>
+                </CountryCodeSelect>
                 <Input
                   type="tel"
                   value={phoneNum}

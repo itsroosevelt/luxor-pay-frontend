@@ -9,6 +9,7 @@ import { toPng } from "html-to-image";
 import { Transfer } from "@/lib/transfers-api";
 import { getExplorerTxUrl } from "@/web3/config/network";
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
+import { downloadTransactionReceipt } from "@/lib/pdf-generator";
 
 const Overlay = styled(motion.div)`
   position: fixed;
@@ -154,41 +155,8 @@ export function TransactionDetailModal({ transfer, onClose, merchantWallet }: Tr
     navigator.clipboard.writeText(text);
   };
 
-  const handleDownloadPDF = async () => {
-    const element = document.getElementById('transaction-receipt');
-    if (!element) return;
-    
-    try {
-      const dataUrl = await toPng(element, {
-        backgroundColor: '#0A0A0A',
-        pixelRatio: 2,
-      });
-
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const img = new Image();
-      img.src = dataUrl;
-      await new Promise((resolve) => { img.onload = resolve; });
-      
-      const pdfPageWidth = pdf.internal.pageSize.getWidth();
-      
-      // Add Brand Name at the top
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(24);
-      pdf.setTextColor(37, 99, 235); // Luxor blue
-      pdf.text('LuxorPay', pdfPageWidth / 2, 20, { align: 'center' });
-      
-      // Calculate receipt dimensions (max width 140mm, centered)
-      const receiptWidth = 140;
-      const receiptHeight = (img.height * receiptWidth) / img.width;
-      const xOffset = (pdfPageWidth - receiptWidth) / 2;
-      const yOffset = 35; // Below the title
-      
-      pdf.addImage(dataUrl, 'PNG', xOffset, yOffset, receiptWidth, receiptHeight);
-      pdf.save(`Transaction_${transfer.id.slice(0,8)}.pdf`);
-    } catch (e) {
-      console.error('Failed to generate PDF', e);
-    }
+  const handleDownloadPDF = () => {
+    downloadTransactionReceipt(transfer, symbol, merchantWallet);
   };
 
   return (

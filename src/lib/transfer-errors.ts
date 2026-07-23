@@ -10,7 +10,7 @@ export function parsePaymentAmount(value: string): number | null {
 const TECHNICAL_ERROR_PATTERN =
   /lamports|simulation failed|transfer failed|custom program error|program log|error code|0x[0-9a-f]{4,}|blockhash not found|transaction simulation|insufficient funds/i;
 
-/** Map API / Solana transfer errors to short Spanish messages for end users. */
+/** Map API / Solana transfer errors to short English messages for end users. */
 export function getTransferErrorMessage(err: unknown): string {
   const raw =
     err instanceof Error
@@ -19,10 +19,10 @@ export function getTransferErrorMessage(err: unknown): string {
         ? err
         : '';
   const message = raw.trim();
-  if (!message) return 'Transferencia fallida';
+  if (!message) return 'Transfer failed';
 
   if (/insufficient lamports|insufficient funds|saldo insuficiente/i.test(message)) {
-    return 'Saldo insuficiente';
+    return 'Insufficient balance';
   }
 
   if (
@@ -30,11 +30,11 @@ export function getTransferErrorMessage(err: unknown): string {
       message,
     )
   ) {
-    return 'Transferencia fallida';
+    return 'Transfer failed';
   }
 
   if (message.length > 80 || TECHNICAL_ERROR_PATTERN.test(message)) {
-    return 'Transferencia fallida';
+    return 'Transfer failed';
   }
 
   return message;

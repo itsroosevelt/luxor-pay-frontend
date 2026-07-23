@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useGetContacts } from '@/hooks/useGetContacts';
 import { useDeleteContact } from '@/hooks/useDeleteContact';
+import { useUpdateContact } from '@/hooks/useUpdateContact';
 import { ContactsView } from './ContactsView';
 import { ContactFormModal } from './ContactFormModal';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
@@ -11,9 +12,11 @@ import { Contact } from '@/lib/contacts-api';
 export function ContactsContainer() {
   const { data, isLoading, isError, refetch } = useGetContacts();
   const { mutate: deleteMutate, isLoading: isDeleting } = useDeleteContact();
+  const { mutate: updateMutate } = useUpdateContact();
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [togglingFavoriteId, setTogglingFavoriteId] = useState<string | null>(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<string | null>(null);
@@ -60,6 +63,15 @@ export function ContactsContainer() {
     refetch(); // Refresh the list after successful creation or update
   };
 
+  const handleToggleFavorite = async (contact: Contact) => {
+    setTogglingFavoriteId(contact.id);
+    const result = await updateMutate(contact.id, { isFavorite: !contact.isFavorite });
+    if (result) {
+      refetch();
+    }
+    setTogglingFavoriteId(null);
+  };
+
   return (
     <>
       <ContactsView 
@@ -69,6 +81,8 @@ export function ContactsContainer() {
         onAddContactClick={handleOpenModal}
         onEditContactClick={handleEditClick}
         onDeleteContactClick={handleDeleteClick}
+        onToggleFavoriteClick={handleToggleFavorite}
+        togglingFavoriteId={togglingFavoriteId}
       />
       
       <ContactFormModal 

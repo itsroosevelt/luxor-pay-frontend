@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { useGetTransfers } from "@/hooks/useGetTransfers";
 import { TransactionsView } from "./TransactionsView";
-import { TransactionDetailModal } from "./TransactionDetailModal";
 import { Transfer } from "@/lib/transfers-api";
-
 
 interface TransactionsContainerProps {
   merchantWallet: string | null;
+  onTransferClick?: () => void;
 }
 
-export function TransactionsContainer({ merchantWallet }: TransactionsContainerProps) {
+export function TransactionsContainer({ merchantWallet, onTransferClick }: TransactionsContainerProps) {
   const {
     data,
     isLoading,
     isError,
     errorMessage,
+    refetch,
     offset,
     limit,
     status,
@@ -24,8 +24,6 @@ export function TransactionsContainer({ merchantWallet }: TransactionsContainerP
     setLimit,
     setStatus,
   } = useGetTransfers(5);
-
-  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
 
   const handleNextPage = () => {
     setOffset(offset + limit);
@@ -45,38 +43,28 @@ export function TransactionsContainer({ merchantWallet }: TransactionsContainerP
     setOffset(0);
   };
 
-  const handleSelectTransaction = (transfer: Transfer) => {
-    setSelectedTransfer(transfer);
-  };
-
-  const handleCloseModal = () => {
-    setSelectedTransfer(null);
+  const handleSelectTransaction = (_transfer: Transfer) => {
+    // Modal removed per user request: details open directly via View on Explorer button
   };
 
   return (
-    <>
-      <TransactionsView
-        data={data}
-        isLoading={isLoading}
-        isError={isError}
-        errorMessage={errorMessage}
-        merchantWallet={merchantWallet}
-        offset={offset}
-        limit={limit}
-        status={status}
-        onNextPage={handleNextPage}
-        onPrevPage={handlePrevPage}
-        onSelectTransaction={handleSelectTransaction}
-        onSetLimit={handleSetLimit}
-        onSetStatus={handleSetStatus}
-      />
-
-
-      <TransactionDetailModal
-        transfer={selectedTransfer}
-        merchantWallet={merchantWallet}
-        onClose={handleCloseModal}
-      />
-    </>
+    <TransactionsView
+      data={data}
+      isLoading={isLoading}
+      isError={isError}
+      errorMessage={errorMessage}
+      merchantWallet={merchantWallet}
+      offset={offset}
+      limit={limit}
+      status={status}
+      onNextPage={handleNextPage}
+      onPrevPage={handlePrevPage}
+      onSelectTransaction={handleSelectTransaction}
+      onSetLimit={handleSetLimit}
+      onSetStatus={handleSetStatus}
+      onRefresh={refetch}
+      onTransferClick={onTransferClick}
+    />
   );
 }
+

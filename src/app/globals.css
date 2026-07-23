@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-outfit), sans-serif;
-  --font-body: var(--font-montserrat), sans-serif;
+  --font-sans: 'Outfit', sans-serif;
+  --font-body: 'Montserrat', sans-serif;
 }
 
 :root {
@@ -11,13 +12,28 @@
   --primary: #14f195; /* Solana Green */
   --secondary: #9945ff; /* Solana Purple */
   --accent: #00ffd1;
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+}
+
+*, body, button, input, select, textarea {
+  font-family: 'Outfit', 'Montserrat', sans-serif;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 @layer base {
   body {
     background: radial-gradient(circle at top left, #1a1a1a, #0a0a0a);
     color: var(--foreground);
-    min-height: 100vh;
+    font-family: 'Outfit', 'Montserrat', sans-serif;
   }
 }
 
@@ -35,5 +51,25 @@
 .text-gradient {
   background: linear-gradient(135deg, var(--primary), var(--secondary));
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* ── Single Visible Sleek Scrollbar ── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(96, 165, 250, 0.5);
 }

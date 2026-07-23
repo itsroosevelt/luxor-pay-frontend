@@ -1,19 +1,18 @@
 "use client";
 
 import styled from "styled-components";
-
 import { motion, AnimatePresence } from "framer-motion";
 import { WalletBalanceData } from "@/lib/solana-api";
 import { QuoteResponse } from "@/lib/swap-api";
-import { ArrowUpDown, Info, AlertTriangle } from "lucide-react";
+import { ArrowUpDown, AlertTriangle } from "lucide-react";
 
 const ViewContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-width: 600px;
+  gap: 20px;
+  max-width: 460px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 16px 0;
   font-family: 'Montserrat', sans-serif;
 `;
 
@@ -21,19 +20,19 @@ const GlassCard = styled(motion.div)`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(40px);
-  border-radius: 40px;
+  border-radius: 32px;
   box-shadow: 0 32px 64px -16px rgba(0,0,0,0.6);
-  padding: 32px;
+  padding: 24px; /* Reduced from 32px */
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px; /* Reduced from 24px */
 `;
 
 const BalancesContainer = styled(GlassCard)`
   flex-direction: row;
   justify-content: space-between;
-  padding: 24px 32px;
-  border-radius: 32px;
+  padding: 16px 20px; /* Reduced from 24px 32px */
+  border-radius: 24px;
   align-items: center;
 `;
 
@@ -54,7 +53,7 @@ const BalanceLabel = styled.p`
 
 const BalanceValue = styled.p`
   font-family: monospace;
-  font-size: 20px;
+  font-size: 16px; /* Reduced from 20px */
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
@@ -67,10 +66,10 @@ const InputGroup = styled.div`
 `;
 
 const Label = styled.label`
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.05em;
-  color: #FFFFFF;
+  color: rgba(255, 255, 255, 0.6);
 `;
 
 const InputWrapper = styled.div`
@@ -81,7 +80,7 @@ const InputWrapper = styled.div`
 
 const MaxButton = styled.button`
   position: absolute;
-  right: 64px;
+  right: 94px; /* Sat cleanly to the left of the token pill */
   background: rgba(96, 165, 250, 0.1);
   border: 1px solid rgba(96, 165, 250, 0.3);
   color: #60A5FA;
@@ -103,11 +102,11 @@ const StyledInput = styled.input`
   width: 100%;
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 16px;
+  border-radius: 14px;
+  padding: 12px 160px 12px 16px; /* Generous right padding to prevent any text overlaps */
   color: #FFFFFF;
   font-family: monospace;
-  font-size: 24px;
+  font-size: 18px; /* Reduced from 24px */
   outline: none;
   transition: border-color 0.2s;
 
@@ -115,22 +114,41 @@ const StyledInput = styled.input`
     outline: 2px solid #60A5FA;
     outline-offset: 2px;
   }
+
+  /* Hide HTML5 spin-buttons */
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  &[type=number] {
+    -moz-appearance: textfield;
+  }
 `;
 
 const TokenSelect = styled.select`
   position: absolute;
-  right: 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px; /* Pill Shape (Rule 3) */
   color: #FFFFFF;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  padding: 6px 30px 6px 14px; /* Space for custom chevron */
   outline: none;
   cursor: pointer;
   appearance: none;
-  font-family: 'Montserrat', sans-serif;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='3 4.5 6 7.5 9 4.5'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
 
   option {
     background: #0A0A0A;
@@ -149,12 +167,12 @@ const ToggleButton = styled.button`
   background: rgba(37, 99, 235, 0.1);
   border: 1px solid rgba(96, 165, 250, 0.3);
   border-radius: 50%;
-  width: 44px;
-  height: 44px;
+  width: 36px; /* Reduced from 44px */
+  height: 36px; /* Reduced from 44px */
   color: #60A5FA;
   cursor: pointer;
   transition: all 0.2s;
-  margin: -16px auto;
+  margin: -14px auto; /* Overlaps nicely */
   z-index: 10;
   position: relative;
 
@@ -172,17 +190,25 @@ const ToggleButton = styled.button`
 
 const InputCurrency = styled.span`
   position: absolute;
-  right: 16px;
-  font-size: 16px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
+  right: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9999px; /* Matches selector pill shape */
+  color: #FFFFFF;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  padding: 6px 14px;
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
 `;
 
 const ButtonBase = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   border-radius: 9999px;
-  padding: 16px 32px;
+  padding: 14px 28px; /* Reduced padding */
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -374,17 +400,7 @@ export function SwapView({
 
   return (
     <ViewContainer>
-      <h1 style={{ 
-        fontFamily: 'Outfit, sans-serif', 
-        fontSize: '48px', 
-        fontWeight: 500, 
-        letterSpacing: '-1px',
-        color: '#FFFFFF',
-        margin: '0 0 16px 0'
-      }}>
-        Swap Tokens
-      </h1>
-
+      {/* Head title has been deleted from this page body since it is already rendered in the parent page header */}
       <BalancesContainer {...standardMotion} style={{ flexWrap: 'wrap', gap: '16px' }}>
         <BalanceColumn>
           <BalanceLabel>SOL Balance</BalanceLabel>
@@ -439,7 +455,7 @@ export function SwapView({
         </InputGroup>
 
         <ToggleButton onClick={onToggleDirection} type="button" aria-label="Toggle Swap Direction">
-          <ArrowUpDown size={20} />
+          <ArrowUpDown size={16} />
         </ToggleButton>
 
         <InputGroup>
