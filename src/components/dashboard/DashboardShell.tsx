@@ -21,6 +21,7 @@ import {
   Lock,
   Check,
   ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
@@ -77,31 +78,58 @@ function NavLinks({
   const currentTab = rawTab || 'general';
 
   return (
-    <div className="space-y-1">
-      {nav.map(({ href, label, icon: Icon }) => {
-        const active = pathname === href;
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onClick}
-            title={collapsed ? label : undefined}
-            className={clsx(
-              'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-2xl',
-              collapsed ? 'justify-center p-3 text-center' : 'gap-3 px-4 py-3',
-              active
-                ? 'bg-white/10 text-white shadow-sm font-semibold'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            )}
-          >
-            <Icon size={18} className="shrink-0" />
-            {!collapsed && <span className="truncate">{label}</span>}
-          </Link>
-        );
-      })}
+    <div className="flex flex-col justify-between h-full space-y-1">
+      <div className="space-y-1">
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname === href;
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={onClick}
+              title={collapsed ? label : undefined}
+              className={clsx(
+                'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-2xl',
+                collapsed ? 'justify-center p-3 text-center' : 'gap-3 px-4 py-3',
+                active
+                  ? 'bg-white/10 text-white shadow-sm font-semibold'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              )}
+            >
+              <Icon size={18} className="shrink-0" />
+              {!collapsed && <span className="truncate">{label}</span>}
+            </Link>
+          );
+        })}
+      </div>
 
-      {/* Settings Dropdown Accordion */}
-      <div className="w-full pt-1">
+      {/* Settings Option at Bottom - Submenu Expands Upwards */}
+      <div className="w-full pt-2 mt-auto border-t border-white/5">
+        {/* Submenu Items (Rendered ABOVE Settings button so it opens UPWARDS) */}
+        {isSettingsOpen && !collapsed && (
+          <div className="mb-2 ml-4 pl-3 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
+            {settingsSubNav.map(({ href, label, icon: SubIcon, tab }) => {
+              const isTabActive = isSettingsActive && currentTab === tab;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={onClick}
+                  className={clsx(
+                    'w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium rounded-full transition-all duration-200',
+                    isTabActive
+                      ? 'bg-[#2563EB]/20 text-[#60A5FA] font-semibold border border-[#2563EB]/40 shadow-sm'
+                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                  )}
+                >
+                  <SubIcon size={14} className="shrink-0" />
+                  <span className="truncate">{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+
         <button
           type="button"
           onClick={() => {
@@ -126,7 +154,7 @@ function NavLinks({
             {!collapsed && <span className="truncate">Settings</span>}
           </div>
           {!collapsed && (
-            <ChevronDown
+            <ChevronUp
               size={16}
               className={clsx(
                 'shrink-0 text-gray-400 transition-transform duration-200',
@@ -135,31 +163,6 @@ function NavLinks({
             />
           )}
         </button>
-
-        {/* Submenu Items */}
-        {isSettingsOpen && !collapsed && (
-          <div className="mt-1.5 ml-4 pl-3 border-l border-white/10 space-y-1">
-            {settingsSubNav.map(({ href, label, icon: SubIcon, tab }) => {
-              const isTabActive = isSettingsActive && currentTab === tab;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={onClick}
-                  className={clsx(
-                    'w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium rounded-full transition-all duration-200',
-                    isTabActive
-                      ? 'bg-[#2563EB]/20 text-[#60A5FA] font-semibold border border-[#2563EB]/40 shadow-sm'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  )}
-                >
-                  <SubIcon size={14} className="shrink-0" />
-                  <span className="truncate">{label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -279,11 +282,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#EDEDED] selection:bg-[#2563EB]/30 flex font-['Montserrat',sans-serif]">
+    <div className="h-screen w-screen bg-[#0A0A0A] text-[#EDEDED] selection:bg-[#2563EB]/30 flex overflow-hidden font-['Montserrat',sans-serif]">
       {/* Desktop Sidebar (Retractable) */}
       <aside
         className={clsx(
-          'border border-white/[0.06] bg-[#111111] hidden md:flex flex-col transition-all duration-300 ease-in-out relative shrink-0 m-3 rounded-3xl',
+          'border border-white/[0.06] bg-[#111111] hidden md:flex flex-col transition-all duration-300 ease-in-out shrink-0 m-3 rounded-3xl z-40 h-[calc(100vh-24px)]',
           isCollapsed ? 'w-20' : 'w-64'
         )}
       >
@@ -339,7 +342,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+      <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden">
         {/* Mobile Header */}
         <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4 border-b border-white/5 bg-[#0A0A0A]">
           <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
@@ -410,7 +413,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         )}
 
         {/* Page Content */}
-        <div className="relative flex-1 overflow-auto">
+        <div className="relative flex-1 min-w-0 overflow-x-hidden">
           {/* Top Header Controls (Desktop only) */}
           <div className="hidden md:flex items-center gap-3 absolute top-6 right-10 z-30">
             <TopWalletBar merchantWallet={profile?.merchantWallet} />
@@ -461,7 +464,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
               <div className="mt-2.5">
                 {kycVerified ? (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.12em] px-3.5 py-1 rounded-full bg-gradient-to-r from-emerald-500/15 to-teal-500/15 text-emerald-400 border border-emerald-400/40 shadow-[0_0_16px_rgba(16,185,129,0.25)] font-['Outfit',sans-serif]">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-['Outfit',sans-serif]">
                     <Check size={12} className="stroke-[3]" /> VERIFIED
                   </span>
                 ) : (

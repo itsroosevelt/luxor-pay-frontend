@@ -20,8 +20,8 @@ const FundButton = styled(motion.button)`
   width: 100%;
   padding: 10px 18px;
   border-radius: 9999px;
-  border: 1px solid rgba(96, 165, 250, 0.35);
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(15, 23, 42, 0.75));
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
@@ -31,12 +31,12 @@ const FundButton = styled(motion.button)`
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 4px 20px -4px rgba(37, 99, 235, 0.25);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.4);
 
   &:hover {
-    border-color: rgba(96, 165, 250, 0.7);
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.28), rgba(30, 58, 138, 0.85));
-    box-shadow: 0 8px 28px -4px rgba(37, 99, 235, 0.45);
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.6);
   }
 
   &:focus-visible {
@@ -49,13 +49,13 @@ const ButtonIconCircle = styled.div`
   width: 36px;
   height: 36px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #2563EB, #60A5FA);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: #FFFFFF;
-  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
 `;
 
 const TextContainer = styled.div`
@@ -78,7 +78,7 @@ const ButtonSub = styled.span`
   font-family: 'Montserrat', sans-serif;
   font-size: 11px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.5);
   margin-top: 2px;
 `;
 
@@ -91,13 +91,13 @@ const ArrowIconCircle = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60A5FA;
+  color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
   transition: all 0.2s ease;
 
   ${FundButton}:hover & {
-    background: rgba(96, 165, 250, 0.2);
-    border-color: rgba(96, 165, 250, 0.4);
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
     color: #FFFFFF;
     transform: translateX(2px);
   }

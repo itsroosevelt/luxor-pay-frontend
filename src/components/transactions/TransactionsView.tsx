@@ -10,31 +10,14 @@ const ViewWrapper = styled.div`
   position: relative;
   width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
 `;
 
 const AmbientGlow = styled.div`
-  position: absolute;
-  width: 600px;
-  height: 600px;
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.06) 0%, rgba(37, 99, 235, 0) 70%);
-  top: -150px;
-  right: -100px;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 `;
 
 const AmbientGlowLeft = styled.div`
-  position: absolute;
-  width: 500px;
-  height: 500px;
-  border-radius: 9999px;
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.04) 0%, rgba(249, 115, 22, 0) 70%);
-  bottom: -100px;
-  left: -150px;
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 `;
 
 const ViewContainer = styled.div`

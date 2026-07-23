@@ -13,5 +13,10 @@ const nextConfig: NextConfig = {
     ],
   },
   output: process.env.BUILD_TARGET === 'capacitor' ? 'export' : undefined,
+  webpack: (config) => {
+    config.module.exprContextCritical = false;
+    config.module.unknownContextCritical = false;
+    return config;
+  },
 };
 export default nextConfig;

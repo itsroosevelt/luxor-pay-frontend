@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import { ArrowUpRight, ArrowDownLeft, ArrowLeftRight, TrendingUp, AlertCircle } from "lucide-react";
+import { TokenIcon } from "@/components/shared/TokenIcon";
 
 const Container = styled.div`
   display: flex;
@@ -109,9 +110,9 @@ const FlowSubtitle = styled.span`
   text-transform: capitalize;
 `;
 
-const COLOR_SENT = "#EF4444";
-const COLOR_RECEIVED = "#10B981";
-const COLOR_FAILED = "#F59E0B";
+const COLOR_SENT = "#F87171";
+const COLOR_RECEIVED = "#34D399";
+const COLOR_FAILED = "#FBBF24";
 
 const FlowIconBadge = styled.div<{ $visualType: 'in' | 'out' | 'failed' }>`
   width: 26px;
@@ -119,10 +120,10 @@ const FlowIconBadge = styled.div<{ $visualType: 'in' | 'out' | 'failed' }>`
   border-radius: 8px;
   background: ${({ $visualType }) => (
     $visualType === 'failed'
-      ? 'rgba(245, 158, 11, 0.15)'
+      ? 'rgba(251, 191, 36, 0.12)'
       : $visualType === 'in'
-      ? 'rgba(16, 185, 129, 0.1)'
-      : 'rgba(239, 68, 68, 0.1)'
+      ? 'rgba(52, 211, 153, 0.12)'
+      : 'rgba(248, 113, 113, 0.12)'
   )};
   color: ${({ $visualType }) => (
     $visualType === 'failed'
@@ -137,17 +138,35 @@ const FlowIconBadge = styled.div<{ $visualType: 'in' | 'out' | 'failed' }>`
   flex-shrink: 0;
 `;
 
-const FlowAmount = styled.span<{ $visualType: 'in' | 'out' | 'failed' }>`
+const FlowAmount = styled.span`
   font-family: monospace;
   font-size: 13px;
-  font-weight: 600;
-  color: ${({ $visualType }) => (
-    $visualType === 'failed'
-      ? COLOR_FAILED
-      : $visualType === 'in'
-      ? COLOR_RECEIVED
-      : COLOR_SENT
-  )};
+  font-weight: 500;
+  color: #FFFFFF;
+`;
+
+const ScrollableFlowContainer = styled.div`
+  max-height: 310px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-right: 6px;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(96, 165, 250, 0.4);
+  }
 `;
 
 const FlowAddress = styled.span`
@@ -188,7 +207,7 @@ export function DashboardExtraPanelsView({ flows }: DashboardExtraPanelsViewProp
             <span>Inflows and Outflows</span>
           </SectionTitle>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <ScrollableFlowContainer>
             {flows.map((group) => (
               <div key={group.dateKey}>
                 <DateHeader>{group.dateKey}</DateHeader>
@@ -217,12 +236,13 @@ export function DashboardExtraPanelsView({ flows }: DashboardExtraPanelsViewProp
                         </BadgeAndName>
 
                         <BadgeAndName>
-                          <TokenCircle $symbol={flow.symbol}>
-                            {flow.symbol.slice(0, 2)}
-                          </TokenCircle>
+                          <TokenIcon symbol={flow.symbol} size={24} />
                           <FlowCell>
-                            <FlowAmount $visualType={visualType}>
-                              {flow.type === 'Send' ? '-' : '+'}{flow.amount} {flow.symbol}
+                            <FlowAmount>
+                              {flow.type === 'Send' ? '-' : '+'}{flow.amount}{' '}
+                              <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontWeight: 400, marginLeft: '4px' }}>
+                                {flow.symbol}
+                              </span>
                             </FlowAmount>
                             <FlowSubtitle>Amount</FlowSubtitle>
                           </FlowCell>
@@ -243,7 +263,7 @@ export function DashboardExtraPanelsView({ flows }: DashboardExtraPanelsViewProp
                 </FlowGrid>
               </div>
             ))}
-          </div>
+          </ScrollableFlowContainer>
         </SectionCard>
       )}
     </Container>

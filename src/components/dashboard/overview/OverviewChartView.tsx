@@ -6,9 +6,11 @@ import { ChevronDown, AlertCircle, RefreshCw } from "lucide-react";
 
 const Container = styled.div`
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(40px);
   border-radius: 24px;
   padding: 20px;
+  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   height: 100%;
