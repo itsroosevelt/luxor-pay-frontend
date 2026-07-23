@@ -54,6 +54,11 @@ const ModalContent = styled(motion.div)<{ $wide?: boolean }>`
   flex-direction: column;
   align-items: stretch;
   text-align: left;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   @media (max-width: 768px) {
     padding: 24px;
@@ -85,20 +90,20 @@ const CloseButton = styled.button`
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 22px;
   font-weight: 500;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   color: #FFFFFF;
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
   text-align: left;
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0 0 32px 0;
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0 20px 0;
   text-align: left;
   line-height: 1.5;
 `;
@@ -215,25 +220,31 @@ const Divider = styled.div`
   width: 100%;
 `;
 
+const ActionButtonGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-top: 16px;
+`;
+
 const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 14px 24px;
+  padding: 9px 20px;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  width: 100%;
-  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
-  gap: 8px;
-
-  &:last-of-type {
-    margin-bottom: 0;
-  }
+  gap: 6px;
+  white-space: nowrap;
 
   ${({ $variant = 'primary' }) =>
     $variant === 'primary' &&
@@ -252,14 +263,21 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     background: transparent;
     color: #60A5FA;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(12px);
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.1);
+      color: #FFFFFF;
     }
   `}
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
   }
 `;
 
@@ -334,8 +352,6 @@ export function PaymentRequestModal({
   onClose,
   requesterWallet,
 }: PaymentRequestModalProps) {
-  const env = getLuxorEnv();
-  const isDev = env === 'development';
   const { tokens } = useTokenRegistry();
 
   const { data: contactsData, isLoading: isLoadingContacts } = useGetContacts();
@@ -362,28 +378,26 @@ export function PaymentRequestModal({
     expirationDate: '',
   });
 
-  // Reset when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      setSuccessId(null);
-      setSelectedContact(null);
-      setIsChoosingContact(false);
-      setShowAdvanced(false);
-      setForm({
-        payerWallet: '',
-        businessName: '',
-        amount: '',
-        assetMint: defaultMint,
-        notificationType: 'NONE',
-        targetNotification: '',
-        phonePrefix: '+1',
-        phoneNumber: '',
-        reference: '',
-        numericalReference: '',
-        expirationDate: '',
-      });
-    }
-  }, [isOpen, defaultMint]);
+  const handleModalClose = () => {
+    setSuccessId(null);
+    setSelectedContact(null);
+    setIsChoosingContact(false);
+    setShowAdvanced(false);
+    setForm({
+      payerWallet: '',
+      businessName: '',
+      amount: '',
+      assetMint: defaultMint,
+      notificationType: 'NONE',
+      targetNotification: '',
+      phonePrefix: '+1',
+      phoneNumber: '',
+      reference: '',
+      numericalReference: '',
+      expirationDate: '',
+    });
+    onClose();
+  };
 
   const handleContactChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const contact = contactsData?.data.find(c => c.id === e.target.value) ?? null;
@@ -772,19 +786,19 @@ export function PaymentRequestModal({
                     </>
                   )}
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', marginTop: '16px' }}>
+                  <ActionButtonGroup>
                     <ActionButton
                       $variant="primary"
                       type="submit"
                       disabled={isLoading}
                     >
-                      {isLoading ? <span className="loader" style={{width: 16, height: 16}} /> : <Send size={16} />}
+                      {isLoading ? <span className="loader" style={{width: 16, height: 16}} /> : <Send size={14} />}
                       {isLoading ? 'Sending…' : 'Send Request'}
                     </ActionButton>
                     <ActionButton $variant="secondary" type="button" onClick={onClose} disabled={isLoading}>
                       Cancel
                     </ActionButton>
-                  </div>
+                  </ActionButtonGroup>
                 </Form>
               </>
             )}

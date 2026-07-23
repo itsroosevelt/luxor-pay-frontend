@@ -348,11 +348,6 @@ export function ContactsView({
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
     >
-      <HeaderContainer>
-        <Title>Contacts</Title>
-        <Subtitle>Manage your frequent transaction network on-chain.</Subtitle>
-      </HeaderContainer>
-
       <ActionBar>
         <AddButton onClick={onAddContactClick}>
           <Plus size={14} />

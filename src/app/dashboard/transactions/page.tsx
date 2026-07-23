@@ -6,16 +6,11 @@ import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { TransactionsContainer } from '@/components/transactions/TransactionsContainer';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
-import styled from 'styled-components';
-import { Send, RefreshCw, Info } from 'lucide-react';
-
-
 
 export default function TransactionsPage() {
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -36,10 +31,6 @@ export default function TransactionsPage() {
     return () => unsubscribe();
   }, []);
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => setIsRefreshing(false), 1000);
-  };
 
   return (
     <>

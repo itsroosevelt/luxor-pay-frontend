@@ -20,6 +20,7 @@ const PageContainer = styled(motion.div)`
   gap: 24px;
   width: 100%;
   box-sizing: border-box;
+  overflow: visible;
 
   @media (min-width: 768px) {
     padding: 40px;
@@ -735,39 +736,42 @@ export default function PreviewPaymentLinkPage() {
   }
 
   return (
-    <PageContainer
+    <>
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            Payment Links
+          </h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Checkout URLs for your website, email, or social.
+          </p>
+        </div>
+      </header>
+
+      <PageContainer
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
     >
-      <Header style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '20px' }}>
-        <TopHeaderRow>
-          <div>
-            <Title>Payment Links</Title>
-            <Subtitle>Checkout URLs for your website, email, or social.</Subtitle>
-          </div>
-        </TopHeaderRow>
-        
-        <ControlsRow>
-          <BackButton onClick={() => router.back()}>
-            <ArrowLeft size={16} /> Back
-          </BackButton>
-          <ToggleContainer>
-            <ToggleButton 
-              $active={mode === 'desktop'} 
-              onClick={() => setMode('desktop')}
-            >
-              <Monitor size={16} /> Desktop
-            </ToggleButton>
-            <ToggleButton 
-              $active={mode === 'mobile'} 
-              onClick={() => setMode('mobile')}
-            >
-              <Smartphone size={16} /> Mobile
-            </ToggleButton>
-          </ToggleContainer>
-        </ControlsRow>
-      </Header>
+      <ControlsRow>
+        <BackButton onClick={() => router.back()}>
+          <ArrowLeft size={16} /> Back
+        </BackButton>
+        <ToggleContainer>
+          <ToggleButton
+            $active={mode === 'desktop'}
+            onClick={() => setMode('desktop')}
+          >
+            <Monitor size={16} /> Desktop
+          </ToggleButton>
+          <ToggleButton
+            $active={mode === 'mobile'}
+            onClick={() => setMode('mobile')}
+          >
+            <Smartphone size={16} /> Mobile
+          </ToggleButton>
+        </ToggleContainer>
+      </ControlsRow>
 
       <ContentGrid>
         <MetaCard>
@@ -985,5 +989,6 @@ export default function PreviewPaymentLinkPage() {
         </PreviewArea>
       </ContentGrid>
     </PageContainer>
+    </>
   );
 }

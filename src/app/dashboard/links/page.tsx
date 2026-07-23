@@ -5,7 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { createPaymentLink, listPaymentLinks } from '@/lib/payments-api';
 import type { PaymentLink } from '@luxor/contracts';
-import { Copy, Link as LinkIcon, Plus, ExternalLink, Loader2 } from 'lucide-react';
+import { Copy, Link as LinkIcon, Plus, ExternalLink, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
@@ -74,17 +74,57 @@ const ContentLayout = styled.div`
   }
 `;
 
-const GlassCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(40px);
-  border-radius: 32px;
-  padding: 32px;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.4);
+const Overlay = styled(motion.div)`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+  }
+`;
+
+const ModalBox = styled(motion.div)`
+  background: rgba(10, 10, 10, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.8);
+  border-radius: 40px;
+  width: 100%;
+  max-width: 680px;
+  padding: 40px;
+  position: relative;
 
   @media (max-width: 768px) {
     padding: 24px;
     border-radius: 24px;
+  }
+`;
+
+const ModalCloseButton = styled.button`
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.6);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
   }
 `;
 
@@ -104,18 +144,10 @@ const FormHeader = styled.h2`
 `;
 
 const InputGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: 16px;
   margin-bottom: 24px;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
-  }
 `;
 
 const InputGroup = styled.div`
@@ -243,23 +275,18 @@ const LinksList = styled.div`
 
 const LinkItem = styled(motion.div)`
   background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
-  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 12px;
   transition: all 0.2s;
 
   &:hover {
     background: rgba(255, 255, 255, 0.04);
     border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  @media (max-width: 640px) {
-    flex-direction: column;
-    align-items: flex-start;
   }
 `;
 
@@ -272,9 +299,9 @@ const LinkInfo = styled.div`
 `;
 
 const IconWrapper = styled.div`
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
   background: rgba(96, 165, 250, 0.1);
   color: #60A5FA;
   display: flex;
@@ -292,7 +319,7 @@ const TextContent = styled.div`
 
 const LinkName = styled.h3`
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
@@ -303,33 +330,52 @@ const LinkName = styled.h3`
 
 const LinkDetails = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.45);
   margin: 0;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 
   strong {
     font-weight: 600;
     color: #60A5FA;
+    font-size: 12px;
   }
 `;
 
 const ActionsGroup = styled.div`
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  flex-shrink: 0;
+`;
+
+const IconAction = styled.button`
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
   flex-shrink: 0;
 
-  @media (max-width: 640px) {
-    width: 100%;
-    
-    button {
-      flex: 1;
-    }
+  &:hover {
+    background: rgba(96, 165, 250, 0.15);
+    border-color: rgba(96, 165, 250, 0.35);
+    color: #60A5FA;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
   }
 `;
 
@@ -461,30 +507,39 @@ export default function PaymentLinksPage() {
 
   return (
     <PageContainer>
-      <Header>
-        <Title>Payment Links</Title>
-        <Subtitle>Checkout URLs for your website, email, or social.</Subtitle>
-      </Header>
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            Payment Links
+          </h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Checkout URLs for your website, email, or social.
+          </p>
+        </div>
+      </header>
 
-      <ContentLayout>
-        {!isFormOpen && (
-          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button $variant="primary" onClick={() => setIsFormOpen(true)}>
-              <Plus size={15} /> Create Link
-            </Button>
-          </div>
-        )}
-        <AnimatePresence>
-          {isFormOpen && (
-            <GlassCard
-              initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
-              animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
-              exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
-              transition={{ duration: 0.3 }}
+      <AnimatePresence>
+        {isFormOpen && (
+          <Overlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !creating && setIsFormOpen(false)}
+          >
+            <ModalBox
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', bounce: 0.4, duration: 0.6 }}
             >
+              <ModalCloseButton type="button" onClick={() => !creating && setIsFormOpen(false)} aria-label="Close">
+                <X size={16} />
+              </ModalCloseButton>
+
               <form onSubmit={handleCreate}>
                 <FormHeader>
-                  <Plus size={24} /> New Link
+                  <Plus size={22} /> New Link
                 </FormHeader>
                 <InputGrid>
                   <InputGroup>
@@ -540,19 +595,27 @@ export default function PaymentLinksPage() {
                   <Button type="submit" $variant="primary" disabled={creating}>
                     {creating ? (
                       <>
-                        <Loader2 size={18} className="animate-spin" /> Creating...
+                        <Loader2 size={16} className="animate-spin" /> Creating...
                       </>
                     ) : (
                       <>
-                        <Plus size={18} /> Create Link
+                        <Plus size={16} /> Create Link
                       </>
                     )}
                   </Button>
                 </div>
               </form>
-            </GlassCard>
-          )}
-        </AnimatePresence>
+            </ModalBox>
+          </Overlay>
+        )}
+      </AnimatePresence>
+
+      <ContentLayout>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Button $variant="primary" onClick={() => setIsFormOpen(true)}>
+            <Plus size={15} /> Create Link
+          </Button>
+        </div>
 
         {loading ? (
           <LoadingState>
@@ -588,12 +651,22 @@ export default function PaymentLinksPage() {
                   </TextContent>
                 </LinkInfo>
                 <ActionsGroup>
-                  <Button type="button" $variant="secondary" onClick={() => copyUrl(link.id)}>
-                    <Copy size={16} /> Copy
-                  </Button>
-                  <Button type="button" $variant="secondary" onClick={() => router.push(`/dashboard/links/preview/${link.id}`)}>
-                    <ExternalLink size={16} /> Preview
-                  </Button>
+                  <IconAction
+                    type="button"
+                    onClick={() => copyUrl(link.id)}
+                    title="Copy link URL"
+                    aria-label="Copy link URL"
+                  >
+                    <Copy size={15} />
+                  </IconAction>
+                  <IconAction
+                    type="button"
+                    onClick={() => router.push(`/dashboard/links/preview/${link.id}`)}
+                    title="Preview link"
+                    aria-label="Preview link"
+                  >
+                    <ExternalLink size={15} />
+                  </IconAction>
                 </ActionsGroup>
               </LinkItem>
             ))}

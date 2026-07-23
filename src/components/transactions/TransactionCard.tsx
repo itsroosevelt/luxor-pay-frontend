@@ -283,6 +283,40 @@ const LinkButton = styled.a`
   }
 `;
 
+const ExplorerButton = styled.a`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 22px;
+  border-radius: 9999px;
+  background: rgba(15, 25, 48, 0.85);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+  color: #60A5FA;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(37, 99, 235, 0.25);
+    border-color: rgba(96, 165, 250, 0.6);
+    color: #FFFFFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
+`;
+
 const DrawerButtonGroup = styled.div`
   display: flex;
   align-items: center;
@@ -691,9 +725,14 @@ export function TransactionCard({ transfer, merchantWallet, onClick, index }: Tr
               </DetailRow>
 
               <DrawerButtonGroup>
-                <DrawerButton type="button" $variant="primary" onClick={onClick}>
-                  See details
-                </DrawerButton>
+                <ExplorerButton
+                  href={explorerUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  View on Explorer <ExternalLink size={14} />
+                </ExplorerButton>
                 <DrawerButton
                   type="button"
                   $variant="secondary"

@@ -1603,7 +1603,7 @@ export default function PaymentRequestsPage() {
             Payment Requests
           </h1>
           <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            Track payments you've requested and payments others are asking from you.
+            Track payments you&apos;ve requested and payments others are asking from you.
           </p>
         </div>
       </header>
