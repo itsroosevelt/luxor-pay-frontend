@@ -1,17 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import styled, { keyframes, createGlobalStyle } from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, AlertCircle, Loader2, CheckCircle2, ExternalLink } from "lucide-react";
 import { auth } from "@/lib/firebase";
 import { useOnrampSession } from "@/hooks/useOnrampSession";
 import { useOnrampSocket } from "@/hooks/useOnrampSocket";
 
-// ─── Fonts ────────────────────────────────────────────────────────────────────
-const FontStyles = createGlobalStyle`
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Outfit:wght@400;500;700&display=swap');
-`;
+
 
 // ─── Keyframes ────────────────────────────────────────────────────────────────
 const spin = keyframes`
@@ -335,7 +332,6 @@ export function OnrampModal({ isOpen, onClose, merchantWallet }: OnrampModalProp
 
   return (
     <>
-      <FontStyles />
 
       <AnimatePresence>
         {isOpen && (

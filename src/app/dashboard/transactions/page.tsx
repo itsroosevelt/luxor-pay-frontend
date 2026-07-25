@@ -6,35 +6,6 @@ import { auth } from '@/lib/firebase';
 import { getMerchantProfile } from '@/lib/merchants-api';
 import { TransactionsContainer } from '@/components/transactions/TransactionsContainer';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
-import styled from 'styled-components';
-import { Send } from 'lucide-react';
-
-const TransferButton = styled.button`
-  font-family: 'Outfit', sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  padding: 12px 24px;
-  border-radius: 9999px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #FFFFFF;
-  color: #000000;
-
-  &:hover:not(:disabled) {
-    background: #2563EB;
-    color: #FFFFFF;
-    box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
-  }
-  
-  &:focus-visible {
-    outline: 2px solid #60A5FA;
-    outline-offset: 2px;
-  }
-`;
 
 export default function TransactionsPage() {
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
@@ -60,26 +31,28 @@ export default function TransactionsPage() {
     return () => unsubscribe();
   }, []);
 
+
   return (
     <>
-      <header className="p-6 md:p-10 border-b border-white/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
         <div>
-          <h1 className="text-2xl font-bold mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Transactions</h1>
-          <p className="text-gray-400 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-            All Solana transfers for your account.
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            Transactions
+          </h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            All Solana transfers and settlement transactions for your account.
           </p>
         </div>
-        <TransferButton onClick={() => setIsTransferModalOpen(true)}>
-          <Send size={16} />
-          Transfer Funds
-        </TransferButton>
       </header>
 
-      <div className="p-6 md:p-10 max-w-5xl mx-auto">
+      <div className="p-6 md:p-8 w-full max-w-[1600px] mx-auto min-w-0 box-border">
         {!loading ? (
-          <TransactionsContainer merchantWallet={merchantWallet} />
+          <TransactionsContainer
+            merchantWallet={merchantWallet}
+            onTransferClick={() => setIsTransferModalOpen(true)}
+          />
         ) : (
-          <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>Loading...</p>
+          <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>Loading transactions...</p>
         )}
       </div>
 

@@ -37,9 +37,8 @@ export function TokenRegistryProvider({ children }: { children: ReactNode }) {
     setIsError(false);
     try {
       const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase();
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3008';
       
-      const response = await fetch(`${apiUrl}/tokens?environment=${network}`);
+      const response = await fetch(`/api/backend/tokens?environment=${network}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch tokens: ${response.statusText}`);
       }

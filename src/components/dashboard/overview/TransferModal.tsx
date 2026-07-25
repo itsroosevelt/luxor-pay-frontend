@@ -8,7 +8,7 @@ import { getLuxorEnv } from '@/lib/luxor-env';
 import { useGetContacts } from '@/hooks/useGetContacts';
 import { useSendTransfer } from '@/hooks/useSendTransfer';
 import { toast } from 'sonner';
-import { Transfer } from '@/lib/transfers-api';
+import { Transfer, SendTransferPayload } from '@/lib/transfers-api';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -143,14 +143,20 @@ const ButtonGroup = styled.div`
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 14px 24px;
+  padding: 9px 20px;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   flex: 1;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
 
   &:focus-visible {
     outline: 2px solid #60A5FA;
@@ -238,7 +244,7 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
       }
     }
 
-    const payload: any = {
+    const payload: SendTransferPayload = {
       toWallet: formData.walletAddress,
       amount: formData.amount,
     };

@@ -100,9 +100,9 @@ function EmptyState({ label }: { label: string }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
       style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'center',
-        justifyContent: 'center', padding: '64px 24px', gap: '12px',
-        textAlign: 'center',
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-start',
+        justifyContent: 'flex-start', padding: '48px 0', gap: '12px',
+        textAlign: 'left',
       }}
     >
       <div style={{
@@ -113,7 +113,7 @@ function EmptyState({ label }: { label: string }) {
       }}>
         <Inbox size={24} />
       </div>
-      <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '16px', fontWeight: 500, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+      <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '16px', fontWeight: 500, color: 'rgba(255,255,255,0.5)', margin: 0, textAlign: 'left' }}>
         {label}
       </p>
     </motion.div>
@@ -1474,7 +1474,7 @@ function RequestsPanel({
 
   if (!walletAddress) {
     return (
-      <div style={{ padding: '40px 0', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'Montserrat, sans-serif', fontSize: '14px' }}>
+      <div style={{ padding: '40px 0', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontFamily: 'Montserrat, sans-serif', fontSize: '14px' }}>
         Configure your wallet in{' '}
         <Link href="/dashboard/settings" style={{ color: '#60A5FA', textDecoration: 'underline' }}>
           Settings
@@ -1597,69 +1597,60 @@ export default function PaymentRequestsPage() {
         @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
       `}</style>
 
-      <header style={{
-        padding: '24px 24px 20px',
-        borderBottom: '1px solid rgba(255,255,255,0.05)',
-        background: 'rgba(255,255,255,0.01)',
-      }}>
-        <div style={{ maxWidth: '860px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
-          <div>
-            <h1 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '24px', fontWeight: 600, color: '#FFFFFF', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>
-              Payment Requests
-            </h1>
-            <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', fontWeight: 300, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
-              Track payments you've requested and payments others are asking from you.
-            </p>
-          </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 20px', borderRadius: '9999px',
-              background: '#FFFFFF', color: '#000000',
-              fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 500,
-              border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-            }}
-          >
-            <Send size={16} /> Create Request
-          </button>
+      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+            Payment Requests
+          </h1>
+          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            Track payments you&apos;ve requested and payments others are asking from you.
+          </p>
         </div>
       </header>
 
-      <div style={{ padding: '24px', maxWidth: '860px', margin: '0 auto' }}>
+      <div className="p-6 md:p-10 w-full">
 
-        {/* Tab Bar */}
-        <div style={{
-          display: 'flex', gap: '4px',
-          background: 'rgba(255,255,255,0.03)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: '16px',
-          padding: '4px',
-          marginBottom: '24px',
-          width: 'fit-content',
-        }}>
-          {tabs.map(({ id, label, Icon }) => {
-            const isActive = activeTab === id;
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveTab(id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '8px',
-                  padding: '9px 18px', borderRadius: '12px', border: 'none',
-                  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
-                  fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: isActive ? 500 : 400,
-                  cursor: 'pointer', transition: 'all 0.2s',
-                  boxShadow: isActive ? '0 1px 8px rgba(0,0,0,0.3)' : 'none',
-                }}
-              >
-                <Icon size={15} />
-                {label}
-              </button>
-            );
-          })}
+        {/* Tab Bar and Action Button Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div style={{
+            display: 'flex', gap: '4px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: '16px',
+            padding: '4px',
+            width: 'fit-content',
+          }}>
+            {tabs.map(({ id, label, Icon }) => {
+              const isActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    padding: '9px 18px', borderRadius: '12px', border: 'none',
+                    background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    color: isActive ? '#FFFFFF' : 'rgba(255,255,255,0.4)',
+                    fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: isActive ? 500 : 400,
+                    cursor: 'pointer', transition: 'all 0.2s',
+                    boxShadow: isActive ? '0 1px 8px rgba(0,0,0,0.3)' : 'none',
+                  }}
+                >
+                  <Icon size={15} />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black font-medium hover:bg-blue-600 hover:text-white transition-all shadow-md focus-visible:outline-2 focus-visible:outline-blue-400 focus-visible:outline-offset-2 self-start sm:self-auto text-xs"
+            style={{ fontFamily: 'Outfit, sans-serif' }}
+          >
+            <Send size={14} /> Create Request
+          </button>
         </div>
 
         {/* Tab Description */}

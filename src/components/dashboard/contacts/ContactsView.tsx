@@ -1,9 +1,9 @@
 "use client";
 
 import React from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, User, Star } from 'lucide-react';
 import { Contact } from '@/lib/contacts-api';
 
 interface ContactsViewProps {
@@ -13,108 +13,93 @@ interface ContactsViewProps {
   onAddContactClick: () => void;
   onEditContactClick: (contact: Contact) => void;
   onDeleteContactClick: (id: string) => void;
+  onToggleFavoriteClick: (contact: Contact) => void;
+  togglingFavoriteId?: string | null;
 }
+
+const spin = keyframes`to { transform: rotate(360deg); }`;
 
 const PageContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-bottom: 64px;
+  padding: 32px 40px 64px 40px;
+
+  @media (max-width: 768px) {
+    padding: 24px 20px 64px 20px;
+  }
 `;
 
 const HeaderContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
-
-  @media (min-width: 768px) {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
+  gap: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 24px;
 `;
 
 const Title = styled.h1`
   font-family: 'Outfit', sans-serif;
-  font-size: 48px;
+  font-size: 32px;
   font-weight: 500;
-  letter-spacing: -1.5px;
+  letter-spacing: -0.02em;
   color: #FFFFFF;
   margin: 0;
-
-  @media (min-width: 1024px) {
-    font-size: 60px;
-  }
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.8);
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
   margin: 0;
-
-  @media (min-width: 1024px) {
-    font-size: 16px;
-  }
 `;
 
-const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+const ActionBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+`;
+
+const AddButton = styled.button`
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
-  padding: 12px 24px;
+  padding: 9px 20px;
   border-radius: 9999px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  background: #FFFFFF;
+  color: #000000;
+  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.15);
+
+  &:hover:not(:disabled) {
+    background: #2563EB;
+    color: #FFFFFF;
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 
   &:focus-visible {
     outline: 2px solid #60A5FA;
     outline-offset: 2px;
   }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  ${({ $variant = 'primary' }) =>
-    $variant === 'primary' &&
-    `
-    background: #FFFFFF;
-    color: #000000;
-    &:hover:not(:disabled) {
-      background: #2563EB;
-      color: #FFFFFF;
-    }
-  `}
-
-  ${({ $variant }) =>
-    $variant === 'secondary' &&
-    `
-    background: transparent;
-    color: #60A5FA;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.1);
-    }
-  `}
 `;
 
 const ContactsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 20px;
 
   @media (min-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
@@ -126,53 +111,125 @@ const ContactsGrid = styled.div`
 `;
 
 const ContactCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(40px);
-  border-radius: 40px;
-  box-shadow: 0 32px 64px -16px rgba(0,0,0,0.6);
-  padding: 32px;
+  border-radius: 24px;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  position: relative;
-  overflow: hidden;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+
+  &:hover {
+    border-color: rgba(96, 165, 250, 0.3);
+    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.1), 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
+  }
+`;
+
+const CardAccent = styled.div`
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(to right, #60A5FA, #2563EB);
+  opacity: 0.7;
+`;
+
+const CardBody = styled.div`
+  padding: 20px 22px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+`;
+
+const CardHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+const AvatarNameGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+`;
+
+const Avatar = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, rgba(96,165,250,0.25), rgba(37,99,235,0.4));
+  border: 1px solid rgba(96,165,250,0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: #60A5FA;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+`;
+
+const NameBadgeGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
 `;
 
 const ContactName = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
-  letter-spacing: -0.5px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const Badge = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #60A5FA;
+  background: rgba(96, 165, 250, 0.12);
+  border: 1px solid rgba(96,165,250,0.25);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  width: fit-content;
 `;
 
 const ActionsContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 `;
 
-const IconButton = styled.button`
+const IconButton = styled.button<{ $danger?: boolean }>`
   background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.5);
   cursor: pointer;
-  padding: 8px;
+  padding: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s;
 
   &:hover {
-    color: #FFFFFF;
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    color: ${({ $danger }) => $danger ? '#f87171' : '#FFFFFF'};
+    background: ${({ $danger }) => $danger ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.1)'};
+    border-color: ${({ $danger }) => $danger ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.2)'};
   }
 
   &:focus-visible {
@@ -181,44 +238,62 @@ const IconButton = styled.button`
   }
 `;
 
-const Badge = styled.span`
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: #60A5FA;
-  background: rgba(96, 165, 250, 0.1);
-  padding: 4px 8px;
-  border-radius: 9999px;
+const FavoriteButton = styled(IconButton)<{ $active?: boolean }>`
+  color: ${({ $active }) => ($active ? '#FBBF24' : 'rgba(255, 255, 255, 0.5)')};
+  background: ${({ $active }) => ($active ? 'rgba(251, 191, 36, 0.12)' : 'rgba(255, 255, 255, 0.05)')};
+  border-color: ${({ $active }) => ($active ? 'rgba(251, 191, 36, 0.35)' : 'rgba(255, 255, 255, 0.08)')};
+
+  &:hover {
+    color: #FBBF24;
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.35);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+`;
+
+const DataGrid = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 `;
 
 const DataRow = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 `;
 
 const Label = styled.span`
   font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
 `;
 
 const Value = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 300;
   color: #EDEDED;
 `;
 
 const OnChainValue = styled.span`
   font-family: monospace;
-  font-size: 13px;
+  font-size: 11px;
   color: #60A5FA;
   word-break: break-all;
+  line-height: 1.5;
 `;
 
 const EmptyState = styled.div`
@@ -229,49 +304,77 @@ const EmptyState = styled.div`
   padding: 64px 24px;
   text-align: center;
   background: rgba(255, 255, 255, 0.02);
-  border: 1px dashed rgba(255, 255, 255, 0.1);
-  border-radius: 40px;
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 32px;
   gap: 16px;
 `;
 
-const Spinner = styled.div`
-  width: 48px;
-  height: 48px;
-  border: 4px solid rgba(96, 165, 250, 0.2);
-  border-top-color: #60A5FA;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+const EmptyTitle = styled.h2`
+  font-family: 'Outfit', sans-serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: #FFFFFF;
+  margin: 0;
+`;
 
-  @keyframes spin {
-    to {
-      transform: rotate(360deg);
-    }
+const SecondaryButton = styled.button`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #60A5FA;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  backdrop-filter: blur(12px);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
   }
 `;
 
-export function ContactsView({ 
-  contacts, 
-  isLoading, 
-  isError, 
+const Spinner = styled.div`
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(96, 165, 250, 0.2);
+  border-top-color: #60A5FA;
+  border-radius: 50%;
+  animation: ${spin} 1s linear infinite;
+`;
+
+export function ContactsView({
+  contacts,
+  isLoading,
+  isError,
   onAddContactClick,
   onEditContactClick,
-  onDeleteContactClick
+  onDeleteContactClick,
+  onToggleFavoriteClick,
+  togglingFavoriteId,
 }: ContactsViewProps) {
   return (
     <PageContainer
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", bounce: 0.4, duration: 0.8 }}
+      transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
     >
-      <HeaderContainer>
-        <div>
-          <Title>Contacts</Title>
-          <Subtitle>Manage your frequent transaction network on-chain.</Subtitle>
-        </div>
-        <Button onClick={onAddContactClick} $variant="primary">
+      <ActionBar>
+        <AddButton onClick={onAddContactClick}>
+          <Plus size={14} />
           Add New Contact
-        </Button>
-      </HeaderContainer>
+        </AddButton>
+      </ActionBar>
 
       {isLoading ? (
         <EmptyState>
@@ -280,79 +383,103 @@ export function ContactsView({
         </EmptyState>
       ) : isError ? (
         <EmptyState>
-          <Title as="h2" style={{ fontSize: '24px' }}>Connection Error</Title>
+          <EmptyTitle>Connection Error</EmptyTitle>
           <Subtitle>Unable to load contacts. Please verify your connection to the ecosystem.</Subtitle>
         </EmptyState>
       ) : contacts.length === 0 ? (
         <EmptyState>
-          <Title as="h2" style={{ fontSize: '24px' }}>No Contacts Yet</Title>
+          <EmptyTitle>No Contacts Yet</EmptyTitle>
           <Subtitle>Start building your on-chain network. Add liquidity partners and frequent clients.</Subtitle>
-          <Button onClick={onAddContactClick} $variant="secondary" style={{ marginTop: '16px' }}>
+          <SecondaryButton onClick={onAddContactClick}>
+            <Plus size={14} />
             Add Your First Contact
-          </Button>
+          </SecondaryButton>
         </EmptyState>
       ) : (
         <ContactsGrid>
           {contacts.map((contact, index) => (
-            <ContactCard 
+            <ContactCard
               key={contact.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
+              transition={{ delay: index * 0.08, duration: 0.45 }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <ContactName>
-                  {contact.nickname}
-                  {contact.isFavorite && <Badge>Fav</Badge>}
-                </ContactName>
-                <ActionsContainer>
-                  <IconButton 
-                    onClick={() => onEditContactClick(contact)}
-                    aria-label={`Edit ${contact.nickname}`}
-                    title="Edit Contact"
-                  >
-                    <Pencil size={16} />
-                  </IconButton>
-                  <IconButton 
-                    onClick={() => onDeleteContactClick(contact.id)}
-                    aria-label={`Delete ${contact.nickname}`}
-                    title="Delete Contact"
-                  >
-                    <Trash2 size={16} />
-                  </IconButton>
-                </ActionsContainer>
-              </div>
-              
-              <DataRow>
-                <Label>WALLET ADDRESS</Label>
-                <OnChainValue>{contact.walletAddress}</OnChainValue>
-              </DataRow>
+              <CardAccent />
+              <CardBody>
+                <CardHeader>
+                  <AvatarNameGroup>
+                    <Avatar>
+                      {contact.nickname?.charAt(0) || <User size={16} />}
+                    </Avatar>
+                    <NameBadgeGroup>
+                      <ContactName title={contact.nickname}>{contact.nickname}</ContactName>
+                      {contact.isFavorite && <Badge>★ Favorite</Badge>}
+                    </NameBadgeGroup>
+                  </AvatarNameGroup>
+                  <ActionsContainer>
+                    <FavoriteButton
+                      type="button"
+                      $active={contact.isFavorite}
+                      onClick={() => onToggleFavoriteClick(contact)}
+                      disabled={togglingFavoriteId === contact.id}
+                      aria-label={contact.isFavorite ? `Remove ${contact.nickname} from favorites` : `Mark ${contact.nickname} as favorite`}
+                      title={contact.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
+                    >
+                      <Star size={13} fill={contact.isFavorite ? 'currentColor' : 'none'} />
+                    </FavoriteButton>
+                    <IconButton
+                      onClick={() => onEditContactClick(contact)}
+                      aria-label={`Edit ${contact.nickname}`}
+                      title="Edit Contact"
+                    >
+                      <Pencil size={13} />
+                    </IconButton>
+                    <IconButton
+                      $danger
+                      onClick={() => onDeleteContactClick(contact.id)}
+                      aria-label={`Delete ${contact.nickname}`}
+                      title="Delete Contact"
+                    >
+                      <Trash2 size={13} />
+                    </IconButton>
+                  </ActionsContainer>
+                </CardHeader>
 
-              {contact.email && (
-                <DataRow>
-                  <Label>EMAIL</Label>
-                  <Value>{contact.email}</Value>
-                </DataRow>
-              )}
+                <Divider />
 
-              {contact.telephone && (
-                <DataRow>
-                  <Label>PHONE</Label>
-                  <Value>{contact.telephone}</Value>
-                </DataRow>
-              )}
+                <DataGrid>
+                  <DataRow>
+                    <Label>Wallet Address</Label>
+                    <OnChainValue>{contact.walletAddress}</OnChainValue>
+                  </DataRow>
 
-              <DataRow>
-                <Label>PREFERRED ASSET</Label>
-                <Value>{contact.symbol || contact.mint}</Value>
-              </DataRow>
+                  {contact.email && (
+                    <DataRow>
+                      <Label>Email</Label>
+                      <Value>{contact.email}</Value>
+                    </DataRow>
+                  )}
 
-              {contact.notes && (
-                <DataRow>
-                  <Label>NOTES</Label>
-                  <Value>{contact.notes}</Value>
-                </DataRow>
-              )}
+                  {contact.telephone && (
+                    <DataRow>
+                      <Label>Phone</Label>
+                      <Value>{contact.telephone}</Value>
+                    </DataRow>
+                  )}
+
+                  <DataRow>
+                    <Label>Preferred Asset</Label>
+                    <Value>{contact.symbol || contact.mint}</Value>
+                  </DataRow>
+
+                  {contact.notes && (
+                    <DataRow>
+                      <Label>Notes</Label>
+                      <Value>{contact.notes}</Value>
+                    </DataRow>
+                  )}
+                </DataGrid>
+              </CardBody>
             </ContactCard>
           ))}
         </ContactsGrid>
