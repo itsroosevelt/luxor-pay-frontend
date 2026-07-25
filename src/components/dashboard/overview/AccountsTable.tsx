@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import { ArrowUpRight, ArrowLeftRight, Copy, Check, Wallet } from "lucide-react";
 import { WalletBalanceData } from "@/lib/solana-api";
+import { useTokenPrice } from "@/hooks/useTokenPrice";
 
 const Container = styled.div`
   background: rgba(255, 255, 255, 0.03);
@@ -256,6 +257,38 @@ export function AccountsTable({
 }: AccountsTableProps) {
   const [activeTab, setActiveTab] = useState<'Accounts' | 'Coins'>('Accounts');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [tokenPrices, setTokenPrices] = useState<Record<string, number>>({});
+
+  React.useEffect(() => {
+    const fetchPrices = async () => {
+      const mints = balanceData?.tokens?.map((t) => t.mint).filter(Boolean) || [];
+      if (mints.length === 0) return;
+
+      try {
+        const jupiterApiUrl = process.env.NEXT_PUBLIC_JUPITER_API_URL || 'https://api.jup.ag/price/v3';
+        const response = await fetch(`${jupiterApiUrl}?ids=${mints.join(',')}`);
+        if (response.ok) {
+          const resJson = await response.json();
+          const newPrices: Record<string, number> = {};
+          
+          mints.forEach((mint) => {
+            if (resJson[mint]?.usdPrice != null) {
+              newPrices[mint] = resJson[mint].usdPrice;
+            }
+          });
+          
+          setTokenPrices(newPrices);
+        }
+      } catch (error) {
+        console.error("Failed to fetch bulk token prices:", error);
+      }
+    };
+    
+    fetchPrices();
+  }, [balanceData?.tokens]);
+
+  const { data: solPriceData } = useTokenPrice('SOL');
+  const solPrice = solPriceData ?? 145;
 
   // Parse REAL SOL balance
   const numSol = balanceData?.solBalance
@@ -263,20 +296,28 @@ export function AccountsTable({
     : solBalance
     ? parseFloat(solBalance)
     : 0;
-  const solUsdValue = numSol * 145; // SOL estimated USD rate
+  const solUsdValue = numSol * solPrice;
 
   // Parse REAL SPL Token balances from balanceData
   const tokenList = (balanceData?.tokens || []).map((t) => {
     const amount = parseFloat(t.uiAmount || '0');
     const symbol = t.symbol || 'SPL';
-    // Estimated USD price (USDC = $1, others = amount)
-    const usdVal = symbol === 'USDC' ? amount : amount * 1.0;
+    const upperSymbol = symbol.trim().toUpperCase();
+    
+    let price = 0;
+    if (['USDC', 'USDT', 'EURC', 'PYUSD', 'LXR'].includes(upperSymbol)) {
+      price = 1.0;
+    } else {
+      price = tokenPrices[t.mint] ?? 0;
+    }
+
+    const usdVal = amount * price;
     return {
       mint: t.mint,
       symbol,
       balanceText: `${t.uiAmount} ${symbol}`,
       usdVal,
-      bg: symbol === 'USDC' ? 'linear-gradient(135deg, #2775CA, #1E508F)' : 'linear-gradient(135deg, #60A5FA, #2563EB)',
+      bg: ['USDC', 'USDT'].includes(upperSymbol) ? 'linear-gradient(135deg, #2775CA, #1E508F)' : 'linear-gradient(135deg, #60A5FA, #2563EB)',
     };
   });
 
@@ -290,8 +331,8 @@ export function AccountsTable({
       symbol: 'SOL',
       name: 'Solana',
       balance: `${numSol.toFixed(6)} SOL`,
-      valueUsd: `$${solUsdValue.toFixed(2)}`,
-      weight: totalPortfolioUsd > 0 ? Math.round((solUsdValue / totalPortfolioUsd) * 100) : 100,
+      valueUsd: `$${solUsdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      weight: totalPortfolioUsd > 0 ? Number(((solUsdValue / totalPortfolioUsd) * 100).toFixed(2)) : 0,
       bg: 'linear-gradient(135deg, #14F195, #9945FF)',
     },
     ...tokenList.map((t) => ({
@@ -299,8 +340,8 @@ export function AccountsTable({
       symbol: t.symbol,
       name: t.symbol,
       balance: t.balanceText,
-      valueUsd: `$${t.usdVal.toFixed(2)}`,
-      weight: totalPortfolioUsd > 0 ? Math.round((t.usdVal / totalPortfolioUsd) * 100) : 0,
+      valueUsd: `$${t.usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      weight: totalPortfolioUsd > 0 ? Number(((t.usdVal / totalPortfolioUsd) * 100).toFixed(2)) : 0,
       bg: t.bg,
     })),
   ];
@@ -312,8 +353,8 @@ export function AccountsTable({
           id: 'main-merchant-wallet',
           name: 'Merchant Main Account',
           address: merchantWallet,
-          balance: `$${totalPortfolioUsd.toFixed(2)}`,
-          weight: 100,
+          balance: `$${totalPortfolioUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          weight: totalPortfolioUsd > 0 ? 100 : 0,
         },
       ]
     : [];

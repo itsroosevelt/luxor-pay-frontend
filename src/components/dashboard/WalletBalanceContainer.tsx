@@ -3,9 +3,8 @@
 import React from "react";
 import styled from "styled-components";
 import { WalletBalanceView } from "./WalletBalanceView";
+import { FundWalletButton } from "./FundWalletButton";
 
-import { OverviewChart } from "./overview/OverviewChart";
-import { AccountsTable } from "./overview/AccountsTable";
 import { DashboardExtraPanelsContainer } from "./overview/DashboardExtraPanelsContainer";
 import { useGetBalance } from "@/hooks/useGetBalance";
 import { useMerchant } from "@/context/MerchantContext";
@@ -16,20 +15,12 @@ const OuterWrapper = styled.div`
   gap: 24px;
   width: 100%;
 `;
-
 const GridContainer = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 20px;
   width: 100%;
-
-  @media (min-width: 1024px) {
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    align-items: stretch;
-  }
 `;
-
 const LeftColumn = styled.div`
   display: flex;
   flex-direction: column;
@@ -69,7 +60,6 @@ export function WalletBalanceContainer({
   return (
     <OuterWrapper>
       <GridContainer>
-        {/* Left Column: Compact Balance Card + Top up Wallet Button */}
         <LeftColumn>
           <WalletBalanceView
             data={data}
@@ -86,21 +76,11 @@ export function WalletBalanceContainer({
             onTradeClick={onTradeClick}
             merchantWallet={merchantWallet}
           />
-
+          {isKycVerified && merchantWallet && (
+            <FundWalletButton merchantWallet={merchantWallet} />
+          )}
         </LeftColumn>
-
-        {/* Right Column: Statistics Chart Box */}
-        <OverviewChart />
       </GridContainer>
-
-      {/* Accounts / Coins / NFTs Assets Table directly underneath */}
-      <AccountsTable
-        onSendClick={onSendClick}
-        onTradeClick={onTradeClick}
-        merchantWallet={merchantWallet}
-        solBalance={data?.solBalance}
-        balanceData={data}
-      />
 
       {/* Interactive limit orders, flows and stake panels */}
       <DashboardExtraPanelsContainer />

@@ -170,6 +170,7 @@ const QuickArrowCircle = styled.div`
 export default function DashboardOverviewPage() {
   const router = useRouter();
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
+  const [isStatsLoading, setIsStatsLoading] = useState(true);
   const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState<string | null>(null);
 
@@ -211,6 +212,8 @@ export default function DashboardOverviewPage() {
         }
       } catch (e) {
         console.error(e);
+      } finally {
+        setIsStatsLoading(false);
       }
     });
     return () => unsubscribe();
@@ -247,7 +250,39 @@ export default function DashboardOverviewPage() {
       </HeaderContainer>
 
       <div className="p-6 md:p-8 w-full max-w-[1600px] mx-auto space-y-8">
-        {!stats.hasWallet && (
+        {pendingInboxCount > 0 && (
+          <Link
+            href="/dashboard/requests"
+            className="flex items-center justify-between gap-4 p-4 rounded-2xl border transition-all shadow-lg"
+            style={{
+              background: 'rgba(37, 99, 235, 0.15)',
+              borderColor: 'rgba(96, 165, 250, 0.4)',
+              textDecoration: 'none',
+              backdropFilter: 'blur(24px)',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div style={{
+                width: '36px', height: '36px', borderRadius: '9999px',
+                background: 'rgba(96,165,250,0.2)', border: '1px solid rgba(96,165,250,0.4)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <Bell size={16} style={{ color: '#FFFFFF' }} />
+              </div>
+              <div>
+                <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                  You have {pendingInboxCount} payment request{pendingInboxCount !== 1 ? 's' : ''} waiting for action
+                </p>
+                <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: 0, fontWeight: 400 }}>
+                  Click to review and pay or decline
+                </p>
+              </div>
+            </div>
+            <ArrowRight size={18} style={{ color: '#FFFFFF', flexShrink: 0 }} />
+          </Link>
+        )}
+
+        {!isStatsLoading && !stats.hasWallet && (
           <GlassCard style={{ padding: '20px', borderColor: 'rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.05)', borderRadius: '24px' }}>
             <p className="text-amber-200 text-sm" style={{ fontFamily: 'Montserrat, sans-serif', margin: 0 }}>
               Add your Solana wallet in{' '}
@@ -266,37 +301,6 @@ export default function DashboardOverviewPage() {
           onTradeClick={() => router.push('/dashboard/swap')}
         />
 
-        {pendingInboxCount > 0 && (
-          <Link
-            href="/dashboard/requests"
-            className="flex items-center justify-between gap-4 p-5 rounded-3xl border transition-all"
-            style={{
-              background: 'rgba(96,165,250,0.06)',
-              borderColor: 'rgba(96,165,250,0.25)',
-              textDecoration: 'none',
-              backdropFilter: 'blur(20px)',
-            }}
-          >
-            <div className="flex items-center gap-3">
-              <div style={{
-                width: '40px', height: '40px', borderRadius: '9999px',
-                background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <Bell size={18} style={{ color: '#60A5FA' }} />
-              </div>
-              <div>
-                <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 500, color: '#FFFFFF', margin: 0 }}>
-                  {pendingInboxCount} payment request{pendingInboxCount !== 1 ? 's' : ''} waiting for your action
-                </p>
-                <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0, fontWeight: 300 }}>
-                  Review and pay or decline
-                </p>
-              </div>
-            </div>
-            <ArrowRight size={18} style={{ color: '#60A5FA', flexShrink: 0 }} />
-          </Link>
-        )}
 
         <div className="grid md:grid-cols-3 gap-5">
           <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />

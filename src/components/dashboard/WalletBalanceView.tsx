@@ -265,34 +265,55 @@ export function WalletBalanceView({
         <ContentWrapper>
           <HeaderRow>
             <div>
-              <EyebrowBadge>On-Chain Treasury</EyebrowBadge>
-              <Title>
-                <Coins size={18} className="text-blue-400 opacity-90" />
-                <span>Wallet Balance</span>
-              </Title>
+              {isLoading ? (
+                <SkeletonBox $width="110px" $height="14px" $borderRadius="4px" style={{ marginBottom: '8px' }} />
+              ) : (
+                <EyebrowBadge>On-Chain Treasury</EyebrowBadge>
+              )}
+              {isLoading ? (
+                <SkeletonBox $width="150px" $height="24px" $borderRadius="6px" />
+              ) : (
+                <Title>
+                  <Coins size={18} className="text-blue-400 opacity-90" />
+                  <span>Wallet Balance</span>
+                </Title>
+              )}
             </div>
             <ControlsContainer>
-              <IconButton
-                onClick={togglePrivacyMode}
-                aria-label={isPrivacyMode ? "Show balance" : "Hide balance"}
-                title="Toggle Privacy Mode"
-              >
-                {isPrivacyMode ? <EyeOff size={16} /> : <Eye size={16} />}
-              </IconButton>
-              <IconButton
-                onClick={refetch}
-                disabled={isLoading}
-                aria-label="Refresh balance"
-                title="Refresh balance"
-                aria-busy={isLoading}
-              >
-                <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-              </IconButton>
+              {isLoading ? (
+                <>
+                  <SkeletonBox $width="36px" $height="36px" $borderRadius="9999px" />
+                  <SkeletonBox $width="36px" $height="36px" $borderRadius="9999px" />
+                </>
+              ) : (
+                <>
+                  <IconButton
+                    onClick={togglePrivacyMode}
+                    aria-label={isPrivacyMode ? "Show balance" : "Hide balance"}
+                    title="Toggle Privacy Mode"
+                  >
+                    {isPrivacyMode ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </IconButton>
+                  <IconButton
+                    onClick={refetch}
+                    disabled={isLoading}
+                    aria-label="Refresh balance"
+                    title="Refresh balance"
+                    aria-busy={isLoading}
+                  >
+                    <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+                  </IconButton>
+                </>
+              )}
             </ControlsContainer>
           </HeaderRow>
 
           <BalanceSection>
-            <BalanceLabel>Total Solana</BalanceLabel>
+            {isLoading ? (
+              <SkeletonBox $width="90px" $height="12px" $borderRadius="4px" style={{ marginBottom: '6px' }} />
+            ) : (
+              <BalanceLabel>Total Solana</BalanceLabel>
+            )}
             {isLoading ? (
               <SkeletonBox $width="200px" $height="42px" $borderRadius="12px" />
             ) : isError ? (
@@ -309,18 +330,28 @@ export function WalletBalanceView({
 
           {/* Action Buttons */}
           <ActionButtonsGrid>
-            <ButtonBase type="button" $variant="primary" onClick={onSendClick}>
-              <ArrowUp size={15} />
-              <span>Send</span>
-            </ButtonBase>
-            <ButtonBase type="button" $variant="glass" onClick={onDepositClick}>
-              <ArrowDown size={15} />
-              <span>Deposit</span>
-            </ButtonBase>
-            <ButtonBase type="button" $variant="secondary" onClick={onTradeClick}>
-              <ArrowLeftRight size={15} />
-              <span>Trade</span>
-            </ButtonBase>
+            {isLoading ? (
+              <>
+                <SkeletonBox $height="44px" $borderRadius="9999px" />
+                <SkeletonBox $height="44px" $borderRadius="9999px" />
+                <SkeletonBox $height="44px" $borderRadius="9999px" />
+              </>
+            ) : (
+              <>
+                <ButtonBase type="button" $variant="primary" onClick={onSendClick}>
+                  <ArrowUp size={15} />
+                  <span>Send</span>
+                </ButtonBase>
+                <ButtonBase type="button" $variant="glass" onClick={onDepositClick}>
+                  <ArrowDown size={15} />
+                  <span>Deposit</span>
+                </ButtonBase>
+                <ButtonBase type="button" $variant="secondary" onClick={onTradeClick}>
+                  <ArrowLeftRight size={15} />
+                  <span>Trade</span>
+                </ButtonBase>
+              </>
+            )}
           </ActionButtonsGrid>
 
           {/* Tokens section */}
@@ -346,8 +377,11 @@ export function WalletBalanceView({
 
           {isLoading && (
             <TokenList>
-              <BalanceLabel>SPL Utility Tokens</BalanceLabel>
-              <SkeletonBox $height="40px" $borderRadius="16px" />
+              <SkeletonBox $width="120px" $height="12px" $borderRadius="4px" style={{ marginBottom: '4px' }} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <SkeletonBox $height="50px" $borderRadius="16px" />
+                <SkeletonBox $height="50px" $borderRadius="16px" />
+              </div>
             </TokenList>
           )}
         </ContentWrapper>
