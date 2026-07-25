@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { Copy, Check, ShieldCheck, ShieldAlert, Wallet, Mail, Building2, Pencil, Save, X, Loader2 } from 'lucide-react';
+import { Copy, Check, ShieldCheck, ShieldAlert, Wallet, Mail, Building2, Pencil, Save, X, Loader2, ArrowDownToLine } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { getMerchantProfile, updateMerchantProfile } from '@/lib/merchants-api';
 import { useMerchant } from '@/context/MerchantContext';
 import { AccountStatementViewer } from '@/components/profile/AccountStatementViewer';
+import { OfframpModal } from '@/components/dashboard/OfframpModal';
+import { useGetBalance } from '@/hooks/useGetBalance';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const { profile, setProfile } = useMerchant();
+  const { profile, setProfile, setIsKycModalOpen } = useMerchant();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,6 +21,7 @@ export default function ProfilePage() {
   const [editMerchantWallet, setEditMerchantWallet] = useState('');
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isOfframpOpen, setIsOfframpOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -90,6 +93,12 @@ export default function ProfilePage() {
   const businessName = profile?.businessName || editBusinessName;
   const merchantWallet = profile?.merchantWallet || editMerchantWallet;
   const kycVerified = profile?.kyc ?? false;
+
+  // Live SOL balance — used to pre-fill the MoonPay offramp widget
+  const { data: balanceData, isLoading: isBalanceLoading } = useGetBalance(
+    kycVerified ? merchantWallet : null
+  );
+  const solBalance = balanceData?.solBalance ?? null;
 
   const displayName = businessName || (user as any)?.displayName || user?.email?.split('@')[0] || 'You';
   const initial = displayName.trim().charAt(0).toUpperCase();
@@ -408,6 +417,236 @@ export default function ProfilePage() {
               )}
             </section>
 
+            {/* ── Offramp / Cash Out ── */}
+            <section
+              style={{
+                background: 'rgba(255,255,255,0.025)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '24px',
+                padding: '24px',
+                backdropFilter: 'blur(24px)',
+              }}
+            >
+              {/* Section header */}
+              <div style={{ marginBottom: '16px' }}>
+                <p
+                  style={{
+                    fontFamily: 'Outfit, sans-serif',
+                    fontSize: '10px',
+                    fontWeight: 700,
+                    letterSpacing: '0.4em',
+                    textTransform: 'uppercase',
+                    color: '#60A5FA',
+                    marginBottom: '4px',
+                  }}
+                >
+                  Fiat Off-ramp
+                </p>
+                <h3
+                  style={{
+                    fontFamily: 'Outfit, sans-serif',
+                    fontSize: '18px',
+                    fontWeight: 500,
+                    color: '#FFFFFF',
+                    margin: 0,
+                    letterSpacing: '-0.3px',
+                  }}
+                >
+                  Cash Out
+                </h3>
+                <p
+                  style={{
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: '13px',
+                    fontWeight: 300,
+                    color: 'rgba(255,255,255,0.5)',
+                    marginTop: '4px',
+                    lineHeight: '1.5',
+                  }}
+                >
+                  Convert your SOL balance into fiat currency via MoonPay.
+                </p>
+              </div>
+
+              {/* KYC gate alert — shown only when not verified */}
+              {!kycVerified && (
+                <div
+                  role="alert"
+                  style={{
+                    background: 'rgba(245,158,11,0.07)',
+                    border: '1px solid rgba(245,158,11,0.25)',
+                    borderRadius: '16px',
+                    padding: '14px 16px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '10px',
+                    marginBottom: '16px',
+                  }}
+                >
+                  <ShieldAlert size={16} style={{ color: '#F59E0B', flexShrink: 0, marginTop: '1px' }} />
+                  <div>
+                    <p
+                      style={{
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontSize: '13px',
+                        fontWeight: 400,
+                        color: 'rgba(255,255,255,0.75)',
+                        margin: 0,
+                        lineHeight: 1.55,
+                      }}
+                    >
+                      Identity verification is required to use the cash-out feature.{' '}
+                      <button
+                        type="button"
+                        onClick={() => setIsKycModalOpen(true)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          fontFamily: 'Montserrat, sans-serif',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          color: '#60A5FA',
+                          textDecoration: 'underline',
+                          textUnderlineOffset: '2px',
+                        }}
+                      >
+                        Complete verification now
+                      </button>
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Offramp button */}
+              <button
+                id="offramp-cashout-btn"
+                type="button"
+                disabled={!kycVerified}
+                onClick={() => kycVerified && setIsOfframpOpen(true)}
+                aria-disabled={!kycVerified}
+                style={{
+                  width: '100%',
+                  padding: '12px 20px',
+                  borderRadius: '9999px',
+                  border: kycVerified
+                    ? '1px solid rgba(255,255,255,0.15)'
+                    : '1px solid rgba(255,255,255,0.06)',
+                  background: kycVerified
+                    ? 'rgba(255,255,255,0.06)'
+                    : 'rgba(255,255,255,0.02)',
+                  backdropFilter: 'blur(16px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px',
+                  cursor: kycVerified ? 'pointer' : 'not-allowed',
+                  opacity: kycVerified ? 1 : 0.45,
+                  transition: 'all 0.25s ease',
+                  boxShadow: kycVerified ? '0 4px 20px -4px rgba(0,0,0,0.4)' : 'none',
+                }}
+                onMouseEnter={(e) => {
+                  if (kycVerified) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(96,165,250,0.4)';
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(37,99,235,0.12)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 24px -4px rgba(37,99,235,0.25)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (kycVerified) {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.15)';
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.06)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 20px -4px rgba(0,0,0,0.4)';
+                  }
+                }}
+              >
+                {/* Left: icon + text */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '9999px',
+                      background: kycVerified ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.05)',
+                      border: kycVerified ? '1px solid rgba(96,165,250,0.25)' : '1px solid rgba(255,255,255,0.08)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      color: kycVerified ? '#60A5FA' : 'rgba(255,255,255,0.3)',
+                    }}
+                  >
+                    <ArrowDownToLine size={17} />
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <p
+                      style={{
+                        fontFamily: 'Outfit, sans-serif',
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        color: '#FFFFFF',
+                        margin: 0,
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      Cash Out via MoonPay
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: 'Montserrat, sans-serif',
+                        fontSize: '11px',
+                        fontWeight: 400,
+                        color: 'rgba(255,255,255,0.45)',
+                        margin: '2px 0 0',
+                      }}
+                    >
+                      SOL → Bank · Card · SEPA
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: KYC badge or arrow */}
+                {kycVerified ? (
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '9999px',
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: 'rgba(255,255,255,0.7)',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <ArrowDownToLine size={13} />
+                  </div>
+                ) : (
+                  <span
+                    style={{
+                      fontFamily: 'Outfit, sans-serif',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: '#F59E0B',
+                      background: 'rgba(245,158,11,0.1)',
+                      border: '1px solid rgba(245,158,11,0.22)',
+                      borderRadius: '9999px',
+                      padding: '4px 10px',
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    KYC required
+                  </span>
+                )}
+              </button>
+            </section>
+
             {/* ── Account Statements ── */}
             <AccountStatementViewer
               merchantWallet={merchantWallet}
@@ -417,6 +656,13 @@ export default function ProfilePage() {
           </>
         )}
       </div>
+
+      {/* ── Offramp Modal ── */}
+      <OfframpModal
+        isOpen={isOfframpOpen}
+        onClose={() => setIsOfframpOpen(false)}
+        solBalance={solBalance}
+      />
     </>
   );
 }
