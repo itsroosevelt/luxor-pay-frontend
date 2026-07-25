@@ -92,79 +92,72 @@ export function OnrampSocketProvider({ children }: { children: ReactNode }) {
     activeSessionIdRef.current = sessionId;
     setOnrampActive(true);
     setOnrampResult(null);
+
+    const user = auth.currentUser;
+    if (!user) {
+      console.warn('Cannot track onramp: user not authenticated');
+      return;
+    }
+
+    const userId = user.uid;
+
+    if (joinedRoomRef.current === userId && socketRef.current?.connected) {
+      return;
+    }
+
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
+    const baseUrl = getApiBaseUrl();
+    setSocketStatus('connecting');
+
+    const socket = io(baseUrl, {
+      transports: ['websocket', 'polling'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      setSocketStatus('connected');
+      joinedRoomRef.current = userId;
+      socket.emit('join_kyc_room', userId);
+    });
+
+    socket.on('disconnect', (reason) => {
+      setSocketStatus('disconnected');
+      if (reason === 'io server disconnect') {
+        joinedRoomRef.current = null;
+      }
+    });
+
+    socket.on('connect_error', () => {
+      setSocketStatus('error');
+    });
+
+    socket.on('onramp_status_updated', (payload: OnrampStatusPayload) => {
+      if (activeSessionIdRef.current && payload.sessionId !== activeSessionIdRef.current) {
+        return;
+      }
+
+      setOnrampPayload(payload);
+      setOnrampActive(true);
+
+      if (payload.status === 'fulfillment_complete') {
+        setOnrampActive(false);
+        setOnrampResult('success');
+      } else if (payload.status === 'rejected') {
+        setOnrampActive(false);
+        setOnrampResult('failed');
+      }
+    });
   }, []);
 
-  // Connect automatically when user is logged in
+  // Cleanup on unmount
   useEffect(() => {
-    let unsubscribe: () => void = () => {};
-
-    const handleAuth = (user: any) => {
-      if (!user) {
-        leaveOnrampRoom();
-        return;
-      }
-
-      const userId = user.uid;
-      if (joinedRoomRef.current === userId && socketRef.current?.connected) {
-        return;
-      }
-
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-
-      const baseUrl = getApiBaseUrl();
-      setSocketStatus('connecting');
-
-      const socket = io(baseUrl, {
-        transports: ['websocket', 'polling'],
-        reconnectionAttempts: 5,
-        reconnectionDelay: 2000,
-      });
-
-      socketRef.current = socket;
-
-      socket.on('connect', () => {
-        setSocketStatus('connected');
-        joinedRoomRef.current = userId;
-        // Join the common room named kyc_room_${userId}
-        socket.emit('join_kyc_room', userId);
-      });
-
-      socket.on('disconnect', (reason) => {
-        setSocketStatus('disconnected');
-        if (reason === 'io server disconnect') {
-          joinedRoomRef.current = null;
-        }
-      });
-
-      socket.on('connect_error', () => {
-        setSocketStatus('error');
-      });
-
-      socket.on('onramp_status_updated', (payload: OnrampStatusPayload) => {
-        // Only update if it relates to our active session or if tracking is active
-        if (activeSessionIdRef.current && payload.sessionId !== activeSessionIdRef.current) {
-          return;
-        }
-
-        setOnrampPayload(payload);
-        setOnrampActive(true);
-
-        if (payload.status === 'fulfillment_complete') {
-          setOnrampActive(false);
-          setOnrampResult('success');
-        } else if (payload.status === 'rejected') {
-          setOnrampActive(false);
-          setOnrampResult('failed');
-        }
-      });
-    };
-
-    unsubscribe = auth.onAuthStateChanged(handleAuth);
-
     return () => {
-      unsubscribe();
       leaveOnrampRoom();
     };
   }, [leaveOnrampRoom]);
