@@ -383,10 +383,10 @@ export default function Footer() {
 
                     {/* Secondary Navigation */}
                     <div className="flex flex-wrap items-center gap-x-8 gap-y-4 text-xs font-sans text-white/40">
-                        <Link href="#" className="hover:text-white transition-colors">About</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Ecosystem</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Terms</Link>
+                        <Link href="/" className="hover:text-white transition-colors">About</Link>
+                        <Link href="/" className="hover:text-white transition-colors">Ecosystem</Link>
+                        <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+                        <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
                         <span className="md:ml-4 flex items-center gap-1">
                             © 2026 Luxor Pay made with love <Heart className="w-3 h-3 text-red-500 fill-current" />
                         </span>
