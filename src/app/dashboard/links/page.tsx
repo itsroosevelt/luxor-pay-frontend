@@ -148,7 +148,7 @@ const FormHeader = styled.h2`
   padding-right: 36px;
 
   svg {
-    color: #60A5FA;
+    color: #34D399;
   }
 `;
 
@@ -189,8 +189,8 @@ const Input = styled.input`
 
   &:focus {
     outline: none;
-    border-color: #60A5FA;
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.2);
+    border-color: #34D399;
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2);
   }
 
   &::placeholder {
@@ -218,7 +218,7 @@ const Select = styled.select`
 
   &:focus {
     outline: none;
-    border-color: #60A5FA;
+    border-color: #34D399;
   }
 
   option, optgroup {
@@ -247,7 +247,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 
@@ -257,9 +257,9 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     background: #FFFFFF;
     color: #000000;
     &:hover:not(:disabled) {
-      background: #2563EB;
+      background: #10B981;
       color: #FFFFFF;
-      box-shadow: 0 8px 16px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
     }
   `}
 
@@ -311,8 +311,8 @@ const IconWrapper = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: rgba(96, 165, 250, 0.1);
-  color: #60A5FA;
+  background: rgba(52, 211, 153, 0.1);
+  color: #34D399;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -350,7 +350,7 @@ const LinkDetails = styled.p`
 
   strong {
     font-weight: 600;
-    color: #60A5FA;
+    color: #34D399;
     font-size: 12px;
   }
 `;
@@ -377,13 +377,13 @@ const IconAction = styled.button`
   flex-shrink: 0;
 
   &:hover {
-    background: rgba(96, 165, 250, 0.15);
-    border-color: rgba(96, 165, 250, 0.35);
-    color: #60A5FA;
+    background: rgba(52, 211, 153, 0.15);
+    border-color: rgba(52, 211, 153, 0.35);
+    color: #34D399;
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -525,12 +525,12 @@ export default function PaymentLinksPage() {
 
   return (
     <PageContainer>
-      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+      <header className="lx-page-header">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+          <h1 className="lx-page-title">
             Payment Links
           </h1>
-          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <p className="lx-page-subtitle">
             Checkout URLs for your website, email, or social.
           </p>
         </div>

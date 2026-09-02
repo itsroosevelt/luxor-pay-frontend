@@ -34,12 +34,12 @@ export default function TransactionsPage() {
 
   return (
     <>
-      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+      <header className="lx-page-header">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+          <h1 className="lx-page-title">
             Transactions
           </h1>
-          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <p className="lx-page-subtitle">
             All Solana transfers and settlement transactions for your account.
           </p>
         </div>
@@ -52,7 +52,7 @@ export default function TransactionsPage() {
             onTransferClick={() => setIsTransferModalOpen(true)}
           />
         ) : (
-          <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>Loading transactions...</p>
+          <p className="text-gray-500 text-sm">Loading transactions...</p>
         )}
       </div>
 

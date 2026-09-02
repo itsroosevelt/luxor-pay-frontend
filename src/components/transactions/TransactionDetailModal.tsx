@@ -96,7 +96,7 @@ const Label = styled.span`
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #60A5FA;
+  color: #34D399;
 `;
 
 const ValueBox = styled.div`
@@ -123,9 +123,9 @@ const LinkButton = styled.a`
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #60A5FA;
+  color: #34D399;
   text-decoration: none;
-  background: rgba(37, 99, 235, 0.1);
+  background: rgba(16, 185, 129, 0.1);
   padding: 12px 24px;
   border-radius: 9999px;
   transition: all 0.2s;
@@ -133,7 +133,7 @@ const LinkButton = styled.a`
   margin-top: 8px;
 
   &:hover {
-    background: rgba(37, 99, 235, 0.2);
+    background: rgba(16, 185, 129, 0.2);
     color: #FFFFFF;
   }
 `;

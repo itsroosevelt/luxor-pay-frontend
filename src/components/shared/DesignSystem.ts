@@ -4,51 +4,48 @@ import styled from "styled-components";
 import { motion } from "framer-motion";
 
 export const GlassCard = styled(motion.div)<{ $variant?: "default" | "hero" }>`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(40px);
-  border-radius: 32px;
-  box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.5);
-  padding: 28px;
+  background: var(--lx-surface, #111624);
+  border: 1px solid var(--lx-border, #1E2638);
+  border-radius: var(--lx-radius, 12px);
+  box-shadow: var(--lx-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.28));
+  padding: var(--lx-pad, 24px);
   position: relative;
   overflow: hidden;
   width: 100%;
 `;
 
 export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "glass" }>`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', 'Outfit', sans-serif;
   font-size: 14px;
-  font-weight: 500;
-  border-radius: 9999px;
-  padding: 12px 24px;
+  font-weight: 600;
+  border-radius: var(--lx-radius-sm, 8px);
+  padding: 10px 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  border: none;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  border: 1px solid transparent;
   white-space: nowrap;
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: var(--lx-ring, 0 0 0 3px rgba(16, 185, 129, 0.28));
   }
 
   &:disabled {
-    opacity: 0.4;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 
   ${({ $variant }) =>
     ($variant === "primary" || !$variant) &&
     `
-    background: #FFFFFF;
-    color: #000000;
+    background: var(--lx-accent, #10B981);
+    color: #05130D;
     &:hover:not(:disabled) {
-      background: #2563EB;
-      color: #FFFFFF;
-      box-shadow: 0 0 20px rgba(37, 99, 235, 0.4);
+      background: var(--lx-accent-hover, #0EA372);
     }
   `}
 
@@ -56,57 +53,54 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
     $variant === "secondary" &&
     `
     background: transparent;
-    color: #60A5FA;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
+    color: var(--lx-text, #F5F7FB);
+    border: 1px solid var(--lx-border-strong, #2D3748);
     &:hover:not(:disabled) {
-      background: rgba(96, 165, 250, 0.1);
-      border-color: #60A5FA;
-      color: #FFFFFF;
+      background: var(--lx-surface-hover, #1A2133);
+      border-color: var(--lx-border-hover, #38445c);
     }
   `}
 
   ${({ $variant }) =>
     $variant === "glass" &&
     `
-    background: rgba(255, 255, 255, 0.05);
-    color: #EDEDED;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
+    background: var(--lx-surface-2, #151B2B);
+    color: var(--lx-text, #F5F7FB);
+    border: 1px solid var(--lx-border, #1E2638);
     &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: var(--lx-surface-hover, #1A2133);
+      border-color: var(--lx-border-hover, #38445c);
     }
   `}
 `;
 
 export const HeroTitle = styled.h1`
-  font-family: 'Outfit', sans-serif;
-  font-size: 36px;
-  font-weight: 500;
-  letter-spacing: -1.5px;
-  color: #FFFFFF;
-  line-height: 1.1;
+  font-family: 'Inter', 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--lx-text, #F5F7FB);
+  line-height: 1.15;
   margin: 0;
 
   @media (min-width: 768px) {
-    font-size: 54px;
+    font-size: 34px;
   }
 `;
 
 export const EyebrowBadge = styled.span`
-  font-family: 'Outfit', sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.4em;
+  font-family: 'Inter', 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #60A5FA;
+  color: var(--lx-text-dim, #66728A);
   display: inline-block;
   margin-bottom: 6px;
 `;
 
 export const GradientText = styled.span`
-  background: linear-gradient(to right, #60A5FA, #2563EB);
+  background: linear-gradient(to right, #34D399, #10B981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 `;

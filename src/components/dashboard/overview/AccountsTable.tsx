@@ -62,7 +62,7 @@ const TabButton = styled.button<{ $active?: boolean }>`
   `}
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -152,7 +152,7 @@ const TokenBadge = styled.span`
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #60A5FA, #2563EB);
+  background: linear-gradient(135deg, #34D399, #10B981);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -164,7 +164,7 @@ const TokenIcon = styled.div<{ $bg?: string }>`
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  background: ${({ $bg }) => $bg || 'linear-gradient(135deg, #60A5FA, #2563EB)'};
+  background: ${({ $bg }) => $bg || 'linear-gradient(135deg, #34D399, #10B981)'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,13 +229,13 @@ const ActionIconButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(96, 165, 250, 0.2);
-    border-color: rgba(96, 165, 250, 0.4);
-    color: #60A5FA;
+    background: rgba(52, 211, 153, 0.2);
+    border-color: rgba(52, 211, 153, 0.4);
+    color: #34D399;
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -317,7 +317,7 @@ export function AccountsTable({
       symbol,
       balanceText: `${t.uiAmount} ${symbol}`,
       usdVal,
-      bg: ['USDC', 'USDT'].includes(upperSymbol) ? 'linear-gradient(135deg, #2775CA, #1E508F)' : 'linear-gradient(135deg, #60A5FA, #2563EB)',
+      bg: ['USDC', 'USDT'].includes(upperSymbol) ? 'linear-gradient(135deg, #2775CA, #1E508F)' : 'linear-gradient(135deg, #34D399, #10B981)',
     };
   });
 

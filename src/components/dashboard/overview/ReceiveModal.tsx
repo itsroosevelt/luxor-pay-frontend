@@ -82,7 +82,7 @@ const AddressLabel = styled.span`
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
-  color: #60A5FA;
+  color: #34D399;
   margin-bottom: 8px;
   text-align: center;
 `;
@@ -149,7 +149,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   justify-content: center;
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 
@@ -159,7 +159,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     background: #FFFFFF;
     color: #000000;
     &:hover {
-      background: #2563EB;
+      background: #10B981;
       color: #FFFFFF;
     }
   `}
@@ -168,7 +168,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     $variant === 'secondary' &&
     `
     background: transparent;
-    color: #60A5FA;
+    color: #34D399;
     border: 1px solid rgba(255, 255, 255, 0.2);
     &:hover {
       background: rgba(255, 255, 255, 0.1);

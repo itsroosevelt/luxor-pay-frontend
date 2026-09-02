@@ -77,12 +77,12 @@ const AddButton = styled.button`
   gap: 6px;
   background: #FFFFFF;
   color: #000000;
-  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.15);
+  box-shadow: 0 4px 20px rgba(52, 211, 153, 0.15);
 
   &:hover:not(:disabled) {
-    background: #2563EB;
+    background: #10B981;
     color: #FFFFFF;
-    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
     transform: translateY(-1px);
   }
 
@@ -91,7 +91,7 @@ const AddButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -122,8 +122,8 @@ const ContactCard = styled(motion.div)`
   transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
 
   &:hover {
-    border-color: rgba(96, 165, 250, 0.3);
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.1), 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+    border-color: rgba(52, 211, 153, 0.3);
+    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.1), 0 24px 48px -12px rgba(0, 0, 0, 0.6);
     transform: translateY(-2px);
   }
 `;
@@ -131,7 +131,7 @@ const ContactCard = styled(motion.div)`
 const CardAccent = styled.div`
   height: 3px;
   width: 100%;
-  background: linear-gradient(to right, #60A5FA, #2563EB);
+  background: linear-gradient(to right, #34D399, #10B981);
   opacity: 0.7;
 `;
 
@@ -160,8 +160,8 @@ const Avatar = styled.div`
   width: 40px;
   height: 40px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(96,165,250,0.25), rgba(37,99,235,0.4));
-  border: 1px solid rgba(96,165,250,0.3);
+  background: linear-gradient(135deg, rgba(52, 211, 153,0.25), rgba(16, 185, 129,0.4));
+  border: 1px solid rgba(52, 211, 153,0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,7 +169,7 @@ const Avatar = styled.div`
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
   font-weight: 500;
-  color: #60A5FA;
+  color: #34D399;
   text-transform: uppercase;
   letter-spacing: -0.5px;
 `;
@@ -199,9 +199,9 @@ const Badge = styled.span`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #60A5FA;
-  background: rgba(96, 165, 250, 0.12);
-  border: 1px solid rgba(96,165,250,0.25);
+  color: #34D399;
+  background: rgba(52, 211, 153, 0.12);
+  border: 1px solid rgba(52, 211, 153,0.25);
   padding: 2px 8px;
   border-radius: 9999px;
   width: fit-content;
@@ -233,7 +233,7 @@ const IconButton = styled.button<{ $danger?: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -291,7 +291,7 @@ const Value = styled.span`
 const OnChainValue = styled.span`
   font-family: monospace;
   font-size: 11px;
-  color: #60A5FA;
+  color: #34D399;
   word-break: break-all;
   line-height: 1.5;
 `;
@@ -325,7 +325,7 @@ const SecondaryButton = styled.button`
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: transparent;
-  color: #60A5FA;
+  color: #34D399;
   cursor: pointer;
   transition: all 0.2s;
   display: inline-flex;
@@ -339,7 +339,7 @@ const SecondaryButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -347,8 +347,8 @@ const SecondaryButton = styled.button`
 const Spinner = styled.div`
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(96, 165, 250, 0.2);
-  border-top-color: #60A5FA;
+  border: 3px solid rgba(52, 211, 153, 0.2);
+  border-top-color: #34D399;
   border-radius: 50%;
   animation: ${spin} 1s linear infinite;
 `;

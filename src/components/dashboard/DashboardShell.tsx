@@ -88,13 +88,8 @@ function NavLinks({
               href={href}
               onClick={onClick}
               title={collapsed ? label : undefined}
-              className={clsx(
-                'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-2xl',
-                collapsed ? 'justify-center p-3 text-center' : 'gap-3 px-4 py-3',
-                active
-                  ? 'bg-white/10 text-white shadow-sm font-semibold'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              )}
+              data-active={active}
+              className={clsx('lx-nav-item lx-focusable', collapsed && 'justify-center')}
             >
               <Icon size={18} className="shrink-0" />
               {!collapsed && <span className="truncate">{label}</span>}
@@ -104,10 +99,13 @@ function NavLinks({
       </div>
 
       {/* Settings Option at Bottom - Submenu Expands Upwards */}
-      <div className="w-full pt-2 mt-auto border-t border-white/5">
+      <div className="w-full pt-2 mt-auto" style={{ borderTop: '1px solid var(--lx-border)' }}>
         {/* Submenu Items (Rendered ABOVE Settings button so it opens UPWARDS) */}
         {isSettingsOpen && !collapsed && (
-          <div className="mb-2 ml-4 pl-3 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div
+            className="mb-2 ml-4 pl-3 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-200"
+            style={{ borderLeft: '1px solid var(--lx-border-strong)' }}
+          >
             {settingsSubNav.map(({ href, label, icon: SubIcon, tab }) => {
               const isTabActive = isSettingsActive && currentTab === tab;
               return (
@@ -115,12 +113,8 @@ function NavLinks({
                   key={href}
                   href={href}
                   onClick={onClick}
-                  className={clsx(
-                    'w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium rounded-full transition-all duration-200',
-                    isTabActive
-                      ? 'bg-[#2563EB]/20 text-[#60A5FA] font-semibold border border-[#2563EB]/40 shadow-sm'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  )}
+                  data-active={isTabActive}
+                  className="lx-nav-item lx-focusable !py-2 !text-xs"
                 >
                   <SubIcon size={14} className="shrink-0" />
                   <span className="truncate">{label}</span>
@@ -141,12 +135,10 @@ function NavLinks({
             }
           }}
           title={collapsed ? 'Settings' : undefined}
+          data-active={isSettingsActive}
           className={clsx(
-            'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-2xl select-none cursor-pointer',
-            collapsed ? 'justify-center p-3 text-center' : 'justify-between px-4 py-3',
-            isSettingsActive
-              ? 'bg-white/10 text-white shadow-sm font-semibold'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
+            'lx-nav-item lx-focusable select-none cursor-pointer',
+            collapsed ? 'justify-center' : 'justify-between'
           )}
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -213,7 +205,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       />
     ) : (
       <div
-        className="rounded-full bg-gradient-to-br from-[#60A5FA] to-[#2563EB] text-white flex items-center justify-center font-semibold"
+        className="rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center font-semibold"
         style={{ width: size, height: size, fontFamily: 'Outfit, sans-serif', fontSize: size * 0.4 }}
       >
         {avatarInitial}
@@ -273,8 +265,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
+      <div className="lx-app min-h-screen flex items-center justify-center" style={{ background: 'var(--lx-bg)' }}>
+        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -282,13 +274,18 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="h-screen w-screen bg-[#0A0A0A] text-[#EDEDED] selection:bg-[#2563EB]/30 flex overflow-hidden font-['Montserrat',sans-serif]">
+    <div className="lx-app h-screen w-screen text-[color:var(--lx-text)] selection:bg-emerald-500/30 flex overflow-hidden" style={{ background: 'var(--lx-bg)' }}>
       {/* Desktop Sidebar (Retractable) */}
       <aside
         className={clsx(
-          'border border-white/[0.06] bg-[#111111] hidden md:flex flex-col transition-all duration-300 ease-in-out shrink-0 m-3 rounded-3xl z-40 h-[calc(100vh-24px)]',
+          'hidden md:flex flex-col transition-all duration-300 ease-in-out shrink-0 m-3 z-40 h-[calc(100vh-24px)]',
           isCollapsed ? 'w-20' : 'w-64'
         )}
+        style={{
+          background: 'var(--lx-sidebar)',
+          border: '1px solid var(--lx-border)',
+          borderRadius: 'var(--lx-radius-lg)',
+        }}
       >
         <div
           onClick={toggleSidebar}
@@ -299,9 +296,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           }}
           title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
           className={clsx(
-            'p-4 border-b border-white/5 flex items-center cursor-pointer select-none transition-colors hover:bg-white/[0.03]',
+            'p-4 flex items-center cursor-pointer select-none transition-colors hover:bg-white/[0.03]',
             isCollapsed ? 'justify-center py-5' : 'justify-start gap-3 px-5'
           )}
+          style={{ borderBottom: '1px solid var(--lx-border)' }}
         >
           <img
             src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
@@ -310,11 +308,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           />
           {!isCollapsed && (
             <span className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] whitespace-nowrap">
-              Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
+              Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-emerald-500">Pay</span>
             </span>
           )}
         </div>
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-3 pl-4 space-y-1 overflow-y-auto">
           <NavLinksSuspense
             pathname={pathname}
             router={router}
@@ -323,16 +321,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             collapsed={isCollapsed}
           />
         </nav>
-        <div className="p-3 border-t border-white/5">
+        <div className="p-3" style={{ borderTop: '1px solid var(--lx-border)' }}>
 
           <button
             type="button"
             onClick={handleSignOut}
             title={isCollapsed ? 'Sign out' : undefined}
-            style={{ fontFamily: 'Outfit, sans-serif' }}
             className={clsx(
-              "w-full flex items-center text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors",
-              isCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3'
+              "w-full flex items-center text-[#F43F5E] hover:bg-[#F43F5E]/10 rounded-lg text-sm font-medium transition-colors",
+              isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2.5'
             )}
           >
             <LogOut size={18} className="shrink-0" />
@@ -344,16 +341,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4 border-b border-white/5 bg-[#0A0A0A]">
+        <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--lx-border)', background: 'var(--lx-bg-elev)' }}>
           <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
             <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-            <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
+            <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-emerald-500">Pay</span></span>
           </Link>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsAccountMenuOpen((v) => !v)}
-              className="rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all flex-shrink-0"
+              className="rounded-full ring-1 ring-white/15 hover:ring-emerald-400/70 transition-all flex-shrink-0"
               title="Account"
               aria-label="Open account menu"
             >
@@ -376,11 +373,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <aside className="relative flex flex-col w-full bg-[#0A0A0A] border-b border-white/5 max-h-[85vh] rounded-b-3xl shadow-2xl animate-in fade-in slide-in-from-top-8 duration-200">
-              <div className="p-4 border-b border-white/5 flex items-center justify-between">
+            <aside className="relative flex flex-col w-full max-h-[85vh] rounded-b-2xl shadow-2xl animate-in fade-in slide-in-from-top-8 duration-200" style={{ background: 'var(--lx-bg-elev)', borderBottom: '1px solid var(--lx-border)' }}>
+              <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--lx-border)' }}>
                 <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                   <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-                  <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
+                  <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-emerald-500">Pay</span></span>
                 </Link>
                 <button
                   type="button"
@@ -399,11 +396,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setIsMobileMenuOpen(false)}
                 />
               </nav>
-              <div className="p-4 border-t border-white/5">
+              <div className="p-4" style={{ borderTop: '1px solid var(--lx-border)' }}>
                 <button
                   type="button"
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors font-['Outfit',sans-serif]"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[#F43F5E] hover:bg-[#F43F5E]/10 rounded-lg text-sm font-medium transition-colors"
                 >
                   <LogOut size={18} /> Sign out
                 </button>
@@ -420,7 +417,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setIsAccountMenuOpen((v) => !v)}
-              className="rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all shadow-lg flex-shrink-0"
+              className="rounded-full ring-1 ring-white/15 hover:ring-emerald-400/70 transition-all shadow-lg flex-shrink-0"
               title="Account"
               aria-label="Open account menu"
             >
@@ -443,13 +440,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
           <div
             style={{
-              background: 'rgba(15,15,15,0.98)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(40px)',
-              borderRadius: '28px',
-              boxShadow: '0 32px 64px -16px rgba(0,0,0,0.8)',
+              background: 'var(--lx-surface)',
+              border: '1px solid var(--lx-border-strong)',
+              borderRadius: 'var(--lx-radius-lg)',
+              boxShadow: 'var(--lx-shadow-lg)',
             }}
-            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-5 text-[#EDEDED] font-body animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-6 text-[color:var(--lx-text)] animate-in fade-in slide-in-from-top-2 duration-200"
           >
             <p className="text-center text-xs text-gray-400 font-mono truncate mb-4">{user.email}</p>
 

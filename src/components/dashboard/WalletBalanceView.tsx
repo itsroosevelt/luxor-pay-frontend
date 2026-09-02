@@ -47,18 +47,18 @@ const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60A5FA;
+  color: #34D399;
   cursor: pointer;
   transition: all 0.2s ease;
 
   &:hover:not(:disabled) {
-    background: rgba(37, 99, 235, 0.25);
+    background: rgba(16, 185, 129, 0.25);
     color: #FFFFFF;
-    border-color: rgba(96, 165, 250, 0.4);
+    border-color: rgba(52, 211, 153, 0.4);
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 
@@ -89,7 +89,7 @@ const PrimaryBalance = styled.div`
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  background: linear-gradient(to right, #60A5FA, #2563EB);
+  background: linear-gradient(to right, #34D399, #10B981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.1;
@@ -138,15 +138,15 @@ const TokenIconCircle = styled.div`
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(37, 99, 235, 0.25));
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.25), rgba(16, 185, 129, 0.25));
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   font-size: 11px;
-  color: #60A5FA;
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #34D399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
 `;
 
 const TokenSymbol = styled.span`
@@ -184,14 +184,14 @@ const SkeletonBox = styled.div<{ $width?: string; $height?: string; $borderRadiu
   width: ${({ $width }) => $width || '100%'};
   height: ${({ $height }) => $height || '24px'};
   border-radius: ${({ $borderRadius }) => $borderRadius || '12px'};
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.1) 25%, rgba(96, 165, 250, 0.2) 50%, rgba(37, 99, 235, 0.1) 75%);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.1) 25%, rgba(52, 211, 153, 0.2) 50%, rgba(16, 185, 129, 0.1) 75%);
   background-size: 200% 100%;
   animation: ${shimmer} 2s infinite;
 `;
 
 const KycAlertBanner = styled(motion.div)`
-  background: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(96, 165, 250, 0.25);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(52, 211, 153, 0.25);
   border-radius: 24px;
   padding: 16px 20px;
   margin-top: 16px;

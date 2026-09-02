@@ -129,7 +129,7 @@ const TokenCircle = styled.span<{ $symbol?: string }>`
       ? 'linear-gradient(135deg, #2775CA, #1E508F)'
       : $symbol === 'USDT'
       ? 'linear-gradient(135deg, #26A17B, #1A6C52)'
-      : 'linear-gradient(135deg, #60A5FA, #2563EB)'};
+      : 'linear-gradient(135deg, #34D399, #10B981)'};
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -180,7 +180,7 @@ const StatusPill = styled.div<{ $status: string }>`
     if (statusUpper === 'PENDING' || statusUpper === 'PROCESSING' || statusUpper === 'SUBMITTED' || statusUpper === 'AWAITING_SIGNATURE') {
       return `
         background: rgba(59, 130, 246, 0.1);
-        color: #60A5FA;
+        color: #34D399;
         border: 1px solid rgba(59, 130, 246, 0.2);
       `;
     }
@@ -211,7 +211,7 @@ const ExpandIconButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -273,7 +273,7 @@ const DetailVal = styled.span`
 `;
 
 const LinkButton = styled.a`
-  color: #60A5FA;
+  color: #34D399;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -291,8 +291,8 @@ const ExplorerButton = styled.a`
   padding: 10px 22px;
   border-radius: 9999px;
   background: rgba(15, 25, 48, 0.85);
-  border: 1px solid rgba(37, 99, 235, 0.35);
-  color: #60A5FA;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34D399;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -301,11 +301,11 @@ const ExplorerButton = styled.a`
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(37, 99, 235, 0.25);
-    border-color: rgba(96, 165, 250, 0.6);
+    background: rgba(16, 185, 129, 0.25);
+    border-color: rgba(52, 211, 153, 0.6);
     color: #FFFFFF;
     transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
   }
 
   &:active {
@@ -313,7 +313,7 @@ const ExplorerButton = styled.a`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -340,12 +340,12 @@ const DrawerButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   border: ${({ $variant }) => ($variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.08)' : 'none')};
 
   &:hover {
-    background: ${({ $variant }) => ($variant === 'primary' ? '#2563EB' : 'rgba(255, 255, 255, 0.1)')};
+    background: ${({ $variant }) => ($variant === 'primary' ? '#10B981' : 'rgba(255, 255, 255, 0.1)')};
     color: #FFFFFF;
   }
   
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;
@@ -385,7 +385,7 @@ const TimelineDot = styled.div<{ $status?: string }>`
   color: ${({ $status }) => {
     if ($status === 'done') return '#34D399';
     if ($status === 'failed') return '#FCA5A5';
-    if ($status === 'pending') return '#60A5FA';
+    if ($status === 'pending') return '#34D399';
     return 'rgba(255, 255, 255, 0.4)';
   }};
   display: flex;

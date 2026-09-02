@@ -153,10 +153,10 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
         type="button"
         onClick={() => setIsOpen((open) => !open)}
         aria-expanded={isOpen}
-        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left hover:bg-white/[0.02] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#60A5FA]"
+        className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left hover:bg-white/[0.02] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#34D399]"
       >
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 border border-[#60A5FA]/30 flex items-center justify-center text-[#60A5FA] flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#10B981]/10 border border-[#34D399]/30 flex items-center justify-center text-[#34D399] flex-shrink-0">
             <FileText size={20} />
           </div>
           <div className="min-w-0">
@@ -217,10 +217,10 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
                   key={option.value}
                   type="button"
                   onClick={() => openStatement(option)}
-                  className="group text-left rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#60A5FA]/40 transition-all p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#60A5FA]"
+                  className="group text-left rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] hover:border-[#34D399]/40 transition-all p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#34D399]"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-9 h-9 rounded-lg bg-[#2563EB]/10 border border-[#60A5FA]/20 flex items-center justify-center text-[#60A5FA]">
+                    <div className="w-9 h-9 rounded-lg bg-[#10B981]/10 border border-[#34D399]/20 flex items-center justify-center text-[#34D399]">
                       <Calendar size={16} />
                     </div>
                   </div>
@@ -230,7 +230,7 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
                   >
                     {option.label}
                   </p>
-                  <p className="mt-2 flex items-center gap-1 text-xs text-gray-400 group-hover:text-[#60A5FA] transition-colors">
+                  <p className="mt-2 flex items-center gap-1 text-xs text-gray-400 group-hover:text-[#34D399] transition-colors">
                     View statement <ChevronRight size={14} />
                   </p>
                 </button>
@@ -280,7 +280,7 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
                   </div>
                 ) : isLoading ? (
                   <div className="flex-1 flex flex-col items-center justify-center gap-3 text-gray-300">
-                    <div className="w-8 h-8 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-2 border-[#34D399] border-t-transparent rounded-full animate-spin" />
                     <p className="text-sm">Loading statement…</p>
                   </div>
                 ) : pdfUrl ? (

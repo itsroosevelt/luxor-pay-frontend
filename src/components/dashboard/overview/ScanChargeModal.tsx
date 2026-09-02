@@ -95,8 +95,8 @@ const Input = styled.input`
 
   &:focus-visible {
     outline: none;
-    border-color: #60A5FA;
-    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+    border-color: #34D399;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
   }
 
   &::placeholder {
@@ -121,8 +121,8 @@ const Select = styled.select`
 
   &:focus-visible {
     outline: none;
-    border-color: #60A5FA;
-    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+    border-color: #34D399;
+    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
   }
 
   & option {
@@ -132,7 +132,7 @@ const Select = styled.select`
   
   & optgroup {
     background: #0A0A0A;
-    color: #60A5FA;
+    color: #34D399;
     font-weight: 600;
   }
 `;
@@ -159,7 +159,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   gap: 8px;
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 
@@ -174,7 +174,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     background: #FFFFFF;
     color: #000000;
     &:hover:not(:disabled) {
-      background: #2563EB;
+      background: #10B981;
       color: #FFFFFF;
     }
   `}
@@ -183,7 +183,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     $variant === 'secondary' &&
     `
     background: transparent;
-    color: #60A5FA;
+    color: #34D399;
     border: 1px solid rgba(255, 255, 255, 0.2);
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.1);
@@ -432,7 +432,7 @@ export function ScanChargeModal({
               <Title>Scanning QR</Title>
               {linkName ? (
                 <Subtitle>
-                  Charge for <strong style={{ color: '#60A5FA' }}>{linkName}</strong>. Align the client's wallet QR code inside the frame.
+                  Charge for <strong style={{ color: '#34D399' }}>{linkName}</strong>. Align the client's wallet QR code inside the frame.
                 </Subtitle>
               ) : (
                 <Subtitle>Align the client's wallet QR code inside the frame.</Subtitle>
@@ -465,7 +465,7 @@ export function ScanChargeModal({
               <Title>Confirm Charge</Title>
               {linkName ? (
                 <Subtitle>
-                  Verify the charge details for <strong style={{ color: '#60A5FA' }}>{linkName}</strong> before confirming.
+                  Verify the charge details for <strong style={{ color: '#34D399' }}>{linkName}</strong> before confirming.
                 </Subtitle>
               ) : (
                 <Subtitle>Verify the charge details before confirming.</Subtitle>
@@ -480,7 +480,7 @@ export function ScanChargeModal({
                 )}
                 <InfoRow>
                   <InfoLabel>Amount</InfoLabel>
-                  <InfoValue style={{ color: '#60A5FA', fontWeight: 600 }}>
+                  <InfoValue style={{ color: '#34D399', fontWeight: 600 }}>
                     {formData.amount} {getSelectedTokenSymbol()}
                   </InfoValue>
                 </InfoRow>
@@ -510,7 +510,7 @@ export function ScanChargeModal({
           {/* STEP 4: SUCCESS */}
           {step === 4 && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
-              <CheckCircle size={64} color="#60A5FA" />
+              <CheckCircle size={64} color="#34D399" />
               <Title style={{ margin: 0 }}>Charge Completed!</Title>
               <Subtitle style={{ margin: 0 }}>
                 The transfer of {formData.amount} {getSelectedTokenSymbol()} was confirmed on-chain.

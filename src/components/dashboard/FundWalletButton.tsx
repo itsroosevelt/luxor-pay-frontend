@@ -40,7 +40,7 @@ const FundButton = styled(motion.button)`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #34D399;
     outline-offset: 2px;
   }
 `;

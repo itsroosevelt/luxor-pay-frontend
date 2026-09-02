@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -53,6 +53,232 @@ html, body {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* ============================================================
+   Luxor Pay — Square-inspired App Theme
+   Scoped to the authenticated dashboard via `.lx-app`.
+   The public landing page and /login are intentionally untouched.
+   ============================================================ */
+.lx-app {
+  /* Surfaces */
+  --lx-bg: #0B0E14;
+  --lx-bg-elev: #0F131C;
+  --lx-surface: #111624;
+  --lx-surface-2: #151B2B;
+  --lx-surface-hover: #1A2133;
+  --lx-sidebar: #0D111A;
+
+  /* Borders */
+  --lx-border: #1E2638;
+  --lx-border-strong: #2D3748;
+  --lx-border-hover: #38445c;
+
+  /* Text */
+  --lx-text: #F5F7FB;
+  --lx-text-muted: #9AA7BD;
+  --lx-text-dim: #66728A;
+
+  /* Accents — neutral + status green */
+  --lx-accent: #10B981;
+  --lx-accent-hover: #0EA372;
+  --lx-accent-soft: rgba(16, 185, 129, 0.12);
+  --lx-accent-border: rgba(16, 185, 129, 0.32);
+  --lx-danger: #F43F5E;
+  --lx-warning: #F59E0B;
+
+  /* Shape & rhythm */
+  --lx-radius-sm: 8px;
+  --lx-radius: 12px;
+  --lx-radius-lg: 16px;
+  --lx-pad: 24px;
+  --lx-pad-lg: 32px;
+
+  /* Elevation — flat, high-contrast, minimal */
+  --lx-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
+  --lx-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 10px 28px -16px rgba(0, 0, 0, 0.55);
+  --lx-shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.35), 0 24px 56px -20px rgba(0, 0, 0, 0.6);
+  --lx-ring: 0 0 0 3px rgba(16, 185, 129, 0.28);
+
+  font-family: 'Inter', var(--font-outfit), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--lx-bg);
+  color: var(--lx-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.lx-app *,
+.lx-app button,
+.lx-app input,
+.lx-app select,
+.lx-app textarea {
+  font-family: 'Inter', var(--font-outfit), system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+/* Structured card — thin border, generous padding, 12px radius */
+.lx-app .lx-card {
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius);
+  padding: var(--lx-pad);
+}
+
+.lx-app .lx-card-lg {
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius-lg);
+  padding: var(--lx-pad-lg);
+}
+
+/* Interactive card — used for action tiles / quick start */
+.lx-app .lx-card-interactive {
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius);
+  transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+}
+.lx-app .lx-card-interactive:hover {
+  background: var(--lx-surface-hover);
+  border-color: var(--lx-border-hover);
+  transform: translateY(-2px);
+}
+.lx-app .lx-card-interactive:active {
+  transform: translateY(0);
+}
+
+/* Section / page eyebrow */
+.lx-app .lx-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--lx-text-dim);
+}
+
+/* Status pill */
+.lx-app .lx-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--lx-accent-soft);
+  color: var(--lx-accent);
+  border: 1px solid var(--lx-accent-border);
+}
+.lx-app .lx-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+}
+
+/* Primary button — Square-style solid, square-ish corners */
+.lx-app .lx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: var(--lx-radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  white-space: nowrap;
+}
+.lx-app .lx-btn-primary {
+  background: var(--lx-accent);
+  color: #05130D;
+}
+.lx-app .lx-btn-primary:hover:not(:disabled) {
+  background: var(--lx-accent-hover);
+}
+.lx-app .lx-btn-secondary {
+  background: transparent;
+  color: var(--lx-text);
+  border-color: var(--lx-border-strong);
+}
+.lx-app .lx-btn-secondary:hover:not(:disabled) {
+  background: var(--lx-surface-hover);
+  border-color: var(--lx-border-hover);
+}
+.lx-app .lx-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.lx-app .lx-btn:focus-visible,
+.lx-app .lx-focusable:focus-visible {
+  outline: none;
+  box-shadow: var(--lx-ring);
+}
+
+/* Page header band */
+.lx-app .lx-page-header {
+  padding: 24px;
+  border-bottom: 1px solid var(--lx-border);
+  background: var(--lx-bg-elev);
+}
+@media (min-width: 768px) {
+  .lx-app .lx-page-header {
+    padding: 28px 40px;
+  }
+}
+.lx-app .lx-page-title {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--lx-text);
+  margin: 0;
+  line-height: 1.15;
+}
+.lx-app .lx-page-subtitle {
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: var(--lx-text-muted);
+  font-weight: 400;
+}
+
+/* Sidebar nav item states + microinteractions */
+.lx-app .lx-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--lx-radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--lx-text-muted);
+  transition: color 0.14s ease, background-color 0.14s ease;
+}
+.lx-app .lx-nav-item :where(svg) {
+  transition: transform 0.16s ease;
+}
+.lx-app .lx-nav-item:hover {
+  color: var(--lx-text);
+  background: var(--lx-surface-hover);
+}
+.lx-app .lx-nav-item:hover :where(svg) {
+  transform: translateX(1px) scale(1.04);
+}
+.lx-app .lx-nav-item[data-active='true'] {
+  color: var(--lx-text);
+  background: var(--lx-surface-2);
+  font-weight: 600;
+}
+.lx-app .lx-nav-item[data-active='true']::before {
+  content: '';
+  position: absolute;
+  left: -3px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 9999px;
+  background: var(--lx-accent);
 }
 
 /* ── Single Visible Sleek Scrollbar ── */

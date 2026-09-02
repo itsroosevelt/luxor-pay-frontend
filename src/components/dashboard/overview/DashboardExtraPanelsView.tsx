@@ -165,7 +165,7 @@ const ScrollableFlowContainer = styled.div`
     border-radius: 9999px;
   }
   &::-webkit-scrollbar-thumb:hover {
-    background: rgba(96, 165, 250, 0.4);
+    background: rgba(52, 211, 153, 0.4);
   }
 `;
 

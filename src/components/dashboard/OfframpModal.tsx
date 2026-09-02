@@ -53,7 +53,7 @@ const Sheet = styled(motion.div)`
     right: -30%;
     width: 60%;
     height: 60%;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.1), transparent 70%);
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.1), transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -93,7 +93,7 @@ const Eyebrow = styled.span`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #60A5FA;
+  color: #34D399;
   display: block;
   margin-bottom: 4px;
 `;
@@ -187,8 +187,8 @@ const RetryButton = styled.button`
   height: 40px;
   padding: 0 20px;
   border-radius: 9999px;
-  border: 1px solid rgba(96, 165, 250, 0.3);
-  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: rgba(16, 185, 129, 0.1);
   color: #60a5fa;
   font-family: 'Outfit', sans-serif;
   font-size: 13px;
@@ -198,8 +198,8 @@ const RetryButton = styled.button`
   margin-top: 4px;
 
   &:hover {
-    background: rgba(37, 99, 235, 0.22);
-    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(16, 185, 129, 0.22);
+    border-color: rgba(52, 211, 153, 0.5);
   }
 
   &:focus-visible {
@@ -357,7 +357,7 @@ export function OfframpModal({ isOpen, onClose, solBalance }: OfframpModalProps)
                     }}
                   >
                     Available:{" "}
-                    <span style={{ color: "#60A5FA", fontWeight: 600, fontFamily: "monospace" }}>
+                    <span style={{ color: "#34D399", fontWeight: 600, fontFamily: "monospace" }}>
                       {parseFloat(solBalance).toFixed(4)} SOL
                     </span>
                   </p>
