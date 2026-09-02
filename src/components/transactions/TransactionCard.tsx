@@ -11,7 +11,7 @@ import { getExplorerTxUrl } from "@/web3/config/network";
 import { TokenIcon } from "@/components/shared/TokenIcon";
 
 const COLOR_SENT = "#F87171";
-const COLOR_RECEIVED = "#34D399";
+const COLOR_RECEIVED = "#E2E8F0";
 const COLOR_FAILED = "#FBBF24";
 
 const ItemContainer = styled(motion.div)<{ $visualType: 'sent' | 'received' | 'failed' }>`
@@ -129,7 +129,7 @@ const TokenCircle = styled.span<{ $symbol?: string }>`
       ? 'linear-gradient(135deg, #2775CA, #1E508F)'
       : $symbol === 'USDT'
       ? 'linear-gradient(135deg, #26A17B, #1A6C52)'
-      : 'linear-gradient(135deg, #34D399, #10B981)'};
+      : 'linear-gradient(135deg, #E2E8F0, #10B981)'};
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -166,7 +166,7 @@ const StatusPill = styled.div<{ $status: string }>`
     if (statusUpper === 'CONFIRMED' || statusUpper === 'EXECUTED' || statusUpper === 'SUCCESS' || statusUpper === 'COMPLETED') {
       return `
         background: rgba(16, 185, 129, 0.1);
-        color: #34D399;
+        color: #E2E8F0;
         border: 1px solid rgba(16, 185, 129, 0.2);
       `;
     }
@@ -180,7 +180,7 @@ const StatusPill = styled.div<{ $status: string }>`
     if (statusUpper === 'PENDING' || statusUpper === 'PROCESSING' || statusUpper === 'SUBMITTED' || statusUpper === 'AWAITING_SIGNATURE') {
       return `
         background: rgba(59, 130, 246, 0.1);
-        color: #34D399;
+        color: #E2E8F0;
         border: 1px solid rgba(59, 130, 246, 0.2);
       `;
     }
@@ -211,7 +211,7 @@ const ExpandIconButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -273,7 +273,7 @@ const DetailVal = styled.span`
 `;
 
 const LinkButton = styled.a`
-  color: #34D399;
+  color: #E2E8F0;
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -291,8 +291,8 @@ const ExplorerButton = styled.a`
   padding: 10px 22px;
   border-radius: 9999px;
   background: rgba(15, 25, 48, 0.85);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #34D399;
+  border: 1px solid var(--lx-success-border, rgba(6,95,70,0.55));
+  color: #E2E8F0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -302,7 +302,7 @@ const ExplorerButton = styled.a`
 
   &:hover {
     background: rgba(16, 185, 129, 0.25);
-    border-color: rgba(52, 211, 153, 0.6);
+    border-color: rgba(255, 255, 255, 0.6);
     color: #FFFFFF;
     transform: translateY(-1px);
     box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2);
@@ -313,7 +313,7 @@ const ExplorerButton = styled.a`
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -345,7 +345,7 @@ const DrawerButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   }
   
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -377,15 +377,15 @@ const TimelineDot = styled.div<{ $status?: string }>`
   height: 18px;
   border-radius: 9999px;
   background: ${({ $status }) => {
-    if ($status === 'done') return 'rgba(52, 211, 153, 0.15)';
+    if ($status === 'done') return 'rgba(255, 255, 255, 0.15)';
     if ($status === 'failed') return 'rgba(239, 68, 68, 0.15)';
     if ($status === 'pending') return 'rgba(59, 130, 246, 0.15)';
     return 'rgba(255, 255, 255, 0.08)';
   }};
   color: ${({ $status }) => {
-    if ($status === 'done') return '#34D399';
+    if ($status === 'done') return '#E2E8F0';
     if ($status === 'failed') return '#FCA5A5';
-    if ($status === 'pending') return '#34D399';
+    if ($status === 'pending') return '#E2E8F0';
     return 'rgba(255, 255, 255, 0.4)';
   }};
   display: flex;

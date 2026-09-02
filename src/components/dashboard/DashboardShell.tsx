@@ -205,8 +205,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       />
     ) : (
       <div
-        className="rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center font-semibold"
-        style={{ width: size, height: size, fontFamily: 'Outfit, sans-serif', fontSize: size * 0.4 }}
+        className="rounded-full flex items-center justify-center font-semibold"
+        style={{
+          width: size,
+          height: size,
+          fontSize: size * 0.4,
+          background: 'var(--lx-surface-hover)',
+          color: 'var(--lx-text)',
+          border: '1px solid var(--lx-border-strong)',
+        }}
       >
         {avatarInitial}
       </div>
@@ -266,7 +273,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="lx-app min-h-screen flex items-center justify-center" style={{ background: 'var(--lx-bg)' }}>
-        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-white/30 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -274,7 +281,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="lx-app h-screen w-screen text-[color:var(--lx-text)] selection:bg-emerald-500/30 flex overflow-hidden" style={{ background: 'var(--lx-bg)' }}>
+    <div className="lx-app h-screen w-screen text-[color:var(--lx-text)] selection:bg-white/15 flex overflow-hidden" style={{ background: 'var(--lx-bg)' }}>
       {/* Desktop Sidebar (Retractable) */}
       <aside
         className={clsx(
@@ -308,7 +315,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           />
           {!isCollapsed && (
             <span className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] whitespace-nowrap">
-              Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-emerald-500">Pay</span>
+              Luxor <span style={{ color: "var(--lx-text)" }}>Pay</span>
             </span>
           )}
         </div>
@@ -344,13 +351,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--lx-border)', background: 'var(--lx-bg-elev)' }}>
           <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
             <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-            <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-emerald-500">Pay</span></span>
+            <span>Luxor <span style={{ color: "var(--lx-text)" }}>Pay</span></span>
           </Link>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsAccountMenuOpen((v) => !v)}
-              className="rounded-full ring-1 ring-white/15 hover:ring-emerald-400/70 transition-all flex-shrink-0"
+              className="rounded-full ring-1 ring-white/15 hover:ring-white/40 transition-all flex-shrink-0"
               title="Account"
               aria-label="Open account menu"
             >
@@ -377,7 +384,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--lx-border)' }}>
                 <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
                   <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-                  <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-300 to-emerald-500">Pay</span></span>
+                  <span>Luxor <span style={{ color: "var(--lx-text)" }}>Pay</span></span>
                 </Link>
                 <button
                   type="button"
@@ -417,7 +424,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <button
               type="button"
               onClick={() => setIsAccountMenuOpen((v) => !v)}
-              className="rounded-full ring-1 ring-white/15 hover:ring-emerald-400/70 transition-all shadow-lg flex-shrink-0"
+              className="rounded-full ring-1 ring-white/15 hover:ring-white/40 transition-all shadow-lg flex-shrink-0"
               title="Account"
               aria-label="Open account menu"
             >
@@ -460,7 +467,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
               <div className="mt-2.5">
                 {kycVerified ? (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-['Outfit',sans-serif]">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-800/50 font-['Outfit',sans-serif]">
                     <Check size={12} className="stroke-[3]" /> VERIFIED
                   </span>
                 ) : (

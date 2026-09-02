@@ -99,8 +99,8 @@ const IconContainer = styled.div`
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: rgba(52, 211, 153, 0.12);
-  border: 1px solid rgba(52, 211, 153, 0.25);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
   color: #60a5fa;
   margin: 0 auto 1.25rem;
 `;
@@ -336,15 +336,15 @@ export function KycModal({ isOpen, onClose }: KycModalProps) {
                 </SectionLabel>
                 <RequirementList>
                   <RequirementItem>
-                    <CheckCircle2 size={14} color="#34D399" style={{ flexShrink: 0 }} />
+                    <CheckCircle2 size={14} color="#E2E8F0" style={{ flexShrink: 0 }} />
                     Passport (any country)
                   </RequirementItem>
                   <RequirementItem>
-                    <CheckCircle2 size={14} color="#34D399" style={{ flexShrink: 0 }} />
+                    <CheckCircle2 size={14} color="#E2E8F0" style={{ flexShrink: 0 }} />
                     Government-issued driving licence
                   </RequirementItem>
                   <RequirementItem>
-                    <CheckCircle2 size={14} color="#34D399" style={{ flexShrink: 0 }} />
+                    <CheckCircle2 size={14} color="#E2E8F0" style={{ flexShrink: 0 }} />
                     National identity card / ID document
                   </RequirementItem>
                 </RequirementList>
@@ -357,7 +357,7 @@ export function KycModal({ isOpen, onClose }: KycModalProps) {
                 </SectionLabel>
                 <RequirementList>
                   <RequirementItem>
-                    <CheckCircle2 size={14} color="#34D399" style={{ flexShrink: 0 }} />
+                    <CheckCircle2 size={14} color="#E2E8F0" style={{ flexShrink: 0 }} />
                     A short selfie video or photo will be captured via your camera to confirm you are the document holder
                   </RequirementItem>
                 </RequirementList>

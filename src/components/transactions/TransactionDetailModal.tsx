@@ -96,7 +96,7 @@ const Label = styled.span`
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #34D399;
+  color: #E2E8F0;
 `;
 
 const ValueBox = styled.div`
@@ -123,7 +123,7 @@ const LinkButton = styled.a`
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 500;
-  color: #34D399;
+  color: #E2E8F0;
   text-decoration: none;
   background: rgba(16, 185, 129, 0.1);
   padding: 12px 24px;

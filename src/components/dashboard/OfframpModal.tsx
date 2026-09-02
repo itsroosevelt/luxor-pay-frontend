@@ -93,7 +93,7 @@ const Eyebrow = styled.span`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #34D399;
+  color: #E2E8F0;
   display: block;
   margin-bottom: 4px;
 `;
@@ -187,7 +187,7 @@ const RetryButton = styled.button`
   height: 40px;
   padding: 0 20px;
   border-radius: 9999px;
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   background: rgba(16, 185, 129, 0.1);
   color: #60a5fa;
   font-family: 'Outfit', sans-serif;
@@ -199,7 +199,7 @@ const RetryButton = styled.button`
 
   &:hover {
     background: rgba(16, 185, 129, 0.22);
-    border-color: rgba(52, 211, 153, 0.5);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   &:focus-visible {
@@ -357,7 +357,7 @@ export function OfframpModal({ isOpen, onClose, solBalance }: OfframpModalProps)
                     }}
                   >
                     Available:{" "}
-                    <span style={{ color: "#34D399", fontWeight: 600, fontFamily: "monospace" }}>
+                    <span style={{ color: "#E2E8F0", fontWeight: 600, fontFamily: "monospace" }}>
                       {parseFloat(solBalance).toFixed(4)} SOL
                     </span>
                   </p>

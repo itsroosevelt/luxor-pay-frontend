@@ -62,7 +62,7 @@ const TabButton = styled.button<{ $active?: boolean }>`
   `}
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -152,19 +152,20 @@ const TokenBadge = styled.span`
   width: 18px;
   height: 18px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #34D399, #10B981);
+  background: var(--lx-fill, rgba(255,255,255,0.06));
+  border: 1px solid var(--lx-border, rgba(255,255,255,0.08));
   display: inline-flex;
   align-items: center;
   justify-content: center;
   font-size: 10px;
-  color: #FFFFFF;
+  color: var(--lx-text-muted, #8A8F9E);
 `;
 
 const TokenIcon = styled.div<{ $bg?: string }>`
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  background: ${({ $bg }) => $bg || 'linear-gradient(135deg, #34D399, #10B981)'};
+  background: ${({ $bg }) => $bg || 'var(--lx-fill, rgba(255,255,255,0.06))'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -229,13 +230,13 @@ const ActionIconButton = styled.button`
   transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(52, 211, 153, 0.2);
-    border-color: rgba(52, 211, 153, 0.4);
-    color: #34D399;
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    color: #E2E8F0;
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -317,7 +318,7 @@ export function AccountsTable({
       symbol,
       balanceText: `${t.uiAmount} ${symbol}`,
       usdVal,
-      bg: ['USDC', 'USDT'].includes(upperSymbol) ? 'linear-gradient(135deg, #2775CA, #1E508F)' : 'linear-gradient(135deg, #34D399, #10B981)',
+      bg: 'var(--lx-fill, rgba(255,255,255,0.06))',
     };
   });
 
@@ -333,7 +334,7 @@ export function AccountsTable({
       balance: `${numSol.toFixed(6)} SOL`,
       valueUsd: `$${solUsdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       weight: totalPortfolioUsd > 0 ? Number(((solUsdValue / totalPortfolioUsd) * 100).toFixed(2)) : 0,
-      bg: 'linear-gradient(135deg, #14F195, #9945FF)',
+      bg: 'var(--lx-fill, rgba(255,255,255,0.06))',
     },
     ...tokenList.map((t) => ({
       id: t.mint,

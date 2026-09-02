@@ -93,8 +93,8 @@ const Input = styled.input`
 
   &:focus-visible {
     outline: none;
-    border-color: #34D399;
-    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
+    border-color: #E2E8F0;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
   }
 
   &::placeholder {
@@ -119,8 +119,8 @@ const Select = styled.select`
 
   &:focus-visible {
     outline: none;
-    border-color: #34D399;
-    box-shadow: 0 0 0 2px rgba(52, 211, 153, 0.2);
+    border-color: #E2E8F0;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
   }
 
   & option {
@@ -130,7 +130,7 @@ const Select = styled.select`
   
   & optgroup {
     background: #0A0A0A;
-    color: #34D399;
+    color: #E2E8F0;
     font-weight: 600;
   }
 `;
@@ -159,7 +159,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   white-space: nowrap;
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 
@@ -183,7 +183,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     $variant === 'secondary' &&
     `
     background: transparent;
-    color: #34D399;
+    color: #E2E8F0;
     border: 1px solid rgba(255, 255, 255, 0.2);
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.1);
@@ -194,7 +194,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
 const ToggleLink = styled.button`
   background: none;
   border: none;
-  color: #34D399;
+  color: #E2E8F0;
   font-family: 'Outfit', sans-serif;
   font-size: 12px;
   font-weight: 500;

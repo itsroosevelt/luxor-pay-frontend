@@ -61,31 +61,49 @@ html, body {
    The public landing page and /login are intentionally untouched.
    ============================================================ */
 .lx-app {
-  /* Surfaces */
-  --lx-bg: #0B0E14;
-  --lx-bg-elev: #0F131C;
-  --lx-surface: #111624;
-  --lx-surface-2: #151B2B;
-  --lx-surface-hover: #1A2133;
-  --lx-sidebar: #0D111A;
+  /* Surfaces — pure neutral greys, zero blue / purple tint (Squads.xyz) */
+  --lx-bg: #0D0E12;            /* canvas */
+  --lx-bg-elev: #101116;       /* page-header band */
+  --lx-surface: #17181E;       /* cards / containers */
+  --lx-surface-2: #1B1C22;     /* nested rows, inputs */
+  --lx-surface-hover: #212228; /* hover state */
+  --lx-sidebar: #0A0B0E;       /* sidebar — a touch darker than canvas */
 
-  /* Borders */
-  --lx-border: #1E2638;
-  --lx-border-strong: #2D3748;
-  --lx-border-hover: #38445c;
+  /* Borders — extremely fine, barely-there */
+  --lx-border: rgba(255, 255, 255, 0.08);
+  --lx-border-strong: rgba(255, 255, 255, 0.12);
+  --lx-border-hover: rgba(255, 255, 255, 0.18);
 
   /* Text */
-  --lx-text: #F5F7FB;
-  --lx-text-muted: #9AA7BD;
-  --lx-text-dim: #66728A;
+  --lx-text: #F1F5F9;          /* near-white — headings, balances, values */
+  --lx-text-muted: #8A8F9E;    /* secondary text */
+  --lx-text-dim: #5C616F;      /* eyebrow labels, meta */
 
-  /* Accents — neutral + status green */
-  --lx-accent: #10B981;
-  --lx-accent-hover: #0EA372;
-  --lx-accent-soft: rgba(16, 185, 129, 0.12);
-  --lx-accent-border: rgba(16, 185, 129, 0.32);
-  --lx-danger: #F43F5E;
+  /* Primary action — high-contrast white (Squads "Send" button) */
+  --lx-primary: #FFFFFF;
+  --lx-primary-hover: #E2E8F0;
+  --lx-primary-text: #0F1015;
+
+  /* Neutral fill — secondary buttons, chips, icon circles */
+  --lx-fill: rgba(255, 255, 255, 0.05);
+  --lx-fill-hover: rgba(255, 255, 255, 0.10);
+
+  /* Status green — DESATURATED, reserved for status only.
+     Never used for primary buttons or balance figures. */
+  --lx-success: #34D399;
+  --lx-success-soft: rgba(16, 185, 129, 0.10);
+  --lx-success-border: rgba(6, 95, 70, 0.55);
+
+  --lx-danger: #F87171;
+  --lx-danger-soft: rgba(248, 113, 113, 0.10);
   --lx-warning: #F59E0B;
+
+  /* Back-compat aliases for older token names — resolve to NEUTRAL now so
+     nothing that still points at `--lx-accent*` renders neon green. */
+  --lx-accent: var(--lx-text);
+  --lx-accent-hover: var(--lx-primary-hover);
+  --lx-accent-soft: var(--lx-fill);
+  --lx-accent-border: var(--lx-border-strong);
 
   /* Shape & rhythm */
   --lx-radius-sm: 8px;
@@ -94,11 +112,11 @@ html, body {
   --lx-pad: 24px;
   --lx-pad-lg: 32px;
 
-  /* Elevation — flat, high-contrast, minimal */
-  --lx-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.28);
-  --lx-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 10px 28px -16px rgba(0, 0, 0, 0.55);
-  --lx-shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.35), 0 24px 56px -20px rgba(0, 0, 0, 0.6);
-  --lx-ring: 0 0 0 3px rgba(16, 185, 129, 0.28);
+  /* Elevation — flat, minimal */
+  --lx-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --lx-shadow: 0 1px 3px rgba(0, 0, 0, 0.32), 0 10px 28px -16px rgba(0, 0, 0, 0.55);
+  --lx-shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.38), 0 24px 56px -20px rgba(0, 0, 0, 0.6);
+  --lx-ring: 0 0 0 3px rgba(255, 255, 255, 0.14);
 
   font-family: 'Inter', var(--font-outfit), system-ui, -apple-system, 'Segoe UI', sans-serif;
   background: var(--lx-bg);
@@ -134,15 +152,11 @@ html, body {
   background: var(--lx-surface);
   border: 1px solid var(--lx-border);
   border-radius: var(--lx-radius);
-  transition: border-color 0.16s ease, background-color 0.16s ease, transform 0.16s ease;
+  transition: border-color 0.16s ease, background-color 0.16s ease;
 }
 .lx-app .lx-card-interactive:hover {
   background: var(--lx-surface-hover);
   border-color: var(--lx-border-hover);
-  transform: translateY(-2px);
-}
-.lx-app .lx-card-interactive:active {
-  transform: translateY(0);
 }
 
 /* Section / page eyebrow */
@@ -154,7 +168,7 @@ html, body {
   color: var(--lx-text-dim);
 }
 
-/* Status pill */
+/* Status pill — desaturated, dark. `lx-status--ok` adds the muted green. */
 .lx-app .lx-status {
   display: inline-flex;
   align-items: center;
@@ -163,15 +177,21 @@ html, body {
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 600;
-  background: var(--lx-accent-soft);
-  color: var(--lx-accent);
-  border: 1px solid var(--lx-accent-border);
+  background: var(--lx-fill);
+  color: var(--lx-text-muted);
+  border: 1px solid var(--lx-border-strong);
+}
+.lx-app .lx-status--ok {
+  background: var(--lx-success-soft);
+  color: var(--lx-success);
+  border-color: var(--lx-success-border);
 }
 .lx-app .lx-status-dot {
   width: 6px;
   height: 6px;
   border-radius: 9999px;
   background: currentColor;
+  opacity: 0.9;
 }
 
 /* Primary button — Square-style solid, square-ish corners */
@@ -190,19 +210,20 @@ html, body {
   white-space: nowrap;
 }
 .lx-app .lx-btn-primary {
-  background: var(--lx-accent);
-  color: #05130D;
+  background: var(--lx-primary);
+  color: var(--lx-primary-text);
 }
 .lx-app .lx-btn-primary:hover:not(:disabled) {
-  background: var(--lx-accent-hover);
+  background: var(--lx-primary-hover);
 }
 .lx-app .lx-btn-secondary {
-  background: transparent;
-  color: var(--lx-text);
+  background: var(--lx-fill);
+  color: var(--lx-text-muted);
   border-color: var(--lx-border-strong);
 }
 .lx-app .lx-btn-secondary:hover:not(:disabled) {
-  background: var(--lx-surface-hover);
+  background: var(--lx-fill-hover);
+  color: var(--lx-text);
   border-color: var(--lx-border-hover);
 }
 .lx-app .lx-btn:disabled {
@@ -267,18 +288,11 @@ html, body {
 }
 .lx-app .lx-nav-item[data-active='true'] {
   color: var(--lx-text);
-  background: var(--lx-surface-2);
+  background: var(--lx-fill);
   font-weight: 600;
 }
-.lx-app .lx-nav-item[data-active='true']::before {
-  content: '';
-  position: absolute;
-  left: -3px;
-  top: 8px;
-  bottom: 8px;
-  width: 3px;
-  border-radius: 9999px;
-  background: var(--lx-accent);
+.lx-app .lx-nav-item[data-active='true'] :where(svg) {
+  color: var(--lx-text);
 }
 
 /* ── Single Visible Sleek Scrollbar ── */

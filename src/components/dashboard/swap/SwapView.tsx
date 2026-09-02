@@ -47,7 +47,7 @@ const BalanceLabel = styled.p`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #34D399;
+  color: #E2E8F0;
   margin: 0;
 `;
 
@@ -81,9 +81,9 @@ const InputWrapper = styled.div`
 const MaxButton = styled.button`
   position: absolute;
   right: 94px; /* Sat cleanly to the left of the token pill */
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
-  color: #34D399;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #E2E8F0;
   font-family: 'Outfit', sans-serif;
   font-size: 11px;
   font-weight: 600;
@@ -93,7 +93,7 @@ const MaxButton = styled.button`
   transition: all 0.2s;
   
   &:hover {
-    background: rgba(52, 211, 153, 0.2);
+    background: rgba(255, 255, 255, 0.2);
     color: #FFFFFF;
   }
 `;
@@ -111,7 +111,7 @@ const StyledInput = styled.input`
   transition: border-color 0.2s;
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 
@@ -156,7 +156,7 @@ const TokenSelect = styled.select`
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
   }
 `;
 
@@ -165,11 +165,11 @@ const ToggleButton = styled.button`
   justify-content: center;
   align-items: center;
   background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
   width: 36px; /* Reduced from 44px */
   height: 36px; /* Reduced from 44px */
-  color: #34D399;
+  color: #E2E8F0;
   cursor: pointer;
   transition: all 0.2s;
   margin: -14px auto; /* Overlaps nicely */
@@ -177,13 +177,13 @@ const ToggleButton = styled.button`
   position: relative;
 
   &:hover {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(255, 255, 255, 0.1);
     color: #FFFFFF;
     transform: scale(1.05);
   }
   
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -221,15 +221,15 @@ const ButtonBase = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     background: #FFFFFF; 
     color: #000000; 
     border: none;
-    &:hover:not(:disabled) { 
-      background: #10B981; 
-      color: #FFFFFF; 
+    &:hover:not(:disabled) {
+      background: #E2E8F0;
+      color: #000000;
     }
   `}
 
   ${({ $variant }) => $variant === 'secondary' && `
     background: transparent; 
-    color: #34D399; 
+    color: #E2E8F0; 
     border: 1px solid rgba(255, 255, 255, 0.2); 
     backdrop-filter: blur(12px);
     &:hover:not(:disabled) {
@@ -243,14 +243,14 @@ const ButtonBase = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
 
 const QuoteResult = styled(motion.div)`
   background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -280,7 +280,7 @@ const ErrorText = styled.p`
 const LoadingSpinner = styled.div`
   width: 20px;
   height: 20px;
-  border: 2px solid #34D399;
+  border: 2px solid #E2E8F0;
   border-top-color: transparent;
   border-radius: 50%;
   animation: spin 1s linear infinite;

@@ -42,12 +42,12 @@ const WalletBadge = styled(BadgeBase)`
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(52, 211, 153, 0.3);
-    color: #34D399;
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #E2E8F0;
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;

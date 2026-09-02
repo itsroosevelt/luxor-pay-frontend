@@ -52,7 +52,7 @@ const DropdownButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -84,7 +84,7 @@ const TimeframeTab = styled.button<{ $active?: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -197,7 +197,7 @@ const SkeletonBox = styled.div<{ $width?: string; $height?: string; $borderRadiu
   width: ${({ $width }) => $width || '100%'};
   height: ${({ $height }) => $height || '24px'};
   border-radius: ${({ $borderRadius }) => $borderRadius || '8px'};
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 25%, rgba(52, 211, 153, 0.15) 50%, rgba(16, 185, 129, 0.05) 75%);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 25%, rgba(255, 255, 255, 0.15) 50%, rgba(16, 185, 129, 0.05) 75%);
   background-size: 200% 100%;
   animation: ${shimmer} 2.5s infinite;
 `;
@@ -340,12 +340,12 @@ export function OverviewChartView({
             >
               <defs>
                 <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#34D399" stopOpacity="0.2" />
-                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                  <stop offset="0%" stopColor="#8A8F9E" stopOpacity="0.18" />
+                  <stop offset="100%" stopColor="#8A8F9E" stopOpacity="0.0" />
                 </linearGradient>
                 <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#34D399" />
-                  <stop offset="100%" stopColor="#10B981" />
+                  <stop offset="0%" stopColor="#8A8F9E" />
+                  <stop offset="100%" stopColor="#E2E8F0" />
                 </linearGradient>
               </defs>
 
@@ -412,7 +412,7 @@ export function OverviewChartView({
                       cx={x}
                       cy={y}
                       r={isHovered ? 6 : 4}
-                      fill={isHovered ? "#FFFFFF" : "#34D399"}
+                      fill={isHovered ? "#FFFFFF" : "#E2E8F0"}
                       stroke="#0A0A0A"
                       strokeWidth="2"
                       pointerEvents="none"

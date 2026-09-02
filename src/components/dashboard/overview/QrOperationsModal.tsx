@@ -128,12 +128,12 @@ const OptionButton = styled.button`
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(52, 211, 153, 0.4);
+    border-color: rgba(255, 255, 255, 0.4);
     transform: translateY(-2px);
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 
@@ -146,8 +146,8 @@ const IconWrapper = styled.div`
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: rgba(52, 211, 153, 0.1);
-  color: #34D399;
+  background: rgba(255, 255, 255, 0.1);
+  color: #E2E8F0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -281,7 +281,7 @@ const InfoValueBlue = styled.span`
   font-family: 'Outfit', sans-serif;
   font-size: 20px;
   font-weight: 600;
-  color: #34D399;
+  color: #E2E8F0;
 `;
 
 const InfoDivider = styled.div`
@@ -344,8 +344,8 @@ const AddressWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(52, 211, 153, 0.1);
-  border: 1px dashed rgba(52, 211, 153, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px dashed rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 12px 16px;
   width: 100%;
@@ -355,7 +355,7 @@ const AddressWrapper = styled.div`
 const AddressText = styled.span`
   font-family: monospace;
   font-size: 15px;
-  color: #34D399;
+  color: #E2E8F0;
   word-break: break-all;
   flex: 1;
   text-align: left;
@@ -394,7 +394,7 @@ const QrTypeButton = styled.button<{ $active: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #34D399;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -479,7 +479,7 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     $variant === 'secondary' &&
     `
     background: transparent;
-    color: #34D399;
+    color: #E2E8F0;
     border: 1px solid rgba(255, 255, 255, 0.2);
     &:hover {
       background: rgba(255, 255, 255, 0.1);
@@ -515,8 +515,8 @@ const TextInput = styled.input`
 
   &:focus {
     outline: none;
-    border-color: #34D399;
-    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2);
+    border-color: #E2E8F0;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
 
   &::placeholder {
@@ -544,7 +544,7 @@ const TokenSelect = styled.select`
 
   &:focus {
     outline: none;
-    border-color: #34D399;
+    border-color: #E2E8F0;
   }
 
   option {
@@ -601,8 +601,8 @@ const ContactSelect = styled.select`
 
   &:focus {
     outline: none;
-    border-color: #34D399;
-    box-shadow: 0 0 0 1px rgba(52, 211, 153, 0.2);
+    border-color: #E2E8F0;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
   }
 
   &:disabled {

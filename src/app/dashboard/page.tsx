@@ -248,24 +248,30 @@ export default function DashboardOverviewPage() {
         {pendingInboxCount > 0 && (
           <Link
             href="/dashboard/requests"
-            className="flex items-center justify-between gap-4 p-4 transition-colors"
+            className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-white/[0.03]"
             style={{
-              background: 'var(--lx-accent-soft)',
-              border: '1px solid var(--lx-accent-border)',
+              background: 'var(--lx-surface)',
+              border: '1px solid var(--lx-border)',
               borderRadius: 'var(--lx-radius)',
               textDecoration: 'none',
             }}
           >
             <div className="flex items-center gap-3">
-              <div style={{
-                width: '36px', height: '36px', borderRadius: 'var(--lx-radius-sm)',
-                background: 'var(--lx-accent-soft)', border: '1px solid var(--lx-accent-border)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <Bell size={16} style={{ color: 'var(--lx-accent)' }} />
+              <div
+                className="flex items-center justify-center shrink-0"
+                style={{
+                  width: '34px', height: '34px', borderRadius: 'var(--lx-radius-sm)',
+                  background: 'var(--lx-fill)', border: '1px solid var(--lx-border)',
+                }}
+              >
+                <Bell size={15} style={{ color: 'var(--lx-text-muted)' }} />
               </div>
               <div>
-                <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--lx-text)', margin: 0 }}>
+                <p className="flex items-center gap-2" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--lx-text)', margin: 0 }}>
+                  <span
+                    aria-hidden
+                    style={{ width: 6, height: 6, borderRadius: 9999, background: 'var(--lx-success)', display: 'inline-block' }}
+                  />
                   You have {pendingInboxCount} payment request{pendingInboxCount !== 1 ? 's' : ''} waiting for action
                 </p>
                 <p style={{ fontSize: '12px', color: 'var(--lx-text-muted)', margin: 0, fontWeight: 400 }}>
@@ -273,7 +279,7 @@ export default function DashboardOverviewPage() {
                 </p>
               </div>
             </div>
-            <ArrowRight size={18} style={{ color: 'var(--lx-accent)', flexShrink: 0 }} />
+            <ArrowRight size={18} style={{ color: 'var(--lx-text-dim)', flexShrink: 0 }} />
           </Link>
         )}
 
@@ -389,8 +395,8 @@ function StatCard({
       </div>
       <div>
         {isText ? (
-          <span className="lx-status">
-            <span className="lx-status-dot animate-pulse" />
+          <span className="lx-status lx-status--ok">
+            <span className="lx-status-dot" />
             {value}
           </span>
         ) : (

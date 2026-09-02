@@ -268,7 +268,7 @@ function SettingsContent() {
                   <input
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#34D399] outline-none"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
                     placeholder="e.g. Acme Corp"
                   />
                 </div>
@@ -279,7 +279,7 @@ function SettingsContent() {
                   <input
                     value={merchantWallet}
                     onChange={(e) => setMerchantWallet(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:border-[#34D399] outline-none"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:border-[#E2E8F0] outline-none"
                     placeholder="Your pubkey for USDC / SOL"
                   />
                   <p className="text-xs text-gray-500 mt-1.5">
@@ -303,20 +303,20 @@ function SettingsContent() {
           <div className="space-y-6">
             <form onSubmit={handleCreatePos} className="glass-panel p-6 space-y-4">
               <h2 className="text-base font-medium text-white flex items-center gap-2">
-                <Plus size={18} className="text-[#34D399]" /> Register POS Device
+                <Plus size={18} className="text-[#E2E8F0]" /> Register POS Device
               </h2>
               <div className="grid md:grid-cols-2 gap-3">
                 <input
                   value={posName}
                   onChange={(e) => setPosName(e.target.value)}
                   placeholder="Store counter #1"
-                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#34D399] outline-none"
+                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
                 />
                 <input
                   value={posId}
                   onChange={(e) => setPosId(e.target.value)}
                   placeholder="POS ID (serial or label)"
-                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#34D399] outline-none"
+                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
                 />
               </div>
               <button
@@ -344,13 +344,13 @@ function SettingsContent() {
               <div className="grid gap-4">
                 {devices.map((d) => (
                   <div key={d.id} className="glass-panel p-5 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-[#34D399]">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-[#E2E8F0]">
                       <Terminal size={18} />
                     </div>
                     <div>
                       <h3 className="font-medium text-white text-sm">{d.name}</h3>
                       <p className="text-xs text-gray-400">
-                        POS ID: <code className="text-[#34D399] font-mono">{d.posId}</code>
+                        POS ID: <code className="text-[#E2E8F0] font-mono">{d.posId}</code>
                         {d.lastSeenAt ? ` · Last seen ${new Date(d.lastSeenAt).toLocaleString()}` : ''}
                       </p>
                     </div>
@@ -367,13 +367,13 @@ function SettingsContent() {
             {adminMissing && (
               <div className="glass-panel p-4 border border-amber-500/30 text-xs text-amber-200">
                 Start the backend and set Firebase Admin in{' '}
-                <code className="text-[#34D399]">backend/.env</code>.
+                <code className="text-[#E2E8F0]">backend/.env</code>.
               </div>
             )}
 
             {newSecret && (
-              <div className="glass-panel p-4 border border-[#34D399]/40 space-y-2">
-                <p className="text-xs font-semibold text-[#34D399]">New secret key (shown once)</p>
+              <div className="glass-panel p-4 border border-[#E2E8F0]/40 space-y-2">
+                <p className="text-xs font-semibold text-[#E2E8F0]">New secret key (shown once)</p>
                 <code className="block text-xs break-all bg-black/50 p-3 rounded-lg font-mono text-white">{newSecret}</code>
                 <button
                   type="button"
@@ -381,7 +381,7 @@ function SettingsContent() {
                     navigator.clipboard.writeText(newSecret);
                     toast.success('Copied');
                   }}
-                  className="text-xs flex items-center gap-1.5 text-[#34D399] hover:underline"
+                  className="text-xs flex items-center gap-1.5 text-[#E2E8F0] hover:underline"
                 >
                   <Copy size={13} /> Copy Key
                 </button>
@@ -393,7 +393,7 @@ function SettingsContent() {
                 value={keyName}
                 onChange={(e) => setKeyName(e.target.value)}
                 placeholder="Key name (e.g. Production POS)"
-                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#34D399] outline-none"
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
               />
               <button
                 type="submit"
@@ -422,7 +422,7 @@ function SettingsContent() {
                     className="glass-panel p-4 flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-3">
-                      <Key className="text-[#34D399]" size={18} />
+                      <Key className="text-[#E2E8F0]" size={18} />
                       <div>
                         <p className="font-medium text-white text-sm">{k.name}</p>
                         <p className="text-xs text-gray-500 font-mono">{k.keyPrefix}…</p>

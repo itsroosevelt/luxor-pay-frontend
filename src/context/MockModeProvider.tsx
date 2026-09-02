@@ -53,20 +53,24 @@ function MockModeBadge() {
         bottom: 12,
         left: 12,
         zIndex: 2147483647,
-        padding: '5px 10px',
-        borderRadius: 8,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '4px 10px',
+        borderRadius: 9999,
         fontSize: 11,
-        fontWeight: 700,
-        letterSpacing: '0.08em',
+        fontWeight: 600,
+        letterSpacing: '0.06em',
         textTransform: 'uppercase',
-        color: '#05130D',
-        background: '#10B981',
-        boxShadow: '0 4px 14px rgba(0,0,0,0.35)',
+        color: '#34D399',
+        background: 'rgba(16, 185, 129, 0.10)',
+        border: '1px solid rgba(6, 95, 70, 0.55)',
         pointerEvents: 'none',
         fontFamily: 'Inter, system-ui, sans-serif',
       }}
     >
-      Mock mode · no backend
+      <span style={{ width: 6, height: 6, borderRadius: 9999, background: 'currentColor' }} />
+      Mock mode
     </div>
   );
 }

@@ -4,10 +4,10 @@ import styled from "styled-components";
 import { motion } from "framer-motion";
 
 export const GlassCard = styled(motion.div)<{ $variant?: "default" | "hero" }>`
-  background: var(--lx-surface, #111624);
-  border: 1px solid var(--lx-border, #1E2638);
+  background: var(--lx-surface, #17181E);
+  border: 1px solid var(--lx-border, rgba(255, 255, 255, 0.08));
   border-radius: var(--lx-radius, 12px);
-  box-shadow: var(--lx-shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.28));
+  box-shadow: none;
   padding: var(--lx-pad, 24px);
   position: relative;
   overflow: hidden;
@@ -31,7 +31,7 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
 
   &:focus-visible {
     outline: none;
-    box-shadow: var(--lx-ring, 0 0 0 3px rgba(16, 185, 129, 0.28));
+    box-shadow: var(--lx-ring, 0 0 0 3px rgba(255, 255, 255, 0.14));
   }
 
   &:disabled {
@@ -39,37 +39,42 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
     cursor: not-allowed;
   }
 
+  /* Primary — high-contrast white with near-black label (Squads "Send"). */
   ${({ $variant }) =>
     ($variant === "primary" || !$variant) &&
     `
-    background: var(--lx-accent, #10B981);
-    color: #05130D;
+    background: var(--lx-primary, #FFFFFF);
+    color: var(--lx-primary-text, #0F1015);
     &:hover:not(:disabled) {
-      background: var(--lx-accent-hover, #0EA372);
+      background: var(--lx-primary-hover, #E2E8F0);
     }
   `}
 
+  /* Secondary — outlined, neutral. */
   ${({ $variant }) =>
     $variant === "secondary" &&
     `
-    background: transparent;
-    color: var(--lx-text, #F5F7FB);
-    border: 1px solid var(--lx-border-strong, #2D3748);
+    background: var(--lx-fill, rgba(255,255,255,0.05));
+    color: var(--lx-text-muted, #8A8F9E);
+    border: 1px solid var(--lx-border-strong, rgba(255,255,255,0.12));
     &:hover:not(:disabled) {
-      background: var(--lx-surface-hover, #1A2133);
-      border-color: var(--lx-border-hover, #38445c);
+      background: var(--lx-fill-hover, rgba(255,255,255,0.10));
+      color: var(--lx-text, #F1F5F9);
+      border-color: var(--lx-border-hover, rgba(255,255,255,0.18));
     }
   `}
 
+  /* Glass — subtle translucent fill. */
   ${({ $variant }) =>
     $variant === "glass" &&
     `
-    background: var(--lx-surface-2, #151B2B);
-    color: var(--lx-text, #F5F7FB);
-    border: 1px solid var(--lx-border, #1E2638);
+    background: var(--lx-fill, rgba(255,255,255,0.05));
+    color: var(--lx-text-muted, #8A8F9E);
+    border: 1px solid var(--lx-border, rgba(255,255,255,0.08));
     &:hover:not(:disabled) {
-      background: var(--lx-surface-hover, #1A2133);
-      border-color: var(--lx-border-hover, #38445c);
+      background: var(--lx-fill-hover, rgba(255,255,255,0.10));
+      color: var(--lx-text, #F1F5F9);
+      border-color: var(--lx-border-hover, rgba(255,255,255,0.18));
     }
   `}
 `;
@@ -99,14 +104,13 @@ export const EyebrowBadge = styled.span`
   margin-bottom: 6px;
 `;
 
+/** Retained for API compatibility — now a flat neutral, no gradient. */
 export const GradientText = styled.span`
-  background: linear-gradient(to right, #34D399, #10B981);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--lx-text, #F1F5F9);
 `;
 
 export const OnChainDataText = styled.span`
   font-family: monospace;
   font-size: 14px;
-  color: #EDEDED;
+  color: var(--lx-text, #F1F5F9);
 `;

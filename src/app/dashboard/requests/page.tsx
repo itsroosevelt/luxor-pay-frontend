@@ -107,9 +107,9 @@ function EmptyState({ label }: { label: string }) {
     >
       <div style={{
         width: '56px', height: '56px', borderRadius: '9999px',
-        background: 'rgba(52, 211, 153,0.08)', border: '1px solid rgba(52, 211, 153,0.15)',
+        background: 'rgba(255, 255, 255,0.08)', border: '1px solid rgba(255, 255, 255,0.15)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        color: 'rgba(52, 211, 153,0.5)',
+        color: 'rgba(255, 255, 255,0.5)',
       }}>
         <Inbox size={24} />
       </div>
@@ -130,7 +130,7 @@ function SkeletonCard() {
       {[80, 60, 40].map((w, i) => (
         <div key={i} style={{
           height: '14px', width: `${w}%`, borderRadius: '6px',
-          background: 'linear-gradient(90deg, rgba(16, 185, 129,0.08) 25%, rgba(52, 211, 153,0.15) 50%, rgba(16, 185, 129,0.08) 75%)',
+          background: 'linear-gradient(90deg, rgba(16, 185, 129,0.08) 25%, rgba(255, 255, 255,0.15) 50%, rgba(16, 185, 129,0.08) 75%)',
           backgroundSize: '200% 100%',
           animation: 'shimmer 2s infinite',
         }} />
@@ -195,7 +195,7 @@ function PaymentModal({
   };
 
   const stepConfig: Record<PayStep, { label: string; color: string; icon: React.ReactNode }> = {
-    idle:       { label: 'Ready to pay',    color: '#34D399', icon: <ShieldCheck size={14} /> },
+    idle:       { label: 'Ready to pay',    color: '#E2E8F0', icon: <ShieldCheck size={14} /> },
     signing:    { label: 'Awaiting signature', color: '#F59E0B', icon: <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> },
     processing: { label: 'Processing on-chain', color: '#A78BFA', icon: <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> },
     success:    { label: 'Transaction confirmed', color: '#22C55E', icon: <CheckCircle2 size={14} /> },
@@ -235,7 +235,7 @@ function PaymentModal({
             background: 'rgba(10,10,10,0.95)',
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: '28px',
-            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.8), 0 0 0 1px rgba(52, 211, 153,0.08)',
+            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.8), 0 0 0 1px rgba(255, 255, 255,0.08)',
             width: '100%',
             maxWidth: '460px',
             overflow: 'hidden',
@@ -249,12 +249,12 @@ function PaymentModal({
             background: 'linear-gradient(135deg, rgba(16, 185, 129,0.08) 0%, rgba(0,0,0,0) 60%)',
           }}>
             <div>
-              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#34D399', margin: '0 0 6px 0' }}>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#E2E8F0', margin: '0 0 6px 0' }}>
                 Payment Request
               </p>
               <span style={{
                 fontFamily: 'Outfit, sans-serif', fontSize: '32px', fontWeight: 600, lineHeight: 1,
-                background: 'linear-gradient(to right, #34D399, #10B981)',
+                background: 'linear-gradient(to right, #E2E8F0, #10B981)',
                 WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
               }}>
                 {formattedAmount}
@@ -287,7 +287,7 @@ function PaymentModal({
               display: 'flex', flexDirection: 'column', gap: '10px',
             }}>
               <ModalRow icon={<Wallet size={13} />} label="From (Requester)">
-                <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#34D399', wordBreak: 'break-all' }}>
+                <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#E2E8F0', wordBreak: 'break-all' }}>
                   {shortenWallet(request.requesterWallet)}
                 </span>
               </ModalRow>
@@ -534,7 +534,7 @@ function UpdateModal({
             background: 'rgba(10,10,10,0.97)',
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: '28px',
-            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(52, 211, 153,0.06)',
+            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(255, 255, 255,0.06)',
             width: '100%',
             maxWidth: '420px',
             overflow: 'hidden',
@@ -548,7 +548,7 @@ function UpdateModal({
             background: 'linear-gradient(135deg, rgba(16, 185, 129,0.07) 0%, transparent 60%)',
           }}>
             <div>
-              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#34D399', margin: '0 0 4px 0' }}>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#E2E8F0', margin: '0 0 4px 0' }}>
                 Manage Request
               </p>
               <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
@@ -592,16 +592,16 @@ function UpdateModal({
                   disabled={isBusy}
                   style={{
                     width: '100%', padding: '16px 20px',
-                    borderRadius: '16px', border: '1px solid rgba(52, 211, 153,0.2)',
-                    background: 'rgba(52, 211, 153,0.05)',
+                    borderRadius: '16px', border: '1px solid rgba(255, 255, 255,0.2)',
+                    background: 'rgba(255, 255, 255,0.05)',
                     cursor: 'pointer', textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: '14px',
                     transition: 'border-color 0.2s, background 0.2s',
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(52, 211, 153,0.4)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(52, 211, 153,0.1)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(52, 211, 153,0.2)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(52, 211, 153,0.05)'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 255, 255,0.4)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 255, 255,0.1)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 255, 255,0.2)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255, 255, 255,0.05)'; }}
                 >
-                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(52, 211, 153,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#34D399' }}>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#E2E8F0' }}>
                     <CalendarDays size={18} />
                   </div>
                   <div>
@@ -840,7 +840,7 @@ function ResendModal({
             background: 'rgba(10,10,10,0.97)',
             border: '1px solid rgba(255,255,255,0.12)',
             borderRadius: '28px',
-            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(52, 211, 153,0.06)',
+            boxShadow: '0 32px 80px -16px rgba(0,0,0,0.85), 0 0 0 1px rgba(255, 255, 255,0.06)',
             width: '100%',
             maxWidth: '420px',
           }}
@@ -855,7 +855,7 @@ function ResendModal({
             borderTopRightRadius: '27px',
           }}>
             <div>
-              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#34D399', margin: '0 0 4px 0' }}>
+              <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '10px', fontWeight: 700, letterSpacing: '0.4em', textTransform: 'uppercase', color: '#E2E8F0', margin: '0 0 4px 0' }}>
                 Resend Request
               </p>
               <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
@@ -902,9 +902,9 @@ function ResendModal({
                     style={{
                       flex: 1, padding: '12px 0',
                       borderRadius: '12px', border: '1px solid',
-                      borderColor: isActive ? '#34D399' : 'rgba(255,255,255,0.1)',
-                      background: isActive ? 'rgba(52, 211, 153,0.1)' : 'rgba(255,255,255,0.02)',
-                      color: isActive ? '#34D399' : 'rgba(255,255,255,0.5)',
+                      borderColor: isActive ? '#E2E8F0' : 'rgba(255,255,255,0.1)',
+                      background: isActive ? 'rgba(255, 255, 255,0.1)' : 'rgba(255,255,255,0.02)',
+                      color: isActive ? '#E2E8F0' : 'rgba(255,255,255,0.5)',
                       fontFamily: 'Outfit, sans-serif', fontSize: '13px', fontWeight: 500,
                       cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
                       transition: 'all 0.2s',
@@ -1006,10 +1006,10 @@ function ResendModal({
                           gap: '2px',
                           transition: 'background 0.2s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(52, 211, 153,0.1)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255,0.1)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <span style={{ fontSize: '10px', color: '#34D399', fontFamily: 'Outfit, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <span style={{ fontSize: '10px', color: '#E2E8F0', fontFamily: 'Outfit, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           Saved Contact ({matchedContact.nickname})
                         </span>
                         <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{matchedContact.email}</span>
@@ -1114,7 +1114,7 @@ function ResendModal({
                                 cursor: 'pointer',
                                 transition: 'background 0.2s',
                               }}
-                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(52, 211, 153,0.1)'}
+                              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255,0.1)'}
                               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                             >
                               {item.label}
@@ -1219,10 +1219,10 @@ function ResendModal({
                           gap: '2px',
                           transition: 'background 0.2s',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(52, 211, 153,0.1)'}
+                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255,0.1)'}
                         onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                       >
-                        <span style={{ fontSize: '10px', color: '#34D399', fontFamily: 'Outfit, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                        <span style={{ fontSize: '10px', color: '#E2E8F0', fontFamily: 'Outfit, sans-serif', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                           Saved Contact ({matchedContact.nickname})
                         </span>
                         <span>{matchedContact.telephone}</span>
@@ -1299,7 +1299,7 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
         gap: '16px',
         transition: 'border-color 0.2s',
       }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(52, 211, 153,0.2)')}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255,0.2)')}
       onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)')}
     >
       {/* Top Row */}
@@ -1307,7 +1307,7 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{
             fontFamily: 'Outfit, sans-serif', fontSize: '22px', fontWeight: 600,
-            background: 'linear-gradient(to right, #34D399, #10B981)',
+            background: 'linear-gradient(to right, #E2E8F0, #10B981)',
             WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
             lineHeight: 1,
           }}>
@@ -1325,7 +1325,7 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
       {/* Meta Row */}
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 20px' }}>
         <MetaItem icon={<Wallet size={13} />} label={perspective === 'payer' ? 'From' : 'To'}>
-          <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#34D399' }}>
+          <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#E2E8F0' }}>
             {shortenWallet(perspective === 'payer' ? request.requesterWallet : request.payerWallet)}
           </span>
         </MetaItem>
@@ -1433,7 +1433,7 @@ function ActionButton({
 }) {
   const styles: Record<string, React.CSSProperties> = {
     primary: { background: 'linear-gradient(135deg,#10B981,#3B82F6)', color: '#FFFFFF', border: 'none' },
-    ghost:   { background: 'rgba(52, 211, 153,0.08)', color: '#34D399', border: '1px solid rgba(52, 211, 153,0.2)' },
+    ghost:   { background: 'rgba(255, 255, 255,0.08)', color: '#E2E8F0', border: '1px solid rgba(255, 255, 255,0.2)' },
     danger:  { background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', border: '1px solid rgba(239,68,68,0.2)' },
   };
 
@@ -1476,7 +1476,7 @@ function RequestsPanel({
     return (
       <div style={{ padding: '40px 0', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontFamily: 'Montserrat, sans-serif', fontSize: '14px' }}>
         Configure your wallet in{' '}
-        <Link href="/dashboard/settings" style={{ color: '#34D399', textDecoration: 'underline' }}>
+        <Link href="/dashboard/settings" style={{ color: '#E2E8F0', textDecoration: 'underline' }}>
           Settings
         </Link>{' '}
         to view payment requests.
@@ -1503,7 +1503,7 @@ function RequestsPanel({
         <span>{errorMessage || 'Failed to load payment requests.'}</span>
         <button
           onClick={refetch}
-          style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#34D399', cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
+          style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#E2E8F0', cursor: 'pointer', fontFamily: 'Outfit, sans-serif', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '4px' }}
         >
           <RefreshCw size={14} /> Retry
         </button>

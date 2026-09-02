@@ -38,17 +38,17 @@ const Pill = styled.div`
   gap: 0.6rem;
   padding: 0.6rem 1.25rem;
   background: rgba(10, 10, 10, 0.85);
-  border: 1px solid rgba(52, 211, 153, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 9999px;
   backdrop-filter: blur(24px);
-  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(52, 211, 153, 0.1);
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
 
   &::before {
     content: '';
     position: absolute;
     inset: -1px;
     border-radius: 9999px;
-    background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.1));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(16, 185, 129, 0.1));
     pointer-events: none;
   }
 `;
