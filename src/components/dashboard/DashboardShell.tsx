@@ -1,28 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { signOut, onAuthStateChanged, type User } from 'firebase/auth';
-import { Suspense, useEffect, useState } from 'react';
-import {
-  LayoutDashboard,
-  Link as LinkIcon,
-  Receipt,
-  Terminal,
-  Code2,
-  Settings,
-  LogOut,
-  Users,
-  Menu,
-  X,
-  ArrowLeftRight,
-  Repeat,
-  UserCircle,
-  Lock,
-  Check,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Menu, X, Check, LogOut } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
 import { useMerchant } from '@/context/MerchantContext';
@@ -31,158 +13,19 @@ import { KycVerificationBanner } from './KycVerificationBanner';
 import { KycResultModal } from './KycResultModal';
 import { OnrampProgressBanner } from './OnrampProgressBanner';
 import { OnrampResultModal } from './OnrampResultModal';
-import { clsx } from 'clsx';
 import { TopWalletBar } from './TopWalletBar';
 import { FundWalletButton } from './FundWalletButton';
+import { Sidebar, SidebarContent } from './Sidebar';
 
-const nav = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard/swap', label: 'Swap', icon: Repeat },
-  { href: '/dashboard/requests', label: 'Payment Requests', icon: ArrowLeftRight },
-  { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
-  { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
-  { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
-  { href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
-];
-
-const settingsSubNav = [
-  { href: '/dashboard/settings?tab=general', label: 'General', icon: Settings, tab: 'general' },
-  { href: '/dashboard/settings?tab=pos', label: 'POS Devices', icon: Terminal, tab: 'pos' },
-  { href: '/dashboard/settings?tab=developers', label: 'Developers', icon: Code2, tab: 'developers' },
-];
-
-type NavLinksShellProps = {
-  pathname: string;
-  router: ReturnType<typeof useRouter>;
-  isSettingsOpen: boolean;
-  setIsSettingsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onClick?: () => void;
-  collapsed?: boolean;
-};
-
-interface NavLinksProps extends NavLinksShellProps {
-  searchParams: ReturnType<typeof useSearchParams>;
-}
-
-function NavLinks({
-  pathname,
-  searchParams,
-  router,
-  isSettingsOpen,
-  setIsSettingsOpen,
-  onClick,
-  collapsed,
-}: NavLinksProps) {
-  const isSettingsActive = pathname.startsWith('/dashboard/settings');
-  const rawTab = searchParams.get('tab');
-  const currentTab = rawTab || 'general';
-
-  return (
-    <div className="flex flex-col justify-between h-full space-y-1">
-      <div className="space-y-1">
-        {nav.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClick}
-              title={collapsed ? label : undefined}
-              data-active={active}
-              className={clsx('lx-nav-item lx-focusable', collapsed && 'justify-center')}
-            >
-              <Icon size={18} className="shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Settings Option at Bottom - Submenu Expands Upwards */}
-      <div className="w-full pt-2 mt-auto" style={{ borderTop: '1px solid var(--lx-border)' }}>
-        {/* Submenu Items (Rendered ABOVE Settings button so it opens UPWARDS) */}
-        {isSettingsOpen && !collapsed && (
-          <div
-            className="mb-2 ml-4 pl-3 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-200"
-            style={{ borderLeft: '1px solid var(--lx-border-strong)' }}
-          >
-            {settingsSubNav.map(({ href, label, icon: SubIcon, tab }) => {
-              const isTabActive = isSettingsActive && currentTab === tab;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={onClick}
-                  data-active={isTabActive}
-                  className="lx-nav-item lx-focusable !py-2 !text-xs"
-                >
-                  <SubIcon size={14} className="shrink-0" />
-                  <span className="truncate">{label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => {
-            if (collapsed) {
-              router.push('/dashboard/settings');
-              if (onClick) onClick();
-            } else {
-              setIsSettingsOpen((prev) => !prev);
-            }
-          }}
-          title={collapsed ? 'Settings' : undefined}
-          data-active={isSettingsActive}
-          className={clsx(
-            'lx-nav-item lx-focusable select-none cursor-pointer',
-            collapsed ? 'justify-center' : 'justify-between'
-          )}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <Settings size={18} className="shrink-0" />
-            {!collapsed && <span className="truncate">Settings</span>}
-          </div>
-          {!collapsed && (
-            <ChevronUp
-              size={16}
-              className={clsx(
-                'shrink-0 text-gray-400 transition-transform duration-200',
-                isSettingsOpen && 'rotate-180 text-white'
-              )}
-            />
-          )}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function NavLinksWithSearchParams(props: NavLinksShellProps) {
-  const searchParams = useSearchParams();
-  return <NavLinks {...props} searchParams={searchParams} />;
-}
-
-const staticSearchParams = new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>;
-
-function NavLinksSuspense(props: NavLinksShellProps) {
-  return (
-    <Suspense fallback={<NavLinks {...props} searchParams={staticSearchParams} />}>
-      <NavLinksWithSearchParams {...props} />
-    </Suspense>
-  );
-}
+const LOGO_SRC =
+  'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(() => pathname.startsWith('/dashboard/settings'));
   const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
 
   const extendedUser = user as (User & { displayName?: string; photoURL?: string }) | null;
@@ -247,22 +90,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     sessionStorage.setItem('luxor_kyc_dismissed', 'true');
   };
 
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('luxor_sidebar_collapsed') === 'true';
-    }
-    return false;
-  });
-
-  const toggleSidebar = () => {
-    setIsCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem('luxor_sidebar_collapsed', String(next));
-      return next;
-    });
-  };
-
-
   const handleSignOut = async () => {
     sessionStorage.removeItem('luxor_kyc_dismissed');
     sessionStorage.removeItem('luxor_merchant_profile');
@@ -281,77 +108,24 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="lx-app h-screen w-screen text-[color:var(--lx-text)] selection:bg-white/15 flex overflow-hidden" style={{ background: 'var(--lx-bg)' }}>
-      {/* Desktop Sidebar (Retractable) */}
-      <aside
-        className={clsx(
-          'hidden md:flex flex-col transition-all duration-300 ease-in-out shrink-0 m-3 z-40 h-[calc(100vh-24px)]',
-          isCollapsed ? 'w-20' : 'w-64'
-        )}
-        style={{
-          background: 'var(--lx-sidebar)',
-          border: '1px solid var(--lx-border)',
-          borderRadius: 'var(--lx-radius-lg)',
-        }}
-      >
-        <div
-          onClick={toggleSidebar}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') toggleSidebar();
-          }}
-          title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
-          className={clsx(
-            'p-4 flex items-center cursor-pointer select-none transition-colors hover:bg-white/[0.03]',
-            isCollapsed ? 'justify-center py-5' : 'justify-start gap-3 px-5'
-          )}
-          style={{ borderBottom: '1px solid var(--lx-border)' }}
-        >
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
-            alt="Logo"
-            className="h-10 w-10 object-contain shrink-0"
-          />
-          {!isCollapsed && (
-            <span className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] whitespace-nowrap">
-              Luxor <span style={{ color: "var(--lx-text)" }}>Pay</span>
-            </span>
-          )}
-        </div>
-        <nav className="flex-1 p-3 pl-4 space-y-1 overflow-y-auto">
-          <NavLinksSuspense
-            pathname={pathname}
-            router={router}
-            isSettingsOpen={isSettingsOpen}
-            setIsSettingsOpen={setIsSettingsOpen}
-            collapsed={isCollapsed}
-          />
-        </nav>
-        <div className="p-3" style={{ borderTop: '1px solid var(--lx-border)' }}>
+    <div
+      className="lx-app h-screen w-screen text-[color:var(--lx-text)] selection:bg-white/15 flex overflow-hidden"
+      style={{ background: 'var(--lx-bg)' }}
+    >
+      {/* Desktop rail */}
+      <Sidebar profile={profile} onSignOut={handleSignOut} />
 
-          <button
-            type="button"
-            onClick={handleSignOut}
-            title={isCollapsed ? 'Sign out' : undefined}
-            className={clsx(
-              "w-full flex items-center text-[#F43F5E] hover:bg-[#F43F5E]/10 rounded-lg text-sm font-medium transition-colors",
-              isCollapsed ? 'justify-center p-3' : 'gap-3 px-3 py-2.5'
-            )}
-          >
-            <LogOut size={18} className="shrink-0" />
-            {!isCollapsed && <span>Sign out</span>}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
+      {/* Main content */}
       <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden">
-        {/* Mobile Header */}
-        <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4" style={{ borderBottom: '1px solid var(--lx-border)', background: 'var(--lx-bg-elev)' }}>
-          <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
-            <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-            <span>Luxor <span style={{ color: "var(--lx-text)" }}>Pay</span></span>
+        {/* Mobile header */}
+        <header
+          className="md:hidden flex-shrink-0 flex items-center justify-between p-4"
+          style={{ borderBottom: '1px solid var(--lx-border)', background: 'var(--lx-bg-elev)' }}
+        >
+          <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold tracking-tight text-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={LOGO_SRC} alt="Luxor Pay" className="h-8 w-8 object-contain" />
+            <span>Luxor <span className="text-gray-400 font-medium">Pay</span></span>
           </Link>
           <div className="flex items-center gap-2">
             <button
@@ -367,58 +141,41 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+              aria-label="Open menu"
             >
-              <Menu size={24} />
+              <Menu size={22} />
             </button>
           </div>
         </header>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile drawer */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex flex-col md:hidden justify-start">
+          <div className="fixed inset-0 z-50 flex md:hidden">
             <div
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <aside className="relative flex flex-col w-full max-h-[85vh] rounded-b-2xl shadow-2xl animate-in fade-in slide-in-from-top-8 duration-200" style={{ background: 'var(--lx-bg-elev)', borderBottom: '1px solid var(--lx-border)' }}>
-              <div className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--lx-border)' }}>
-                <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-                  <span>Luxor <span style={{ color: "var(--lx-text)" }}>Pay</span></span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                <NavLinksSuspense
-                  pathname={pathname}
-                  router={router}
-                  isSettingsOpen={isSettingsOpen}
-                  setIsSettingsOpen={setIsSettingsOpen}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                />
-              </nav>
-              <div className="p-4" style={{ borderTop: '1px solid var(--lx-border)' }}>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[#F43F5E] hover:bg-[#F43F5E]/10 rounded-lg text-sm font-medium transition-colors"
-                >
-                  <LogOut size={18} /> Sign out
-                </button>
-              </div>
+            <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#0A0B0E] border-r border-white/10 animate-in slide-in-from-left duration-200">
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="absolute right-3 top-4 z-10 rounded-full p-1.5 text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
+              <SidebarContent
+                profile={profile}
+                onSignOut={handleSignOut}
+                onNavigate={() => setIsMobileMenuOpen(false)}
+              />
             </aside>
           </div>
         )}
 
-        {/* Page Content */}
+        {/* Page content */}
         <div className="relative flex-1 min-w-0 overflow-x-hidden">
-          {/* Top Header Controls (Desktop only) */}
+          {/* Desktop top-right controls */}
           <div className="hidden md:flex items-center gap-3 absolute top-6 right-10 z-30">
             <TopWalletBar merchantWallet={profile?.merchantWallet} />
             <button
@@ -441,7 +198,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <OnrampProgressBanner />
       <OnrampResultModal />
 
-      {/* Account dropdown menu (Google-style) — shared for desktop + mobile */}
+      {/* Account dropdown menu — shared for desktop + mobile */}
       {isAccountMenuOpen && user && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
@@ -458,23 +215,21 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
             <div className="flex flex-col items-center text-center">
               <div className="rounded-full ring-2 ring-white/10">{renderAvatar(72)}</div>
-              <h3 className="mt-3 text-lg font-light text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                Hi, {displayName}!
-              </h3>
+              <h3 className="mt-3 text-lg font-light text-white">Hi, {displayName}!</h3>
               {profile?.businessName && (
                 <p className="text-xs text-gray-500 mt-0.5">{profile.businessName}</p>
               )}
 
               <div className="mt-2.5">
                 {kycVerified ? (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-800/50 font-['Outfit',sans-serif]">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-800/50">
                     <Check size={12} className="stroke-[3]" /> VERIFIED
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => { setIsAccountMenuOpen(false); setIsKycModalOpen(true); }}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30 transition-all font-['Outfit',sans-serif] shadow-[0_0_16px_rgba(245,158,11,0.2)]"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30 transition-all"
                   >
                     Verify identity
                   </button>
