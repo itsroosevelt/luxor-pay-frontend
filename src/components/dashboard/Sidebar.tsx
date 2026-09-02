@@ -7,8 +7,7 @@
  *   1. Brand (Luxor Pay logo + wordmark)
  *   2. Workspace / organisation card  (avatar · name · total balance · network)
  *   3. Primary navigation             (flat links + collapsible groups)
- *   4. Promotional banner card        (dismissible)
- *   5. Footer                         (Contacts · Help & Support · Sign out)
+ *   4. Footer                         (Contacts · Help & Support · Sign out)
  *
  * `Sidebar` renders the fixed desktop rail (`hidden md:flex`).
  * `SidebarContent` is the shared inner column, reused inside the mobile drawer.
@@ -16,7 +15,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Suspense, useMemo, useState, useSyncExternalStore } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import {
   LayoutDashboard,
   ArrowLeftRight,
@@ -30,9 +29,6 @@ import {
   LogOut,
   ChevronDown,
   ChevronsUpDown,
-  Sparkles,
-  ArrowRight,
-  X,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { MerchantProfile } from '@luxor/contracts';
@@ -42,7 +38,6 @@ import { useTokenPrice } from '@/hooks/useTokenPrice';
 const LOGO_SRC =
   'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b';
 
-const PROMO_DISMISS_KEY = 'luxor_promo_business_account_dismissed';
 const STABLES = ['USDC', 'USDT', 'EURC', 'PYUSD', 'DAI', 'USDG'];
 
 /* ─────────────────────────── Nav model ─────────────────────────── */
@@ -139,18 +134,18 @@ function WorkspaceCard({ profile }: { profile: MerchantProfile | null }) {
           {initial}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] font-medium text-gray-300 leading-tight">
+          <p className="truncate text-sm font-medium text-gray-300 leading-tight">
             {orgName} <span className="text-gray-600">/ Main</span>
           </p>
-          <p className="mt-0.5 text-[15px] font-semibold text-white leading-tight tabular-nums">
+          <p className="mt-0.5 text-base font-semibold text-white leading-tight tabular-nums">
             {formatUsd(totalUsd)}
           </p>
         </div>
-        <ChevronsUpDown size={15} className="shrink-0 text-gray-500" />
+        <ChevronsUpDown size={16} className="shrink-0 text-gray-500" />
       </div>
 
       <div className="mt-3 flex items-center justify-between border-t border-white/[0.06] pt-2.5">
-        <span className="inline-flex items-center gap-1.5 rounded-md bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-gray-400">
+        <span className="inline-flex items-center gap-1.5 rounded-md bg-white/[0.04] px-2 py-1 text-xs font-medium text-gray-400">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/80" />
           {networkLabel()}
         </span>
@@ -160,7 +155,7 @@ function WorkspaceCard({ profile }: { profile: MerchantProfile | null }) {
           title="Workspace settings"
           aria-label="Workspace settings"
         >
-          <ChevronDown size={14} />
+          <ChevronDown size={15} />
         </button>
       </div>
     </div>
@@ -230,7 +225,7 @@ function NavGroup({
         <Icon size={17} className="shrink-0" />
         <span className="truncate flex-1 text-left">{node.label}</span>
         <ChevronDown
-          size={14}
+          size={15}
           className={clsx('shrink-0 text-gray-500 transition-transform duration-200', open && 'rotate-180')}
         />
       </button>
@@ -246,7 +241,7 @@ function NavGroup({
                 onClick={onNavigate}
                 aria-current={active ? 'page' : undefined}
                 className={clsx(
-                  'rounded-md px-3 py-1.5 text-[13px] font-medium transition-colors',
+                  'rounded-md px-3 py-2 text-sm font-medium transition-colors',
                   active ? 'bg-[#20232B] text-white' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]',
                 )}
               >
@@ -256,63 +251,6 @@ function NavGroup({
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-function readPromoDismissed(): boolean {
-  try {
-    return localStorage.getItem(PROMO_DISMISS_KEY) === 'true';
-  } catch {
-    return false;
-  }
-}
-
-function PromoCard() {
-  // Subscribe to the persisted flag (idiomatic external-store read, SSR-safe).
-  const storedDismissed = useSyncExternalStore(
-    (cb) => {
-      window.addEventListener('storage', cb);
-      return () => window.removeEventListener('storage', cb);
-    },
-    readPromoDismissed,
-    () => false,
-  );
-  const [locallyClosed, setLocallyClosed] = useState(false);
-
-  if (storedDismissed || locallyClosed) return null;
-
-  const close = () => {
-    try {
-      localStorage.setItem(PROMO_DISMISS_KEY, 'true');
-    } catch {
-      /* ignore */
-    }
-    setLocallyClosed(true);
-  };
-
-  return (
-    <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-white/10 to-white/5 p-3.5">
-      <button
-        type="button"
-        onClick={close}
-        className="absolute left-2 top-2 rounded-md p-1 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-        aria-label="Dismiss"
-      >
-        <X size={13} />
-      </button>
-      <Sparkles size={16} className="absolute right-3 top-3 text-gray-300/70" />
-
-      <p className="mt-5 text-[12.5px] leading-snug text-gray-300">
-        Our new business account for USD, EUR and stablecoins.
-      </p>
-      <Link
-        href="/dashboard/profile"
-        className="mt-2.5 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-white hover:gap-2.5 transition-all"
-      >
-        Start earning 3.25% APY
-        <ArrowRight size={14} />
-      </Link>
     </div>
   );
 }
@@ -336,7 +274,7 @@ function SidebarInner({ profile, onSignOut, onNavigate }: SidebarContentProps) {
         <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO_SRC} alt="Luxor Pay" className="h-8 w-8 object-contain" />
-          <span className="text-[17px] font-semibold tracking-tight text-white">
+          <span className="text-lg font-semibold tracking-tight text-white">
             Luxor <span className="text-gray-400 font-medium">Pay</span>
           </span>
         </Link>
@@ -364,14 +302,9 @@ function SidebarInner({ profile, onSignOut, onNavigate }: SidebarContentProps) {
             />
           );
         })}
-
-        {/* 4 · Promo banner */}
-        <div className="pt-3">
-          <PromoCard />
-        </div>
       </nav>
 
-      {/* 5 · Footer */}
+      {/* 4 · Footer */}
       <div className="mt-auto space-y-1.5 border-t border-white/[0.06] px-3 py-3">
         {FOOTER_NAV.map(({ href, label, icon: Icon, external }) => {
           const active = !external && isLeafActive({ href });
@@ -415,9 +348,7 @@ export function SidebarContent(props: SidebarContentProps) {
 
 export function Sidebar(props: SidebarContentProps) {
   return (
-    <aside
-      className="hidden md:flex shrink-0 flex-col m-3 h-[calc(100vh-24px)] w-[264px] rounded-2xl border border-white/10 bg-[#0A0B0E] z-40"
-    >
+    <aside className="hidden md:flex shrink-0 flex-col m-3 h-[calc(100vh-24px)] w-[264px] rounded-2xl border border-white/10 bg-[#0A0B0E] z-40">
       <SidebarContent {...props} />
     </aside>
   );
