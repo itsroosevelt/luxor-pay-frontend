@@ -13,3 +13,7 @@ NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=
 NEXT_PUBLIC_API_URL=http://localhost:3008
 NEXT_PUBLIC_SOLANA_NETWORK=mainnet-beta
 NEXT_PUBLIC_SOLANA_RPC_URL=https://mainnet.helius-rpc.com/?api-key=YOUR_HELIUS_KEY
+
+# Frontend Mock Mode — when true, the app runs with zero backend/Firebase calls
+# (auth + every REST endpoint are served from src/mocks). Keep false in real envs.
+NEXT_PUBLIC_USE_MOCK_DATA=false

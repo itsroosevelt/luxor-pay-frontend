@@ -1,8 +1,20 @@
 import type { Metadata, Viewport } from "next";
 import { Montserrat, Outfit } from "next/font/google";
+import dynamic from "next/dynamic";
+import { Fragment } from "react";
 import "./globals.css";
 import { SolanaProvider } from '@/web3/providers/SolanaProvider';
 import { TokenRegistryProvider } from '@/context/TokenRegistryContext';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
+
+/**
+ * Mock Mode wrapper — only pulled into the bundle when
+ * `NEXT_PUBLIC_USE_MOCK_DATA=true`. In a normal build this is a no-op Fragment
+ * and none of `src/mocks` / `src/lib/mock` is imported.
+ */
+const MockModeProvider = IS_MOCK_MODE
+  ? dynamic(() => import('@/context/MockModeProvider').then((m) => m.MockModeProvider))
+  : Fragment;
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -81,11 +93,13 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${outfit.variable} antialiased`}
       >
-        <TokenRegistryProvider>
-          <SolanaProvider>
-            {children}
-          </SolanaProvider>
-        </TokenRegistryProvider>
+        <MockModeProvider>
+          <TokenRegistryProvider>
+            <SolanaProvider>
+              {children}
+            </SolanaProvider>
+          </TokenRegistryProvider>
+        </MockModeProvider>
       </body>
     </html>
   );

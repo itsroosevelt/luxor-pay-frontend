@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { getApiBaseUrl } from '@/lib/api-client';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { useMerchant } from '@/context/MerchantContext';
 
 /* ─── Types ────────────────────────────────────────────────────────────── */
@@ -84,6 +85,19 @@ export function KycSocketProvider({ children }: { children: ReactNode }) {
 
   const joinKycRoom = useCallback(
     (userId: string) => {
+      // Mock Mode: no socket server. Simulate a quick successful verification.
+      if (IS_MOCK_MODE) {
+        setSocketStatus('connected');
+        setVerificationActive(true);
+        setKycResult(null);
+        setTimeout(() => {
+          setProfile((prev) => (prev ? { ...prev, kyc: true, kycStatus: 'VERIFIED' } : prev));
+          setVerificationActive(false);
+          setKycResult('success');
+        }, 1600);
+        return;
+      }
+
       // Avoid duplicate connections to the same room
       if (joinedRoomRef.current === userId && socketRef.current?.connected) {
         return;

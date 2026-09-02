@@ -10,6 +10,8 @@ import {
   onAuthStateChanged,
 } from 'firebase/auth';
 import { auth, getMissingFirebaseEnvKeys, isFirebaseConfigured } from '@/lib/firebase';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
+import { clearMockSignedOut } from '@/lib/mock/mock-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
 import { SolanaParticles } from '@/components/login/SolanaParticles';
@@ -84,8 +86,20 @@ function LoginContent() {
     router.push(redirect || '/dashboard');
   };
 
+  const goToDashboard = () => {
+    const redirect = searchParams.get('redirect');
+    router.push(redirect || '/dashboard');
+  };
+
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (IS_MOCK_MODE) {
+      // No network: restore the simulated session and enter the dashboard.
+      clearMockSignedOut();
+      toast.success('Signed in as Demo User (mock mode)');
+      goToDashboard();
+      return;
+    }
     if (!isFirebaseConfigured) {
       toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
       return;
@@ -110,6 +124,12 @@ function LoginContent() {
   };
 
   const handleGoogleLogin = async () => {
+    if (IS_MOCK_MODE) {
+      clearMockSignedOut();
+      toast.success('Signed in as Demo User (mock mode)');
+      goToDashboard();
+      return;
+    }
     if (!isFirebaseConfigured) {
       toast.error('Firebase not configured. Add env vars in Vercel → Production → Redeploy.');
       return;
