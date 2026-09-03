@@ -11,7 +11,7 @@ import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
 import { listPaymentRequests } from '@/lib/payment-requests-api';
 import { getLuxorEnv } from '@/lib/luxor-env';
-import { Link as LinkIcon, Terminal, Code2, ArrowRight, RefreshCw, Bell } from 'lucide-react';
+import { Link as LinkIcon, Terminal, Code2, ArrowRight, RefreshCw, Bell, QrCode, ArrowUp } from 'lucide-react';
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
 import { OverviewChart } from '@/components/dashboard/overview/OverviewChart';
 import { AccountsTable } from '@/components/dashboard/overview/AccountsTable';
@@ -237,13 +237,37 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        {/* Top Wallet Bar at top right (mobile only here, desktop is global) */}
-        <div className="md:hidden">
-          <TopWalletBar
-            merchantWallet={merchantWallet}
-            solBalance={balanceData?.solBalance}
-            isLoading={isBalanceLoading}
-          />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          {/* Quick actions — QR pay/charge + Send */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsQrModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors"
+              style={{ background: 'var(--lx-primary)', color: 'var(--lx-primary-text)' }}
+              title="QR pay / charge"
+            >
+              <QrCode size={16} /> QR Pay / Charge
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsTransferModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors"
+              style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border-strong)', color: 'var(--lx-text-muted)' }}
+              title="Send funds"
+            >
+              <ArrowUp size={16} /> Send
+            </button>
+          </div>
+
+          {/* Top Wallet Bar (mobile only here, desktop is global) */}
+          <div className="md:hidden">
+            <TopWalletBar
+              merchantWallet={merchantWallet}
+              solBalance={balanceData?.solBalance}
+              isLoading={isBalanceLoading}
+            />
+          </div>
         </div>
       </HeaderContainer>
 
