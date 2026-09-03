@@ -29,6 +29,7 @@ import {
   LogOut,
   ChevronDown,
   ChevronsUpDown,
+  Landmark,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { MerchantProfile } from '@luxor/contracts';
@@ -50,6 +51,7 @@ type NavNode =
 const PRIMARY_NAV: NavNode[] = [
   { kind: 'link', href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
   { kind: 'link', href: '/dashboard/transactions', label: 'Transactions', icon: ArrowLeftRight },
+  { kind: 'link', href: '/dashboard/treasury', label: 'Treasury', icon: Landmark },
   { kind: 'link', href: '/dashboard/swap', label: 'Swap & Trade', icon: Repeat },
   {
     kind: 'group',

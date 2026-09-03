@@ -13,6 +13,9 @@ import { listPaymentRequests } from '@/lib/payment-requests-api';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import { Link as LinkIcon, Terminal, Code2, ArrowRight, RefreshCw, Bell } from 'lucide-react';
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
+import { OverviewChart } from '@/components/dashboard/overview/OverviewChart';
+import { AccountsTable } from '@/components/dashboard/overview/AccountsTable';
+import { DashboardExtraPanelsContainer } from '@/components/dashboard/overview/DashboardExtraPanelsContainer';
 import { TopWalletBar } from '@/components/dashboard/TopWalletBar';
 import { useGetBalance } from '@/hooks/useGetBalance';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
@@ -300,8 +303,23 @@ export default function DashboardOverviewPage() {
           onSendClick={() => setIsTransferModalOpen(true)}
           onDepositClick={() => setIsQrModalOpen(true)}
           onTradeClick={() => router.push('/dashboard/swap')}
+          showExtraPanels={false}
         />
 
+        {/* Balance-over-time chart + accounts / coins breakdown (Squads "Overview") */}
+        {merchantWallet && <OverviewChart />}
+        {merchantWallet && (
+          <AccountsTable
+            merchantWallet={merchantWallet}
+            balanceData={balanceData}
+            solBalance={balanceData?.solBalance}
+            onSendClick={() => setIsTransferModalOpen(true)}
+            onTradeClick={() => router.push('/dashboard/swap')}
+          />
+        )}
+
+        {/* Limit orders · Inflows & Outflows · Stake · Managed assets */}
+        {merchantWallet && <DashboardExtraPanelsContainer />}
 
         <div className="grid md:grid-cols-3 gap-5">
           <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />

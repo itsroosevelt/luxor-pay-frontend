@@ -32,6 +32,8 @@ interface WalletBalanceContainerProps {
   onSendClick?: () => void;
   onDepositClick?: () => void;
   onTradeClick?: () => void;
+  /** Render the Limit-Order / Inflows / Stake / Managed-Assets panels. Default true. */
+  showExtraPanels?: boolean;
 }
 
 export function WalletBalanceContainer({
@@ -39,6 +41,7 @@ export function WalletBalanceContainer({
   onSendClick,
   onDepositClick,
   onTradeClick,
+  showExtraPanels = true,
 }: WalletBalanceContainerProps) {
   const { profile, setIsKycModalOpen } = useMerchant();
   const {
@@ -83,7 +86,7 @@ export function WalletBalanceContainer({
       </GridContainer>
 
       {/* Interactive limit orders, flows and stake panels */}
-      <DashboardExtraPanelsContainer />
+      {showExtraPanels && <DashboardExtraPanelsContainer />}
     </OuterWrapper>
   );
 }
