@@ -5,7 +5,7 @@
  *
  * Layout (top → bottom):
  *   1. Brand (Luxor Pay logo + wordmark + collapse toggle)
- *   2. Primary navigation (flat links + collapsible groups)
+ *   2. Primary navigation (flat links + collapsible groups + external portal redirects)
  *   3. Footer (Contacts · Help & Support · Sign out)
  *
  * Supports collapsing into icon-only mode (`w-[76px]`) with state persistence.
@@ -16,58 +16,113 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState, useEffect } from 'react';
 import {
   LayoutDashboard,
-  ArrowLeftRight,
-  Repeat,
+  Zap,
+  Users,
+  Landmark,
+  CandlestickChart,
+  Layers,
   Link as LinkIcon,
+  QrCode,
   Code2,
   UserCircle,
   Settings,
-  Users,
   HelpCircle,
   LogOut,
   ChevronDown,
-  Landmark,
   ChevronLeft,
+  ExternalLink,
+  Repeat,
+  FileText,
+  Sparkles,
+  Rocket,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { MerchantProfile } from '@luxor/contracts';
+import { PortalSwitcher } from './PortalSwitcher';
 
 const LOGO_SRC =
   'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b';
 
 /* ─────────────────────────── Nav model ─────────────────────────── */
 
-type NavLeaf = { href: string; label: string; tab?: string };
+type NavLeaf = { href: string; label: string; tab?: string; external?: boolean };
 type NavNode =
-  | { kind: 'link'; href: string; label: string; icon: typeof LayoutDashboard; exact?: boolean; tab?: string }
+  | {
+      kind: 'link';
+      href: string;
+      label: string;
+      icon: typeof LayoutDashboard;
+      exact?: boolean;
+      tab?: string;
+      external?: boolean;
+    }
   | { kind: 'group'; id: string; label: string; icon: typeof LayoutDashboard; children: NavLeaf[] };
 
-const PRIMARY_NAV: NavNode[] = [
-  { kind: 'link', href: '/dashboard', label: 'Resumen', icon: LayoutDashboard, exact: true },
-  { kind: 'link', href: '/dashboard/transactions', label: 'Transacciones', icon: ArrowLeftRight },
-  { kind: 'link', href: '/dashboard/members', label: 'Miembros', icon: Users },
-  { kind: 'link', href: '/dashboard/treasury', label: 'Tesorería', icon: Landmark },
-  { kind: 'link', href: '/dashboard/swap', label: 'Swap & Trade', icon: Repeat },
+export type NavSection = {
+  title?: string;
+  items: NavNode[];
+};
+
+export const NAV_SECTIONS: NavSection[] = [
   {
-    kind: 'group',
-    id: 'payments',
-    label: 'Payment Links / POS',
-    icon: LinkIcon,
-    children: [
-      { href: '/dashboard/links', label: 'Payment Links' },
-      { href: '/dashboard/requests', label: 'Payment Requests' },
-      { href: '/dashboard/settings?tab=pos', label: 'POS Devices', tab: 'pos' },
+    title: 'Overview',
+    items: [
+      { kind: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+      { kind: 'link', href: '/dashboard/transactions', label: 'Transactions', icon: Zap },
     ],
   },
   {
-    kind: 'group',
-    id: 'developers',
-    label: 'Developers / API Keys',
-    icon: Code2,
-    children: [{ href: '/dashboard/settings?tab=developers', label: 'API Keys', tab: 'developers' }],
+    title: 'Portals',
+    items: [
+      { kind: 'link', href: '/token-launcher', label: 'Launcher & DEX', icon: Rocket },
+      { kind: 'link', href: '/payment-portal', label: 'POS & Payments', icon: QrCode },
+    ],
   },
-  { kind: 'link', href: '/dashboard/profile', label: 'Perfil', icon: UserCircle },
-  { kind: 'link', href: '/dashboard/settings?tab=general', label: 'Ajustes', icon: Settings, tab: 'general' },
+  {
+    title: 'Payments',
+    items: [
+      { kind: 'link', href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
+      { kind: 'link', href: '/dashboard/pos', label: 'POS Terminal', icon: QrCode },
+      { kind: 'link', href: '/dashboard/requests', label: 'Payment Requests', icon: FileText },
+      { kind: 'link', href: '/dashboard/contacts', label: 'Contacts', icon: Users },
+    ],
+  },
+  {
+    title: 'Treasury & DeFi',
+    items: [
+      {
+        kind: 'group',
+        id: 'treasury',
+        label: 'Treasury',
+        icon: Landmark,
+        children: [
+          { href: '/dashboard/treasury', label: 'Operating Vaults' },
+          { href: '/dashboard/members', label: 'Multisig Signers' },
+        ],
+      },
+      { kind: 'link', href: '/dashboard/swap', label: 'Trade', icon: CandlestickChart },
+      { kind: 'link', href: '/dashboard/stake', label: 'Stake', icon: Layers },
+    ],
+  },
+  {
+    title: 'System & Devs',
+    items: [
+      { kind: 'link', href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
+      { kind: 'link', href: '/dashboard/members', label: 'Members', icon: Users },
+      { kind: 'link', href: '/dashboard/subscription', label: 'Subscription', icon: Sparkles },
+      {
+        kind: 'group',
+        id: 'developers',
+        label: 'Developers',
+        icon: Code2,
+        children: [
+          { href: '/dashboard/settings?tab=developers', label: 'API Keys & Secrets', tab: 'developers' },
+          { href: '/dashboard/developers', label: 'Webhooks & Docs' },
+        ],
+      },
+      { kind: 'link', href: '/dashboard/settings', label: 'Settings', icon: Settings },
+    ],
+  },
 ];
 
 /* ─────────────────────────── Helpers ─────────────────────────── */
@@ -77,7 +132,8 @@ function useActiveMatcher() {
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'general';
 
-  const isLeafActive = (leaf: { href: string; tab?: string; exact?: boolean }) => {
+  const isLeafActive = (leaf: { href: string; tab?: string; exact?: boolean; external?: boolean }) => {
+    if (leaf.external) return false;
     const [path] = leaf.href.split('?');
     if (leaf.tab) return pathname.startsWith('/dashboard/settings') && currentTab === leaf.tab;
     if (leaf.exact) return pathname === path;
@@ -95,6 +151,7 @@ function NavLinkRow({
   icon: Icon,
   active,
   isCollapsed,
+  external,
   onNavigate,
 }: {
   href: string;
@@ -102,26 +159,55 @@ function NavLinkRow({
   icon: typeof LayoutDashboard;
   active: boolean;
   isCollapsed?: boolean;
+  external?: boolean;
   onNavigate?: () => void;
 }) {
+  const content = (
+    <>
+      <Icon size={18} className={clsx('shrink-0 transition-colors', active ? 'text-white' : 'group-hover:text-white')} />
+      {!isCollapsed && (
+        <span className="truncate flex-1 text-left flex items-center justify-between gap-1.5">
+          <span className="truncate">{label}</span>
+          {external && <ExternalLink size={12} className="text-gray-400 group-hover:text-white shrink-0" />}
+        </span>
+      )}
+    </>
+  );
+
+  const className = clsx(
+    'group flex items-center transition-all duration-200',
+    isCollapsed
+      ? 'justify-center rounded-full w-10 h-10 mx-auto'
+      : 'gap-2.5 rounded-full px-3 py-2 text-[13.5px] font-medium',
+    active
+      ? 'bg-white/[0.08] text-white border border-white/20 shadow-sm font-semibold'
+      : 'text-gray-400 border border-transparent hover:text-white hover:bg-white/[0.05]',
+  );
+
+  if (external) {
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onNavigate}
+        title={`${label} (Abre en ventana externa)`}
+        className={className}
+      >
+        {content}
+      </a>
+    );
+  }
+
   return (
     <Link
       href={href}
       onClick={onNavigate}
       title={label}
       aria-current={active ? 'page' : undefined}
-      className={clsx(
-        'group flex items-center transition-all duration-200',
-        isCollapsed
-          ? 'justify-center rounded-full w-10 h-10 mx-auto'
-          : 'gap-2.5 rounded-full px-3 py-2 text-[13.5px] font-medium',
-        active
-          ? 'bg-gradient-to-r from-blue-600/25 to-blue-400/10 text-white border border-blue-500/30 shadow-sm shadow-blue-500/20 font-semibold'
-          : 'text-gray-400 border border-transparent hover:text-white hover:bg-white/[0.05]',
-      )}
+      className={className}
     >
-      <Icon size={18} className={clsx('shrink-0 transition-colors', active ? 'text-blue-400' : 'group-hover:text-blue-400')} />
-      {!isCollapsed && <span className="truncate">{label}</span>}
+      {content}
     </Link>
   );
 }
@@ -152,11 +238,11 @@ function NavGroup({
         className={clsx(
           'flex h-10 w-10 mx-auto items-center justify-center rounded-full transition-all duration-200',
           containsActive
-            ? 'bg-gradient-to-r from-blue-600/25 to-blue-400/10 text-white border border-blue-500/30 shadow-sm shadow-blue-500/20'
+            ? 'bg-white/[0.08] text-white border border-white/20 shadow-sm'
             : 'text-gray-400 hover:text-white hover:bg-white/[0.05]',
         )}
       >
-        <Icon size={18} className={containsActive ? 'text-blue-400' : ''} />
+        <Icon size={18} className={containsActive ? 'text-white' : ''} />
       </Link>
     );
   }
@@ -186,6 +272,22 @@ function NavGroup({
         <div className="mt-1 ml-[18px] flex flex-col gap-0.5 border-l border-white/10 pl-2.5">
           {node.children.map((child) => {
             const active = isLeafActive(child);
+            if (child.external) {
+              return (
+                <a
+                  key={child.href}
+                  href={child.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={onNavigate}
+                  title={`${child.label} (Abre en ventana externa)`}
+                  className="rounded-md px-2.5 py-1.5 text-[12.5px] font-medium transition-colors text-gray-400 hover:text-white hover:bg-white/[0.04] flex items-center justify-between"
+                >
+                  <span className="truncate">{child.label}</span>
+                  <ExternalLink size={12} className="text-gray-500 shrink-0 ml-1" />
+                </a>
+              );
+            }
             return (
               <Link
                 key={child.href}
@@ -269,60 +371,66 @@ function SidebarInner({
         )}
       </div>
 
-      {/* 2 · Primary navigation */}
-      <nav className="mt-3 flex-1 space-y-1.5 overflow-y-auto px-2.5 pb-2">
-        {PRIMARY_NAV.map((node) => {
-          if (node.kind === 'group') {
-            return (
-              <NavGroup
-                key={node.id}
-                node={node}
-                isCollapsed={isCollapsed}
-                onNavigate={onNavigate}
-              />
-            );
-          }
-          return (
-            <NavLinkRow
-              key={node.href}
-              href={node.href}
-              label={node.label}
-              icon={node.icon}
-              active={isLeafActive(node)}
-              isCollapsed={isCollapsed}
-              onNavigate={onNavigate}
-            />
-          );
-        })}
+      {/* 2 · Primary navigation with structured categories */}
+      <nav className="mt-3 flex-1 space-y-4 overflow-y-auto px-2.5 pb-2">
+        {NAV_SECTIONS.map((section, idx) => (
+          <div key={section.title || idx} className="space-y-1">
+            {!isCollapsed && section.title && (
+              <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
+                {section.title}
+              </div>
+            )}
+            {isCollapsed && idx > 0 && (
+              <div className="my-2 border-t border-white/[0.06] w-8 mx-auto" />
+            )}
+            <div className="space-y-1">
+              {section.items.map((node) => {
+                if (node.kind === 'group') {
+                  return (
+                    <NavGroup
+                      key={node.id}
+                      node={node}
+                      isCollapsed={isCollapsed}
+                      onNavigate={onNavigate}
+                    />
+                  );
+                }
+                return (
+                  <NavLinkRow
+                    key={node.href}
+                    href={node.href}
+                    label={node.label}
+                    icon={node.icon}
+                    active={isLeafActive(node)}
+                    external={node.external}
+                    isCollapsed={isCollapsed}
+                    onNavigate={onNavigate}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* 4 · Footer */}
       <div className="mt-auto space-y-1 border-t border-white/[0.06] px-2.5 py-2.5">
-        <NavLinkRow
-          href="/dashboard/contacts"
-          label="Contactos"
-          icon={Users}
-          active={isLeafActive({ href: '/dashboard/contacts' })}
-          isCollapsed={isCollapsed}
-          onNavigate={onNavigate}
-        />
-
         <button
           type="button"
           onClick={() => {
             onNavigate?.();
             onOpenSupportCenter?.();
           }}
-          title="Ayuda y soporte"
+          title="Help & Support"
           className={clsx(
             'flex items-center transition-colors',
             isCollapsed
-              ? 'h-10 w-10 justify-center rounded-full mx-auto text-gray-400 hover:text-white hover:bg-white/[0.05]'
-              : 'w-full gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-gray-400 hover:text-white hover:bg-white/[0.04]',
+              ? 'h-10 w-10 justify-center rounded-full mx-auto text-gray-400 hover:text-white hover:bg-white/[0.08]'
+              : 'w-full gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-gray-400 hover:text-white hover:bg-white/[0.05]',
           )}
         >
           <HelpCircle size={18} className="shrink-0" />
-          {!isCollapsed && <span className="truncate">Ayuda y soporte</span>}
+          {!isCollapsed && <span className="truncate">Help & Support</span>}
         </button>
 
         <button
@@ -332,8 +440,8 @@ function SidebarInner({
           className={clsx(
             'flex items-center transition-colors',
             isCollapsed
-              ? 'h-10 w-10 justify-center rounded-full mx-auto text-gray-500 hover:text-[#F87171] hover:bg-[#F87171]/10'
-              : 'w-full gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-gray-500 hover:text-[#F87171] hover:bg-[#F87171]/10',
+              ? 'h-10 w-10 justify-center rounded-full mx-auto text-gray-500 hover:text-white hover:bg-white/[0.08]'
+              : 'w-full gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium text-gray-500 hover:text-white hover:bg-white/[0.05]',
           )}
         >
           <LogOut size={18} className="shrink-0" />
@@ -376,7 +484,7 @@ export function Sidebar(props: SidebarContentProps) {
   return (
     <aside
       className={clsx(
-        'hidden md:flex shrink-0 flex-col my-3 ml-3 mr-1.5 h-[calc(100vh-24px)] rounded-2xl border border-white/10 bg-[#08090D] z-40 transition-all duration-300 ease-in-out',
+        'hidden md:flex shrink-0 flex-col h-screen border-r border-white/10 bg-[#08090D] z-40 transition-all duration-300 ease-in-out',
         isCollapsed ? 'w-[76px]' : 'w-[260px]',
       )}
     >

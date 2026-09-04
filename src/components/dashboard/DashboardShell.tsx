@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut, onAuthStateChanged, type User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { Menu, X, Check, LogOut } from 'lucide-react';
+import { Menu, X, Check, LogOut, User as UserIcon } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
 import { useMerchant } from '@/context/MerchantContext';
@@ -133,7 +133,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       />
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-w-0 h-full md:my-3 md:mr-3 md:ml-1.5 md:h-[calc(100vh-24px)] md:rounded-2xl md:border md:border-white/12 md:bg-[#07090D]/90 md:backdrop-blur-xl md:shadow-2xl overflow-y-auto overflow-x-hidden relative">
+      <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative">
         {/* Mobile header */}
         <header
           className="md:hidden flex-shrink-0 flex items-center justify-between p-4"
@@ -165,14 +165,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Mobile drawer */}
+        {/* Mobile drawer — slides in from the right */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex md:hidden">
+          <div className="fixed inset-0 z-50 flex justify-end md:hidden">
             <div
               className="fixed inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#0A0B0E] border-r border-white/10 animate-in slide-in-from-left duration-200">
+            <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#0A0B0E] border-l border-white/10 animate-in slide-in-from-right duration-200">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -260,10 +260,11 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
           <div
             style={{
-              background: 'var(--lx-surface)',
-              border: '1px solid var(--lx-border-strong)',
-              borderRadius: 'var(--lx-radius-lg)',
-              boxShadow: 'var(--lx-shadow-lg)',
+              background: '#0D0E14',
+              backdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              borderRadius: '24px',
+              boxShadow: '0 24px 60px -16px rgba(0, 0, 0, 0.95), 0 0 40px rgba(0, 0, 0, 0.8)',
             }}
             className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-6 text-[color:var(--lx-text)] animate-in fade-in slide-in-from-top-2 duration-200"
           >
@@ -293,8 +294,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
+            <Link
+              href="/dashboard/profile"
+              onClick={() => setIsAccountMenuOpen(false)}
+              className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-full border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-white transition-all text-xs font-medium"
+            >
+              <UserIcon size={14} /> Manage Profile & Statements
+            </Link>
+
             {kycVerified && (
-              <div className="mt-4 w-full">
+              <div className="mt-2.5 w-full">
                 <FundWalletButton
                   merchantWallet={profile?.merchantWallet}
                   onTrigger={() => setIsAccountMenuOpen(false)}

@@ -28,9 +28,9 @@ import {
 } from '@/lib/proposals-api';
 
 const TYPE_META: Record<ProposalType, { label: string; icon: typeof Repeat }> = {
-  transfer: { label: 'Transferencia', icon: ArrowUpRight },
+  transfer: { label: 'Transfer', icon: ArrowUpRight },
   swap: { label: 'Swap', icon: Repeat },
-  config: { label: 'Configuración', icon: Settings2 },
+  config: { label: 'Settings', icon: Settings2 },
 };
 
 const FALLBACK_TOKENS = [
@@ -43,10 +43,10 @@ const FALLBACK_TOKENS = [
 const short = (a: string) => (a && a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a || '—');
 const timeAgo = (iso: string) => {
   const s = Math.round((Date.now() - new Date(iso).getTime()) / 1000);
-  if (s < 60) return 'hace un momento';
-  if (s < 3600) return `hace ${Math.floor(s / 60)} min`;
-  if (s < 86400) return `hace ${Math.floor(s / 3600)} h`;
-  return `hace ${Math.floor(s / 86400)} d`;
+  if (s < 60) return 'just now';
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
 };
 
 function StatusChip({ status }: { status: Proposal['status'] }) {
@@ -99,7 +99,7 @@ export function ProposalsPanel({
   const tokenList = tokens.length ? tokens.map((t) => ({ mint: t.mint, symbol: t.symbol })) : FALLBACK_TOKENS;
   const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? null, [members]);
   const signers = useMemo(() => members.filter((m) => m.roles.signer), [members]);
-  const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? 'Miembro';
+  const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? 'Member';
 
   const canPropose = !!me && (me.roles.proposer || me.roles.admin);
 
@@ -120,17 +120,17 @@ export function ProposalsPanel({
   const run = async (label: string, fn: () => Promise<unknown>, ok: string) => {
     setBusy(label);
     try { await fn(); toast.success(ok); }
-    catch (e) { toast.error(e instanceof Error ? e.message : 'Acción fallida'); }
+    catch (e) { toast.error(e instanceof Error ? e.message : 'Action failed'); }
     finally { setBusy(null); }
   };
 
   const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canPropose) { toast.error('Necesitas el rol de Iniciador'); return; }
-    if (!form.title.trim()) { toast.error('Ponle un título a la propuesta'); return; }
-    if (form.type !== 'config' && !effVaultId) { toast.error('Elige una bóveda de origen'); return; }
-    if (form.type === 'transfer' && !form.destination.trim()) { toast.error('Falta la dirección de destino'); return; }
-    if (form.type !== 'config' && !form.amount.trim()) { toast.error('Falta el monto'); return; }
+    if (!canPropose) { toast.error('Proposer role required'); return; }
+    if (!form.title.trim()) { toast.error('Please enter a proposal title'); return; }
+    if (form.type !== 'config' && !effVaultId) { toast.error('Select a source vault'); return; }
+    if (form.type === 'transfer' && !form.destination.trim()) { toast.error('Recipient address is required'); return; }
+    if (form.type !== 'config' && !form.amount.trim()) { toast.error('Amount is required'); return; }
 
     const payload: CreateProposalPayload = {
       type: form.type,
@@ -147,8 +147,8 @@ export function ProposalsPanel({
       await createProposal(payload);
       setCreateOpen(false);
       setForm((f) => ({ ...f, title: '', destination: '', destinationLabel: '', amount: '', memo: '' }));
-      toast.success('Propuesta creada · abierta a votación');
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'No se pudo crear la propuesta'); }
+      toast.success('Proposal created · open for voting');
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not create proposal'); }
     finally { setBusy(null); }
   };
 
@@ -158,27 +158,27 @@ export function ProposalsPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--lx-text-muted)' }}>
           <ShieldCheck size={14} />
-          Umbral actual: <strong style={{ color: 'var(--lx-text)' }}>{config ? `${config.threshold} de ${signers.length}` : '—'}</strong> firmantes
+          Current Threshold: <strong style={{ color: 'var(--lx-text)' }}>{config ? `${config.threshold} of ${signers.length}` : '—'}</strong> signers
         </div>
         <button type="button" className="lx-btn lx-btn-primary" disabled={!canPropose}
-          onClick={() => { if (!canPropose) { toast.error('Necesitas el rol de Iniciador'); return; } setCreateOpen(true); }}>
-          <Plus size={15} /> Nueva propuesta
+          onClick={() => { if (!canPropose) { toast.error('Proposer role required'); return; } setCreateOpen(true); }}>
+          <Plus size={15} /> New Proposal
         </button>
       </div>
 
       {isLoading && (
         <div className="flex items-center justify-center gap-2 py-16 text-sm" style={{ color: 'var(--lx-text-muted)' }}>
-          <Loader2 size={18} className="animate-spin" /> Cargando propuestas…
+          <Loader2 size={18} className="animate-spin" /> Loading proposals…
         </div>
       )}
       {isError && (
         <div className="flex items-center gap-3 rounded-xl p-4 text-sm" style={{ background: 'var(--lx-danger-soft)', border: '1px solid var(--lx-danger)', color: 'var(--lx-danger)' }}>
-          <AlertTriangle size={16} /> {errorMessage || 'Error al cargar las propuestas'}
+          <AlertTriangle size={16} /> {errorMessage || 'Error loading proposals'}
         </div>
       )}
       {!isLoading && !isError && proposals.length === 0 && (
         <div className="rounded-xl p-10 text-center text-sm" style={{ background: 'var(--lx-surface-2)', border: '1px dashed var(--lx-border-strong)', color: 'var(--lx-text-muted)' }}>
-          Aún no hay propuestas. Crea la primera para mover fondos desde una bóveda.
+          No proposals yet. Create your first proposal to transfer funds from a vault.
         </div>
       )}
 
@@ -241,20 +241,20 @@ export function ProposalsPanel({
               </div>
 
               <div className="grid gap-x-6 gap-y-2.5 rounded-xl p-4 sm:grid-cols-2" style={{ background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)' }}>
-                <Row label="Bóveda de origen" value={detail.vaultLabel} />
-                <Row label="Monto" value={detail.amount ? `${detail.amount} ${detail.symbol}` : '—'} />
+                <Row label="Source Vault" value={detail.vaultLabel} />
+                <Row label="Amount" value={detail.amount ? `${detail.amount} ${detail.symbol}` : '—'} />
                 {detail.type === 'transfer' && (
-                  <Row label="Destino" value={detail.destinationLabel ? `${detail.destinationLabel} · ${short(detail.destination)}` : short(detail.destination)} mono />
+                  <Row label="Destination" value={detail.destinationLabel ? `${detail.destinationLabel} · ${short(detail.destination)}` : short(detail.destination)} mono />
                 )}
-                <Row label="Creada por" value={nameOf(detail.createdBy)} />
-                <Row label="Umbral" value={`${detail.threshold} de ${signers.length}`} />
-                {detail.memo && <Row label="Nota" value={detail.memo} full />}
-                {detail.executedSig && <Row label="Firma" value={short(detail.executedSig)} mono full />}
+                <Row label="Created by" value={nameOf(detail.createdBy)} />
+                <Row label="Threshold" value={`${detail.threshold} of ${signers.length}`} />
+                {detail.memo && <Row label="Note" value={detail.memo} full />}
+                {detail.executedSig && <Row label="Signature" value={short(detail.executedSig)} mono full />}
               </div>
 
               {/* vote roster */}
               <div>
-                <p className="lx-eyebrow" style={{ marginBottom: 8 }}>Votos ({detail.approvals.length}/{detail.threshold} para ejecutar)</p>
+                <p className="lx-eyebrow" style={{ marginBottom: 8 }}>Votes ({detail.approvals.length}/{detail.threshold} required to execute)</p>
                 <VoteBar have={detail.approvals.length} need={detail.threshold} />
                 <div className="mt-3 space-y-1.5">
                   {signers.map((s) => {
@@ -262,9 +262,9 @@ export function ProposalsPanel({
                     const rejected = detail.rejections.includes(s.id);
                     return (
                       <div key={s.id} className="flex items-center justify-between text-[13px]">
-                        <span style={{ color: 'var(--lx-text-muted)' }}>{s.name}{s.isCurrentUser ? ' · tú' : ''}</span>
+                        <span style={{ color: 'var(--lx-text-muted)' }}>{s.name}{s.isCurrentUser ? ' · you' : ''}</span>
                         <span className="inline-flex items-center gap-1 text-[12px] font-medium" style={{ color: approved ? 'var(--lx-success)' : rejected ? 'var(--lx-danger)' : 'var(--lx-text-dim)' }}>
-                          {approved ? <><ThumbsUp size={12} /> Aprobó</> : rejected ? <><ThumbsDown size={12} /> Rechazó</> : 'Pendiente'}
+                          {approved ? <><ThumbsUp size={12} /> Approved</> : rejected ? <><ThumbsDown size={12} /> Rejected</> : 'Pending'}
                         </span>
                       </div>
                     );
@@ -275,11 +275,11 @@ export function ProposalsPanel({
               {/* actions */}
               <ProposalActions
                 p={detail} me={me} busy={busy}
-                onApprove={() => run('approve', () => approve(detail.id), 'Voto de aprobación registrado')}
-                onReject={() => run('reject', () => reject(detail.id), 'Voto de rechazo registrado')}
-                onExecute={() => run('execute', () => execute(detail.id), 'Propuesta ejecutada on-chain')}
-                onActivate={() => run('activate', () => activate(detail.id), 'Propuesta abierta a votación')}
-                onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Propuesta cancelada')}
+                onApprove={() => run('approve', () => approve(detail.id), 'Approval vote registered')}
+                onReject={() => run('reject', () => reject(detail.id), 'Rejection vote registered')}
+                onExecute={() => run('execute', () => execute(detail.id), 'Proposal executed on-chain')}
+                onActivate={() => run('activate', () => activate(detail.id), 'Proposal opened for voting')}
+                onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Proposal cancelled')}
               />
             </div>
           </Modal>
@@ -289,7 +289,7 @@ export function ProposalsPanel({
       {/* create modal */}
       <AnimatePresence>
         {createOpen && (
-          <Modal onClose={() => busy !== 'create' && setCreateOpen(false)} title="Nueva propuesta" icon={<Plus size={18} style={{ color: 'var(--lx-text-muted)' }} />} maxWidth={520}>
+          <Modal onClose={() => busy !== 'create' && setCreateOpen(false)} title="New Proposal" icon={<Plus size={18} style={{ color: 'var(--lx-text-muted)' }} />} maxWidth={520}>
             <form onSubmit={submitCreate} className="space-y-4">
               <div className="flex gap-2">
                 {(['transfer', 'swap'] as ProposalType[]).map((t) => {
@@ -306,12 +306,12 @@ export function ProposalsPanel({
               </div>
 
               <label className="block">
-                <span className="lx-eyebrow">Título</span>
-                <input style={fieldStyle} className="mt-1.5" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="p. ej. Pago a proveedor" required />
+                <span className="lx-eyebrow">Title</span>
+                <input style={fieldStyle} className="mt-1.5" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Vendor payout" required />
               </label>
 
               <label className="block">
-                <span className="lx-eyebrow">Bóveda de origen</span>
+                <span className="lx-eyebrow">Source Vault</span>
                 <select style={fieldStyle} className="mt-1.5" value={effVaultId} onChange={(e) => setForm((f) => ({ ...f, vaultId: e.target.value }))}>
                   {vaults.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
                 </select>
@@ -320,19 +320,19 @@ export function ProposalsPanel({
               {form.type === 'transfer' && (
                 <div className="grid grid-cols-2 gap-3">
                   <label className="col-span-2 block">
-                    <span className="lx-eyebrow">Dirección de destino</span>
+                    <span className="lx-eyebrow">Recipient Address</span>
                     <input style={{ ...fieldStyle, fontFamily: 'monospace', fontSize: 13 }} className="mt-1.5" value={form.destination} onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))} placeholder="Pubkey base58" required />
                   </label>
                   <label className="col-span-2 block">
-                    <span className="lx-eyebrow">Etiqueta del destino (opcional)</span>
-                    <input style={fieldStyle} className="mt-1.5" value={form.destinationLabel} onChange={(e) => setForm((f) => ({ ...f, destinationLabel: e.target.value }))} placeholder="p. ej. Green Highlands" />
+                    <span className="lx-eyebrow">Recipient Label (Optional)</span>
+                    <input style={fieldStyle} className="mt-1.5" value={form.destinationLabel} onChange={(e) => setForm((f) => ({ ...f, destinationLabel: e.target.value }))} placeholder="e.g. Green Highlands" />
                   </label>
                 </div>
               )}
 
               <div className="grid grid-cols-2 gap-3">
                 <label className="block">
-                  <span className="lx-eyebrow">Monto</span>
+                  <span className="lx-eyebrow">Amount</span>
                   <input style={fieldStyle} className="mt-1.5" inputMode="decimal" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} placeholder="0.00" required />
                 </label>
                 <label className="block">
@@ -344,18 +344,18 @@ export function ProposalsPanel({
               </div>
 
               <label className="block">
-                <span className="lx-eyebrow">Nota (opcional)</span>
-                <input style={fieldStyle} className="mt-1.5" value={form.memo} onChange={(e) => setForm((f) => ({ ...f, memo: e.target.value }))} placeholder="Referencia interna" />
+                <span className="lx-eyebrow">Note (Optional)</span>
+                <input style={fieldStyle} className="mt-1.5" value={form.memo} onChange={(e) => setForm((f) => ({ ...f, memo: e.target.value }))} placeholder="Internal reference" />
               </label>
 
               <p className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>
-                La propuesta se abre a votación de inmediato. Necesita {config?.threshold ?? 2} aprobaciones para poder ejecutarse.
+                The proposal opens for voting immediately. It requires {config?.threshold ?? 2} approvals to be executed.
               </p>
 
               <div className="flex justify-end gap-2 pt-1">
-                <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setCreateOpen(false)} disabled={busy === 'create'}>Cancelar</button>
+                <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setCreateOpen(false)} disabled={busy === 'create'}>Cancel</button>
                 <button type="submit" className="lx-btn lx-btn-primary" disabled={busy === 'create'}>
-                  {busy === 'create' ? <><Loader2 size={15} className="animate-spin" /> Creando…</> : 'Crear propuesta'}
+                  {busy === 'create' ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : 'Create Proposal'}
                 </button>
               </div>
             </form>

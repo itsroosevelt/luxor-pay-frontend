@@ -4,22 +4,12 @@ import styled from "styled-components";
 import { motion } from "framer-motion";
 
 export const GlassCard = styled(motion.div)<{ $variant?: "default" | "hero" }>`
-  background: ${({ $variant }) =>
-    $variant === "hero"
-      ? "linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(13, 15, 22, 0.95))"
-      : "rgba(18, 20, 28, 0.8)"};
-  border: 1px solid
-    ${({ $variant }) =>
-      $variant === "hero"
-        ? "rgba(96, 165, 250, 0.28)"
-        : "rgba(255, 255, 255, 0.12)"};
-  border-radius: 24px;
-  backdrop-filter: blur(24px);
-  box-shadow: ${({ $variant }) =>
-    $variant === "hero"
-      ? "0 24px 60px -16px rgba(0, 0, 0, 0.85), 0 0 35px rgba(37, 99, 235, 0.18)"
-      : "0 16px 40px -12px rgba(0, 0, 0, 0.7)"};
-  padding: var(--lx-pad, 24px);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
+  box-shadow: none;
+  padding: 0;
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -42,7 +32,7 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
 
   &:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px #60A5FA, 0 0 12px rgba(96, 165, 250, 0.4);
+    box-shadow: 0 0 0 2px #FFFFFF, 0 0 12px rgba(255, 255, 255, 0.4);
   }
 
   &:disabled {
@@ -50,16 +40,16 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
     cursor: not-allowed;
   }
 
-  /* Primary — Official Luxor Electric Blue Gradient */
+  /* Primary — Monochrome solid white pill */
   ${({ $variant }) =>
     ($variant === "primary" || !$variant) &&
     `
-    background: linear-gradient(135deg, #60A5FA, #2563EB);
-    color: #FFFFFF;
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+    background: #FFFFFF;
+    color: #000000;
+    box-shadow: none;
     &:hover:not(:disabled) {
-      background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+      background: #EDEDED;
+      color: #000000;
       transform: translateY(-1px);
     }
   `}
@@ -71,27 +61,25 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
     background: rgba(255, 255, 255, 0.05);
     color: #FFFFFF;
     border: 1px solid rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.10);
       color: #FFFFFF;
-      border-color: rgba(96, 165, 250, 0.4);
+      border-color: rgba(255, 255, 255, 0.3);
       transform: translateY(-1px);
     }
   `}
 
-  /* Glass — Translucent pill fill */
+  /* Glass — Neutral translucent pill fill */
   ${({ $variant }) =>
     $variant === "glass" &&
     `
-    background: rgba(96, 165, 250, 0.1);
-    color: #60A5FA;
-    border: 1px solid rgba(96, 165, 250, 0.25);
-    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     &:hover:not(:disabled) {
-      background: rgba(96, 165, 250, 0.18);
+      background: rgba(255, 255, 255, 0.14);
       color: #FFFFFF;
-      border-color: rgba(96, 165, 250, 0.45);
+      border-color: rgba(255, 255, 255, 0.35);
       transform: translateY(-1px);
     }
   `}
@@ -117,16 +105,14 @@ export const EyebrowBadge = styled.span`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #60A5FA;
+  color: rgba(255, 255, 255, 0.6);
   display: inline-block;
   margin-bottom: 6px;
 `;
 
 export const GradientText = styled.span`
-  background: linear-gradient(to right, #60A5FA, #2563EB);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #FFFFFF;
+  -webkit-text-fill-color: #FFFFFF;
   font-weight: 500;
 `;
 

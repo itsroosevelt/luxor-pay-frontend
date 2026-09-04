@@ -140,17 +140,16 @@ const LastUpdated = styled.div`
 `;
 
 const GlassCard = styled.div`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(40px);
-  border-radius: 32px;
-  padding: 32px;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  border-radius: 0;
+  padding: 32px 0;
+  box-shadow: none;
   margin-bottom: 32px;
 
   @media (min-width: 768px) {
-    padding: 56px;
-    border-radius: 40px;
+    padding: 40px 0;
   }
 `;
 

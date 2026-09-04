@@ -41,10 +41,10 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     color: #000000;
     border: 1px solid #FFFFFF;
     &:hover:not(:disabled) {
-      background: #2563EB;
-      border-color: #2563EB;
-      color: #FFFFFF;
-      box-shadow: 0 0 16px rgba(37, 99, 235, 0.4);
+      background: #EDEDED;
+      border-color: #EDEDED;
+      color: #000000;
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.2);
     }
   `}
 
@@ -63,7 +63,7 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   `}
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #FFFFFF;
     outline-offset: 2px;
   }
 `;
@@ -99,7 +99,7 @@ const WalletBadge = styled(BadgeBase)`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #FFFFFF;
     outline-offset: 2px;
   }
 `;

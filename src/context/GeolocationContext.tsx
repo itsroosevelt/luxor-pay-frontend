@@ -91,8 +91,8 @@ const GlowRing = styled.div`
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.25) 0%,
-    rgba(37, 99, 235, 0.05) 60%,
+    rgba(255, 255, 255, 0.1) 0%,
+    rgba(255, 255, 255, 0.02) 60%,
     transparent 100%
   );
   display: flex;
@@ -107,7 +107,7 @@ const GlowRing = styled.div`
     position: absolute;
     inset: -8px;
     border-radius: 50%;
-    border: 1px solid rgba(37, 99, 235, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     animation: ${pulse} 2s ease-in-out infinite;
   }
 `;
@@ -116,12 +116,13 @@ const IconWrap = styled.div`
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #2563EB, #60A5FA);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 `;
 
 const Eyebrow = styled.span`
@@ -130,7 +131,7 @@ const Eyebrow = styled.span`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #60A5FA;
+  color: rgba(255, 255, 255, 0.6);
   margin-bottom: 12px;
 `;
 
@@ -160,8 +161,8 @@ const WarningNote = styled.div`
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  background: rgba(249, 115, 22, 0.08);
-  border: 1px solid rgba(249, 115, 22, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 14px 18px;
   margin-bottom: 32px;
@@ -172,7 +173,7 @@ const WarningText = styled.span`
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
   font-weight: 300;
-  color: rgba(255, 165, 80, 0.9);
+  color: rgba(255, 255, 255, 0.7);
   line-height: 1.5;
 `;
 
@@ -195,14 +196,14 @@ const AllowButton = styled.button`
   box-shadow: 0 8px 32px rgba(255, 255, 255, 0.15);
 
   &:hover:not(:disabled) {
-    background: #2563EB;
-    color: #ffffff;
-    box-shadow: 0 8px 32px rgba(37, 99, 235, 0.4);
+    background: #EDEDED;
+    color: #000000;
+    box-shadow: 0 8px 32px rgba(255, 255, 255, 0.2);
     transform: translateY(-1px);
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #FFFFFF;
     outline-offset: 2px;
   }
 
@@ -269,7 +270,7 @@ function GeolocationBlockingModal({
           <WarningNote>
             <ShieldAlert
               size={16}
-              color="rgba(249, 115, 22, 0.9)"
+              color="rgba(255, 255, 255, 0.6)"
               style={{ flexShrink: 0, marginTop: 2 }}
             />
             <WarningText>

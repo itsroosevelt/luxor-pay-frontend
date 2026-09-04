@@ -96,9 +96,8 @@ const AddButton = styled.button`
   white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: #2563EB;
-    color: #FFFFFF;
-    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.35);
+    background: #EDEDED;
+    color: #000000;
     transform: translateY(-1px);
   }
 
@@ -107,7 +106,7 @@ const AddButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #FFFFFF;
     outline-offset: 2px;
   }
 `;
@@ -212,7 +211,7 @@ const FilterTab = styled.button<{ $active?: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #FFFFFF;
     outline-offset: 2px;
   }
 `;
@@ -234,20 +233,18 @@ const ContactsGrid = styled.div`
 `;
 
 const ContactCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(40px);
-  border-radius: 20px;
-  padding: 20px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: none;
+  border-radius: 0;
+  padding: 16px 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+  transition: opacity 0.2s;
 
   &:hover {
-    border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.6);
-    transform: translateY(-2px);
+    opacity: 0.9;
   }
 `;
 
@@ -305,7 +302,7 @@ const FavoriteBadge = styled.span`
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
   font-weight: 600;
-  color: #FBBF24;
+  color: rgba(255, 255, 255, 0.8);
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -322,7 +319,7 @@ const IconButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  color: ${({ $active, $danger }) => ($active ? '#FBBF24' : $danger ? 'rgba(248, 113, 113, 0.7)' : 'rgba(255, 255, 255, 0.4)')};
+  color: ${({ $active }) => ($active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)')};
   cursor: pointer;
   padding: 6px;
   display: flex;
@@ -331,9 +328,9 @@ const IconButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    color: ${({ $danger }) => ($danger ? '#F87171' : '#FFFFFF')};
-    background: ${({ $danger }) => ($danger ? 'rgba(248, 113, 113, 0.1)' : 'rgba(255, 255, 255, 0.08)')};
-    border-color: ${({ $danger }) => ($danger ? 'rgba(248, 113, 113, 0.25)' : 'rgba(255, 255, 255, 0.15)')};
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
   }
 
   &:disabled {
@@ -342,7 +339,7 @@ const IconButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #FFFFFF;
     outline-offset: 2px;
   }
 `;
@@ -384,7 +381,7 @@ const MiniButton = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    color: #60A5FA;
+    color: #FFFFFF;
     background: rgba(255, 255, 255, 0.06);
   }
 `;
@@ -445,10 +442,10 @@ const SendLinkButton = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    background: #2563EB;
-    color: #FFFFFF;
-    border-color: #60A5FA;
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+    background: #FFFFFF;
+    color: #000000;
+    border-color: #FFFFFF;
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.15);
   }
 `;
 
@@ -479,7 +476,7 @@ const Spinner = styled.div`
   width: 36px;
   height: 36px;
   border: 2px solid rgba(255, 255, 255, 0.15);
-  border-top-color: #60A5FA;
+  border-top-color: #FFFFFF;
   border-radius: 50%;
   animation: ${spin} 1s linear infinite;
 `;
@@ -659,7 +656,7 @@ export function ContactsView({
                       onClick={() => handleCopyAddress(contact.id, contact.walletAddress)}
                       title="Copy Address"
                     >
-                      {copiedId === contact.id ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                      {copiedId === contact.id ? <Check size={13} /> : <Copy size={13} />}
                     </MiniButton>
                     <a
                       href={`https://explorer.solana.com/address/${contact.walletAddress}?cluster=devnet`}

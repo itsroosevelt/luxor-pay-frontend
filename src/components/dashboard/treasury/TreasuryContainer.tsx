@@ -69,19 +69,19 @@ export function TreasuryContainer() {
   const [vaultDesc, setVaultDesc] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copiado'); };
+  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copied'); };
 
   const totalVaultUsd = vaults.reduce((s, v) => s + v.usdValue, 0);
 
   const submitVault = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!vaultLabel.trim()) { toast.error('Ponle una etiqueta a la bóveda'); return; }
+    if (!vaultLabel.trim()) { toast.error('Please provide a label for the vault'); return; }
     setCreating(true);
     try {
       await createVault({ label: vaultLabel.trim(), description: vaultDesc.trim() });
       setVaultLabel(''); setVaultDesc(''); setVaultModalOpen(false);
-      toast.success('Bóveda creada (Vault PDA derivada del multisig)');
-    } catch { toast.error('No se pudo crear la bóveda'); }
+      toast.success('Vault created (Vault PDA derived from multisig)');
+    } catch { toast.error('Could not create vault'); }
     finally { setCreating(false); }
   };
 
@@ -89,7 +89,7 @@ export function TreasuryContainer() {
     return (
       <div className="p-6 md:p-8">
         <div className="lx-card text-sm" style={{ borderColor: 'var(--lx-warning)', background: 'rgba(245, 158, 11, 0.06)', color: '#FDE68A' }}>
-          Añade tu wallet de Solana en Ajustes para ver tu tesorería.
+          Add your Solana wallet in Settings to view your treasury.
         </div>
       </div>
     );
@@ -123,7 +123,7 @@ export function TreasuryContainer() {
             <ShieldCheck size={16} style={{ color: 'var(--lx-text-muted)' }} />
           </span>
           <div>
-            <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Tesorería multisig · Squads v4</p>
+            <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Multisig Treasury · Squads v4</p>
             <button type="button" onClick={() => config && copy(config.address)}
               className="inline-flex items-center gap-1.5 font-mono text-[13px]" style={{ color: 'var(--lx-text)' }}>
               {config ? short(config.address) : '—'} <Copy size={12} />
@@ -132,15 +132,15 @@ export function TreasuryContainer() {
         </div>
         <div className="flex flex-wrap items-center gap-6">
           <div>
-            <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Umbral</p>
+            <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Threshold</p>
             <p className="text-[15px] font-semibold tabular-nums" style={{ color: 'var(--lx-text)' }}>
-              {config ? `${config.threshold}-de-N` : '—'}
+              {config ? `${config.threshold}-of-N` : '—'}
             </p>
           </div>
           <button type="button" onClick={() => router.push('/dashboard/members')}
             className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium"
             style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border-strong)', color: 'var(--lx-text-muted)' }}>
-            <Users size={14} /> Miembros y política <ArrowUpRight size={13} />
+            <Users size={14} /> Members &amp; Policy <ArrowUpRight size={13} />
           </button>
         </div>
       </section>
@@ -149,22 +149,22 @@ export function TreasuryContainer() {
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold tracking-tight" style={{ color: 'var(--lx-text)' }}>
-            Bóvedas <span style={{ color: 'var(--lx-text-dim)' }}>· {vaults.length}</span>
+            Vaults <span style={{ color: 'var(--lx-text-dim)' }}>· {vaults.length}</span>
           </h2>
           <button type="button" onClick={() => setVaultModalOpen(true)}
             className="lx-btn lx-btn-primary">
-            <Plus size={15} /> Crear bóveda
+            <Plus size={15} /> Create Vault
           </button>
         </div>
 
         {tLoading && (
           <div className="flex items-center justify-center gap-2 py-12 text-sm" style={{ color: 'var(--lx-text-muted)' }}>
-            <Loader2 size={18} className="animate-spin" /> Cargando bóvedas…
+            <Loader2 size={18} className="animate-spin" /> Loading vaults…
           </div>
         )}
         {tError && (
           <div className="flex items-center gap-3 rounded-xl p-4 text-sm" style={{ background: 'var(--lx-danger-soft)', border: '1px solid var(--lx-danger)', color: 'var(--lx-danger)' }}>
-            <AlertTriangle size={16} /> {tErr || 'Error al cargar las bóvedas'}
+            <AlertTriangle size={16} /> {tErr || 'Error loading vaults'}
           </div>
         )}
 
@@ -191,7 +191,7 @@ export function TreasuryContainer() {
                       </div>
                     </div>
                     {v.isDefault && (
-                      <span className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'var(--lx-fill-hover)', color: 'var(--lx-text-muted)' }}>Predeterminada</span>
+                      <span className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'var(--lx-fill-hover)', color: 'var(--lx-text-muted)' }}>Default</span>
                     )}
                   </div>
 
@@ -199,7 +199,7 @@ export function TreasuryContainer() {
 
                   <div className="flex items-end justify-between">
                     <div>
-                      <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Valor</p>
+                      <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Value</p>
                       <p className="text-[20px] font-semibold tracking-tight tabular-nums" style={{ color: 'var(--lx-text)' }}>{usd(v.usdValue)}</p>
                     </div>
                     <div className="flex gap-1.5">
@@ -212,9 +212,9 @@ export function TreasuryContainer() {
                   </div>
 
                   <div className="flex gap-2 pt-1">
-                    <button type="button" onClick={() => router.push(`/dashboard/transactions?propose=${v.id}`)}
+                    <button type="button" onClick={() => router.push('/dashboard/transactions')}
                       className="lx-btn lx-btn-secondary flex-1 !py-1.5 text-[12px]">
-                      <Plus size={13} /> Nueva propuesta
+                      View transactions
                     </button>
                     <button type="button" onClick={() => copy(v.address)}
                       className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
@@ -229,7 +229,7 @@ export function TreasuryContainer() {
 
         {!tLoading && vaults.length > 0 && (
           <p className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>
-            Suma de bóvedas: <span className="tabular-nums" style={{ color: 'var(--lx-text-muted)' }}>{usd(totalVaultUsd)}</span>
+            Total Vault Assets: <span className="tabular-nums" style={{ color: 'var(--lx-text-muted)' }}>{usd(totalVaultUsd)}</span>
           </p>
         )}
       </section>
@@ -257,32 +257,32 @@ export function TreasuryContainer() {
             >
               <div className="mb-5 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 text-[17px] font-semibold" style={{ color: 'var(--lx-text)' }}>
-                  <Landmark size={18} style={{ color: 'var(--lx-text-muted)' }} /> Crear bóveda
+                  <Landmark size={18} style={{ color: 'var(--lx-text-muted)' }} /> Create Vault
                 </h2>
-                <button type="button" onClick={() => setVaultModalOpen(false)} aria-label="Cerrar" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
+                <button type="button" onClick={() => setVaultModalOpen(false)} aria-label="Close" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
                   <X size={15} />
                 </button>
               </div>
               <form onSubmit={submitVault} className="space-y-4">
                 <label className="block">
-                  <span className="lx-eyebrow">Etiqueta</span>
+                  <span className="lx-eyebrow">Label</span>
                   <input className="mt-1.5" value={vaultLabel} onChange={(e) => setVaultLabel(e.target.value)}
-                    placeholder="p. ej. Bóveda Marketing"
+                    placeholder="e.g. Marketing Vault"
                     style={{ width: '100%', padding: '10px 12px', borderRadius: 10, background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)', color: 'var(--lx-text)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} required />
                 </label>
                 <label className="block">
-                  <span className="lx-eyebrow">Propósito (opcional)</span>
+                  <span className="lx-eyebrow">Purpose (Optional)</span>
                   <input className="mt-1.5" value={vaultDesc} onChange={(e) => setVaultDesc(e.target.value)}
-                    placeholder="Para qué se usará esta bóveda"
+                    placeholder="What will this vault be used for"
                     style={{ width: '100%', padding: '10px 12px', borderRadius: 10, background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)', color: 'var(--lx-text)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
                 </label>
                 <p className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>
-                  Se derivará una Vault PDA nueva bajo el mismo multisig. Empieza con saldo 0.
+                  A new Vault PDA will be derived under the same multisig. Starts with 0 balance.
                 </p>
                 <div className="flex justify-end gap-2 pt-1">
-                  <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setVaultModalOpen(false)} disabled={creating}>Cancelar</button>
+                  <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setVaultModalOpen(false)} disabled={creating}>Cancel</button>
                   <button type="submit" className="lx-btn lx-btn-primary" disabled={creating}>
-                    {creating ? <><Loader2 size={15} className="animate-spin" /> Creando…</> : 'Crear bóveda'}
+                    {creating ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : 'Create Vault'}
                   </button>
                 </div>
               </form>
