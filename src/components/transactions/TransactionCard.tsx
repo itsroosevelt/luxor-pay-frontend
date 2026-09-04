@@ -17,24 +17,12 @@ const COLOR_FAILED = "#FBBF24";
 const ItemContainer = styled(motion.div)<{ $visualType: 'sent' | 'received' | 'failed' }>`
   display: flex;
   flex-direction: column;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-left: 3px solid ${({ $visualType }) => (
-    $visualType === 'failed' ? COLOR_FAILED : $visualType === 'sent' ? COLOR_SENT : COLOR_RECEIVED
-  )};
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 20px -8px rgba(0, 0, 0, 0.4);
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-color: rgba(255, 255, 255, 0.12);
-    border-left-color: ${({ $visualType }) => (
-      $visualType === 'failed' ? COLOR_FAILED : $visualType === 'sent' ? COLOR_SENT : COLOR_RECEIVED
-    )};
-    box-shadow: 0 20px 40px -16px rgba(0, 0, 0, 0.6);
+    background: rgba(255, 255, 255, 0.02);
   }
 `;
 
@@ -42,7 +30,7 @@ const MainRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 14px 4px;
   cursor: pointer;
   gap: 16px;
 `;
@@ -89,33 +77,16 @@ const AmountAndStatus = styled.div`
 `;
 
 const IconBadge = styled.div<{ $visualType: 'sent' | 'received' | 'failed' }>`
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: ${({ $visualType }) => 
-    $visualType === 'failed' 
-      ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.18))' 
-      : $visualType === 'sent' 
-      ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(185, 28, 28, 0.15))' 
-      : 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.15))'};
-  color: ${({ $visualType }) => 
-    $visualType === 'failed' ? COLOR_FAILED : $visualType === 'sent' ? COLOR_SENT : COLOR_RECEIVED};
-  border: 1px solid ${({ $visualType }) => 
-    $visualType === 'failed' 
-      ? 'rgba(245, 158, 11, 0.3)' 
-      : $visualType === 'sent' 
-      ? 'rgba(239, 68, 68, 0.25)' 
-      : 'rgba(16, 185, 129, 0.25)'};
+  background: rgba(255, 255, 255, 0.03);
+  color: #EDEDED;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
-  box-shadow: ${({ $visualType }) =>
-    $visualType === 'failed' 
-      ? '0 0 12px rgba(245, 158, 11, 0.15)' 
-      : $visualType === 'sent' 
-      ? '0 0 12px rgba(239, 68, 68, 0.1)' 
-      : '0 0 12px rgba(16, 185, 129, 0.1)'};
 `;
 
 const TokenCircle = styled.span<{ $symbol?: string }>`
@@ -156,40 +127,13 @@ const StatusPill = styled.div<{ $status: string }>`
   font-weight: 700;
   letter-spacing: 0.05em;
   padding: 3px 10px;
-  border-radius: 9999px; /* Pill Shape (Rule 3) */
+  border-radius: 9999px;
   display: inline-flex;
   align-items: center;
   text-transform: uppercase;
-
-  ${({ $status }) => {
-    const statusUpper = ($status || '').toUpperCase();
-    if (statusUpper === 'CONFIRMED' || statusUpper === 'EXECUTED' || statusUpper === 'SUCCESS' || statusUpper === 'COMPLETED') {
-      return `
-        background: rgba(16, 185, 129, 0.1);
-        color: #E2E8F0;
-        border: 1px solid rgba(16, 185, 129, 0.2);
-      `;
-    }
-    if (statusUpper === 'FAILED' || statusUpper === 'REJECTED' || statusUpper === 'ERROR' || statusUpper === 'REVERTED') {
-      return `
-        background: rgba(239, 68, 68, 0.1);
-        color: #FCA5A5;
-        border: 1px solid rgba(239, 68, 68, 0.2);
-      `;
-    }
-    if (statusUpper === 'PENDING' || statusUpper === 'PROCESSING' || statusUpper === 'SUBMITTED' || statusUpper === 'AWAITING_SIGNATURE') {
-      return `
-        background: rgba(59, 130, 246, 0.1);
-        color: #E2E8F0;
-        border: 1px solid rgba(59, 130, 246, 0.2);
-      `;
-    }
-    return `
-      background: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    `;
-  }}
+  background: rgba(255, 255, 255, 0.05);
+  color: #EDEDED;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 `;
 
 const ExpandIconButton = styled.button`

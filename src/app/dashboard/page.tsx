@@ -27,15 +27,13 @@ import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { EyebrowBadge, HeroTitle, GlassCard } from '@/components/shared/DesignSystem';
 
 const HeaderContainer = styled.header`
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--lx-border);
-  background: var(--lx-bg-elev);
+  padding: 24px 24px 12px 24px;
   display: flex;
   flex-direction: column;
   gap: 12px;
 
   @media (min-width: 768px) {
-    padding: 18px 28px;
+    padding: 28px 32px 16px 32px;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
@@ -68,21 +66,19 @@ const RefreshButton = styled.button`
 
 const StatCardLink = styled(motion(Link))`
   position: relative;
-  background: var(--lx-surface);
-  border: 1px solid var(--lx-border);
-  border-radius: var(--lx-radius);
-  padding: 22px 24px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   text-decoration: none;
   overflow: hidden;
-  transition: background-color 0.16s ease, border-color 0.16s ease;
+  transition: opacity 0.16s ease;
 
   &:hover {
-    background: var(--lx-surface-hover);
-    border-color: var(--lx-border-hover);
+    opacity: 0.85;
   }
 `;
 
@@ -90,50 +86,41 @@ const StatArrowCircle = styled.div`
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  background: var(--lx-surface-2);
-  border: 1px solid var(--lx-border);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--lx-text-dim);
-  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
-
-  ${StatCardLink}:hover & {
-    background: var(--lx-accent-soft);
-    border-color: var(--lx-accent-border);
-    color: var(--lx-accent);
-    transform: translate(1px, -1px);
-  }
+  color: #FFFFFF;
+  transition: all 0.16s ease;
 `;
 
 const QuickLinkCard = styled(motion(Link))`
-  background: var(--lx-surface);
-  border: 1px solid var(--lx-border);
-  border-radius: var(--lx-radius);
-  padding: 18px 24px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 16px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   text-decoration: none;
-  transition: background-color 0.16s ease, border-color 0.16s ease;
+  transition: opacity 0.16s ease;
 
   &:hover {
-    background: var(--lx-surface-hover);
-    border-color: var(--lx-border-hover);
+    opacity: 0.85;
   }
 `;
 
 const QuickIconCircle = styled.div`
-  width: 44px;
-  height: 44px;
-  border-radius: var(--lx-radius-sm);
-  background: var(--lx-surface-2);
-  border: 1px solid var(--lx-border);
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--lx-accent);
+  color: #FFFFFF;
   flex-shrink: 0;
   transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 
@@ -300,16 +287,18 @@ export default function DashboardOverviewPage() {
           </GlassCard>
         )}
 
-        <WalletBalanceContainer
-          merchantWallet={merchantWallet}
-          onSendClick={() => setIsTransferModalOpen(true)}
-          onDepositClick={() => setIsQrModalOpen(true)}
-          onTradeClick={() => router.push('/dashboard/swap')}
-          showExtraPanels={false}
-        />
+        {/* 50% / 50% Grid: Wallet Balance + Metrics / Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <WalletBalanceContainer
+            merchantWallet={merchantWallet}
+            onSendClick={() => setIsTransferModalOpen(true)}
+            onDepositClick={() => setIsQrModalOpen(true)}
+            onTradeClick={() => router.push('/dashboard/swap')}
+            showExtraPanels={false}
+          />
+          {merchantWallet && <OverviewChart />}
+        </div>
 
-        {/* Balance-over-time chart + accounts / coins breakdown (Squads "Overview") */}
-        {merchantWallet && <OverviewChart />}
         {merchantWallet && (
           <AccountsTable
             merchantWallet={merchantWallet}

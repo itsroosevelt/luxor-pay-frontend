@@ -69,10 +69,10 @@ function formatDate(dateStr?: string) {
 }
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Pending', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', border: 'rgba(245,158,11,0.2)', Icon: Clock },
-  PAID:    { label: 'Paid',    color: '#22C55E', bg: 'rgba(34,197,94,0.1)',  border: 'rgba(34,197,94,0.2)',  Icon: CheckCircle2 },
-  EXPIRED: { label: 'Expired', color: '#6B7280', bg: 'rgba(107,114,128,0.1)',border: 'rgba(107,114,128,0.2)',Icon: XCircle },
-  CANCELLED:{ label: 'Cancelled',color:'#EF4444', bg:'rgba(239,68,68,0.1)', border:'rgba(239,68,68,0.2)',  Icon: Ban },
+  PENDING: { label: 'Pending', color: '#EDEDED', bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.15)', Icon: Clock },
+  PAID:    { label: 'Paid',    color: '#FFFFFF', bg: 'rgba(255,255,255,0.1)',  border: 'rgba(255,255,255,0.25)', Icon: CheckCircle2 },
+  EXPIRED: { label: 'Expired', color: '#A1A1AA', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)', Icon: XCircle },
+  CANCELLED:{ label: 'Cancelled',color:'#A1A1AA', bg:'rgba(255,255,255,0.04)', border:'rgba(255,255,255,0.1)',  Icon: Ban },
 } as const;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -1290,25 +1290,22 @@ function RequestCard({ request, perspective, network, onRefetch, onPay, onUpdate
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', bounce: 0.3, duration: 0.5 }}
       style={{
-        background: 'rgba(255,255,255,0.03)',
-        borderRadius: '20px',
-        border: '1px solid rgba(255,255,255,0.07)',
-        padding: '20px 24px',
+        background: 'transparent',
+        borderRadius: '0px',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        padding: '20px 0',
         display: 'flex',
         flexDirection: 'column',
         gap: '16px',
         transition: 'border-color 0.2s',
       }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(255, 255, 255,0.2)')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)')}
     >
       {/* Top Row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{
             fontFamily: 'Outfit, sans-serif', fontSize: '22px', fontWeight: 600,
-            background: 'linear-gradient(to right, #E2E8F0, #10B981)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+            color: '#FFFFFF',
             lineHeight: 1,
           }}>
             {formattedAmount}
@@ -1432,9 +1429,9 @@ function ActionButton({
   variant: 'primary' | 'ghost' | 'danger';
 }) {
   const styles: Record<string, React.CSSProperties> = {
-    primary: { background: 'linear-gradient(135deg,#10B981,#3B82F6)', color: '#FFFFFF', border: 'none' },
-    ghost:   { background: 'rgba(255, 255, 255,0.08)', color: '#E2E8F0', border: '1px solid rgba(255, 255, 255,0.2)' },
-    danger:  { background: 'rgba(239,68,68,0.08)', color: '#FCA5A5', border: '1px solid rgba(239,68,68,0.2)' },
+    primary: { background: '#FFFFFF', color: '#000000', border: 'none' },
+    ghost:   { background: 'rgba(255, 255, 255,0.06)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255,0.15)' },
+    danger:  { background: 'rgba(255, 255, 255,0.06)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255,0.15)' },
   };
 
   return (

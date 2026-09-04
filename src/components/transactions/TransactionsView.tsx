@@ -36,18 +36,13 @@ const ControlsHeader = styled.div`
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
-  padding: 12px 20px;
-  backdrop-filter: blur(20px);
+  padding: 4px 0;
   width: 100%;
   box-sizing: border-box;
 
   @media (max-width: 767px) {
     flex-direction: column;
     align-items: stretch;
-    padding: 12px 14px;
     gap: 12px;
   }
 `;

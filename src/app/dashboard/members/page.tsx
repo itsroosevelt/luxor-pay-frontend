@@ -100,16 +100,12 @@ export default function MembersPage() {
     data: members, isLoading, isError, errorMessage,
     addMember, updateMember, removeMember,
   } = useMembers();
-  const { config, isLoading: cfgLoading, setThreshold } = useTreasury();
-
   // Demo-only: preview the UI as a read-only auditor without editing fixtures.
   const [previewReadOnly, setPreviewReadOnly] = useState(false);
 
   const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? null, [members]);
-  const signerCount = useMemo(() => members.filter((m) => m.roles.signer).length, [members]);
   const adminCount = useMemo(() => members.filter((m) => m.roles.admin).length, [members]);
   const canManage = !previewReadOnly && (me?.roles.admin ?? false);
-  const threshold = config?.threshold ?? 2;
 
   const [addOpen, setAddOpen] = useState(false);
   const [detail, setDetail] = useState<Member | null>(null);
@@ -121,11 +117,11 @@ export default function MembersPage() {
     roles: { admin: false, signer: true, proposer: true, auditor: false },
   });
 
-  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copiado al portapapeles'); };
+  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copied to clipboard'); };
 
   const guard = () => {
     if (!canManage) {
-      toast.error(previewReadOnly ? 'Vista de solo lectura activa' : 'Necesitas el rol de Administrador');
+      toast.error(previewReadOnly ? 'Read-only view active' : 'Administrator role required');
       return false;
     }
     return true;
@@ -134,49 +130,40 @@ export default function MembersPage() {
   const toggleRole = async (m: Member, key: MemberRoleKey) => {
     if (!guard()) return;
     if (key === 'admin' && m.roles.admin && adminCount <= 1) {
-      toast.error('Debe quedar al menos un Administrador');
+      toast.error('At least one Administrator must remain');
       return;
     }
     const roles = { ...m.roles, [key]: !m.roles[key] };
     try {
       await updateMember(m.id, { roles });
       setDetail((d) => (d && d.id === m.id ? { ...d, roles } : d));
-      toast.success(`${MEMBER_ROLE_META[key].label} ${roles[key] ? 'asignado' : 'retirado'} · ${m.name}`);
-    } catch { toast.error('No se pudo actualizar el rol'); }
-  };
-
-  const changeThreshold = async (next: number) => {
-    if (!guard()) return;
-    if (next < 1 || next > Math.max(1, signerCount)) return;
-    try {
-      await setThreshold(next);
-      toast.success(`Umbral: ${next} de ${signerCount} firmantes`);
-    } catch { toast.error('No se pudo cambiar el umbral'); }
+      toast.success(`${MEMBER_ROLE_META[key].label} ${roles[key] ? 'assigned' : 'removed'} · ${m.name}`);
+    } catch { toast.error('Could not update role'); }
   };
 
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.walletAddress.trim()) { toast.error('Nombre y dirección son obligatorios'); return; }
+    if (!form.name.trim() || !form.walletAddress.trim()) { toast.error('Name and address are required'); return; }
     setBusy(true);
     try {
       await addMember({ name: form.name.trim(), walletAddress: form.walletAddress.trim(), roles: form.roles });
       setForm({ name: '', walletAddress: '', roles: { admin: false, signer: true, proposer: true, auditor: false } });
       setAddOpen(false);
-      toast.success('Miembro añadido al multisig');
-    } catch { toast.error('No se pudo añadir el miembro'); }
+      toast.success('Member added to multisig');
+    } catch { toast.error('Could not add member'); }
     finally { setBusy(false); }
   };
 
   const confirmDelete = async () => {
     if (!deleting) return;
-    if (deleting.roles.admin && adminCount <= 1) { toast.error('No puedes eliminar al único Administrador'); return; }
+    if (deleting.roles.admin && adminCount <= 1) { toast.error('Cannot remove the only Administrator'); return; }
     setBusy(true);
     try {
       await removeMember(deleting.id);
-      toast.success(`${deleting.name} fue removido del multisig`);
+      toast.success(`${deleting.name} was removed from multisig`);
       if (detail?.id === deleting.id) setDetail(null);
       setDeleting(null);
-    } catch { toast.error('No se pudo remover el miembro'); }
+    } catch { toast.error('Could not remove member'); }
     finally { setBusy(false); }
   };
 
@@ -184,112 +171,68 @@ export default function MembersPage() {
     <>
       <header className="lx-page-header">
         <div>
-          <h1 className="lx-page-title">Miembros</h1>
+          <h1 className="lx-page-title">Members</h1>
           <p className="lx-page-subtitle">
-            Firmantes del multisig, matriz de roles y umbral de aprobación de propuestas.
+            Multisig signers, role matrix, and access permissions.
           </p>
         </div>
       </header>
 
       <div className="mx-auto w-full max-w-[1200px] space-y-6 p-6 md:p-8">
 
-        {/* Signing policy */}
-        <section className="lx-card" style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 24, justifyContent: 'space-between' }}>
-          <div className="flex items-start gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)' }}>
-              <ShieldCheck size={16} style={{ color: 'var(--lx-text-muted)' }} />
-            </span>
-            <div>
-              <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Política de firmas</p>
-              <p className="text-[15px] font-semibold" style={{ color: 'var(--lx-text)' }}>
-                {cfgLoading ? '—' : `${threshold} de ${signerCount}`} firmantes para ejecutar
-              </p>
-              <button
-                type="button"
-                onClick={() => config && copy(config.address)}
-                className="mt-1 inline-flex items-center gap-1.5 font-mono text-[12px]"
-                style={{ color: 'var(--lx-text-dim)' }}
-                title="Copiar dirección del multisig"
-              >
-                {config ? short(config.address) : '—'} <Copy size={11} />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>Umbral M-de-N</span>
-            <div className="flex items-center gap-1 rounded-lg p-1" style={{ background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)' }}>
-              <button type="button" aria-label="Bajar umbral" disabled={!canManage || threshold <= 1}
-                onClick={() => changeThreshold(threshold - 1)}
-                className="flex h-7 w-7 items-center justify-center rounded-md disabled:opacity-30"
-                style={{ background: 'var(--lx-fill)', color: 'var(--lx-text)' }}>
-                <Minus size={13} />
-              </button>
-              <span className="w-8 text-center text-[15px] font-semibold tabular-nums" style={{ color: 'var(--lx-text)' }}>{threshold}</span>
-              <button type="button" aria-label="Subir umbral" disabled={!canManage || threshold >= signerCount}
-                onClick={() => changeThreshold(threshold + 1)}
-                className="flex h-7 w-7 items-center justify-center rounded-md disabled:opacity-30"
-                style={{ background: 'var(--lx-fill)', color: 'var(--lx-text)' }}>
-                <Plus size={13} />
-              </button>
-            </div>
-          </div>
-        </section>
 
         {/* Your role + preview toggle */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-2 text-[13px]" style={{ color: 'var(--lx-text-muted)' }}>
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-2 text-[13px] text-white/60">
             <KeyRound size={14} />
-            Tu rol:
+            Your role:
             {me
               ? ROLE_KEYS.filter((k) => me.roles[k]).map((k) => (
-                  <span key={k} className="rounded-full px-2 py-0.5 text-[11px] font-medium"
-                    style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text)' }}>
+                  <span key={k} className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-white/10 border border-white/15 text-white">
                     {MEMBER_ROLE_META[k].label}
                   </span>
                 ))
-              : <span style={{ color: 'var(--lx-text-dim)' }}>—</span>}
+              : <span className="text-white/40">—</span>}
           </div>
           <button
             type="button"
             onClick={() => setPreviewReadOnly((v) => !v)}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[12px] font-medium"
-            style={{
-              background: previewReadOnly ? 'var(--lx-warning)' : 'var(--lx-fill)',
-              color: previewReadOnly ? '#0F1015' : 'var(--lx-text-muted)',
-              border: '1px solid var(--lx-border)',
-            }}
-            title="Previsualiza la interfaz como un miembro de solo lectura (Auditor)"
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium bg-white/5 border border-white/15 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            title="Preview interface as a read-only Auditor"
           >
-            <Eye size={13} /> {previewReadOnly ? 'Vista Auditor activa' : 'Previsualizar como Auditor'}
+            <Eye size={13} /> {previewReadOnly ? 'Auditor View Active' : 'Preview as Auditor'}
           </button>
         </div>
 
         {/* Members list */}
-        <section className="space-y-3">
+        <section className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold tracking-tight" style={{ color: 'var(--lx-text)' }}>
-              Firmantes <span style={{ color: 'var(--lx-text-dim)' }}>· {members.length}</span>
+            <h2 className="text-lg font-semibold tracking-tight text-white">
+              Signers <span className="text-white/40">· {members.length}</span>
             </h2>
-            <button type="button" className="lx-btn lx-btn-primary" disabled={!canManage}
-              onClick={() => { if (guard()) setAddOpen(true); }}>
-              <Plus size={15} /> Añadir miembro
+            <button
+              type="button"
+              className="px-4 py-2 rounded-full bg-white text-black font-medium text-xs hover:bg-neutral-200 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40"
+              disabled={!canManage}
+              onClick={() => { if (guard()) setAddOpen(true); }}
+            >
+              <Plus size={15} /> Add member
             </button>
           </div>
 
           {isLoading && (
-            <div className="flex items-center justify-center gap-2 py-16 text-sm" style={{ color: 'var(--lx-text-muted)' }}>
-              <Loader2 size={18} className="animate-spin" /> Cargando miembros…
+            <div className="flex items-center justify-center gap-2 py-16 text-sm text-white/50">
+              <Loader2 size={18} className="animate-spin" /> Loading members…
             </div>
           )}
           {isError && (
-            <div className="flex items-center gap-3 rounded-xl p-4 text-sm" style={{ background: 'var(--lx-danger-soft)', border: '1px solid var(--lx-danger)', color: 'var(--lx-danger)' }}>
-              <AlertTriangle size={16} /> {errorMessage || 'Error al cargar los miembros'}
+            <div className="flex items-center gap-3 rounded-xl p-4 text-sm bg-red-500/10 border border-red-500/20 text-red-300">
+              <AlertTriangle size={16} /> {errorMessage || 'Error loading members'}
             </div>
           )}
 
           {!isLoading && !isError && (
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 pt-2">
               <AnimatePresence>
                 {members.map((m) => (
                   <motion.div
@@ -298,31 +241,29 @@ export default function MembersPage() {
                     initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ type: 'spring', bounce: 0.28, duration: 0.45 }}
                     onClick={() => setDetail(m)}
-                    className="lx-card-interactive cursor-pointer"
-                    style={{ padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}
+                    className="cursor-pointer border-b border-white/10 pb-4 pt-2 flex flex-col gap-3.5 hover:opacity-90 transition-opacity"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
+                        <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/15 text-white/70">
                           <User size={16} />
                         </span>
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <p className="truncate text-[14px] font-semibold" style={{ color: 'var(--lx-text)' }}>{m.name}</p>
+                            <p className="truncate text-[14px] font-semibold text-white">{m.name}</p>
                             {m.isCurrentUser && (
-                              <span className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'var(--lx-fill-hover)', color: 'var(--lx-text-muted)' }}>Tú</span>
+                              <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-white/15 text-white">You</span>
                             )}
                           </div>
                           <button type="button" onClick={(e) => { e.stopPropagation(); copy(m.walletAddress); }}
-                            className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px]" style={{ color: 'var(--lx-text-dim)' }}>
+                            className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] text-white/40 hover:text-white transition-colors">
                             {short(m.walletAddress)} <Copy size={10} />
                           </button>
                         </div>
                       </div>
-                      <button type="button" aria-label="Eliminar miembro" disabled={!canManage}
+                      <button type="button" aria-label="Remove member" disabled={!canManage}
                         onClick={(e) => { e.stopPropagation(); if (guard()) setDeleting(m); }}
-                        className="flex h-8 w-8 items-center justify-center rounded-full disabled:opacity-25"
-                        style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/15 text-white/50 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-25">
                         <Trash2 size={14} />
                       </button>
                     </div>
@@ -340,37 +281,24 @@ export default function MembersPage() {
           )}
         </section>
 
-        {/* Role reference */}
-        <section className="lx-card">
-          <p className="lx-eyebrow" style={{ marginBottom: 12 }}>Referencia de roles</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {ROLE_KEYS.map((k) => (
-              <div key={k} className="flex items-start gap-2.5">
-                <span className="mt-0.5 flex h-6 items-center rounded-full px-2 text-[11px] font-medium" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text)' }}>
-                  {MEMBER_ROLE_META[k].label}
-                </span>
-                <p className="text-[13px]" style={{ color: 'var(--lx-text-muted)' }}>{MEMBER_ROLE_META[k].description}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+
       </div>
 
       {/* Add modal */}
       <AnimatePresence>
         {addOpen && (
-          <ModalShell title="Añadir miembro" icon={<Plus size={18} style={{ color: 'var(--lx-text-muted)' }} />} onClose={() => !busy && setAddOpen(false)}>
+          <ModalShell title="Add member" icon={<Plus size={18} style={{ color: 'var(--lx-text-muted)' }} />} onClose={() => !busy && setAddOpen(false)}>
             <form onSubmit={submitAdd} className="space-y-4">
               <label className="block">
-                <span className="lx-eyebrow">Nombre / alias</span>
-                <input style={fieldStyle} className="mt-1.5" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="p. ej. Mariana Solís" required />
+                <span className="lx-eyebrow">Name / Alias</span>
+                <input style={fieldStyle} className="mt-1.5" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarah Jenkins" required />
               </label>
               <label className="block">
-                <span className="lx-eyebrow">Dirección de wallet (Solana)</span>
+                <span className="lx-eyebrow">Wallet Address (Solana)</span>
                 <input style={{ ...fieldStyle, fontFamily: 'monospace', fontSize: 13 }} className="mt-1.5" value={form.walletAddress} onChange={(e) => setForm((f) => ({ ...f, walletAddress: e.target.value }))} placeholder="Pubkey base58" required />
               </label>
               <div>
-                <span className="lx-eyebrow">Roles asignados</span>
+                <span className="lx-eyebrow">Assigned Roles</span>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {ROLE_KEYS.map((k) => (
                     <RoleChip key={k} role={k} active={form.roles[k]}
@@ -379,9 +307,9 @@ export default function MembersPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setAddOpen(false)} disabled={busy}>Cancelar</button>
+                <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</button>
                 <button type="submit" className="lx-btn lx-btn-primary" disabled={busy}>
-                  {busy ? <><Loader2 size={15} className="animate-spin" /> Añadiendo…</> : 'Añadir miembro'}
+                  {busy ? <><Loader2 size={15} className="animate-spin" /> Adding…</> : 'Add member'}
                 </button>
               </div>
             </form>
@@ -396,7 +324,7 @@ export default function MembersPage() {
             <div className="space-y-5">
               <div>
                 <div className="mb-2 flex items-center gap-1.5">
-                  <span className="lx-eyebrow">Permisos</span>
+                  <span className="lx-eyebrow">Permissions</span>
                   <Info size={12} style={{ color: 'var(--lx-text-dim)' }} />
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -408,14 +336,14 @@ export default function MembersPage() {
               </div>
 
               <div>
-                <span className="lx-eyebrow">Dirección</span>
+                <span className="lx-eyebrow">Address</span>
                 <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl p-3" style={{ background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)' }}>
                   <span className="break-all font-mono text-[12px]" style={{ color: 'var(--lx-text)' }}>{detail.walletAddress}</span>
                   <div className="flex flex-shrink-0 gap-1.5">
-                    <button type="button" onClick={() => copy(detail.walletAddress)} title="Copiar" className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
+                    <button type="button" onClick={() => copy(detail.walletAddress)} title="Copy" className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
                       <Copy size={14} />
                     </button>
-                    <button type="button" title="Ver en Solana Explorer"
+                    <button type="button" title="View on Solana Explorer"
                       onClick={() => window.open(`https://explorer.solana.com/address/${detail.walletAddress}?cluster=devnet`, '_blank', 'noopener,noreferrer')}
                       className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
                       <ExternalLink size={14} />
@@ -428,7 +356,7 @@ export default function MembersPage() {
                 <div className="flex justify-end pt-1">
                   <button type="button" className="lx-btn lx-btn-secondary" style={{ color: 'var(--lx-danger)' }}
                     onClick={() => { setDeleting(detail); setDetail(null); }}>
-                    <Trash2 size={14} /> Remover del multisig
+                    <Trash2 size={14} /> Remove from multisig
                   </button>
                 </div>
               )}
@@ -440,15 +368,15 @@ export default function MembersPage() {
       {/* Delete confirm */}
       <AnimatePresence>
         {deleting && (
-          <ModalShell title="Remover miembro" icon={<Trash2 size={18} style={{ color: 'var(--lx-danger)' }} />} onClose={() => !busy && setDeleting(null)} maxWidth={420}>
+          <ModalShell title="Remove member" icon={<Trash2 size={18} style={{ color: 'var(--lx-danger)' }} />} onClose={() => !busy && setDeleting(null)} maxWidth={420}>
             <p className="text-[14px]" style={{ color: 'var(--lx-text-muted)' }}>
-              ¿Remover a <strong style={{ color: 'var(--lx-text)' }}>{deleting.name}</strong> del multisig?
-              Perderá sus derechos de propuesta y voto. Esto requeriría una transacción on-chain de cambio de configuración.
+              Remove <strong style={{ color: 'var(--lx-text)' }}>{deleting.name}</strong> from multisig?
+              They will lose proposal and voting rights. This requires an on-chain configuration transaction.
             </p>
             <div className="mt-5 flex justify-end gap-2">
-              <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setDeleting(null)} disabled={busy}>Cancelar</button>
+              <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setDeleting(null)} disabled={busy}>Cancel</button>
               <button type="button" className="lx-btn" style={{ background: 'var(--lx-danger)', color: '#fff' }} onClick={confirmDelete} disabled={busy}>
-                {busy ? <Loader2 size={15} className="animate-spin" /> : 'Remover'}
+                {busy ? <Loader2 size={15} className="animate-spin" /> : 'Remove'}
               </button>
             </div>
           </ModalShell>

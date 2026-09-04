@@ -17,10 +17,10 @@ export interface MemberRoles {
 export type MemberRoleKey = keyof MemberRoles;
 
 export const MEMBER_ROLE_META: Record<MemberRoleKey, { label: string; short: string; description: string }> = {
-  admin: { label: 'Administrador', short: 'Admin', description: 'Gestiona miembros y el umbral de firmas.' },
-  signer: { label: 'Firmante', short: 'Firmante', description: 'Vota propuestas; cuenta para el umbral.' },
-  proposer: { label: 'Iniciador', short: 'Iniciador', description: 'Puede proponer transacciones.' },
-  auditor: { label: 'Auditor', short: 'Auditor', description: 'Solo lectura: balances, bóvedas e historial.' },
+  admin: { label: 'Administrator', short: 'Admin', description: 'Manages members and signature threshold.' },
+  signer: { label: 'Signer', short: 'Signer', description: 'Votes on proposals; counts towards threshold.' },
+  proposer: { label: 'Proposer', short: 'Proposer', description: 'Can propose transactions.' },
+  auditor: { label: 'Auditor', short: 'Auditor', description: 'Read-only: balances, vaults, and history.' },
 };
 
 export interface Member {

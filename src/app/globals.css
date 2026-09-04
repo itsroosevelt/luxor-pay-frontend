@@ -31,31 +31,26 @@ html, body {
 
 @layer base {
   body {
-    background: radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.12), transparent 45%),
-                radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.06), transparent 50%),
-                #060709;
+    background: #0A0A0A;
     color: var(--foreground);
     font-family: 'Outfit', 'Montserrat', sans-serif;
   }
 }
 
 .glass-panel {
-  background: rgba(18, 20, 27, 0.75);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 24px;
-  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.7);
+  background: transparent;
+  backdrop-filter: none;
+  border: none;
+  box-shadow: none;
 }
 
 .solana-gradient {
-  background: linear-gradient(135deg, #60A5FA, #2563EB);
+  background: #FFFFFF;
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #60A5FA, #2563EB);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #FFFFFF;
+  -webkit-text-fill-color: #FFFFFF;
 }
 
 /* ============================================================
@@ -65,10 +60,10 @@ html, body {
 .lx-app {
   /* Surfaces — Rich glassmorphic dark mode */
   --lx-bg: #06070A;
-  --lx-bg-elev: rgba(14, 16, 22, 0.85);
-  --lx-surface: rgba(17, 19, 27, 0.8);
-  --lx-surface-2: rgba(23, 26, 36, 0.85);
-  --lx-surface-hover: rgba(30, 34, 48, 0.9);
+  --lx-bg-elev: rgba(14, 16, 22, 0.95);
+  --lx-surface: #0D0E14;
+  --lx-surface-2: #141722;
+  --lx-surface-hover: rgba(30, 34, 48, 0.95);
   --lx-sidebar: #08090D;
 
   /* Borders — Glowing subtle Web3 highlights */
@@ -126,39 +121,38 @@ html, body {
   font-family: 'Outfit', 'Montserrat', system-ui, sans-serif;
 }
 
-/* Glassmorphic structured card */
+/* Glassmorphic structured card — unboxed fluid layout */
 .lx-app .lx-card {
-  background: var(--lx-surface);
-  border: 1px solid var(--lx-border);
-  border-radius: var(--lx-radius);
-  padding: var(--lx-pad);
-  backdrop-filter: blur(16px);
-  box-shadow: var(--lx-shadow);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  backdrop-filter: none;
+  box-shadow: none;
   transition: all 0.2s ease;
 }
 
 .lx-app .lx-card-lg {
-  background: var(--lx-surface);
-  border: 1px solid var(--lx-border-strong);
-  border-radius: var(--lx-radius-lg);
-  padding: var(--lx-pad-lg);
-  backdrop-filter: blur(24px);
-  box-shadow: var(--lx-shadow-lg);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  backdrop-filter: none;
+  box-shadow: none;
 }
 
 /* Interactive card */
 .lx-app .lx-card-interactive {
-  background: var(--lx-surface);
-  border: 1px solid var(--lx-border);
-  border-radius: var(--lx-radius);
-  backdrop-filter: blur(16px);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  backdrop-filter: none;
   transition: all 0.2s ease;
 }
 .lx-app .lx-card-interactive:hover {
-  background: var(--lx-surface-hover);
-  border-color: var(--lx-border-hover);
-  box-shadow: 0 12px 32px -10px rgba(37, 99, 235, 0.25);
-  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.02);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 /* Section / page eyebrow */
@@ -168,7 +162,7 @@ html, body {
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #60A5FA;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* Status pill */
@@ -181,13 +175,13 @@ html, body {
   font-size: 11px;
   font-weight: 600;
   background: rgba(255, 255, 255, 0.05);
-  color: var(--lx-text-muted);
-  border: 1px solid var(--lx-border-strong);
+  color: #EDEDED;
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 .lx-app .lx-status--ok {
-  background: var(--lx-success-soft);
-  color: var(--lx-success);
-  border-color: var(--lx-success-border);
+  background: rgba(255, 255, 255, 0.08);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.2);
 }
 .lx-app .lx-status-dot {
   width: 6px;
@@ -197,7 +191,7 @@ html, body {
   opacity: 0.9;
 }
 
-/* Primary button — Pill shape with Luxor Electric Gradient */
+/* Primary button — Monochrome solid white pill */
 .lx-app .lx-btn {
   display: inline-flex;
   align-items: center;
@@ -215,13 +209,13 @@ html, body {
 }
 
 .lx-app .lx-btn-primary {
-  background: linear-gradient(135deg, #60A5FA, #2563EB);
-  color: #FFFFFF;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+  background: #FFFFFF;
+  color: #000000;
+  box-shadow: none;
 }
 .lx-app .lx-btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  background: #EDEDED;
+  color: #000000;
   transform: translateY(-1px);
 }
 
@@ -247,16 +241,15 @@ html, body {
   box-shadow: var(--lx-ring);
 }
 
-/* Page header band */
+/* Page header band — clean, unboxed title area */
 .lx-app .lx-page-header {
-  padding: 22px 28px;
-  border-bottom: 1px solid var(--lx-border);
-  background: rgba(12, 14, 20, 0.8);
-  backdrop-filter: blur(20px);
+  padding: 24px 24px 12px 24px;
+  border-bottom: none;
+  background: transparent;
 }
 @media (min-width: 768px) {
   .lx-app .lx-page-header {
-    padding: 22px 240px 22px 32px;
+    padding: 28px 260px 16px 32px;
   }
 }
 .lx-app .lx-page-title {

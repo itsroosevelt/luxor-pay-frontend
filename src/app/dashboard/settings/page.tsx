@@ -10,7 +10,9 @@ import { authHeaders } from '@/lib/auth-client';
 import { apiUrl, getApiBaseUrl } from '@/lib/api-client';
 import type { PosDevice } from '@luxor/contracts';
 import { useMerchant } from '@/context/MerchantContext';
-import { Settings, Terminal, Code2, Plus, Key, Trash2, Copy } from 'lucide-react';
+import { useTreasury } from '@/hooks/useTreasury';
+import { useMembers } from '@/hooks/useMembers';
+import { Settings, Terminal, Code2, Plus, Key, Trash2, Copy, ShieldCheck, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ApiKeyRow {
@@ -29,6 +31,23 @@ function SettingsContent() {
   );
 
   const { setProfile } = useMerchant();
+  const { config: treasuryConfig, isLoading: cfgLoading, setThreshold } = useTreasury();
+  const { data: members = [] } = useMembers();
+
+  const signerCount = members.filter((m) => m.roles?.signer).length || 3;
+  const threshold = treasuryConfig?.threshold ?? 2;
+
+  const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a);
+
+  const changeThreshold = async (next: number) => {
+    if (next < 1 || next > Math.max(1, signerCount)) return;
+    try {
+      await setThreshold(next);
+      toast.success(`Signature threshold updated: ${next} of ${signerCount}`);
+    } catch {
+      toast.error('Could not update threshold');
+    }
+  };
 
   // General state
   const [businessName, setBusinessName] = useState('');
@@ -289,12 +308,67 @@ function SettingsContent() {
                 <button
                   type="submit"
                   disabled={savingProfile}
-                  className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50 shadow-md focus-visible:outline-2 focus-visible:outline-blue-400"
+                  className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full hover:bg-neutral-200 transition-all disabled:opacity-50 shadow-md"
                 >
                   {savingProfile ? 'Saving…' : 'Save Profile'}
                 </button>
               </form>
             )}
+
+            {/* Signing Policy Multisig */}
+            <div className="mt-8 pt-6 border-t border-white/10 max-w-2xl space-y-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={18} className="text-white/70" />
+                <h3 className="text-sm font-semibold text-white">Signing Policy (Multisig)</h3>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-400">Active Threshold</p>
+                  <p className="text-sm font-semibold text-white mt-0.5">
+                    {cfgLoading ? '—' : `${threshold} of ${signerCount}`} signers required to execute
+                  </p>
+                  {treasuryConfig?.address && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(treasuryConfig.address);
+                        toast.success('Multisig address copied');
+                      }}
+                      className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-neutral-400 hover:text-white transition-colors"
+                      title="Copy multisig address"
+                    >
+                      {short(treasuryConfig.address)} <Copy size={11} />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-neutral-400">M-of-N Threshold</span>
+                  <div className="flex items-center gap-1 rounded-full p-1 bg-white/5 border border-white/15">
+                    <button
+                      type="button"
+                      aria-label="Decrease threshold"
+                      disabled={threshold <= 1}
+                      onClick={() => changeThreshold(threshold - 1)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
+                    >
+                      <Minus size={13} />
+                    </button>
+                    <span className="w-8 text-center text-sm font-semibold tabular-nums text-white">{threshold}</span>
+                    <button
+                      type="button"
+                      aria-label="Increase threshold"
+                      disabled={threshold >= signerCount}
+                      onClick={() => changeThreshold(threshold + 1)}
+                      className="flex h-7 w-7 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
+                    >
+                      <Plus size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
