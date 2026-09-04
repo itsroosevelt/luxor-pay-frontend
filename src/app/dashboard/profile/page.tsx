@@ -107,15 +107,14 @@ export default function ProfilePage() {
   return (
     <>
       {/* ── Page Header — matches all other dashboard pages ── */}
-      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+      <header className="lx-page-header">
         <div>
           <h1
-            className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1"
-            style={{ fontFamily: 'Outfit, sans-serif' }}
+            className="lx-page-title"
           >
             Profile
           </h1>
-          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <p className="lx-page-subtitle">
             Your account details and monthly account statements.
           </p>
         </div>
@@ -127,9 +126,9 @@ export default function ProfilePage() {
           <div className="flex items-center gap-3 py-10">
             <div
               className="w-5 h-5 rounded-full border-2 border-t-transparent animate-spin"
-              style={{ borderColor: '#60A5FA', borderTopColor: 'transparent' }}
+              style={{ borderColor: '#E2E8F0', borderTopColor: 'transparent' }}
             />
-            <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+            <p className="text-gray-500 text-sm">
               Loading profile…
             </p>
           </div>
@@ -141,7 +140,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="absolute top-5 right-5 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[#60A5FA] transition-all focus-visible:outline-2 focus-visible:outline-[#60A5FA] focus-visible:outline-offset-2"
+                  className="absolute top-5 right-5 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-[#E2E8F0] transition-all focus-visible:outline-2 focus-visible:outline-[#E2E8F0] focus-visible:outline-offset-2"
                   aria-label="Edit Profile"
                   title="Edit Profile"
                 >
@@ -156,7 +155,7 @@ export default function ProfilePage() {
                     setEditMerchantWallet(profile?.merchantWallet || '');
                   }}
                   disabled={saving}
-                  className="absolute top-5 right-5 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-all focus-visible:outline-2 focus-visible:outline-[#60A5FA] focus-visible:outline-offset-2 disabled:opacity-50"
+                  className="absolute top-5 right-5 z-20 inline-flex items-center justify-center w-9 h-9 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white transition-all focus-visible:outline-2 focus-visible:outline-[#E2E8F0] focus-visible:outline-offset-2 disabled:opacity-50"
                   aria-label="Cancel editing"
                   title="Cancel"
                 >
@@ -172,7 +171,7 @@ export default function ProfilePage() {
                   className="pointer-events-none absolute inset-0"
                   style={{
                     background:
-                      'radial-gradient(ellipse at top left, rgba(37,99,235,0.14), transparent 60%)',
+                      'radial-gradient(ellipse at top left, rgba(16, 185, 129,0.14), transparent 60%)',
                   }}
                 />
 
@@ -191,8 +190,8 @@ export default function ProfilePage() {
                       <div
                         className="w-20 h-20 rounded-2xl flex items-center justify-center text-white text-2xl font-semibold"
                         style={{
-                          background: 'linear-gradient(135deg, #2563EB, #60A5FA)',
-                          boxShadow: '0 0 0 3px rgba(255,255,255,0.08), 0 0 28px rgba(37,99,235,0.4)',
+                          background: 'linear-gradient(135deg, #10B981, #E2E8F0)',
+                          boxShadow: '0 0 0 3px rgba(255,255,255,0.08), 0 0 0 1px rgba(255,255,255,0.06)',
                           fontFamily: 'Outfit, sans-serif',
                         }}
                       >
@@ -206,17 +205,16 @@ export default function ProfilePage() {
                   <div className="relative min-w-0">
                     <p
                       className="text-[11px] uppercase tracking-[0.14em] mb-1"
-                      style={{ color: '#60A5FA', fontFamily: 'Outfit, sans-serif' }}
+                      style={{ color: '#E2E8F0', fontFamily: 'Outfit, sans-serif' }}
                     >
                       Merchant Profile
                     </p>
                     <h2
                       className="text-xl font-medium text-white truncate"
-                      style={{ fontFamily: 'Outfit, sans-serif' }}
                     >
                       {displayName}
                     </h2>
-                    <p className="text-sm text-gray-400 mt-0.5 truncate" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <p className="text-sm text-gray-400 mt-0.5 truncate">
                       {user?.email || '—'}
                     </p>
                     <div className="mt-3">
@@ -259,17 +257,15 @@ export default function ProfilePage() {
                     <div>
                       <label
                         className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5"
-                        style={{ fontFamily: 'Outfit, sans-serif' }}
                       >
-                        <Building2 size={12} className="text-[#60A5FA]" /> Business Name
+                        <Building2 size={12} className="text-[#E2E8F0]" /> Business Name
                       </label>
                       <input
                         type="text"
                         value={editBusinessName}
                         onChange={(e) => setEditBusinessName(e.target.value)}
                         placeholder="e.g. Acme Corp"
-                        className="w-full bg-black/60 border border-white/10 focus:border-[#60A5FA] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 transition-all outline-none"
-                        style={{ fontFamily: 'Montserrat, sans-serif' }}
+                        className="w-full bg-black/60 border border-white/10 focus:border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-600 transition-all outline-none"
                       />
                     </div>
 
@@ -277,16 +273,14 @@ export default function ProfilePage() {
                     <div>
                       <label
                         className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5"
-                        style={{ fontFamily: 'Outfit, sans-serif' }}
                       >
-                        <Mail size={12} className="text-[#60A5FA]" /> Email (Account)
+                        <Mail size={12} className="text-[#E2E8F0]" /> Email (Account)
                       </label>
                       <input
                         type="text"
                         value={user?.email || ''}
                         disabled
                         className="w-full bg-white/[0.02] border border-white/5 rounded-xl px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed outline-none"
-                        style={{ fontFamily: 'Montserrat, sans-serif' }}
                       />
                     </div>
                   </div>
@@ -295,18 +289,17 @@ export default function ProfilePage() {
                   <div>
                     <label
                       className="block text-xs uppercase tracking-wider text-gray-400 mb-1.5 flex items-center gap-1.5"
-                      style={{ fontFamily: 'Outfit, sans-serif' }}
                     >
-                      <Wallet size={12} className="text-[#60A5FA]" /> Solana Wallet Address
+                      <Wallet size={12} className="text-[#E2E8F0]" /> Solana Wallet Address
                     </label>
                     <input
                       type="text"
                       value={editMerchantWallet}
                       onChange={(e) => setEditMerchantWallet(e.target.value)}
                       placeholder="e.g. B8NUqgYnZiNLmDBZCA3cgWeRR7oWcC1xTmmXFXGaYxJ4"
-                      className="w-full bg-black/60 border border-white/10 focus:border-[#60A5FA] rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-gray-600 transition-all outline-none"
+                      className="w-full bg-black/60 border border-white/10 focus:border-[#E2E8F0] rounded-xl px-4 py-2.5 text-sm text-white font-mono placeholder-gray-600 transition-all outline-none"
                     />
-                    <p className="text-xs text-gray-500 mt-1.5" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <p className="text-xs text-gray-500 mt-1.5">
                       Used to receive funds from payment links, POS terminals, and payment requests.
                     </p>
                   </div>
@@ -322,15 +315,13 @@ export default function ProfilePage() {
                       }}
                       disabled={saving}
                       className="px-5 py-2 rounded-full border border-white/10 bg-transparent text-white text-xs font-medium hover:bg-white/5 transition-all disabled:opacity-50"
-                      style={{ fontFamily: 'Outfit, sans-serif' }}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={saving}
-                      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white text-black hover:bg-[#2563EB] hover:text-white text-xs font-medium transition-all shadow-md disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-[#60A5FA]"
-                      style={{ fontFamily: 'Outfit, sans-serif' }}
+                      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white text-black hover:bg-[#10B981] hover:text-white text-xs font-medium transition-all shadow-md disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-[#E2E8F0]"
                     >
                       {saving ? (
                         <>
@@ -353,15 +344,14 @@ export default function ProfilePage() {
                   {/* Business name */}
                   <div style={{ background: 'rgba(10,10,10,0.6)', padding: '18px 24px' }}>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <Building2 size={12} color="rgba(96,165,250,0.7)" />
+                      <Building2 size={12} color="rgba(255, 255, 255,0.7)" />
                       <p
                         className="text-[11px] uppercase tracking-wider text-gray-500"
-                        style={{ fontFamily: 'Outfit, sans-serif' }}
                       >
                         Business Name
                       </p>
                     </div>
-                    <p className="text-sm text-[#EDEDED]" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <p className="text-sm text-[#EDEDED]">
                       {businessName || '—'}
                     </p>
                   </div>
@@ -369,15 +359,14 @@ export default function ProfilePage() {
                   {/* Email */}
                   <div style={{ background: 'rgba(10,10,10,0.6)', padding: '18px 24px' }}>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <Mail size={12} color="rgba(96,165,250,0.7)" />
+                      <Mail size={12} color="rgba(255, 255, 255,0.7)" />
                       <p
                         className="text-[11px] uppercase tracking-wider text-gray-500"
-                        style={{ fontFamily: 'Outfit, sans-serif' }}
                       >
                         Email
                       </p>
                     </div>
-                    <p className="text-sm text-[#EDEDED] break-all" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                    <p className="text-sm text-[#EDEDED] break-all">
                       {user?.email || '—'}
                     </p>
                   </div>
@@ -389,10 +378,9 @@ export default function ProfilePage() {
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center gap-2">
-                        <Wallet size={12} color="rgba(96,165,250,0.7)" />
+                        <Wallet size={12} color="rgba(255, 255, 255,0.7)" />
                         <p
                           className="text-[11px] uppercase tracking-wider text-gray-500"
-                          style={{ fontFamily: 'Outfit, sans-serif' }}
                         >
                           Solana Wallet
                         </p>
@@ -401,8 +389,7 @@ export default function ProfilePage() {
                         <button
                           type="button"
                           onClick={handleCopyWallet}
-                          className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-[#60A5FA] transition-colors focus-visible:outline-2 focus-visible:outline-[#60A5FA] focus-visible:outline-offset-2"
-                          style={{ fontFamily: 'Outfit, sans-serif' }}
+                          className="inline-flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-[#E2E8F0] transition-colors focus-visible:outline-2 focus-visible:outline-[#E2E8F0] focus-visible:outline-offset-2"
                         >
                           {copied ? <Check size={12} /> : <Copy size={12} />}
                           {copied ? 'Copied!' : 'Copy'}
@@ -436,7 +423,7 @@ export default function ProfilePage() {
                     fontWeight: 700,
                     letterSpacing: '0.4em',
                     textTransform: 'uppercase',
-                    color: '#60A5FA',
+                    color: '#E2E8F0',
                     marginBottom: '4px',
                   }}
                 >
@@ -507,7 +494,7 @@ export default function ProfilePage() {
                           fontFamily: 'Montserrat, sans-serif',
                           fontSize: '13px',
                           fontWeight: 600,
-                          color: '#60A5FA',
+                          color: '#E2E8F0',
                           textDecoration: 'underline',
                           textUnderlineOffset: '2px',
                         }}
@@ -548,9 +535,9 @@ export default function ProfilePage() {
                 }}
                 onMouseEnter={(e) => {
                   if (kycVerified) {
-                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(96,165,250,0.4)';
-                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(37,99,235,0.12)';
-                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 24px -4px rgba(37,99,235,0.25)';
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 255, 255,0.4)';
+                    (e.currentTarget as HTMLButtonElement).style.background = 'rgba(16, 185, 129,0.12)';
+                    (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 8px 24px -4px rgba(16, 185, 129,0.25)';
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -568,13 +555,13 @@ export default function ProfilePage() {
                       width: '38px',
                       height: '38px',
                       borderRadius: '9999px',
-                      background: kycVerified ? 'rgba(96,165,250,0.12)' : 'rgba(255,255,255,0.05)',
-                      border: kycVerified ? '1px solid rgba(96,165,250,0.25)' : '1px solid rgba(255,255,255,0.08)',
+                      background: kycVerified ? 'rgba(255, 255, 255,0.12)' : 'rgba(255,255,255,0.05)',
+                      border: kycVerified ? '1px solid rgba(255, 255, 255,0.25)' : '1px solid rgba(255,255,255,0.08)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      color: kycVerified ? '#60A5FA' : 'rgba(255,255,255,0.3)',
+                      color: kycVerified ? '#E2E8F0' : 'rgba(255,255,255,0.3)',
                     }}
                   >
                     <ArrowDownToLine size={17} />

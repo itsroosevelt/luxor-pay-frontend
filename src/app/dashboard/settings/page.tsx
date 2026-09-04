@@ -205,10 +205,10 @@ function SettingsContent() {
 
   return (
     <>
-      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+      <header className="lx-page-header">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Settings</h1>
-          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <h1 className="lx-page-title">Settings</h1>
+          <p className="lx-page-subtitle">
             Manage your account preferences, POS terminals, and developer API keys.
           </p>
         </div>
@@ -225,7 +225,6 @@ function SettingsContent() {
                 ? 'bg-white text-black shadow-md'
                 : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
-            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             <Settings size={15} /> General
           </button>
@@ -238,7 +237,6 @@ function SettingsContent() {
                 ? 'bg-white text-black shadow-md'
                 : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
-            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             <Terminal size={15} /> POS Devices
           </button>
@@ -251,7 +249,6 @@ function SettingsContent() {
                 ? 'bg-white text-black shadow-md'
                 : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
             }`}
-            style={{ fontFamily: 'Outfit, sans-serif' }}
           >
             <Code2 size={15} /> Developers & API
           </button>
@@ -261,32 +258,31 @@ function SettingsContent() {
         {activeTab === 'general' && (
           <div>
             {loadingProfile ? (
-              <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>Loading profile…</p>
+              <p className="text-gray-500 text-sm">Loading profile…</p>
             ) : (
               <form onSubmit={handleSaveProfile} className="glass-panel p-6 space-y-4 max-w-2xl">
                 <div>
-                  <label className="text-xs uppercase tracking-wider text-gray-400 block mb-1.5" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                  <label className="text-xs uppercase tracking-wider text-gray-400 block mb-1.5">
                     Business Name
                   </label>
                   <input
                     value={businessName}
                     onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#60A5FA] outline-none"
-                    style={{ fontFamily: 'Montserrat, sans-serif' }}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
                     placeholder="e.g. Acme Corp"
                   />
                 </div>
                 <div>
-                  <label className="text-xs uppercase tracking-wider text-gray-400 block mb-1.5" style={{ fontFamily: 'Outfit, sans-serif' }}>
+                  <label className="text-xs uppercase tracking-wider text-gray-400 block mb-1.5">
                     Solana Wallet Address
                   </label>
                   <input
                     value={merchantWallet}
                     onChange={(e) => setMerchantWallet(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:border-[#60A5FA] outline-none"
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:border-[#E2E8F0] outline-none"
                     placeholder="Your pubkey for USDC / SOL"
                   />
-                  <p className="text-xs text-gray-500 mt-1.5" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+                  <p className="text-xs text-gray-500 mt-1.5">
                     Used on payment links, QR codes, and POS charges.
                   </p>
                 </div>
@@ -294,7 +290,6 @@ function SettingsContent() {
                   type="submit"
                   disabled={savingProfile}
                   className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50 shadow-md focus-visible:outline-2 focus-visible:outline-blue-400"
-                  style={{ fontFamily: 'Outfit, sans-serif' }}
                 >
                   {savingProfile ? 'Saving…' : 'Save Profile'}
                 </button>
@@ -307,37 +302,34 @@ function SettingsContent() {
         {activeTab === 'pos' && (
           <div className="space-y-6">
             <form onSubmit={handleCreatePos} className="glass-panel p-6 space-y-4">
-              <h2 className="text-base font-medium text-white flex items-center gap-2" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                <Plus size={18} className="text-[#60A5FA]" /> Register POS Device
+              <h2 className="text-base font-medium text-white flex items-center gap-2">
+                <Plus size={18} className="text-[#E2E8F0]" /> Register POS Device
               </h2>
               <div className="grid md:grid-cols-2 gap-3">
                 <input
                   value={posName}
                   onChange={(e) => setPosName(e.target.value)}
                   placeholder="Store counter #1"
-                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#60A5FA] outline-none"
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
                 />
                 <input
                   value={posId}
                   onChange={(e) => setPosId(e.target.value)}
                   placeholder="POS ID (serial or label)"
-                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#60A5FA] outline-none"
-                  style={{ fontFamily: 'Montserrat, sans-serif' }}
+                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
                 />
               </div>
               <button
                 type="submit"
                 disabled={creatingPos}
                 className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50 shadow-md focus-visible:outline-2 focus-visible:outline-blue-400"
-                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 {creatingPos ? 'Saving…' : 'Register POS'}
               </button>
             </form>
 
             <div className="glass-panel p-6 text-xs text-gray-400 space-y-2 font-mono">
-              <p className="text-white font-sans font-semibold mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>Charge Endpoint</p>
+              <p className="text-white font-sans font-semibold mb-1">Charge Endpoint</p>
               <p>POST {apiBase}/api/v1/pos/charge</p>
               <p>Header: X-Api-Key: sk_live_…</p>
             </div>
@@ -345,20 +337,20 @@ function SettingsContent() {
             {loadingDevices ? (
               <p className="text-gray-500 text-sm">Loading devices…</p>
             ) : devices.length === 0 ? (
-              <p className="text-center py-12 text-gray-500 border border-dashed border-white/10 rounded-2xl text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+              <p className="text-center py-12 text-gray-500 border border-dashed border-white/10 rounded-2xl text-sm">
                 No POS devices registered yet.
               </p>
             ) : (
               <div className="grid gap-4">
                 {devices.map((d) => (
                   <div key={d.id} className="glass-panel p-5 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-[#60A5FA]">
+                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-[#E2E8F0]">
                       <Terminal size={18} />
                     </div>
                     <div>
-                      <h3 className="font-medium text-white text-sm" style={{ fontFamily: 'Outfit, sans-serif' }}>{d.name}</h3>
-                      <p className="text-xs text-gray-400" style={{ fontFamily: 'Montserrat, sans-serif' }}>
-                        POS ID: <code className="text-[#60A5FA] font-mono">{d.posId}</code>
+                      <h3 className="font-medium text-white text-sm">{d.name}</h3>
+                      <p className="text-xs text-gray-400">
+                        POS ID: <code className="text-[#E2E8F0] font-mono">{d.posId}</code>
                         {d.lastSeenAt ? ` · Last seen ${new Date(d.lastSeenAt).toLocaleString()}` : ''}
                       </p>
                     </div>
@@ -375,13 +367,13 @@ function SettingsContent() {
             {adminMissing && (
               <div className="glass-panel p-4 border border-amber-500/30 text-xs text-amber-200">
                 Start the backend and set Firebase Admin in{' '}
-                <code className="text-[#60A5FA]">backend/.env</code>.
+                <code className="text-[#E2E8F0]">backend/.env</code>.
               </div>
             )}
 
             {newSecret && (
-              <div className="glass-panel p-4 border border-[#60A5FA]/40 space-y-2">
-                <p className="text-xs font-semibold text-[#60A5FA]" style={{ fontFamily: 'Outfit, sans-serif' }}>New secret key (shown once)</p>
+              <div className="glass-panel p-4 border border-[#E2E8F0]/40 space-y-2">
+                <p className="text-xs font-semibold text-[#E2E8F0]">New secret key (shown once)</p>
                 <code className="block text-xs break-all bg-black/50 p-3 rounded-lg font-mono text-white">{newSecret}</code>
                 <button
                   type="button"
@@ -389,8 +381,7 @@ function SettingsContent() {
                     navigator.clipboard.writeText(newSecret);
                     toast.success('Copied');
                   }}
-                  className="text-xs flex items-center gap-1.5 text-[#60A5FA] hover:underline"
-                  style={{ fontFamily: 'Outfit, sans-serif' }}
+                  className="text-xs flex items-center gap-1.5 text-[#E2E8F0] hover:underline"
                 >
                   <Copy size={13} /> Copy Key
                 </button>
@@ -402,29 +393,27 @@ function SettingsContent() {
                 value={keyName}
                 onChange={(e) => setKeyName(e.target.value)}
                 placeholder="Key name (e.g. Production POS)"
-                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#60A5FA] outline-none"
-                style={{ fontFamily: 'Montserrat, sans-serif' }}
+                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
               />
               <button
                 type="submit"
                 className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full flex items-center justify-center gap-1.5 hover:bg-blue-600 hover:text-white transition-all shadow-md"
-                style={{ fontFamily: 'Outfit, sans-serif' }}
               >
                 <Plus size={15} /> Create Key
               </button>
             </form>
 
             <div className="glass-panel p-6 font-mono text-xs text-gray-400 space-y-2">
-              <p className="text-white font-sans font-semibold text-sm" style={{ fontFamily: 'Outfit, sans-serif' }}>Base URL</p>
+              <p className="text-white font-sans font-semibold text-sm">Base URL</p>
               <p>{apiBase}/api/v1</p>
-              <p className="pt-2 text-white font-sans font-semibold text-sm" style={{ fontFamily: 'Outfit, sans-serif' }}>Endpoints</p>
+              <p className="pt-2 text-white font-sans font-semibold text-sm">Endpoints</p>
               <p>GET /payment-links · POST /pos/charge · Header X-Api-Key</p>
             </div>
 
             {loadingKeys ? (
               <p className="text-gray-500 text-sm">Loading keys…</p>
             ) : keys.length === 0 ? (
-              <p className="text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>No API keys yet.</p>
+              <p className="text-gray-500 text-sm">No API keys yet.</p>
             ) : (
               <div className="grid gap-3">
                 {keys.map((k) => (
@@ -433,9 +422,9 @@ function SettingsContent() {
                     className="glass-panel p-4 flex items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-3">
-                      <Key className="text-[#60A5FA]" size={18} />
+                      <Key className="text-[#E2E8F0]" size={18} />
                       <div>
-                        <p className="font-medium text-white text-sm" style={{ fontFamily: 'Outfit, sans-serif' }}>{k.name}</p>
+                        <p className="font-medium text-white text-sm">{k.name}</p>
                         <p className="text-xs text-gray-500 font-mono">{k.keyPrefix}…</p>
                       </div>
                     </div>
@@ -461,7 +450,7 @@ function SettingsContent() {
 export default function SettingsPage() {
   return (
     <Suspense fallback={
-      <div className="p-10 text-gray-500 text-sm" style={{ fontFamily: 'Montserrat, sans-serif' }}>Loading settings…</div>
+      <div className="p-10 text-gray-500 text-sm">Loading settings…</div>
     }>
       <SettingsContent />
     </Suspense>

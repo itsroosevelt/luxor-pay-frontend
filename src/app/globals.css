@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -7,11 +6,11 @@
 }
 
 :root {
-  --background: #0a0a0a;
+  --background: #060709;
   --foreground: #ededed;
-  --primary: #14f195; /* Solana Green */
-  --secondary: #9945ff; /* Solana Purple */
-  --accent: #00ffd1;
+  --primary: #60a5fa;
+  --secondary: #2563eb;
+  --accent: #3b82f6;
   font-family: 'Outfit', 'Montserrat', sans-serif;
 }
 
@@ -27,35 +26,294 @@ html, body {
   overflow-y: auto;
   margin: 0;
   padding: 0;
+  background: #060709;
 }
 
 @layer base {
   body {
-    background: radial-gradient(circle at top left, #1a1a1a, #0a0a0a);
+    background: radial-gradient(circle at 15% 15%, rgba(37, 99, 235, 0.12), transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(249, 115, 22, 0.06), transparent 50%),
+                #060709;
     color: var(--foreground);
     font-family: 'Outfit', 'Montserrat', sans-serif;
   }
 }
 
 .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(18, 20, 27, 0.75);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 24px;
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.7);
 }
 
 .solana-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, #60A5FA, #2563EB);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, #60A5FA, #2563EB);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* ── Single Visible Sleek Scrollbar ── */
+/* ============================================================
+   Luxor Pay — Signature Web3 Multisig App Theme
+   Scoped to the authenticated dashboard via `.lx-app`.
+   ============================================================ */
+.lx-app {
+  /* Surfaces — Rich glassmorphic dark mode */
+  --lx-bg: #06070A;
+  --lx-bg-elev: rgba(14, 16, 22, 0.85);
+  --lx-surface: rgba(17, 19, 27, 0.8);
+  --lx-surface-2: rgba(23, 26, 36, 0.85);
+  --lx-surface-hover: rgba(30, 34, 48, 0.9);
+  --lx-sidebar: #08090D;
+
+  /* Borders — Glowing subtle Web3 highlights */
+  --lx-border: rgba(255, 255, 255, 0.09);
+  --lx-border-strong: rgba(255, 255, 255, 0.15);
+  --lx-border-hover: rgba(96, 165, 250, 0.35);
+
+  /* Text */
+  --lx-text: #F8FAFC;
+  --lx-text-muted: #94A3B8;
+  --lx-text-dim: #64748B;
+
+  /* Primary action — Official Luxor Electric Blue Gradient */
+  --lx-primary: linear-gradient(135deg, #60A5FA, #2563EB);
+  --lx-primary-hover: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  --lx-primary-text: #FFFFFF;
+
+  /* Neutral fill — secondary buttons, chips, icon circles */
+  --lx-fill: rgba(255, 255, 255, 0.05);
+  --lx-fill-hover: rgba(255, 255, 255, 0.10);
+
+  /* Status colors */
+  --lx-success: #34D399;
+  --lx-success-soft: rgba(52, 211, 153, 0.12);
+  --lx-success-border: rgba(52, 211, 153, 0.35);
+
+  --lx-danger: #F87171;
+  --lx-danger-soft: rgba(248, 113, 113, 0.12);
+  --lx-warning: #F59E0B;
+
+  /* Shape & rhythm */
+  --lx-radius-sm: 8px;
+  --lx-radius: 16px;
+  --lx-radius-lg: 24px;
+  --lx-pad: 24px;
+  --lx-pad-lg: 32px;
+
+  /* Elevation */
+  --lx-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --lx-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.7), 0 0 20px rgba(37, 99, 235, 0.08);
+  --lx-shadow-lg: 0 24px 60px -16px rgba(0, 0, 0, 0.85), 0 0 35px rgba(37, 99, 235, 0.15);
+  --lx-ring: 0 0 0 2px #60A5FA, 0 0 12px rgba(96, 165, 250, 0.4);
+
+  font-family: 'Outfit', 'Montserrat', system-ui, sans-serif;
+  background: var(--lx-bg);
+  color: var(--lx-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+.lx-app *,
+.lx-app button,
+.lx-app input,
+.lx-app select,
+.lx-app textarea {
+  font-family: 'Outfit', 'Montserrat', system-ui, sans-serif;
+}
+
+/* Glassmorphic structured card */
+.lx-app .lx-card {
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius);
+  padding: var(--lx-pad);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--lx-shadow);
+  transition: all 0.2s ease;
+}
+
+.lx-app .lx-card-lg {
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border-strong);
+  border-radius: var(--lx-radius-lg);
+  padding: var(--lx-pad-lg);
+  backdrop-filter: blur(24px);
+  box-shadow: var(--lx-shadow-lg);
+}
+
+/* Interactive card */
+.lx-app .lx-card-interactive {
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius);
+  backdrop-filter: blur(16px);
+  transition: all 0.2s ease;
+}
+.lx-app .lx-card-interactive:hover {
+  background: var(--lx-surface-hover);
+  border-color: var(--lx-border-hover);
+  box-shadow: 0 12px 32px -10px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+}
+
+/* Section / page eyebrow */
+.lx-app .lx-eyebrow {
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  text-transform: uppercase;
+  color: #60A5FA;
+}
+
+/* Status pill */
+.lx-app .lx-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--lx-text-muted);
+  border: 1px solid var(--lx-border-strong);
+}
+.lx-app .lx-status--ok {
+  background: var(--lx-success-soft);
+  color: var(--lx-success);
+  border-color: var(--lx-success-border);
+}
+.lx-app .lx-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.9;
+}
+
+/* Primary button — Pill shape with Luxor Electric Gradient */
+.lx-app .lx-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 22px;
+  border-radius: 9999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.lx-app .lx-btn-primary {
+  background: linear-gradient(135deg, #60A5FA, #2563EB);
+  color: #FFFFFF;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+}
+.lx-app .lx-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+  transform: translateY(-1px);
+}
+
+.lx-app .lx-btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #FFFFFF;
+  border-color: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+}
+.lx-app .lx-btn-secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.10);
+  color: #FFFFFF;
+  border-color: rgba(96, 165, 250, 0.4);
+}
+
+.lx-app .lx-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.lx-app .lx-btn:focus-visible,
+.lx-app .lx-focusable:focus-visible {
+  outline: none;
+  box-shadow: var(--lx-ring);
+}
+
+/* Page header band */
+.lx-app .lx-page-header {
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--lx-border);
+  background: rgba(12, 14, 20, 0.8);
+  backdrop-filter: blur(20px);
+}
+@media (min-width: 768px) {
+  .lx-app .lx-page-header {
+    padding: 22px 240px 22px 32px;
+  }
+}
+.lx-app .lx-page-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--lx-text);
+  margin: 0;
+  line-height: 1.15;
+}
+.lx-app .lx-page-subtitle {
+  margin-top: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: var(--lx-text-muted);
+  font-weight: 300;
+}
+
+/* Sidebar nav item states */
+.lx-app .lx-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 9999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--lx-text-muted);
+  transition: all 0.2s ease;
+}
+.lx-app .lx-nav-item :where(svg) {
+  transition: transform 0.2s ease;
+}
+.lx-app .lx-nav-item:hover {
+  color: var(--lx-text);
+  background: rgba(255, 255, 255, 0.05);
+}
+.lx-app .lx-nav-item:hover :where(svg) {
+  transform: translateX(2px) scale(1.05);
+  color: #60A5FA;
+}
+.lx-app .lx-nav-item[data-active='true'] {
+  color: #FFFFFF;
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.2), rgba(96, 165, 250, 0.08));
+  border: 1px solid rgba(96, 165, 250, 0.25);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+.lx-app .lx-nav-item[data-active='true'] :where(svg) {
+  color: #60A5FA;
+}
+
+/* ── Sleek Scrollbar ── */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;

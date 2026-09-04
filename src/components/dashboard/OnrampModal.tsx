@@ -56,7 +56,7 @@ const Sheet = styled(motion.div)`
     right: -30%;
     width: 60%;
     height: 60%;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.12), transparent 70%);
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.12), transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -99,7 +99,7 @@ const Eyebrow = styled.span`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #60A5FA;
+  color: #E2E8F0;
   display: block;
   margin-bottom: 4px;
 `;
@@ -137,7 +137,7 @@ const CloseButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -170,7 +170,7 @@ const StateContainer = styled.div`
 
 const SpinnerIcon = styled(Loader2)`
   animation: ${spin} 1s linear infinite;
-  color: #60A5FA;
+  color: #E2E8F0;
 `;
 
 const StateTitle = styled.p`
@@ -214,9 +214,9 @@ const RetryButton = styled.button`
   height: 42px;
   padding: 0 24px;
   border-radius: 9999px;
-  border: 1px solid rgba(96, 165, 250, 0.3);
-  background: rgba(37, 99, 235, 0.1);
-  color: #60A5FA;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(16, 185, 129, 0.1);
+  color: #E2E8F0;
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 500;
@@ -225,12 +225,12 @@ const RetryButton = styled.button`
   margin-top: 4px;
 
   &:hover {
-    background: rgba(37, 99, 235, 0.2);
-    border-color: rgba(96, 165, 250, 0.5);
+    background: rgba(16, 185, 129, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -239,7 +239,7 @@ const OpenTabButton = styled.a`
   height: 52px;
   padding: 0 28px;
   border-radius: 9999px;
-  background: linear-gradient(to right, #60A5FA, #2563EB);
+  background: linear-gradient(to right, #E2E8F0, #10B981);
   color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
   font-size: 15px;
@@ -250,16 +250,16 @@ const OpenTabButton = styled.a`
   gap: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 8px 24px -6px rgba(37, 99, 235, 0.5);
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.45);
   margin-top: 12px;
 
   &:hover {
-    box-shadow: 0 12px 32px -6px rgba(37, 99, 235, 0.7);
+    box-shadow: 0 12px 32px -6px rgba(0, 0, 0, 0.45);
     transform: translateY(-1px);
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -401,12 +401,12 @@ export function OnrampModal({ isOpen, onClose, merchantWallet }: OnrampModalProp
                         width: 48,
                         height: 48,
                         borderRadius: "50%",
-                        background: "rgba(96, 165, 250, 0.1)",
-                        border: "1px solid rgba(96, 165, 250, 0.2)",
+                        background: "rgba(255, 255, 255, 0.1)",
+                        border: "1px solid rgba(255, 255, 255, 0.2)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        color: "#60A5FA",
+                        color: "#E2E8F0",
                       }}
                     >
                       <Loader2 className="animate-spin" size={24} />

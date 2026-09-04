@@ -1,8 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat, Outfit } from "next/font/google";
+import { Montserrat, Outfit, Inter } from "next/font/google";
+import dynamic from "next/dynamic";
+import { Fragment } from "react";
 import "./globals.css";
+import StyledComponentsRegistry from '@/lib/registry';
 import { SolanaProvider } from '@/web3/providers/SolanaProvider';
 import { TokenRegistryProvider } from '@/context/TokenRegistryContext';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
+
+/**
+ * Mock Mode wrapper — only pulled into the bundle when
+ * `NEXT_PUBLIC_USE_MOCK_DATA=true`. In a normal build this is a no-op Fragment
+ * and none of `src/mocks` / `src/lib/mock` is imported.
+ */
+const MockModeProvider = IS_MOCK_MODE
+  ? dynamic(() => import('@/context/MockModeProvider').then((m) => m.MockModeProvider))
+  : Fragment;
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -15,6 +28,13 @@ const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
   weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -40,9 +60,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -79,13 +96,17 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${montserrat.variable} ${outfit.variable} antialiased`}
+        className={`${montserrat.variable} ${outfit.variable} ${inter.variable} antialiased`}
       >
-        <TokenRegistryProvider>
-          <SolanaProvider>
-            {children}
-          </SolanaProvider>
-        </TokenRegistryProvider>
+        <StyledComponentsRegistry>
+          <MockModeProvider>
+            <TokenRegistryProvider>
+              <SolanaProvider>
+                {children}
+              </SolanaProvider>
+            </TokenRegistryProvider>
+          </MockModeProvider>
+        </StyledComponentsRegistry>
       </body>
     </html>
   );

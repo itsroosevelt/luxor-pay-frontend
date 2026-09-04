@@ -121,8 +121,8 @@ const StyledSelect = styled.select`
   }
 
   &:focus {
-    border-color: #2563EB;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+    border-color: #10B981;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
   }
   
   option {
@@ -169,13 +169,13 @@ const TransferButton = styled.button`
   gap: 6px;
   background: #FFFFFF;
   color: #000000;
-  box-shadow: 0 4px 20px rgba(96, 165, 250, 0.15);
+  box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
   white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: #2563EB;
+    background: #10B981;
     color: #FFFFFF;
-    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.4);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
     transform: translateY(-1px);
   }
 
@@ -184,7 +184,7 @@ const TransferButton = styled.button`
   }
   
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 
@@ -230,7 +230,7 @@ const ReloadButton = styled.button<{ $isLoading?: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 
@@ -368,7 +368,7 @@ const PageButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;

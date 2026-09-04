@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { getApiBaseUrl } from '@/lib/api-client';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { auth } from '@/lib/firebase';
 
 /* ─── Types ────────────────────────────────────────────────────────────── */
@@ -92,6 +93,17 @@ export function OnrampSocketProvider({ children }: { children: ReactNode }) {
     activeSessionIdRef.current = sessionId;
     setOnrampActive(true);
     setOnrampResult(null);
+
+    // Mock Mode: no socket server. Simulate fulfillment completing.
+    if (IS_MOCK_MODE) {
+      setSocketStatus('connected');
+      setTimeout(() => {
+        setOnrampPayload({ userId: 'mock', status: 'fulfillment_complete', sessionId });
+        setOnrampActive(false);
+        setOnrampResult('success');
+      }, 1800);
+      return;
+    }
 
     const user = auth.currentUser;
     if (!user) {

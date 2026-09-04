@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { Wallet, Check, Copy } from "lucide-react";
+import { Wallet, Check, Copy, QrCode, ArrowUp } from "lucide-react";
 
 const Container = styled(motion.div)`
   display: flex;
@@ -12,7 +12,59 @@ const Container = styled(motion.div)`
   flex-wrap: wrap;
 
   @media (min-width: 768px) {
-    gap: 12px;
+    gap: 10px;
+  }
+`;
+
+const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  @media (min-width: 768px) {
+    padding: 7px 16px;
+    font-size: 13px;
+  }
+
+  ${({ $variant }) =>
+    $variant === 'primary' &&
+    `
+    background: #FFFFFF;
+    color: #000000;
+    border: 1px solid #FFFFFF;
+    &:hover:not(:disabled) {
+      background: #2563EB;
+      border-color: #2563EB;
+      color: #FFFFFF;
+      box-shadow: 0 0 16px rgba(37, 99, 235, 0.4);
+    }
+  `}
+
+  ${({ $variant }) =>
+    $variant === 'secondary' &&
+    `
+    background: rgba(255, 255, 255, 0.05);
+    color: #EDEDED;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #FFFFFF;
+    }
+  `}
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
   }
 `;
 
@@ -32,7 +84,7 @@ const BadgeBase = styled.div`
   transition: all 0.2s ease;
 
   @media (min-width: 768px) {
-    padding: 8px 16px;
+    padding: 7px 16px;
     font-size: 13px;
   }
 `;
@@ -42,8 +94,8 @@ const WalletBadge = styled(BadgeBase)`
 
   &:hover {
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(96, 165, 250, 0.3);
-    color: #60A5FA;
+    border-color: rgba(255, 255, 255, 0.3);
+    color: #E2E8F0;
   }
 
   &:focus-visible {
@@ -61,9 +113,11 @@ interface TopWalletBarProps {
   merchantWallet?: string | null;
   solBalance?: string | null;
   isLoading?: boolean;
+  onQrClick?: () => void;
+  onSendClick?: () => void;
 }
 
-export function TopWalletBar({ merchantWallet }: TopWalletBarProps) {
+export function TopWalletBar({ merchantWallet, onQrClick, onSendClick }: TopWalletBarProps) {
   const [copied, setCopied] = useState(false);
 
   const truncatedAddress = merchantWallet
@@ -83,7 +137,19 @@ export function TopWalletBar({ merchantWallet }: TopWalletBarProps) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
+      {onQrClick && (
+        <ActionButton $variant="primary" onClick={onQrClick} title="QR Pay / Charge">
+          <QrCode size={14} />
+          <span>QR Pay / Charge</span>
+        </ActionButton>
+      )}
 
+      {onSendClick && (
+        <ActionButton $variant="secondary" onClick={onSendClick} title="Send funds">
+          <ArrowUp size={14} />
+          <span>Send</span>
+        </ActionButton>
+      )}
 
       {truncatedAddress ? (
         <WalletBadge
@@ -108,3 +174,4 @@ export function TopWalletBar({ merchantWallet }: TopWalletBarProps) {
     </Container>
   );
 }
+

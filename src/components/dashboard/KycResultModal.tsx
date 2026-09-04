@@ -201,7 +201,7 @@ const ButtonBase = styled.button<{ $variant: 'primary' | 'secondary' }>`
     margin-bottom: 0.75rem;
 
     &:hover {
-      background: #2563EB;
+      background: #10B981;
       color: #FFFFFF;
     }
   `}

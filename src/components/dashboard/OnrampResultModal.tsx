@@ -167,7 +167,7 @@ const ButtonBase = styled.button`
   border: none;
 
   &:hover {
-    background: #2563EB;
+    background: #10B981;
     color: #FFFFFF;
   }
 

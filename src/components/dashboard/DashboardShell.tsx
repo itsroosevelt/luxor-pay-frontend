@@ -1,28 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { signOut, onAuthStateChanged, type User } from 'firebase/auth';
-import { Suspense, useEffect, useState } from 'react';
-import {
-  LayoutDashboard,
-  Link as LinkIcon,
-  Receipt,
-  Terminal,
-  Code2,
-  Settings,
-  LogOut,
-  Users,
-  Menu,
-  X,
-  ArrowLeftRight,
-  Repeat,
-  UserCircle,
-  Lock,
-  Check,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Menu, X, Check, LogOut } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
 import { useMerchant } from '@/context/MerchantContext';
@@ -31,167 +13,33 @@ import { KycVerificationBanner } from './KycVerificationBanner';
 import { KycResultModal } from './KycResultModal';
 import { OnrampProgressBanner } from './OnrampProgressBanner';
 import { OnrampResultModal } from './OnrampResultModal';
-import { clsx } from 'clsx';
 import { TopWalletBar } from './TopWalletBar';
 import { FundWalletButton } from './FundWalletButton';
+import { Sidebar, SidebarContent } from './Sidebar';
+import { SupportCenterDrawer } from './SupportCenterDrawer';
+import { QrOperationsModal } from './overview/QrOperationsModal';
+import { TransferModal } from './overview/TransferModal';
+import { TransferSuccessModal } from './overview/TransferSuccessModal';
+import { PaymentRequestModal } from './overview/PaymentRequestModal';
+import { Transfer } from '@/lib/transfers-api';
 
-const nav = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard },
-  { href: '/dashboard/swap', label: 'Swap', icon: Repeat },
-  { href: '/dashboard/requests', label: 'Payment Requests', icon: ArrowLeftRight },
-  { href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
-  { href: '/dashboard/transactions', label: 'Transactions', icon: Receipt },
-  { href: '/dashboard/contacts', label: 'Contacts', icon: Users },
-  { href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
-];
-
-const settingsSubNav = [
-  { href: '/dashboard/settings?tab=general', label: 'General', icon: Settings, tab: 'general' },
-  { href: '/dashboard/settings?tab=pos', label: 'POS Devices', icon: Terminal, tab: 'pos' },
-  { href: '/dashboard/settings?tab=developers', label: 'Developers', icon: Code2, tab: 'developers' },
-];
-
-type NavLinksShellProps = {
-  pathname: string;
-  router: ReturnType<typeof useRouter>;
-  isSettingsOpen: boolean;
-  setIsSettingsOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  onClick?: () => void;
-  collapsed?: boolean;
-};
-
-interface NavLinksProps extends NavLinksShellProps {
-  searchParams: ReturnType<typeof useSearchParams>;
-}
-
-function NavLinks({
-  pathname,
-  searchParams,
-  router,
-  isSettingsOpen,
-  setIsSettingsOpen,
-  onClick,
-  collapsed,
-}: NavLinksProps) {
-  const isSettingsActive = pathname.startsWith('/dashboard/settings');
-  const rawTab = searchParams.get('tab');
-  const currentTab = rawTab || 'general';
-
-  return (
-    <div className="flex flex-col justify-between h-full space-y-1">
-      <div className="space-y-1">
-        {nav.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClick}
-              title={collapsed ? label : undefined}
-              className={clsx(
-                'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-2xl',
-                collapsed ? 'justify-center p-3 text-center' : 'gap-3 px-4 py-3',
-                active
-                  ? 'bg-white/10 text-white shadow-sm font-semibold'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              )}
-            >
-              <Icon size={18} className="shrink-0" />
-              {!collapsed && <span className="truncate">{label}</span>}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Settings Option at Bottom - Submenu Expands Upwards */}
-      <div className="w-full pt-2 mt-auto border-t border-white/5">
-        {/* Submenu Items (Rendered ABOVE Settings button so it opens UPWARDS) */}
-        {isSettingsOpen && !collapsed && (
-          <div className="mb-2 ml-4 pl-3 border-l border-white/10 space-y-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
-            {settingsSubNav.map(({ href, label, icon: SubIcon, tab }) => {
-              const isTabActive = isSettingsActive && currentTab === tab;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={onClick}
-                  className={clsx(
-                    'w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium rounded-full transition-all duration-200',
-                    isTabActive
-                      ? 'bg-[#2563EB]/20 text-[#60A5FA] font-semibold border border-[#2563EB]/40 shadow-sm'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  )}
-                >
-                  <SubIcon size={14} className="shrink-0" />
-                  <span className="truncate">{label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => {
-            if (collapsed) {
-              router.push('/dashboard/settings');
-              if (onClick) onClick();
-            } else {
-              setIsSettingsOpen((prev) => !prev);
-            }
-          }}
-          title={collapsed ? 'Settings' : undefined}
-          className={clsx(
-            'w-full flex items-center text-sm font-medium transition-all duration-200 rounded-2xl select-none cursor-pointer',
-            collapsed ? 'justify-center p-3 text-center' : 'justify-between px-4 py-3',
-            isSettingsActive
-              ? 'bg-white/10 text-white shadow-sm font-semibold'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          )}
-        >
-          <div className="flex items-center gap-3 min-w-0">
-            <Settings size={18} className="shrink-0" />
-            {!collapsed && <span className="truncate">Settings</span>}
-          </div>
-          {!collapsed && (
-            <ChevronUp
-              size={16}
-              className={clsx(
-                'shrink-0 text-gray-400 transition-transform duration-200',
-                isSettingsOpen && 'rotate-180 text-white'
-              )}
-            />
-          )}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function NavLinksWithSearchParams(props: NavLinksShellProps) {
-  const searchParams = useSearchParams();
-  return <NavLinks {...props} searchParams={searchParams} />;
-}
-
-const staticSearchParams = new URLSearchParams() as unknown as ReturnType<typeof useSearchParams>;
-
-function NavLinksSuspense(props: NavLinksShellProps) {
-  return (
-    <Suspense fallback={<NavLinks {...props} searchParams={staticSearchParams} />}>
-      <NavLinksWithSearchParams {...props} />
-    </Suspense>
-  );
-}
+const LOGO_SRC =
+  'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(() => pathname.startsWith('/dashboard/settings'));
+  const [isSupportDrawerOpen, setIsSupportDrawerOpen] = useState(false);
   const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
+
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
+  const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
+  const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
 
   const extendedUser = user as (User & { displayName?: string; photoURL?: string }) | null;
   const displayName =
@@ -213,8 +61,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       />
     ) : (
       <div
-        className="rounded-full bg-gradient-to-br from-[#60A5FA] to-[#2563EB] text-white flex items-center justify-center font-semibold"
-        style={{ width: size, height: size, fontFamily: 'Outfit, sans-serif', fontSize: size * 0.4 }}
+        className="rounded-full flex items-center justify-center font-semibold"
+        style={{
+          width: size,
+          height: size,
+          fontSize: size * 0.4,
+          background: 'var(--lx-surface-hover)',
+          color: 'var(--lx-text)',
+          border: '1px solid var(--lx-border-strong)',
+        }}
       >
         {avatarInitial}
       </div>
@@ -248,22 +103,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     sessionStorage.setItem('luxor_kyc_dismissed', 'true');
   };
 
-  const [isCollapsed, setIsCollapsed] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('luxor_sidebar_collapsed') === 'true';
-    }
-    return false;
-  });
-
-  const toggleSidebar = () => {
-    setIsCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem('luxor_sidebar_collapsed', String(next));
-      return next;
-    });
-  };
-
-
   const handleSignOut = async () => {
     sessionStorage.removeItem('luxor_kyc_dismissed');
     sessionStorage.removeItem('luxor_merchant_profile');
@@ -273,8 +112,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#60A5FA] border-t-transparent rounded-full animate-spin" />
+      <div className="lx-app min-h-screen flex items-center justify-center" style={{ background: 'var(--lx-bg)' }}>
+        <div className="w-8 h-8 border-2 border-white/30 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -282,78 +121,34 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="h-screen w-screen bg-[#0A0A0A] text-[#EDEDED] selection:bg-[#2563EB]/30 flex overflow-hidden font-['Montserrat',sans-serif]">
-      {/* Desktop Sidebar (Retractable) */}
-      <aside
-        className={clsx(
-          'border border-white/[0.06] bg-[#111111] hidden md:flex flex-col transition-all duration-300 ease-in-out shrink-0 m-3 rounded-3xl z-40 h-[calc(100vh-24px)]',
-          isCollapsed ? 'w-20' : 'w-64'
-        )}
-      >
-        <div
-          onClick={toggleSidebar}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') toggleSidebar();
-          }}
-          title={isCollapsed ? 'Expand menu' : 'Collapse menu'}
-          className={clsx(
-            'p-4 border-b border-white/5 flex items-center cursor-pointer select-none transition-colors hover:bg-white/[0.03]',
-            isCollapsed ? 'justify-center py-5' : 'justify-start gap-3 px-5'
-          )}
+    <div
+      className="lx-app h-screen w-screen text-[color:var(--lx-text)] selection:bg-white/15 flex overflow-hidden"
+      style={{ background: 'var(--lx-bg)' }}
+    >
+      {/* Desktop rail */}
+      <Sidebar
+        profile={profile}
+        onSignOut={handleSignOut}
+        onOpenSupportCenter={() => setIsSupportDrawerOpen(true)}
+      />
+
+      {/* Main content */}
+      <main className="flex-1 flex flex-col min-w-0 h-full md:my-3 md:mr-3 md:ml-1.5 md:h-[calc(100vh-24px)] md:rounded-2xl md:border md:border-white/12 md:bg-[#07090D]/90 md:backdrop-blur-xl md:shadow-2xl overflow-y-auto overflow-x-hidden relative">
+        {/* Mobile header */}
+        <header
+          className="md:hidden flex-shrink-0 flex items-center justify-between p-4"
+          style={{ borderBottom: '1px solid var(--lx-border)', background: 'var(--lx-bg-elev)' }}
         >
-          <img
-            src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
-            alt="Logo"
-            className="h-10 w-10 object-contain shrink-0"
-          />
-          {!isCollapsed && (
-            <span className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] whitespace-nowrap">
-              Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span>
-            </span>
-          )}
-        </div>
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          <NavLinksSuspense
-            pathname={pathname}
-            router={router}
-            isSettingsOpen={isSettingsOpen}
-            setIsSettingsOpen={setIsSettingsOpen}
-            collapsed={isCollapsed}
-          />
-        </nav>
-        <div className="p-3 border-t border-white/5">
-
-          <button
-            type="button"
-            onClick={handleSignOut}
-            title={isCollapsed ? 'Sign out' : undefined}
-            style={{ fontFamily: 'Outfit, sans-serif' }}
-            className={clsx(
-              "w-full flex items-center text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors",
-              isCollapsed ? 'justify-center p-3' : 'gap-3 px-4 py-3'
-            )}
-          >
-            <LogOut size={18} className="shrink-0" />
-            {!isCollapsed && <span>Sign out</span>}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden">
-        {/* Mobile Header */}
-        <header className="md:hidden flex-shrink-0 flex items-center justify-between p-4 border-b border-white/5 bg-[#0A0A0A]">
-          <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2">
-            <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-            <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
+          <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold tracking-tight text-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={LOGO_SRC} alt="Luxor Pay" className="h-8 w-8 object-contain" />
+            <span>Luxor <span className="text-gray-400 font-medium">Pay</span></span>
           </Link>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => setIsAccountMenuOpen((v) => !v)}
-              className="rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all flex-shrink-0"
+              className="rounded-full ring-1 ring-white/15 hover:ring-white/40 transition-all flex-shrink-0"
               title="Account"
               aria-label="Open account menu"
             >
@@ -363,68 +158,56 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               type="button"
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
+              aria-label="Open menu"
             >
-              <Menu size={24} />
+              <Menu size={22} />
             </button>
           </div>
         </header>
 
-        {/* Mobile Menu Overlay */}
+        {/* Mobile drawer */}
         {isMobileMenuOpen && (
-          <div className="fixed inset-0 z-50 flex flex-col md:hidden justify-start">
+          <div className="fixed inset-0 z-50 flex md:hidden">
             <div
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <aside className="relative flex flex-col w-full bg-[#0A0A0A] border-b border-white/5 max-h-[85vh] rounded-b-3xl shadow-2xl animate-in fade-in slide-in-from-top-8 duration-200">
-              <div className="p-4 border-b border-white/5 flex items-center justify-between">
-                <Link href="/dashboard" className="text-xl font-semibold tracking-tight font-['Outfit',sans-serif] flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-                  <span>Luxor <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB]">Pay</span></span>
-                </Link>
-                <button
-                  type="button"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="p-2 text-gray-400 hover:text-white transition-colors rounded-full hover:bg-white/5"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-              <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                <NavLinksSuspense
-                  pathname={pathname}
-                  router={router}
-                  isSettingsOpen={isSettingsOpen}
-                  setIsSettingsOpen={setIsSettingsOpen}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                />
-              </nav>
-              <div className="p-4 border-t border-white/5">
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-400/10 rounded-xl text-sm font-medium transition-colors font-['Outfit',sans-serif]"
-                >
-                  <LogOut size={18} /> Sign out
-                </button>
-              </div>
+            <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#0A0B0E] border-r border-white/10 animate-in slide-in-from-left duration-200">
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="absolute right-3 top-4 z-10 rounded-full p-1.5 text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
+                aria-label="Close menu"
+              >
+                <X size={18} />
+              </button>
+              <SidebarContent
+                profile={profile}
+                onSignOut={handleSignOut}
+                onNavigate={() => setIsMobileMenuOpen(false)}
+                onOpenSupportCenter={() => setIsSupportDrawerOpen(true)}
+              />
             </aside>
           </div>
         )}
 
-        {/* Page Content */}
+        {/* Page content */}
         <div className="relative flex-1 min-w-0 overflow-x-hidden">
-          {/* Top Header Controls (Desktop only) */}
-          <div className="hidden md:flex items-center gap-3 absolute top-6 right-10 z-30">
-            <TopWalletBar merchantWallet={profile?.merchantWallet} />
+          {/* Desktop top-right controls */}
+          <div className="hidden md:flex items-center gap-2.5 absolute top-3.5 right-6 z-30">
+            <TopWalletBar
+              merchantWallet={profile?.merchantWallet}
+              onQrClick={() => setIsQrModalOpen(true)}
+              onSendClick={() => setIsTransferModalOpen(true)}
+            />
             <button
               type="button"
               onClick={() => setIsAccountMenuOpen((v) => !v)}
-              className="rounded-full ring-1 ring-white/15 hover:ring-[#60A5FA]/70 transition-all shadow-lg flex-shrink-0"
+              className="rounded-full ring-1 ring-white/15 hover:ring-white/40 transition-all shadow-lg flex-shrink-0"
               title="Account"
               aria-label="Open account menu"
             >
-              {renderAvatar(36)}
+              {renderAvatar(32)}
             </button>
           </div>
           {children}
@@ -437,41 +220,72 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <OnrampProgressBanner />
       <OnrampResultModal />
 
-      {/* Account dropdown menu (Google-style) — shared for desktop + mobile */}
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        onSuccess={(data) => {
+          setTransferSuccessData(data);
+          setIsTransferSuccessModalOpen(true);
+        }}
+      />
+
+      <PaymentRequestModal
+        isOpen={isPaymentRequestModalOpen}
+        onClose={() => setIsPaymentRequestModalOpen(false)}
+        requesterWallet={profile?.merchantWallet ?? null}
+      />
+      <TransferSuccessModal
+        isOpen={isTransferSuccessModalOpen}
+        onClose={() => setIsTransferSuccessModalOpen(false)}
+        transferData={transferSuccessData}
+      />
+
+      <QrOperationsModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        merchantWallet={profile?.merchantWallet ?? null}
+        recipientLabel={profile?.businessName ?? null}
+        initialMode="select"
+        onCreatePaymentRequest={() => setIsPaymentRequestModalOpen(true)}
+      />
+
+      <SupportCenterDrawer
+        isOpen={isSupportDrawerOpen}
+        onClose={() => setIsSupportDrawerOpen(false)}
+      />
+
+      {/* Account dropdown menu — shared for desktop + mobile */}
       {isAccountMenuOpen && user && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
           <div
             style={{
-              background: 'rgba(15,15,15,0.98)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(40px)',
-              borderRadius: '28px',
-              boxShadow: '0 32px 64px -16px rgba(0,0,0,0.8)',
+              background: 'var(--lx-surface)',
+              border: '1px solid var(--lx-border-strong)',
+              borderRadius: 'var(--lx-radius-lg)',
+              boxShadow: 'var(--lx-shadow-lg)',
             }}
-            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-5 text-[#EDEDED] font-body animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-6 text-[color:var(--lx-text)] animate-in fade-in slide-in-from-top-2 duration-200"
           >
             <p className="text-center text-xs text-gray-400 font-mono truncate mb-4">{user.email}</p>
 
             <div className="flex flex-col items-center text-center">
               <div className="rounded-full ring-2 ring-white/10">{renderAvatar(72)}</div>
-              <h3 className="mt-3 text-lg font-light text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
-                Hi, {displayName}!
-              </h3>
+              <h3 className="mt-3 text-lg font-light text-white">Hi, {displayName}!</h3>
               {profile?.businessName && (
                 <p className="text-xs text-gray-500 mt-0.5">{profile.businessName}</p>
               )}
 
               <div className="mt-2.5">
                 {kycVerified ? (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 font-['Outfit',sans-serif]">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-800/50">
                     <Check size={12} className="stroke-[3]" /> VERIFIED
                   </span>
                 ) : (
                   <button
                     type="button"
                     onClick={() => { setIsAccountMenuOpen(false); setIsKycModalOpen(true); }}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30 transition-all font-['Outfit',sans-serif] shadow-[0_0_16px_rgba(245,158,11,0.2)]"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/40 hover:bg-amber-500/30 transition-all"
                   >
                     Verify identity
                   </button>

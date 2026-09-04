@@ -70,6 +70,28 @@ export async function createPaymentLink(token: string, data: { name: string, bus
   return json.data as any;
 }
 
+export async function updatePaymentLink(token: string, id: string, data: { name?: string, businessName?: string, amount?: number, currency?: string }): Promise<any> {
+  const res = await fetch(apiUrl(`/payment-links/${id}`), {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message ?? 'Failed to update link');
+  return json.data as any;
+}
+
+export async function deletePaymentLink(token: string, id: string): Promise<void> {
+  const res = await fetch(apiUrl(`/payment-links/${id}`), {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.message ?? 'Failed to delete link');
+  }
+}
+
 export async function listPosDevices(token: string): Promise<any[]> {
   const res = await fetch(apiUrl('/pos/devices'), {
     headers: { Authorization: `Bearer ${token}` }

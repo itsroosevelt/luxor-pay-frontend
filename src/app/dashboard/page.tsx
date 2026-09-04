@@ -11,8 +11,11 @@ import { getMerchantProfile } from '@/lib/merchants-api';
 import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
 import { listPaymentRequests } from '@/lib/payment-requests-api';
 import { getLuxorEnv } from '@/lib/luxor-env';
-import { Link as LinkIcon, Terminal, Code2, ArrowRight, RefreshCw, Bell } from 'lucide-react';
+import { Link as LinkIcon, Terminal, Code2, ArrowRight, RefreshCw, Bell, QrCode, ArrowUp } from 'lucide-react';
 import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
+import { OverviewChart } from '@/components/dashboard/overview/OverviewChart';
+import { AccountsTable } from '@/components/dashboard/overview/AccountsTable';
+import { DashboardExtraPanelsContainer } from '@/components/dashboard/overview/DashboardExtraPanelsContainer';
 import { TopWalletBar } from '@/components/dashboard/TopWalletBar';
 import { useGetBalance } from '@/hooks/useGetBalance';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
@@ -24,15 +27,15 @@ import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { EyebrowBadge, HeroTitle, GlassCard } from '@/components/shared/DesignSystem';
 
 const HeaderContainer = styled.header`
-  padding: 24px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.01);
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--lx-border);
+  background: var(--lx-bg-elev);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 
   @media (min-width: 768px) {
-    padding: 32px 40px;
+    padding: 18px 28px;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
@@ -40,35 +43,34 @@ const HeaderContainer = styled.header`
 `;
 
 const RefreshButton = styled.button`
-  padding: 6px;
-  color: rgba(255, 255, 255, 0.6);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 9999px;
+  padding: 7px;
+  color: var(--lx-text-muted);
+  background: var(--lx-surface-2);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius-sm);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease;
 
   &:hover {
-    color: #FFFFFF;
-    background: rgba(37, 99, 235, 0.2);
-    border-color: rgba(96, 165, 250, 0.3);
+    color: var(--lx-text);
+    background: var(--lx-surface-hover);
+    border-color: var(--lx-border-hover);
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: var(--lx-ring);
   }
 `;
 
 const StatCardLink = styled(motion(Link))`
   position: relative;
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px);
-  border-radius: 24px;
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius);
   padding: 22px 24px;
   display: flex;
   flex-direction: column;
@@ -76,12 +78,11 @@ const StatCardLink = styled(motion(Link))`
   gap: 16px;
   text-decoration: none;
   overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.16s ease, border-color 0.16s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(96, 165, 250, 0.35);
-    box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), 0 0 24px -6px rgba(37, 99, 235, 0.12);
+    background: var(--lx-surface-hover);
+    border-color: var(--lx-border-hover);
   }
 `;
 
@@ -89,60 +90,57 @@ const StatArrowCircle = styled.div`
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lx-surface-2);
+  border: 1px solid var(--lx-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.4);
-  transition: all 0.2s ease;
+  color: var(--lx-text-dim);
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
 
   ${StatCardLink}:hover & {
-    background: rgba(37, 99, 235, 0.2);
-    border-color: rgba(96, 165, 250, 0.4);
-    color: #FFFFFF;
+    background: var(--lx-accent-soft);
+    border-color: var(--lx-accent-border);
+    color: var(--lx-accent);
     transform: translate(1px, -1px);
   }
 `;
 
 const QuickLinkCard = styled(motion(Link))`
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(24px);
-  border-radius: 24px;
+  background: var(--lx-surface);
+  border: 1px solid var(--lx-border);
+  border-radius: var(--lx-radius);
   padding: 18px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   text-decoration: none;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background-color 0.16s ease, border-color 0.16s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(96, 165, 250, 0.35);
-    box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.5), 0 0 24px -6px rgba(37, 99, 235, 0.12);
+    background: var(--lx-surface-hover);
+    border-color: var(--lx-border-hover);
   }
 `;
 
 const QuickIconCircle = styled.div`
   width: 44px;
   height: 44px;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--lx-radius-sm);
+  background: var(--lx-surface-2);
+  border: 1px solid var(--lx-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60A5FA;
+  color: var(--lx-accent);
   flex-shrink: 0;
-  transition: all 0.25s ease;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 
   ${QuickLinkCard}:hover & {
-    background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(96, 165, 250, 0.15));
-    border-color: rgba(96, 165, 250, 0.45);
-    color: #FFFFFF;
-    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.25);
+    background: var(--lx-accent-soft);
+    border-color: var(--lx-accent-border);
+    color: var(--lx-accent);
   }
 `;
 
@@ -150,19 +148,19 @@ const QuickArrowCircle = styled.div`
   width: 32px;
   height: 32px;
   border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lx-surface-2);
+  border: 1px solid var(--lx-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--lx-text-dim);
   flex-shrink: 0;
-  transition: all 0.2s ease;
+  transition: color 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
 
   ${QuickLinkCard}:hover & {
-    background: rgba(37, 99, 235, 0.2);
-    border-color: rgba(96, 165, 250, 0.4);
-    color: #FFFFFF;
+    background: var(--lx-accent-soft);
+    border-color: var(--lx-accent-border);
+    color: var(--lx-accent);
     transform: translateX(3px);
   }
 `;
@@ -221,11 +219,11 @@ export default function DashboardOverviewPage() {
 
   return (
     <>
-      {/* Top Header Row with Dashboard title & Top Wallet Bar */}
+      {/* Top Header Row with Dashboard title */}
       <HeaderContainer>
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <HeroTitle style={{ fontSize: '32px' }}>Overview</HeroTitle>
+            <HeroTitle style={{ fontSize: '26px' }}>Overview</HeroTitle>
             <RefreshButton
               type="button"
               onClick={() => refetchBalance()}
@@ -234,17 +232,19 @@ export default function DashboardOverviewPage() {
               <RefreshCw size={16} className={isBalanceLoading ? "animate-spin" : ""} />
             </RefreshButton>
           </div>
-          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <p className="lx-page-subtitle">
             Your Solana payment platform — links, POS, and API in one place.
           </p>
         </div>
 
-        {/* Top Wallet Bar at top right (mobile only here, desktop is global) */}
+        {/* Top Wallet Bar with quick actions (mobile view) */}
         <div className="md:hidden">
           <TopWalletBar
             merchantWallet={merchantWallet}
             solBalance={balanceData?.solBalance}
             isLoading={isBalanceLoading}
+            onQrClick={() => setIsQrModalOpen(true)}
+            onSendClick={() => setIsTransferModalOpen(true)}
           />
         </div>
       </HeaderContainer>
@@ -253,38 +253,44 @@ export default function DashboardOverviewPage() {
         {pendingInboxCount > 0 && (
           <Link
             href="/dashboard/requests"
-            className="flex items-center justify-between gap-4 p-4 rounded-2xl border transition-all shadow-lg"
+            className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-white/[0.03]"
             style={{
-              background: 'rgba(37, 99, 235, 0.15)',
-              borderColor: 'rgba(96, 165, 250, 0.4)',
+              background: 'var(--lx-surface)',
+              border: '1px solid var(--lx-border)',
+              borderRadius: 'var(--lx-radius)',
               textDecoration: 'none',
-              backdropFilter: 'blur(24px)',
             }}
           >
             <div className="flex items-center gap-3">
-              <div style={{
-                width: '36px', height: '36px', borderRadius: '9999px',
-                background: 'rgba(96,165,250,0.2)', border: '1px solid rgba(96,165,250,0.4)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <Bell size={16} style={{ color: '#FFFFFF' }} />
+              <div
+                className="flex items-center justify-center shrink-0"
+                style={{
+                  width: '34px', height: '34px', borderRadius: 'var(--lx-radius-sm)',
+                  background: 'var(--lx-fill)', border: '1px solid var(--lx-border)',
+                }}
+              >
+                <Bell size={15} style={{ color: 'var(--lx-text-muted)' }} />
               </div>
               <div>
-                <p style={{ fontFamily: 'Outfit, sans-serif', fontSize: '14px', fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+                <p className="flex items-center gap-2" style={{ fontSize: '14px', fontWeight: 600, color: 'var(--lx-text)', margin: 0 }}>
+                  <span
+                    aria-hidden
+                    style={{ width: 6, height: 6, borderRadius: 9999, background: 'var(--lx-success)', display: 'inline-block' }}
+                  />
                   You have {pendingInboxCount} payment request{pendingInboxCount !== 1 ? 's' : ''} waiting for action
                 </p>
-                <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '12px', color: 'rgba(255,255,255,0.7)', margin: 0, fontWeight: 400 }}>
+                <p style={{ fontSize: '12px', color: 'var(--lx-text-muted)', margin: 0, fontWeight: 400 }}>
                   Click to review and pay or decline
                 </p>
               </div>
             </div>
-            <ArrowRight size={18} style={{ color: '#FFFFFF', flexShrink: 0 }} />
+            <ArrowRight size={18} style={{ color: 'var(--lx-text-dim)', flexShrink: 0 }} />
           </Link>
         )}
 
         {!isStatsLoading && !stats.hasWallet && (
-          <GlassCard style={{ padding: '20px', borderColor: 'rgba(245, 158, 11, 0.3)', background: 'rgba(245, 158, 11, 0.05)', borderRadius: '24px' }}>
-            <p className="text-amber-200 text-sm" style={{ fontFamily: 'Montserrat, sans-serif', margin: 0 }}>
+          <GlassCard style={{ padding: '18px 20px', borderColor: 'rgba(245, 158, 11, 0.32)', background: 'rgba(245, 158, 11, 0.06)' }}>
+            <p className="text-amber-200 text-sm" style={{ margin: 0 }}>
               Add your Solana wallet in{' '}
               <Link href="/dashboard/settings" className="underline font-medium text-amber-100">
                 Settings
@@ -299,8 +305,23 @@ export default function DashboardOverviewPage() {
           onSendClick={() => setIsTransferModalOpen(true)}
           onDepositClick={() => setIsQrModalOpen(true)}
           onTradeClick={() => router.push('/dashboard/swap')}
+          showExtraPanels={false}
         />
 
+        {/* Balance-over-time chart + accounts / coins breakdown (Squads "Overview") */}
+        {merchantWallet && <OverviewChart />}
+        {merchantWallet && (
+          <AccountsTable
+            merchantWallet={merchantWallet}
+            balanceData={balanceData}
+            solBalance={balanceData?.solBalance}
+            onSendClick={() => setIsTransferModalOpen(true)}
+            onTradeClick={() => router.push('/dashboard/swap')}
+          />
+        )}
+
+        {/* Limit orders · Inflows & Outflows · Stake · Managed assets */}
+        {merchantWallet && <DashboardExtraPanelsContainer />}
 
         <div className="grid md:grid-cols-3 gap-5">
           <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />
@@ -310,8 +331,8 @@ export default function DashboardOverviewPage() {
 
         <section className="pt-2">
           <EyebrowBadge style={{ marginBottom: '4px' }}>Ecosystem Accelerators</EyebrowBadge>
-          <h2 className="text-2xl font-medium mb-4 text-white" style={{ fontFamily: 'Outfit, sans-serif' }}>Quick start</h2>
-          <div className="grid gap-4">
+          <h2 className="text-xl font-semibold mb-4 tracking-tight" style={{ color: 'var(--lx-text)' }}>Quick start</h2>
+          <div className="grid gap-3">
             <QuickLink
               href="/dashboard/links"
               icon={LinkIcon}
@@ -385,23 +406,21 @@ function StatCard({
   isText?: boolean;
 }) {
   return (
-    <StatCardLink href={href} whileHover={{ y: -3 }} whileTap={{ scale: 0.99 }}>
+    <StatCardLink href={href} whileHover={{ y: -2 }} whileTap={{ scale: 0.995 }}>
       <div className="flex items-center justify-between">
-        <span className="text-[11px] uppercase tracking-[0.15em] font-bold text-white/50 font-['Outfit',sans-serif]">
-          {label}
-        </span>
+        <span className="lx-eyebrow">{label}</span>
         <StatArrowCircle>
           <ArrowRight size={13} />
         </StatArrowCircle>
       </div>
       <div>
         {isText ? (
-          <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/25 text-sm font-semibold font-['Outfit',sans-serif]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="lx-status lx-status--ok">
+            <span className="lx-status-dot" />
             {value}
           </span>
         ) : (
-          <p className="text-4xl font-semibold font-['Outfit',sans-serif] text-white tracking-tight leading-none">
+          <p className="text-4xl font-semibold tracking-tight leading-none" style={{ color: 'var(--lx-text)' }}>
             {value}
           </p>
         )}
@@ -428,8 +447,8 @@ function QuickLink({
           <Icon size={20} />
         </QuickIconCircle>
         <div>
-          <p className="font-semibold text-white font-['Outfit',sans-serif] text-base leading-snug">{title}</p>
-          <p className="text-xs text-white/60 font-['Montserrat',sans-serif] font-light mt-0.5">{description}</p>
+          <p className="font-semibold text-base leading-snug" style={{ color: 'var(--lx-text)' }}>{title}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--lx-text-muted)' }}>{description}</p>
         </div>
       </div>
       <QuickArrowCircle>

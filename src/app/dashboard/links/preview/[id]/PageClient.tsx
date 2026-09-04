@@ -69,7 +69,7 @@ const BackButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -161,12 +161,12 @@ const CreateLinkButton = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    background: #2563EB;
+    background: #10B981;
     color: #FFFFFF;
   }
   
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -206,7 +206,7 @@ const ToggleButton = styled.button<{ $active: boolean }>`
   }
   
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 `;
@@ -270,7 +270,7 @@ const DetailLabel = styled.div`
   color: rgba(255, 255, 255, 0.45);
 
   svg {
-    color: #60A5FA;
+    color: #E2E8F0;
     opacity: 0.8;
   }
 `;
@@ -304,7 +304,7 @@ const CopyButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
   }
 `;
 
@@ -604,7 +604,7 @@ const SimulatedBrandLogo = styled.div<{ $mode: 'desktop' | 'mobile' }>`
   gap: 4px;
 
   span {
-    color: #60A5FA;
+    color: #E2E8F0;
   }
 `;
 
@@ -647,7 +647,7 @@ const SimulatedBusinessName = styled.div<{ $mode: 'desktop' | 'mobile' }>`
   font-family: 'Outfit', sans-serif;
   font-size: ${({ $mode }) => ($mode === 'mobile' ? '11px' : '12px')};
   font-weight: 500;
-  color: #60A5FA;
+  color: #E2E8F0;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   margin-bottom: 6px;
@@ -666,7 +666,7 @@ const SimulatedAmountText = styled.div<{ $mode: 'desktop' | 'mobile' }>`
   font-size: ${({ $mode }) => ($mode === 'mobile' ? '32px' : '38px')};
   font-weight: 500;
   letter-spacing: -1px;
-  background: linear-gradient(to right, #60A5FA, #2563EB);
+  background: linear-gradient(to right, #E2E8F0, #10B981);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 4px;
@@ -712,9 +712,9 @@ const SimulatedFooter = styled.footer<{ $mode: 'desktop' | 'mobile' }>`
 const LoadingSpinner = styled.div`
   width: 40px;
   height: 40px;
-  border: 3px solid rgba(96, 165, 250, 0.3);
+  border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top-color: #60A5FA;
+  border-top-color: #E2E8F0;
   animation: spin 1s ease-in-out infinite;
 
   @keyframes spin {
@@ -839,12 +839,12 @@ export default function PreviewPaymentLinkPage() {
 
   return (
     <>
-      <header className="px-6 py-6 md:px-10 md:py-8 border-b border-white/5 bg-white/[0.01]">
+      <header className="lx-page-header">
         <div>
-          <h1 className="text-2xl md:text-3xl font-medium text-white tracking-tight mb-1" style={{ fontFamily: 'Outfit, sans-serif' }}>
+          <h1 className="lx-page-title">
             Payment Links
           </h1>
-          <p className="text-gray-400 text-sm font-light" style={{ fontFamily: 'Montserrat, sans-serif' }}>
+          <p className="lx-page-subtitle">
             Checkout URLs for your website, email, or social.
           </p>
         </div>
@@ -912,7 +912,7 @@ export default function PreviewPaymentLinkPage() {
               <DollarSign size={15} />
               <span>Amount</span>
             </DetailLabel>
-            <DetailValue className="notranslate" translate="no" style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 600, color: '#60A5FA' }}>
+            <DetailValue className="notranslate" translate="no" style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 600, color: '#E2E8F0' }}>
               {link.amount} {link.currency}
             </DetailValue>
           </DetailRow>
@@ -992,7 +992,7 @@ export default function PreviewPaymentLinkPage() {
                     </BrowserDots>
                     <BrowserTabsContainer>
                       <BrowserTab>
-                        <ShoppingBag size={10} color="#60A5FA" />
+                        <ShoppingBag size={10} color="#E2E8F0" />
                         <span>Luxor Pay - Checkout</span>
                       </BrowserTab>
                       <BrowserTabPlus>

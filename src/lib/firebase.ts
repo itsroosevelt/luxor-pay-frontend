@@ -1,6 +1,8 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
+import { mockAuth } from '@/lib/mock/mock-auth';
 
 /** Strip accidental whitespace from Vercel copy-paste (tabs/newlines break Firebase iframe URLs). */
 function trimEnv(raw: string | undefined): string | undefined {
@@ -42,26 +44,27 @@ export function getMissingFirebaseEnvKeys(): string[] {
   return REQUIRED_ENV_KEYS.filter((key) => !values[key]);
 }
 
-export const isFirebaseConfigured = getMissingFirebaseEnvKeys().length === 0;
+const hasRealFirebaseEnv = getMissingFirebaseEnvKeys().length === 0;
+export const isFirebaseConfigured = hasRealFirebaseEnv || IS_MOCK_MODE;
 
 // Initialize Firebase App
 let app: any;
 let db: any;
 let auth: any;
 
-if (isFirebaseConfigured) {
+if (IS_MOCK_MODE) {
+  // In Mock Mode: use mockAuth for simulated demo auth without backend/Firebase requirement
+  app = null;
+  db = null;
+  auth = mockAuth;
+} else if (hasRealFirebaseEnv) {
   app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
   db = getFirestore(app);
   auth = getAuth(app);
 } else {
-  // Mock for SSR build step when no ENV variables are present
   app = null;
   db = null;
-  auth = {
-    onAuthStateChanged: () => () => {},
-    signOut: async () => {},
-    currentUser: null
-  };
+  auth = mockAuth;
 }
 
 export { app, db, auth };

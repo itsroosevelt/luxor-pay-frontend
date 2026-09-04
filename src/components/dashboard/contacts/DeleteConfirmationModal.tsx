@@ -81,7 +81,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
   justify-content: center;
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
+    outline: 2px solid #E2E8F0;
     outline-offset: 2px;
   }
 
@@ -96,7 +96,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
     background: #FFFFFF;
     color: #000000;
     &:hover:not(:disabled) {
-      background: #2563EB;
+      background: #10B981;
       color: #FFFFFF;
     }
   `}
@@ -105,7 +105,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' | 'danger' }>`
     $variant === 'secondary' &&
     `
     background: transparent;
-    color: #60A5FA;
+    color: #E2E8F0;
     border: 1px solid rgba(255, 255, 255, 0.2);
     &:hover:not(:disabled) {
       background: rgba(255, 255, 255, 0.1);

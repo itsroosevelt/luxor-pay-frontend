@@ -111,7 +111,7 @@ const FlowSubtitle = styled.span`
 `;
 
 const COLOR_SENT = "#F87171";
-const COLOR_RECEIVED = "#34D399";
+const COLOR_RECEIVED = "#E2E8F0";
 const COLOR_FAILED = "#FBBF24";
 
 const FlowIconBadge = styled.div<{ $visualType: 'in' | 'out' | 'failed' }>`
@@ -122,7 +122,7 @@ const FlowIconBadge = styled.div<{ $visualType: 'in' | 'out' | 'failed' }>`
     $visualType === 'failed'
       ? 'rgba(251, 191, 36, 0.12)'
       : $visualType === 'in'
-      ? 'rgba(52, 211, 153, 0.12)'
+      ? 'rgba(255, 255, 255, 0.12)'
       : 'rgba(248, 113, 113, 0.12)'
   )};
   color: ${({ $visualType }) => (
@@ -165,7 +165,7 @@ const ScrollableFlowContainer = styled.div`
     border-radius: 9999px;
   }
   &::-webkit-scrollbar-thumb:hover {
-    background: rgba(96, 165, 250, 0.4);
+    background: rgba(255, 255, 255, 0.4);
   }
 `;
 

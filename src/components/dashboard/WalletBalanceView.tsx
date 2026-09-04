@@ -23,7 +23,7 @@ const HeaderRow = styled.div`
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
@@ -39,27 +39,27 @@ const ControlsContainer = styled.div`
 `;
 
 const IconButton = styled.button`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--lx-fill, rgba(255, 255, 255, 0.05));
+  border: 1px solid var(--lx-border, rgba(255, 255, 255, 0.08));
   border-radius: 9999px;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60A5FA;
+  color: var(--lx-text-muted, #8A8F9E);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease;
 
   &:hover:not(:disabled) {
-    background: rgba(37, 99, 235, 0.25);
-    color: #FFFFFF;
-    border-color: rgba(96, 165, 250, 0.4);
+    background: var(--lx-fill-hover, rgba(255, 255, 255, 0.1));
+    color: var(--lx-text, #F1F5F9);
+    border-color: var(--lx-border-hover, rgba(255, 255, 255, 0.18));
   }
 
   &:focus-visible {
-    outline: 2px solid #60A5FA;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: var(--lx-ring, 0 0 0 3px rgba(255, 255, 255, 0.14));
   }
 
   &:disabled {
@@ -71,31 +71,28 @@ const IconButton = styled.button`
 const BalanceSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 `;
 
 const BalanceLabel = styled.p`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 11px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--lx-text-dim, #5C616F);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.4em;
 `;
 
 const PrimaryBalance = styled.div`
-  font-family: monospace;
-  font-size: 32px;
-  font-weight: 700;
-  letter-spacing: -0.5px;
-  background: linear-gradient(to right, #60A5FA, #2563EB);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--lx-text, #F1F5F9);
   line-height: 1.1;
 
   @media (min-width: 768px) {
-    font-size: 38px;
+    font-size: 32px;
   }
 `;
 
@@ -108,23 +105,27 @@ const ActionButtonsGrid = styled.div`
 const TokenList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--lx-border, rgba(255, 255, 255, 0.08));
   padding-top: 16px;
+  gap: 4px;
 `;
 
 const TokenRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: background 0.2s ease;
+  padding: 12px 12px;
+  background: transparent;
+  border-radius: var(--lx-radius-sm, 8px);
+  border: none;
+  transition: background-color 0.16s ease;
+
+  & + & {
+    border-top: 1px solid var(--lx-border, rgba(255, 255, 255, 0.06));
+  }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--lx-fill, rgba(255, 255, 255, 0.04));
   }
 `;
 
@@ -138,28 +139,30 @@ const TokenIconCircle = styled.div`
   width: 28px;
   height: 28px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.25), rgba(37, 99, 235, 0.25));
+  background: var(--lx-fill, rgba(255, 255, 255, 0.06));
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 700;
-  font-size: 11px;
-  color: #60A5FA;
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  font-family: 'Inter', 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--lx-text-muted, #8A8F9E);
+  border: 1px solid var(--lx-border, rgba(255, 255, 255, 0.08));
 `;
 
 const TokenSymbol = styled.span`
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Inter', 'Outfit', sans-serif;
   font-weight: 500;
   font-size: 14px;
-  color: #EDEDED;
+  color: var(--lx-text, #F1F5F9);
 `;
 
 const TokenAmount = styled.span`
-  font-family: monospace;
+  font-family: 'Inter', 'Outfit', sans-serif;
   font-size: 14px;
-  color: #FFFFFF;
+  font-variant-numeric: tabular-nums;
+  color: var(--lx-text, #F1F5F9);
 `;
 
 const ErrorContainer = styled.div`
@@ -184,15 +187,15 @@ const SkeletonBox = styled.div<{ $width?: string; $height?: string; $borderRadiu
   width: ${({ $width }) => $width || '100%'};
   height: ${({ $height }) => $height || '24px'};
   border-radius: ${({ $borderRadius }) => $borderRadius || '12px'};
-  background: linear-gradient(90deg, rgba(37, 99, 235, 0.1) 25%, rgba(96, 165, 250, 0.2) 50%, rgba(37, 99, 235, 0.1) 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.04) 25%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.04) 75%);
   background-size: 200% 100%;
   animation: ${shimmer} 2s infinite;
 `;
 
 const KycAlertBanner = styled(motion.div)`
-  background: rgba(37, 99, 235, 0.08);
-  border: 1px solid rgba(96, 165, 250, 0.25);
-  border-radius: 24px;
+  background: var(--lx-surface, #17181E);
+  border: 1px solid var(--lx-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--lx-radius, 12px);
   padding: 16px 20px;
   margin-top: 16px;
   display: flex;
@@ -274,7 +277,7 @@ export function WalletBalanceView({
                 <SkeletonBox $width="150px" $height="24px" $borderRadius="6px" />
               ) : (
                 <Title>
-                  <Coins size={18} className="text-blue-400 opacity-90" />
+                  <Coins size={18} className="opacity-80" style={{ color: "var(--lx-text-muted)" }} />
                   <span>Wallet Balance</span>
                 </Title>
               )}
@@ -394,7 +397,7 @@ export function WalletBalanceView({
           transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
         >
           <KycInfo>
-            <ShieldAlert size={20} className="text-blue-400 shrink-0" />
+            <ShieldAlert size={20} className="shrink-0" style={{ color: "var(--lx-text-muted)" }} />
             <div>
               <h4 style={{ fontFamily: "Outfit, sans-serif", fontWeight: 500, color: "#FFFFFF", fontSize: "14px", margin: 0 }}>
                 Verify your identity to unlock all features
