@@ -35,7 +35,6 @@ export function MockModeProvider({ children }: { children: ReactNode }) {
   return (
     <MockModeContext.Provider value={{ isMockMode: true, user: MOCK_USER }}>
       {children}
-      <MockModeBadge />
     </MockModeContext.Provider>
   );
 }
@@ -44,33 +43,3 @@ export function useMockMode(): MockModeValue {
   return useContext(MockModeContext);
 }
 
-function MockModeBadge() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        position: 'fixed',
-        bottom: 12,
-        left: 12,
-        zIndex: 2147483647,
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '4px 10px',
-        borderRadius: 9999,
-        fontSize: 11,
-        fontWeight: 600,
-        letterSpacing: '0.06em',
-        textTransform: 'uppercase',
-        color: '#34D399',
-        background: 'rgba(16, 185, 129, 0.10)',
-        border: '1px solid rgba(6, 95, 70, 0.55)',
-        pointerEvents: 'none',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      }}
-    >
-      <span style={{ width: 6, height: 6, borderRadius: 9999, background: 'currentColor' }} />
-      Mock mode
-    </div>
-  );
-}
