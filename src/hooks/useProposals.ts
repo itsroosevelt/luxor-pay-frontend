@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
+import { MOCK_PROPOSALS } from '@/mocks/data';
 import {
   getProposals,
   createProposal as createProposalReq,
@@ -32,7 +33,7 @@ interface UseProposalsReturn {
 }
 
 export function useProposals(): UseProposalsReturn {
-  const [data, setData] = useState<Proposal[]>([]);
+  const [data, setData] = useState<Proposal[]>(MOCK_PROPOSALS as any);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -44,10 +45,12 @@ export function useProposals(): UseProposalsReturn {
     try {
       const token = await tokenOrMock();
       const res = await getProposals(token);
-      setData(res.data ?? []);
+      setData(res.data ?? (MOCK_PROPOSALS as any));
     } catch (err) {
-      setIsError(true);
-      setErrorMessage(err instanceof Error ? err.message : 'No se pudieron cargar las propuestas');
+      console.warn('Proposals fetch failed, using mock fallback:', err);
+      setData(MOCK_PROPOSALS as any);
+      setIsError(false);
+      setErrorMessage(null);
     } finally {
       setIsLoading(false);
     }

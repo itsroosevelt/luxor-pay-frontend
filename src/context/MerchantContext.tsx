@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import type { MerchantProfile } from '@luxor/contracts';
+import { MOCK_MERCHANT_PROFILE } from '@/mocks/data';
 
 interface MerchantContextType {
   profile: MerchantProfile | null;
@@ -11,14 +12,16 @@ interface MerchantContextType {
 }
 
 const MerchantContext = createContext<MerchantContextType>({
-  profile: null,
+  profile: MOCK_MERCHANT_PROFILE,
   setProfile: () => {},
   isKycModalOpen: false,
   setIsKycModalOpen: () => {},
 });
 
+export const DEFAULT_MOCK_MERCHANT_PROFILE = MOCK_MERCHANT_PROFILE;
+
 export function MerchantProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfileState] = useState<MerchantProfile | null>(null);
+  const [profile, setProfileState] = useState<MerchantProfile | null>(MOCK_MERCHANT_PROFILE);
   const [isKycModalOpen, setIsKycModalOpen] = useState(false);
 
   // Sync with sessionStorage as requested
