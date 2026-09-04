@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Landmark } from 'lucide-react';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import { useGetContacts } from '@/hooks/useGetContacts';
 import { useSendTransfer } from '@/hooks/useSendTransfer';
+import { useTreasury } from '@/hooks/useTreasury';
 import { toast } from 'sonner';
 import { Transfer, SendTransferPayload } from '@/lib/transfers-api';
 
@@ -14,6 +16,8 @@ interface TransferModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: (data: Transfer) => void;
+  initialRecipientAddress?: string;
+  initialMint?: string;
 }
 
 const Overlay = styled(motion.div)`
@@ -206,28 +210,85 @@ const ToggleLink = styled.button`
   }
 `;
 
-export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps) {
+const VaultInfoBadge = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 4px;
+`;
+
+const VaultBalanceText = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const VaultBadgeTag = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: rgba(96, 165, 250, 0.15);
+  color: #60A5FA;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+`;
+
+export function TransferModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialRecipientAddress,
+  initialMint,
+}: TransferModalProps) {
   const { data: contactsData, isLoading: isLoadingContacts } = useGetContacts();
-  const { mutate: sendMutate, isLoading: isSending, isError, errorMessage } = useSendTransfer();
+  const { mutate: sendMutate, isLoading: isSending } = useSendTransfer();
+  const { vaults, isLoading: isLoadingVaults } = useTreasury();
   
   const [isChoosingContact, setIsChoosingContact] = useState(false);
+  const [selectedVaultId, setSelectedVaultId] = useState<string>('');
   const { tokens } = useTokenRegistry();
 
   const [formData, setFormData] = useState({
-    walletAddress: '',
-    token: 'SOL',
+    walletAddress: initialRecipientAddress || '',
+    token: initialMint || 'SOL',
     amount: '',
     reference: '',
   });
 
-  const env = getLuxorEnv();
-  const isDev = env === 'development';
+  React.useEffect(() => {
+    if (isOpen && initialRecipientAddress) {
+      setFormData((prev) => ({
+        ...prev,
+        walletAddress: initialRecipientAddress,
+        token: initialMint || prev.token || 'SOL',
+      }));
+    }
+  }, [isOpen, initialRecipientAddress, initialMint]);
+
+  const selectedVault = useMemo(() => {
+    if (!vaults || vaults.length === 0) return null;
+    if (selectedVaultId) {
+      return vaults.find((v) => v.id === selectedVaultId) || vaults[0];
+    }
+    return vaults.find((v) => v.isDefault) || vaults[0];
+  }, [vaults, selectedVaultId]);
 
   if (!isOpen) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -238,7 +299,7 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
     
     let toNickname = null;
     if (isChoosingContact && contactsData) {
-      const contact = contactsData.data.find(c => c.walletAddress === formData.walletAddress);
+      const contact = contactsData.data.find((c) => c.walletAddress === formData.walletAddress);
       if (contact && contact.nickname) {
         toNickname = contact.nickname;
       }
@@ -247,6 +308,8 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
     const payload: SendTransferPayload = {
       toWallet: formData.walletAddress,
       amount: formData.amount,
+      fromVaultPda: selectedVault?.address,
+      fromVaultId: selectedVault?.id,
     };
 
     if (formData.token !== 'SOL') {
@@ -263,7 +326,7 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
 
     const { success, data, error } = await sendMutate(payload);
     if (success && data) {
-      toast.success('Transfer sent successfully!');
+      toast.success('Transfer proposal submitted successfully!');
       
       setFormData({
         walletAddress: '',
@@ -301,6 +364,45 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
           <Subtitle>Send crypto directly to another Solana address.</Subtitle>
 
           <Form onSubmit={handleSubmit}>
+            {/* SOURCE VAULT / ACCOUNT SELECTOR */}
+            <FormGroup>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Label>SOURCE ACCOUNT / VAULT *</Label>
+                {selectedVault && (
+                  <VaultBadgeTag>
+                    {selectedVault.isDefault ? 'Default Vault' : `Vault #${selectedVault.index}`}
+                  </VaultBadgeTag>
+                )}
+              </div>
+              <Select
+                name="sourceVault"
+                value={selectedVault?.id || ''}
+                onChange={(e) => setSelectedVaultId(e.target.value)}
+              >
+                {isLoadingVaults ? (
+                  <option disabled>Loading treasury vaults...</option>
+                ) : vaults && vaults.length > 0 ? (
+                  vaults.map((vault) => (
+                    <option key={vault.id} value={vault.id}>
+                      {vault.label || `Vault #${vault.index}`} {vault.isDefault ? '(Main Treasury)' : ''} — ${vault.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                    </option>
+                  ))
+                ) : (
+                  <option value="main">Main Wallet / Treasury Vault</option>
+                )}
+              </Select>
+
+              {selectedVault && (
+                <VaultInfoBadge>
+                  <VaultBalanceText>
+                    <Landmark size={14} className="text-blue-400" />
+                    Vault balance: <strong style={{ color: '#FFFFFF' }}>{selectedVault.solBalance || '0.00'} SOL</strong> (~${selectedVault.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD)
+                  </VaultBalanceText>
+                </VaultInfoBadge>
+              )}
+            </FormGroup>
+
+            {/* DESTINATION ADDRESS */}
             <FormGroup>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Label>DESTINATION ADDRESS *</Label>
@@ -338,6 +440,7 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
               )}
             </FormGroup>
 
+            {/* ASSET TO SEND */}
             <FormGroup>
               <Label>ASSET TO SEND *</Label>
               <Select 
@@ -357,6 +460,7 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
               </Select>
             </FormGroup>
 
+            {/* AMOUNT */}
             <FormGroup>
               <Label>AMOUNT *</Label>
               <Input 
@@ -371,6 +475,7 @@ export function TransferModal({ isOpen, onClose, onSuccess }: TransferModalProps
               />
             </FormGroup>
 
+            {/* REFERENCE */}
             <FormGroup>
               <Label>REFERENCE (OPTIONAL)</Label>
               <Input 

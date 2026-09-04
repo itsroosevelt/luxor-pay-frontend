@@ -1,10 +1,23 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
-import { Pencil, Trash2, Plus, User, Star } from 'lucide-react';
+import {
+  Pencil,
+  Trash2,
+  Plus,
+  User,
+  Star,
+  Search,
+  Copy,
+  Check,
+  ExternalLink,
+  Send,
+  X,
+} from 'lucide-react';
 import { Contact } from '@/lib/contacts-api';
+import { toast } from 'sonner';
 
 interface ContactsViewProps {
   contacts: Contact[];
@@ -14,6 +27,7 @@ interface ContactsViewProps {
   onEditContactClick: (contact: Contact) => void;
   onDeleteContactClick: (id: string) => void;
   onToggleFavoriteClick: (contact: Contact) => void;
+  onSendClick?: (contact: Contact) => void;
   togglingFavoriteId?: string | null;
 }
 
@@ -22,21 +36,24 @@ const spin = keyframes`to { transform: rotate(360deg); }`;
 const PageContainer = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 24px;
   width: 100%;
-  padding: 32px 40px 64px 40px;
+  padding: 68px 40px 64px 40px;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
     padding: 24px 20px 64px 20px;
   }
 `;
 
-const HeaderContainer = styled.div`
+/* ─────────────────────────── Header Section ─────────────────────────── */
+
+const HeaderRow = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 24px;
+  padding-bottom: 20px;
 `;
 
 const Title = styled.h1`
@@ -46,6 +63,10 @@ const Title = styled.h1`
   letter-spacing: -0.02em;
   color: #FFFFFF;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 26px;
+  }
 `;
 
 const Subtitle = styled.p`
@@ -53,14 +74,8 @@ const Subtitle = styled.p`
   font-size: 14px;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.5);
-  line-height: 1.5;
   margin: 0;
-`;
-
-const ActionBar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  line-height: 1.5;
 `;
 
 const AddButton = styled.button`
@@ -78,11 +93,12 @@ const AddButton = styled.button`
   background: #FFFFFF;
   color: #000000;
   box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+  white-space: nowrap;
 
   &:hover:not(:disabled) {
-    background: #10B981;
+    background: #2563EB;
     color: #FFFFFF;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 6px 24px rgba(37, 99, 235, 0.35);
     transform: translateY(-1px);
   }
 
@@ -91,10 +107,117 @@ const AddButton = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid #E2E8F0;
+    outline: 2px solid #60A5FA;
     outline-offset: 2px;
   }
 `;
+
+/* ─────────────────────────── Toolbar ─────────────────────────── */
+
+const ToolbarRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+`;
+
+const RightControlsGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+`;
+
+const SearchContainer = styled.div`
+  position: relative;
+  flex: 1;
+  min-width: 240px;
+  max-width: 380px;
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 8px 36px 8px 38px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: #FFFFFF;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  &:focus-visible {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+  }
+`;
+
+const SearchIconWrapper = styled.div`
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+`;
+
+const ClearSearchButton = styled.button`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    color: #FFFFFF;
+  }
+`;
+
+const FilterGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+`;
+
+const FilterTab = styled.button<{ $active?: boolean }>`
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  border: 1px solid ${({ $active }) => ($active ? 'rgba(255, 255, 255, 0.3)' : 'transparent')};
+  background: ${({ $active }) => ($active ? 'rgba(255, 255, 255, 0.1)' : 'transparent')};
+  color: ${({ $active }) => ($active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)')};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #FFFFFF;
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #60A5FA;
+    outline-offset: 2px;
+  }
+`;
+
+/* ─────────────────────────── Cards Grid ─────────────────────────── */
 
 const ContactsGrid = styled.div`
   display: grid;
@@ -111,35 +234,21 @@ const ContactsGrid = styled.div`
 `;
 
 const ContactCard = styled(motion.div)`
-  position: relative;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(40px);
-  border-radius: 24px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
-
-  &:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 24px 48px -12px rgba(0, 0, 0, 0.6);
-    transform: translateY(-2px);
-  }
-`;
-
-const CardAccent = styled.div`
-  height: 3px;
-  width: 100%;
-  background: linear-gradient(to right, #E2E8F0, #10B981);
-  opacity: 0.7;
-`;
-
-const CardBody = styled.div`
-  padding: 20px 22px 22px 22px;
+  border-radius: 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 14px;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.25s;
+
+  &:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.6);
+    transform: translateY(-2px);
+  }
 `;
 
 const CardHeader = styled.div`
@@ -159,9 +268,9 @@ const AvatarNameGroup = styled.div`
 const Avatar = styled.div`
   width: 40px;
   height: 40px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, rgba(255, 255, 255,0.25), rgba(16, 185, 129,0.4));
-  border: 1px solid rgba(255, 255, 255,0.3);
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -169,56 +278,51 @@ const Avatar = styled.div`
   font-family: 'Outfit', sans-serif;
   font-size: 16px;
   font-weight: 500;
-  color: #E2E8F0;
+  color: #FFFFFF;
   text-transform: uppercase;
-  letter-spacing: -0.5px;
 `;
 
-const NameBadgeGroup = styled.div`
+const NameGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
 `;
 
 const ContactName = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
-const Badge = styled.span`
+const FavoriteBadge = styled.span`
   font-family: 'Outfit', sans-serif;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.4em;
-  text-transform: uppercase;
-  color: #E2E8F0;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255,0.25);
-  padding: 2px 8px;
-  border-radius: 9999px;
-  width: fit-content;
+  font-size: 10px;
+  font-weight: 600;
+  color: #FBBF24;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 `;
 
 const ActionsContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-shrink: 0;
 `;
 
-const IconButton = styled.button<{ $danger?: boolean }>`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+const IconButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 8px;
-  color: rgba(255, 255, 255, 0.5);
+  color: ${({ $active, $danger }) => ($active ? '#FBBF24' : $danger ? 'rgba(248, 113, 113, 0.7)' : 'rgba(255, 255, 255, 0.4)')};
   cursor: pointer;
   padding: 6px;
   display: flex;
@@ -227,74 +331,128 @@ const IconButton = styled.button<{ $danger?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    color: ${({ $danger }) => $danger ? '#f87171' : '#FFFFFF'};
-    background: ${({ $danger }) => $danger ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.1)'};
-    border-color: ${({ $danger }) => $danger ? 'rgba(248,113,113,0.3)' : 'rgba(255,255,255,0.2)'};
+    color: ${({ $danger }) => ($danger ? '#F87171' : '#FFFFFF')};
+    background: ${({ $danger }) => ($danger ? 'rgba(248, 113, 113, 0.1)' : 'rgba(255, 255, 255, 0.08)')};
+    border-color: ${({ $danger }) => ($danger ? 'rgba(248, 113, 113, 0.25)' : 'rgba(255, 255, 255, 0.15)')};
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   &:focus-visible {
-    outline: 2px solid #E2E8F0;
+    outline: 2px solid #60A5FA;
     outline-offset: 2px;
   }
 `;
 
-const FavoriteButton = styled(IconButton)<{ $active?: boolean }>`
-  color: ${({ $active }) => ($active ? '#FBBF24' : 'rgba(255, 255, 255, 0.5)')};
-  background: ${({ $active }) => ($active ? 'rgba(251, 191, 36, 0.12)' : 'rgba(255, 255, 255, 0.05)')};
-  border-color: ${({ $active }) => ($active ? 'rgba(251, 191, 36, 0.35)' : 'rgba(255, 255, 255, 0.08)')};
+/* ─────────────────────────── Address Pill ─────────────────────────── */
+
+const AddressPill = styled.div`
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+`;
+
+const AddressMonospace = styled.span`
+  font-family: monospace;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.8);
+`;
+
+const AddressActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+`;
+
+const MiniButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: all 0.2s;
 
   &:hover {
-    color: #FBBF24;
-    background: rgba(251, 191, 36, 0.15);
-    border-color: rgba(251, 191, 36, 0.35);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    color: #60A5FA;
+    background: rgba(255, 255, 255, 0.06);
   }
 `;
 
-const Divider = styled.div`
-  height: 1px;
-  background: rgba(255, 255, 255, 0.06);
-`;
+/* ─────────────────────────── Data Grid ─────────────────────────── */
 
 const DataGrid = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 12px;
 `;
 
 const DataRow = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13px;
 `;
 
 const Label = styled.span`
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
 `;
 
 const Value = styled.span`
   font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 300;
-  color: #EDEDED;
+  color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-const OnChainValue = styled.span`
-  font-family: monospace;
-  font-size: 11px;
+const SendLinkButton = styled.button`
+  margin-top: 4px;
+  width: 100%;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
   color: #E2E8F0;
-  word-break: break-all;
-  line-height: 1.5;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #2563EB;
+    color: #FFFFFF;
+    border-color: #60A5FA;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+  }
 `;
+
+/* ─────────────────────────── Empty State ─────────────────────────── */
 
 const EmptyState = styled.div`
   display: flex;
@@ -305,53 +463,32 @@ const EmptyState = styled.div`
   text-align: center;
   background: rgba(255, 255, 255, 0.02);
   border: 1px dashed rgba(255, 255, 255, 0.08);
-  border-radius: 32px;
+  border-radius: 24px;
   gap: 16px;
 `;
 
 const EmptyTitle = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
 `;
 
-const SecondaryButton = styled.button`
-  font-family: 'Outfit', sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  padding: 9px 20px;
-  border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: transparent;
-  color: #E2E8F0;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 8px;
-  backdrop-filter: blur(12px);
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
-
-  &:focus-visible {
-    outline: 2px solid #E2E8F0;
-    outline-offset: 2px;
-  }
-`;
-
 const Spinner = styled.div`
-  width: 40px;
-  height: 40px;
-  border: 3px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #E2E8F0;
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #60A5FA;
   border-radius: 50%;
   animation: ${spin} 1s linear infinite;
 `;
+
+function formatAddressTruncated(address: string): string {
+  if (!address) return '';
+  if (address.length <= 12) return address;
+  return `${address.slice(0, 6)}...${address.slice(-6)}`;
+}
 
 export function ContactsView({
   contacts,
@@ -361,83 +498,151 @@ export function ContactsView({
   onEditContactClick,
   onDeleteContactClick,
   onToggleFavoriteClick,
+  onSendClick,
   togglingFavoriteId,
 }: ContactsViewProps) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const filteredContacts = useMemo(() => {
+    return contacts.filter((contact) => {
+      if (showFavoritesOnly && !contact.isFavorite) return false;
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        contact.nickname?.toLowerCase().includes(q) ||
+        contact.walletAddress?.toLowerCase().includes(q) ||
+        contact.email?.toLowerCase().includes(q) ||
+        contact.telephone?.includes(q) ||
+        contact.notes?.toLowerCase().includes(q)
+      );
+    });
+  }, [contacts, showFavoritesOnly, searchQuery]);
+
+  const handleCopyAddress = (id: string, address: string) => {
+    navigator.clipboard.writeText(address);
+    setCopiedId(id);
+    toast.success('Dirección copiada');
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
   return (
     <PageContainer
-      initial={{ opacity: 0, y: 40 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', bounce: 0.4, duration: 0.8 }}
+      transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
     >
-      <ActionBar>
-        <AddButton onClick={onAddContactClick}>
-          <Plus size={14} />
-          Add New Contact
-        </AddButton>
-      </ActionBar>
+      {/* Header Row */}
+      <HeaderRow>
+        <Title>Contacts</Title>
+        <Subtitle>Manage your frequent transaction contacts on the Luxor network.</Subtitle>
+      </HeaderRow>
 
+      {/* Toolbar */}
+      <ToolbarRow>
+        <SearchContainer>
+          <SearchIconWrapper>
+            <Search size={14} />
+          </SearchIconWrapper>
+          <SearchInput
+            type="text"
+            placeholder="Search contacts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <ClearSearchButton onClick={() => setSearchQuery('')}>
+              <X size={12} />
+            </ClearSearchButton>
+          )}
+        </SearchContainer>
+
+        <RightControlsGroup>
+          <FilterGroup>
+            <FilterTab $active={!showFavoritesOnly} onClick={() => setShowFavoritesOnly(false)}>
+              All ({contacts.length})
+            </FilterTab>
+            <FilterTab $active={showFavoritesOnly} onClick={() => setShowFavoritesOnly(true)}>
+              Favorites ★
+            </FilterTab>
+          </FilterGroup>
+
+          <AddButton onClick={onAddContactClick}>
+            <Plus size={14} />
+            Add New Contact
+          </AddButton>
+        </RightControlsGroup>
+      </ToolbarRow>
+
+      {/* Grid Content */}
       {isLoading ? (
         <EmptyState>
           <Spinner aria-busy="true" />
-          <Subtitle>Loading infrastructure...</Subtitle>
+          <Subtitle>Loading contacts...</Subtitle>
         </EmptyState>
       ) : isError ? (
         <EmptyState>
           <EmptyTitle>Connection Error</EmptyTitle>
-          <Subtitle>Unable to load contacts. Please verify your connection to the ecosystem.</Subtitle>
+          <Subtitle>Unable to load contacts. Please verify your connection.</Subtitle>
         </EmptyState>
       ) : contacts.length === 0 ? (
         <EmptyState>
           <EmptyTitle>No Contacts Yet</EmptyTitle>
-          <Subtitle>Start building your on-chain network. Add liquidity partners and frequent clients.</Subtitle>
-          <SecondaryButton onClick={onAddContactClick}>
+          <Subtitle>Start building your network. Add frequent clients or partners.</Subtitle>
+          <AddButton onClick={onAddContactClick}>
             <Plus size={14} />
-            Add Your First Contact
-          </SecondaryButton>
+            Add First Contact
+          </AddButton>
+        </EmptyState>
+      ) : filteredContacts.length === 0 ? (
+        <EmptyState>
+          <EmptyTitle>No Matches Found</EmptyTitle>
+          <Subtitle>No contacts match your current search criteria.</Subtitle>
         </EmptyState>
       ) : (
         <ContactsGrid>
-          {contacts.map((contact, index) => (
-            <ContactCard
-              key={contact.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.08, duration: 0.45 }}
-            >
-              <CardAccent />
-              <CardBody>
+          {filteredContacts.map((contact, index) => {
+            const isFav = contact.isFavorite;
+            const assetSymbol = contact.symbol || contact.mint || 'USDC';
+
+            return (
+              <ContactCard
+                key={contact.id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.04, duration: 0.35 }}
+              >
                 <CardHeader>
                   <AvatarNameGroup>
-                    <Avatar>
-                      {contact.nickname?.charAt(0) || <User size={16} />}
-                    </Avatar>
-                    <NameBadgeGroup>
+                    <Avatar>{contact.nickname?.charAt(0) || <User size={16} />}</Avatar>
+                    <NameGroup>
                       <ContactName title={contact.nickname}>{contact.nickname}</ContactName>
-                      {contact.isFavorite && <Badge>★ Favorite</Badge>}
-                    </NameBadgeGroup>
+                      {isFav && <FavoriteBadge>★ Favorite</FavoriteBadge>}
+                    </NameGroup>
                   </AvatarNameGroup>
+
                   <ActionsContainer>
-                    <FavoriteButton
+                    <IconButton
                       type="button"
-                      $active={contact.isFavorite}
+                      $active={isFav}
                       onClick={() => onToggleFavoriteClick(contact)}
                       disabled={togglingFavoriteId === contact.id}
-                      aria-label={contact.isFavorite ? `Remove ${contact.nickname} from favorites` : `Mark ${contact.nickname} as favorite`}
-                      title={contact.isFavorite ? 'Remove from favorites' : 'Mark as favorite'}
+                      title={isFav ? 'Remove favorite' : 'Mark favorite'}
                     >
-                      <Star size={13} fill={contact.isFavorite ? 'currentColor' : 'none'} />
-                    </FavoriteButton>
+                      <Star size={13} fill={isFav ? 'currentColor' : 'none'} />
+                    </IconButton>
                     <IconButton
+                      type="button"
                       onClick={() => onEditContactClick(contact)}
-                      aria-label={`Edit ${contact.nickname}`}
                       title="Edit Contact"
                     >
                       <Pencil size={13} />
                     </IconButton>
                     <IconButton
+                      type="button"
                       $danger
                       onClick={() => onDeleteContactClick(contact.id)}
-                      aria-label={`Delete ${contact.nickname}`}
                       title="Delete Contact"
                     >
                       <Trash2 size={13} />
@@ -445,43 +650,68 @@ export function ContactsView({
                   </ActionsContainer>
                 </CardHeader>
 
-                <Divider />
+                {/* Wallet Address Pill */}
+                <AddressPill>
+                  <AddressMonospace>{formatAddressTruncated(contact.walletAddress)}</AddressMonospace>
+                  <AddressActions>
+                    <MiniButton
+                      type="button"
+                      onClick={() => handleCopyAddress(contact.id, contact.walletAddress)}
+                      title="Copy Address"
+                    >
+                      {copiedId === contact.id ? <Check size={13} className="text-emerald-400" /> : <Copy size={13} />}
+                    </MiniButton>
+                    <a
+                      href={`https://explorer.solana.com/address/${contact.walletAddress}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title="View on Solana Explorer"
+                    >
+                      <MiniButton type="button">
+                        <ExternalLink size={13} />
+                      </MiniButton>
+                    </a>
+                  </AddressActions>
+                </AddressPill>
 
+                {/* Data Grid */}
                 <DataGrid>
-                  <DataRow>
-                    <Label>Wallet Address</Label>
-                    <OnChainValue>{contact.walletAddress}</OnChainValue>
-                  </DataRow>
-
                   {contact.email && (
                     <DataRow>
-                      <Label>Email</Label>
-                      <Value>{contact.email}</Value>
+                      <Label>EMAIL</Label>
+                      <Value title={contact.email}>{contact.email}</Value>
                     </DataRow>
                   )}
 
                   {contact.telephone && (
                     <DataRow>
-                      <Label>Phone</Label>
+                      <Label>PHONE</Label>
                       <Value>{contact.telephone}</Value>
                     </DataRow>
                   )}
 
                   <DataRow>
-                    <Label>Preferred Asset</Label>
-                    <Value>{contact.symbol || contact.mint}</Value>
+                    <Label>PREFERRED ASSET</Label>
+                    <Value>{assetSymbol}</Value>
                   </DataRow>
 
                   {contact.notes && (
                     <DataRow>
-                      <Label>Notes</Label>
-                      <Value>{contact.notes}</Value>
+                      <Label>NOTES</Label>
+                      <Value title={contact.notes}>{contact.notes}</Value>
                     </DataRow>
                   )}
                 </DataGrid>
-              </CardBody>
-            </ContactCard>
-          ))}
+
+                {onSendClick && (
+                  <SendLinkButton type="button" onClick={() => onSendClick(contact)}>
+                    <Send size={13} />
+                    Send Funds
+                  </SendLinkButton>
+                )}
+              </ContactCard>
+            );
+          })}
         </ContactsGrid>
       )}
     </PageContainer>

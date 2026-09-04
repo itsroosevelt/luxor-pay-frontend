@@ -23,7 +23,7 @@ const HeaderRow = styled.div`
 
 const Title = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: #FFFFFF;
   margin: 0;
@@ -42,8 +42,8 @@ const IconButton = styled.button`
   background: var(--lx-fill, rgba(255, 255, 255, 0.05));
   border: 1px solid var(--lx-border, rgba(255, 255, 255, 0.08));
   border-radius: 9999px;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -71,28 +71,28 @@ const IconButton = styled.button`
 const BalanceSection = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 `;
 
 const BalanceLabel = styled.p`
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 10px;
+  font-weight: 700;
   color: var(--lx-text-dim, #5C616F);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.4em;
 `;
 
 const PrimaryBalance = styled.div`
-  font-family: 'Inter', 'Outfit', sans-serif;
-  font-size: 34px;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px;
+  font-weight: 500;
   letter-spacing: -0.02em;
   color: var(--lx-text, #F1F5F9);
   line-height: 1.1;
 
   @media (min-width: 768px) {
-    font-size: 40px;
+    font-size: 32px;
   }
 `;
 

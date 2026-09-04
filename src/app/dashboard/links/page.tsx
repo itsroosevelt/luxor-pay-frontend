@@ -3,9 +3,9 @@
 import React, { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { createPaymentLink, listPaymentLinks } from '@/lib/payments-api';
+import { createPaymentLink, listPaymentLinks, updatePaymentLink, deletePaymentLink } from '@/lib/payments-api';
 import type { PaymentLink } from '@luxor/contracts';
-import { Copy, Link as LinkIcon, Plus, ExternalLink, Loader2, X } from 'lucide-react';
+import { Copy, Link as LinkIcon, Plus, ExternalLink, Loader2, X, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
@@ -388,6 +388,24 @@ const IconAction = styled.button`
   }
 `;
 
+const IconDeleteAction = styled(IconAction)`
+  &:hover {
+    background: rgba(248, 113, 113, 0.15);
+    border-color: rgba(248, 113, 113, 0.4);
+    color: #F87171;
+  }
+`;
+
+const DangerButton = styled(Button)`
+  background: #F87171;
+  color: #FFFFFF;
+  &:hover:not(:disabled) {
+    background: #EF4444;
+    color: #FFFFFF;
+    box-shadow: 0 8px 16px rgba(248, 113, 113, 0.35);
+  }
+`;
+
 const UrlSection = styled.span`
   display: flex;
   align-items: center;
@@ -443,12 +461,27 @@ export default function PaymentLinksPage() {
   const router = useRouter();
   const [links, setLinks] = useState<PaymentLink[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Create state
   const [name, setName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState<string>('USDC');
   const [creating, setCreating] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
+
+  // Edit state
+  const [editingLink, setEditingLink] = useState<PaymentLink | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editBusinessName, setEditBusinessName] = useState('');
+  const [editAmount, setEditAmount] = useState('');
+  const [editCurrency, setEditCurrency] = useState<string>('USDC');
+  const [updating, setUpdating] = useState(false);
+
+  // Delete state
+  const [deletingLinkId, setDeletingLinkId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const { tokens } = useTokenRegistry();
 
   const env = getLuxorEnv();
@@ -462,6 +495,15 @@ export default function PaymentLinksPage() {
     !Number.isNaN(parsedAmount) &&
     parsedAmount > 0 &&
     Boolean(currency);
+
+  const parsedEditAmount = parseFloat(editAmount);
+  const isEditFormValid =
+    editName.trim().length > 0 &&
+    editBusinessName.trim().length > 0 &&
+    editAmount.trim().length > 0 &&
+    !Number.isNaN(parsedEditAmount) &&
+    parsedEditAmount > 0 &&
+    Boolean(editCurrency);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -516,6 +558,77 @@ export default function PaymentLinksPage() {
     }
   };
 
+  const openEditModal = (link: PaymentLink) => {
+    setEditingLink(link);
+    setEditName(link.name || '');
+    setEditBusinessName(link.businessName || '');
+    setEditAmount(String(link.amount || ''));
+    setEditCurrency(link.currency || 'USDC');
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLink) return;
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const parsed = parseFloat(editAmount);
+    if (!editName.trim() || !editBusinessName.trim() || Number.isNaN(parsed) || parsed <= 0) {
+      toast.error('Enter valid details for all fields');
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const token = await user.getIdToken();
+      const updated = await updatePaymentLink(token, editingLink.id, {
+        name: editName.trim(),
+        businessName: editBusinessName.trim(),
+        amount: parsed,
+        currency: editCurrency,
+      });
+      setLinks((prev) =>
+        prev.map((l) =>
+          l.id === editingLink.id
+            ? {
+                ...l,
+                ...updated,
+                name: editName.trim(),
+                businessName: editBusinessName.trim(),
+                amount: parsed,
+                currency: editCurrency,
+              }
+            : l,
+        ),
+      );
+      setEditingLink(null);
+      toast.success('Payment link updated');
+    } catch {
+      toast.error('Could not update link');
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deletingLinkId) return;
+    const user = auth.currentUser;
+    if (!user) return;
+
+    setDeleting(true);
+    try {
+      const token = await user.getIdToken();
+      await deletePaymentLink(token, deletingLinkId);
+      setLinks((prev) => prev.filter((l) => l.id !== deletingLinkId));
+      setDeletingLinkId(null);
+      toast.success('Payment link deleted');
+    } catch {
+      toast.error('Could not delete link');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const payLinkUrl = (id: string) => `${window.location.origin}/pay/link/${id}`;
 
   const copyUrl = (id: string) => {
@@ -537,6 +650,7 @@ export default function PaymentLinksPage() {
       </header>
 
       <AnimatePresence>
+        {/* Create Link Modal */}
         {isFormOpen && (
           <Overlay
             initial={{ opacity: 0 }}
@@ -626,6 +740,142 @@ export default function PaymentLinksPage() {
             </ModalBox>
           </Overlay>
         )}
+
+        {/* Edit Link Modal */}
+        {editingLink && (
+          <Overlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !updating && setEditingLink(null)}
+          >
+            <ModalBox
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', bounce: 0.4, duration: 0.6 }}
+            >
+              <ModalCloseButton type="button" onClick={() => !updating && setEditingLink(null)} aria-label="Close">
+                <X size={16} />
+              </ModalCloseButton>
+
+              <form onSubmit={handleUpdate}>
+                <FormHeader>
+                  <Pencil size={20} /> Edit Link
+                </FormHeader>
+                <InputGrid>
+                  <InputGroup>
+                    <Label>Product or Service Name</Label>
+                    <Input
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder="e.g. Premium Subscription"
+                      required
+                    />
+                  </InputGroup>
+                  <InputGroup>
+                    <Label>Business Name</Label>
+                    <Input
+                      value={editBusinessName}
+                      onChange={(e) => setEditBusinessName(e.target.value)}
+                      placeholder="e.g. Acme Corp"
+                      required
+                    />
+                  </InputGroup>
+                  <InputGroup>
+                    <Label>Amount</Label>
+                    <Input
+                      type="number"
+                      step="any"
+                      min="0.000001"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                      placeholder="0.00"
+                      required
+                    />
+                  </InputGroup>
+                  <InputGroup>
+                    <Label>Currency</Label>
+                    <Select
+                      value={editCurrency}
+                      onChange={(e) => setEditCurrency(e.target.value)}
+                    >
+                      <optgroup label="Available Tokens">
+                        {tokens.map((token) => (
+                          <option key={token.symbol} value={token.symbol}>
+                            {token.symbol}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </Select>
+                  </InputGroup>
+                </InputGrid>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <Button type="button" $variant="secondary" onClick={() => setEditingLink(null)} disabled={updating}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" $variant="primary" disabled={updating || !isEditFormValid}>
+                    {updating ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Pencil size={16} /> Save Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </ModalBox>
+          </Overlay>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {deletingLinkId && (
+          <Overlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => !deleting && setDeletingLinkId(null)}
+          >
+            <ModalBox
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: 'spring', bounce: 0.4, duration: 0.6 }}
+            >
+              <ModalCloseButton type="button" onClick={() => !deleting && setDeletingLinkId(null)} aria-label="Close">
+                <X size={16} />
+              </ModalCloseButton>
+
+              <FormHeader style={{ color: '#F87171' }}>
+                <Trash2 size={20} /> Delete Payment Link
+              </FormHeader>
+              <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '24px', lineHeight: 1.5 }}>
+                Are you sure you want to delete this payment link? This action cannot be undone and customers will no longer be able to use it.
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <Button type="button" $variant="secondary" onClick={() => setDeletingLinkId(null)} disabled={deleting}>
+                  Cancel
+                </Button>
+                <DangerButton type="button" onClick={handleDelete} disabled={deleting}>
+                  {deleting ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" /> Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={16} /> Delete Link
+                    </>
+                  )}
+                </DangerButton>
+              </div>
+            </ModalBox>
+          </Overlay>
+        )}
       </AnimatePresence>
 
       <ContentLayout>
@@ -685,6 +935,22 @@ export default function PaymentLinksPage() {
                   >
                     <ExternalLink size={15} />
                   </IconAction>
+                  <IconAction
+                    type="button"
+                    onClick={() => openEditModal(link)}
+                    title="Edit link"
+                    aria-label="Edit link"
+                  >
+                    <Pencil size={15} />
+                  </IconAction>
+                  <IconDeleteAction
+                    type="button"
+                    onClick={() => setDeletingLinkId(link.id)}
+                    title="Delete link"
+                    aria-label="Delete link"
+                  >
+                    <Trash2 size={15} />
+                  </IconDeleteAction>
                 </ActionsGroup>
               </LinkItem>
             ))}

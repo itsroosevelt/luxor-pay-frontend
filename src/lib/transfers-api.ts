@@ -120,6 +120,8 @@ export interface SendTransferPayload {
   mint?: string | null;
   toNickname?: string | null;
   reference?: string;
+  fromVaultPda?: string;
+  fromVaultId?: string;
   transactionTypeId?: 'Regular' | 'Request' | 'TopUp';
   paymentRequestId?: string;
   /** WGS-84 latitude in decimal degrees (-90 to 90). */

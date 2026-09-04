@@ -27,15 +27,15 @@ import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { EyebrowBadge, HeroTitle, GlassCard } from '@/components/shared/DesignSystem';
 
 const HeaderContainer = styled.header`
-  padding: 24px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--lx-border);
   background: var(--lx-bg-elev);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 
   @media (min-width: 768px) {
-    padding: 28px 40px;
+    padding: 18px 28px;
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
@@ -219,7 +219,7 @@ export default function DashboardOverviewPage() {
 
   return (
     <>
-      {/* Top Header Row with Dashboard title & Top Wallet Bar */}
+      {/* Top Header Row with Dashboard title */}
       <HeaderContainer>
         <div>
           <div className="flex items-center gap-3 mb-1">
@@ -237,37 +237,15 @@ export default function DashboardOverviewPage() {
           </p>
         </div>
 
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          {/* Quick actions — QR pay/charge + Send */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setIsQrModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-semibold transition-colors"
-              style={{ background: 'var(--lx-primary)', color: 'var(--lx-primary-text)' }}
-              title="QR pay / charge"
-            >
-              <QrCode size={16} /> QR Pay / Charge
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsTransferModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors"
-              style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border-strong)', color: 'var(--lx-text-muted)' }}
-              title="Send funds"
-            >
-              <ArrowUp size={16} /> Send
-            </button>
-          </div>
-
-          {/* Top Wallet Bar (mobile only here, desktop is global) */}
-          <div className="md:hidden">
-            <TopWalletBar
-              merchantWallet={merchantWallet}
-              solBalance={balanceData?.solBalance}
-              isLoading={isBalanceLoading}
-            />
-          </div>
+        {/* Top Wallet Bar with quick actions (mobile view) */}
+        <div className="md:hidden">
+          <TopWalletBar
+            merchantWallet={merchantWallet}
+            solBalance={balanceData?.solBalance}
+            isLoading={isBalanceLoading}
+            onQrClick={() => setIsQrModalOpen(true)}
+            onSendClick={() => setIsTransferModalOpen(true)}
+          />
         </div>
       </HeaderContainer>
 

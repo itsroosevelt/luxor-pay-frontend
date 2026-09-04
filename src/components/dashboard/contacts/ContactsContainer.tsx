@@ -7,19 +7,25 @@ import { useUpdateContact } from '@/hooks/useUpdateContact';
 import { ContactsView } from './ContactsView';
 import { ContactFormModal } from './ContactFormModal';
 import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { TransferModal } from '@/components/dashboard/overview/TransferModal';
 import { Contact } from '@/lib/contacts-api';
 
 export function ContactsContainer() {
   const { data, isLoading, isError, refetch } = useGetContacts();
   const { mutate: deleteMutate, isLoading: isDeleting } = useDeleteContact();
   const { mutate: updateMutate } = useUpdateContact();
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
   const [togglingFavoriteId, setTogglingFavoriteId] = useState<string | null>(null);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [contactToDelete, setContactToDelete] = useState<string | null>(null);
+
+  // Transfer Modal Integration
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [transferRecipient, setTransferRecipient] = useState<string>('');
+  const [transferMint, setTransferMint] = useState<string>('');
 
   const handleOpenModal = () => {
     setSelectedContact(null);
@@ -34,6 +40,12 @@ export function ContactsContainer() {
   const handleDeleteClick = (id: string) => {
     setContactToDelete(id);
     setIsDeleteModalOpen(true);
+  };
+
+  const handleSendClick = (contact: Contact) => {
+    setTransferRecipient(contact.walletAddress);
+    setTransferMint(contact.symbol || contact.mint || 'SOL');
+    setIsTransferModalOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -60,7 +72,7 @@ export function ContactsContainer() {
   const handleSuccess = () => {
     setIsModalOpen(false);
     setSelectedContact(null);
-    refetch(); // Refresh the list after successful creation or update
+    refetch();
   };
 
   const handleToggleFavorite = async (contact: Contact) => {
@@ -82,6 +94,7 @@ export function ContactsContainer() {
         onEditContactClick={handleEditClick}
         onDeleteContactClick={handleDeleteClick}
         onToggleFavoriteClick={handleToggleFavorite}
+        onSendClick={handleSendClick}
         togglingFavoriteId={togglingFavoriteId}
       />
       
@@ -97,6 +110,13 @@ export function ContactsContainer() {
         isLoading={isDeleting}
         onClose={handleCloseDeleteModal}
         onConfirm={handleConfirmDelete}
+      />
+
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        initialRecipientAddress={transferRecipient}
+        initialMint={transferMint}
       />
     </>
   );

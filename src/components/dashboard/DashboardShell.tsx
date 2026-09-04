@@ -16,6 +16,12 @@ import { OnrampResultModal } from './OnrampResultModal';
 import { TopWalletBar } from './TopWalletBar';
 import { FundWalletButton } from './FundWalletButton';
 import { Sidebar, SidebarContent } from './Sidebar';
+import { SupportCenterDrawer } from './SupportCenterDrawer';
+import { QrOperationsModal } from './overview/QrOperationsModal';
+import { TransferModal } from './overview/TransferModal';
+import { TransferSuccessModal } from './overview/TransferSuccessModal';
+import { PaymentRequestModal } from './overview/PaymentRequestModal';
+import { Transfer } from '@/lib/transfers-api';
 
 const LOGO_SRC =
   'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b';
@@ -26,7 +32,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
+  const [isSupportDrawerOpen, setIsSupportDrawerOpen] = useState(false);
   const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
+
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
+  const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
+  const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
 
   const extendedUser = user as (User & { displayName?: string; photoURL?: string }) | null;
   const displayName =
@@ -113,10 +126,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       style={{ background: 'var(--lx-bg)' }}
     >
       {/* Desktop rail */}
-      <Sidebar profile={profile} onSignOut={handleSignOut} />
+      <Sidebar
+        profile={profile}
+        onSignOut={handleSignOut}
+        onOpenSupportCenter={() => setIsSupportDrawerOpen(true)}
+      />
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden">
+      <main className="flex-1 flex flex-col min-w-0 h-full md:my-3 md:mr-3 md:ml-1.5 md:h-[calc(100vh-24px)] md:rounded-2xl md:border md:border-white/12 md:bg-[#07090D]/90 md:backdrop-blur-xl md:shadow-2xl overflow-y-auto overflow-x-hidden relative">
         {/* Mobile header */}
         <header
           className="md:hidden flex-shrink-0 flex items-center justify-between p-4"
@@ -168,6 +185,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 profile={profile}
                 onSignOut={handleSignOut}
                 onNavigate={() => setIsMobileMenuOpen(false)}
+                onOpenSupportCenter={() => setIsSupportDrawerOpen(true)}
               />
             </aside>
           </div>
@@ -176,8 +194,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {/* Page content */}
         <div className="relative flex-1 min-w-0 overflow-x-hidden">
           {/* Desktop top-right controls */}
-          <div className="hidden md:flex items-center gap-3 absolute top-6 right-10 z-30">
-            <TopWalletBar merchantWallet={profile?.merchantWallet} />
+          <div className="hidden md:flex items-center gap-2.5 absolute top-3.5 right-6 z-30">
+            <TopWalletBar
+              merchantWallet={profile?.merchantWallet}
+              onQrClick={() => setIsQrModalOpen(true)}
+              onSendClick={() => setIsTransferModalOpen(true)}
+            />
             <button
               type="button"
               onClick={() => setIsAccountMenuOpen((v) => !v)}
@@ -185,7 +207,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               title="Account"
               aria-label="Open account menu"
             >
-              {renderAvatar(36)}
+              {renderAvatar(32)}
             </button>
           </div>
           {children}
@@ -197,6 +219,40 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <KycResultModal />
       <OnrampProgressBanner />
       <OnrampResultModal />
+
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        onSuccess={(data) => {
+          setTransferSuccessData(data);
+          setIsTransferSuccessModalOpen(true);
+        }}
+      />
+
+      <PaymentRequestModal
+        isOpen={isPaymentRequestModalOpen}
+        onClose={() => setIsPaymentRequestModalOpen(false)}
+        requesterWallet={profile?.merchantWallet ?? null}
+      />
+      <TransferSuccessModal
+        isOpen={isTransferSuccessModalOpen}
+        onClose={() => setIsTransferSuccessModalOpen(false)}
+        transferData={transferSuccessData}
+      />
+
+      <QrOperationsModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        merchantWallet={profile?.merchantWallet ?? null}
+        recipientLabel={profile?.businessName ?? null}
+        initialMode="select"
+        onCreatePaymentRequest={() => setIsPaymentRequestModalOpen(true)}
+      />
+
+      <SupportCenterDrawer
+        isOpen={isSupportDrawerOpen}
+        onClose={() => setIsSupportDrawerOpen(false)}
+      />
 
       {/* Account dropdown menu — shared for desktop + mobile */}
       {isAccountMenuOpen && user && (

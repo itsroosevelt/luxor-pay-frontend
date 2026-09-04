@@ -262,6 +262,263 @@ export const MOCK_CONTACTS: Contact[] = [
   },
 ];
 
+/* ─────────────────────────── Members ─────────────────────────────── */
+/**
+ * Multisig members mapped to the SRS role matrix (Squads v4 reference):
+ *   admin    — añade/remueve miembros y modifica el umbral
+ *   signer   — vota propuestas; cuenta para el umbral M-de-N
+ *   proposer — puede iniciar propuestas de transacción
+ *   auditor  — solo lectura (balances, bóvedas, historial), sin claves de firma
+ */
+
+export const MOCK_MEMBERS = [
+  {
+    id: 'mem_01',
+    merchantId: MOCK_MERCHANT_PROFILE.id!,
+    name: 'Julio Romero',
+    walletAddress: 'HSVNd7Qm4rP2xKb9Tf3wYcJ8sLzA1eR6tYuVe4XoPqN',
+    roles: { admin: true, signer: true, proposer: true, auditor: false },
+    isCurrentUser: true,
+    createdAt: iso(-60 * DAY),
+    updatedAt: iso(-2 * DAY),
+  },
+  {
+    id: 'mem_02',
+    merchantId: MOCK_MERCHANT_PROFILE.id!,
+    name: 'Mariana Solís',
+    walletAddress: 'B42ExkQ9mLp7yTn3wZcVb8sHy2aR6tYuIoP1dGfS47x',
+    roles: { admin: false, signer: true, proposer: true, auditor: false },
+    isCurrentUser: false,
+    createdAt: iso(-50 * DAY),
+    updatedAt: iso(-2 * DAY),
+  },
+  {
+    id: 'mem_03',
+    merchantId: MOCK_MERCHANT_PROFILE.id!,
+    name: 'Diego Fuentes',
+    walletAddress: '7jTgWm2Kq9Lp4xNb8yZcVdHy3sA1eR6tYuIoP5MrNt',
+    roles: { admin: true, signer: true, proposer: true, auditor: false },
+    isCurrentUser: false,
+    createdAt: iso(-40 * DAY),
+    updatedAt: iso(-2 * DAY),
+  },
+  {
+    id: 'mem_04',
+    merchantId: MOCK_MERCHANT_PROFILE.id!,
+    name: 'Contabilidad · Auditoría',
+    walletAddress: '2B7bYk9Qm3Lp8xNc4yZwVdHy1sA6eR2tYuIoPfVXfg',
+    roles: { admin: false, signer: false, proposer: false, auditor: true },
+    isCurrentUser: false,
+    createdAt: iso(-30 * DAY),
+    updatedAt: iso(-2 * DAY),
+  },
+  {
+    id: 'mem_05',
+    merchantId: MOCK_MERCHANT_PROFILE.id!,
+    name: 'Tesorería · Bot de nómina',
+    walletAddress: 'AGBMxk2Qp9Lm7yTn4wZcVb8sHy3aR1eR6tYuIoPpJ8f',
+    roles: { admin: false, signer: false, proposer: true, auditor: false },
+    isCurrentUser: false,
+    createdAt: iso(-20 * DAY),
+    updatedAt: iso(-2 * DAY),
+  },
+];
+
+/* ──────────────── Multisig treasury (Squads v4-style) ─────────────── */
+/**
+ * The enterprise wrapper over a Squads v4 program account. `transactionIndex`
+ * is the on-chain proposal counter; the next proposal takes index + 1.
+ */
+export const MOCK_MULTISIG = {
+  address: 'Mu1tiSigJ4kPq2Nf7Xr9wDcVbHy3sZ8aQ1eR6tYuIoP',
+  threshold: 2,
+  timeLock: 0,
+  transactionIndex: 7,
+  createKey: 'CrTeKy8mLp3xNb7yZcVdHy2sA1eR6tYuIoP4wQ9nMz',
+  createdAt: iso(-60 * DAY),
+  updatedAt: iso(-2 * DAY),
+};
+
+/* Sub-vaults — Vault PDAs derived from the multisig, one per business purpose. */
+export const MOCK_VAULTS = [
+  {
+    id: 'vault_0',
+    index: 0,
+    label: 'Bóveda POS Cobros',
+    address: 'PoS1CobRosVau1tXbT7yqLpN2mKdRf8sWzA3eH9jUvBc',
+    description: 'Entradas de pagos de clientes (POS y payment links).',
+    isDefault: true,
+    usdValue: 13_128.4,
+    solBalance: '9.2000',
+    tokens: [
+      { mint: MINTS.USDC, symbol: 'USDC', uiAmount: '11578.00' },
+      { mint: MINTS.USDT, symbol: 'USDT', uiAmount: '0.00' },
+    ],
+    createdAt: iso(-60 * DAY),
+  },
+  {
+    id: 'vault_1',
+    index: 1,
+    label: 'Bóveda Operativa',
+    address: 'OpeRaTiVaVau1t9kMzXbT3yqLpN7mKdRf2sWzA8eH1jU',
+    description: 'Pagos de nómina y proveedores.',
+    isDefault: false,
+    usdValue: 4_040.55,
+    solBalance: '3.2185',
+    tokens: [
+      { mint: MINTS.USDC, symbol: 'USDC', uiAmount: '2500.00' },
+      { mint: MINTS.USDT, symbol: 'USDT', uiAmount: '1500.00' },
+    ],
+    createdAt: iso(-52 * DAY),
+  },
+  {
+    id: 'vault_2',
+    index: 2,
+    label: 'Bóveda Token Reserves',
+    address: 'ReSeRvEsVau1tK7mLp2xNb9yZcVdHy3sA1eR6tYuIoP',
+    description: 'Liquidez del token LXR y reservas de tesorería.',
+    isDefault: false,
+    usdValue: 18_275.0,
+    solBalance: '0.0000',
+    tokens: [{ mint: MINTS.LXR, symbol: 'LXR', uiAmount: '250000.0' }],
+    createdAt: iso(-40 * DAY),
+  },
+];
+
+/* ─────────────── Multisig proposals (transaction lifecycle) ───────── */
+/**
+ * Proposal statuses mirror the Squads flow:
+ *   draft     — creada, aún sin abrir a votación
+ *   active    — abierta; los firmantes votan (approvals / rejections)
+ *   approved  — alcanzó el umbral; lista para ejecutarse
+ *   executed  — ejecutada on-chain (tiene `executedSig`)
+ *   rejected  — rechazada por mayoría
+ *   cancelled — retirada por quien la creó o un admin
+ * `approvals` / `rejections` guardan ids de miembro.
+ */
+export const MOCK_PROPOSALS = [
+  {
+    id: 'prop_1007',
+    index: 7,
+    type: 'transfer' as const,
+    title: 'Pago a proveedor — Green Highlands',
+    vaultId: 'vault_1',
+    vaultLabel: 'Bóveda Operativa',
+    amount: '640.00',
+    mint: MINTS.USDC,
+    symbol: 'USDC',
+    destination: 'H2x8Iq5mockVendorWalletGGG7777777777777777777',
+    destinationLabel: 'Green Highlands',
+    memo: 'Factura de café — net 15',
+    status: 'active' as const,
+    threshold: 2,
+    approvals: ['mem_02'],
+    rejections: [],
+    createdBy: 'mem_05',
+    createdByName: 'Tesorería · Bot de nómina',
+    createdAt: iso(-6 * HOUR),
+    updatedAt: iso(-2 * HOUR),
+    executedAt: null as string | null,
+    executedSig: null as string | null,
+  },
+  {
+    id: 'prop_1006',
+    index: 6,
+    type: 'transfer' as const,
+    title: 'Nómina quincenal del equipo',
+    vaultId: 'vault_1',
+    vaultLabel: 'Bóveda Operativa',
+    amount: '1200.00',
+    mint: MINTS.USDC,
+    symbol: 'USDC',
+    destination: 'J4z0Ks7mockPayrollWalletHHH8888888888888888888',
+    destinationLabel: 'Payroll',
+    memo: 'Ciclo 2026-09 · primera quincena',
+    status: 'approved' as const,
+    threshold: 2,
+    approvals: ['mem_01', 'mem_03'],
+    rejections: [],
+    createdBy: 'mem_05',
+    createdByName: 'Tesorería · Bot de nómina',
+    createdAt: iso(-30 * HOUR),
+    updatedAt: iso(-20 * HOUR),
+    executedAt: null,
+    executedSig: null,
+  },
+  {
+    id: 'prop_1005',
+    index: 5,
+    type: 'swap' as const,
+    title: 'Convertir 5 SOL → USDC (reservas)',
+    vaultId: 'vault_2',
+    vaultLabel: 'Bóveda Token Reserves',
+    amount: '5.00',
+    mint: MINTS.SOL,
+    symbol: 'SOL',
+    destination: '',
+    destinationLabel: 'Jupiter · ruta mock',
+    memo: 'Rebalanceo de reservas',
+    status: 'draft' as const,
+    threshold: 2,
+    approvals: [],
+    rejections: [],
+    createdBy: 'mem_01',
+    createdByName: 'Julio Romero',
+    createdAt: iso(-2 * HOUR),
+    updatedAt: iso(-2 * HOUR),
+    executedAt: null,
+    executedSig: null,
+  },
+  {
+    id: 'prop_1004',
+    index: 4,
+    type: 'transfer' as const,
+    title: 'Reembolso a cliente — pedido #4471',
+    vaultId: 'vault_0',
+    vaultLabel: 'Bóveda POS Cobros',
+    amount: '18.00',
+    mint: MINTS.USDC,
+    symbol: 'USDC',
+    destination: 'K5a1Lt8mockRefundWalletIII9999999999999999999',
+    destinationLabel: '',
+    memo: 'Pedido cancelado por el cliente',
+    status: 'executed' as const,
+    threshold: 2,
+    approvals: ['mem_01', 'mem_02'],
+    rejections: [],
+    createdBy: 'mem_02',
+    createdByName: 'Mariana Solís',
+    createdAt: iso(-4 * DAY),
+    updatedAt: iso(-4 * DAY + 3 * HOUR),
+    executedAt: iso(-4 * DAY + 3 * HOUR),
+    executedSig: sig(4),
+  },
+  {
+    id: 'prop_1003',
+    index: 3,
+    type: 'config' as const,
+    title: 'Subir el umbral de firmas a 3 de 3',
+    vaultId: '',
+    vaultLabel: 'Configuración del multisig',
+    amount: '',
+    mint: '',
+    symbol: '',
+    destination: '',
+    destinationLabel: '',
+    memo: 'Propuesta de endurecer la política de firmas',
+    status: 'rejected' as const,
+    threshold: 2,
+    approvals: ['mem_03'],
+    rejections: ['mem_01', 'mem_02'],
+    createdBy: 'mem_03',
+    createdByName: 'Diego Fuentes',
+    createdAt: iso(-9 * DAY),
+    updatedAt: iso(-8 * DAY),
+    executedAt: null,
+    executedSig: null,
+  },
+];
+
 /* ─────────────────────── Overview counters ────────────────────────── */
 
 export const MOCK_OVERVIEW_STATS = {

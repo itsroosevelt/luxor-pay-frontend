@@ -15,6 +15,10 @@ import {
   MOCK_POS_DEVICES,
   MOCK_API_KEYS,
   MOCK_CONTACTS,
+  MOCK_MEMBERS,
+  MOCK_MULTISIG,
+  MOCK_VAULTS,
+  MOCK_PROPOSALS,
   MOCK_PAYMENT_REQUESTS,
   MOCK_TRANSFERS,
   MOCK_WALLET_BALANCE,
@@ -27,6 +31,9 @@ import {
 import type { PaymentRequest } from '@/lib/payment-requests-api';
 import type { Transfer } from '@/lib/transfers-api';
 import type { Contact } from '@/lib/contacts-api';
+import type { Member } from '@/lib/members-api';
+import type { MultisigConfig, Vault } from '@/lib/treasury-api';
+import type { Proposal } from '@/lib/proposals-api';
 
 export interface MockResult {
   status: number;
@@ -47,8 +54,20 @@ const links = [...MOCK_PAYMENT_LINKS];
 const devices = [...MOCK_POS_DEVICES];
 const apiKeys = [...MOCK_API_KEYS];
 let contacts: Contact[] = [...MOCK_CONTACTS];
+let members: Member[] = [...(MOCK_MEMBERS as Member[])];
 let requests: PaymentRequest[] = [...MOCK_PAYMENT_REQUESTS];
 let transfers: Transfer[] = [...MOCK_TRANSFERS];
+let multisig: MultisigConfig = { ...MOCK_MULTISIG };
+let vaults: Vault[] = MOCK_VAULTS.map((v) => ({ ...v, tokens: [...v.tokens] }));
+let proposals: Proposal[] = MOCK_PROPOSALS.map((p) => ({
+  ...p,
+  approvals: [...p.approvals],
+  rejections: [...p.rejections],
+})) as Proposal[];
+
+/** The signed-in user's own multisig membership (mock: whoever has isCurrentUser). */
+const currentMemberId = () => members.find((m) => m.isCurrentUser)?.id ?? members[0]?.id ?? 'mem_01';
+const vaultLabelFor = (id: string) => vaults.find((v) => v.id === id)?.label ?? 'Bóveda';
 
 const nowIso = () => new Date().toISOString();
 const rid = (p: string) => `${p}_${Math.random().toString(36).slice(2, 8)}`;
@@ -112,6 +131,29 @@ export function resolveMock(
     const id = p.split('/')[2];
     const link = links.find((l) => l.id === id) ?? links[0];
     return ok({ data: link });
+  }
+  if (p.startsWith('/payment-links/') && (method === 'PUT' || method === 'PATCH')) {
+    const id = p.split('/')[2];
+    const index = links.findIndex((l) => l.id === id);
+    if (index !== -1) {
+      links[index] = {
+        ...links[index],
+        ...(body?.name ? { name: String(body.name) } : {}),
+        ...(body?.businessName ? { businessName: String(body.businessName) } : {}),
+        ...(body?.amount !== undefined ? { amount: Number(body.amount) } : {}),
+        ...(body?.currency ? { currency: String(body.currency) } : {}),
+      };
+      return ok({ data: links[index] });
+    }
+    return ok({ data: links[0] });
+  }
+  if (p.startsWith('/payment-links/') && method === 'DELETE') {
+    const id = p.split('/')[2];
+    const index = links.findIndex((l) => l.id === id);
+    if (index !== -1) {
+      links.splice(index, 1);
+    }
+    return ok({ success: true });
   }
 
   /* ───────────────── POS devices ───────────────── */
@@ -189,6 +231,181 @@ export function resolveMock(
     const id = p.split('/')[2];
     contacts = contacts.filter((c) => c.id !== id);
     return ok({ success: true });
+  }
+
+  /* ───────────────── Members ───────────────── */
+  if (p === '/members' && method === 'GET') return ok({ data: members, total: members.length });
+  if (p === '/members' && method === 'POST') {
+    const r = (body?.roles as Partial<Member['roles']>) ?? {};
+    const newMember: Member = {
+      id: rid('mem'),
+      merchantId: MOCK_MERCHANT_PROFILE.id!,
+      name: String(body?.name ?? 'Nuevo miembro'),
+      walletAddress: String(body?.walletAddress ?? ''),
+      roles: {
+        admin: Boolean(r.admin ?? false),
+        signer: Boolean(r.signer ?? true),
+        proposer: Boolean(r.proposer ?? true),
+        auditor: Boolean(r.auditor ?? false),
+      },
+      isCurrentUser: false,
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+    };
+    members = [...members, newMember];
+    return created({ data: newMember });
+  }
+  if (p.startsWith('/members/') && method === 'PATCH') {
+    const id = p.split('/')[2];
+    members = members.map((m) =>
+      m.id === id
+        ? {
+            ...m,
+            ...(body?.name ? { name: String(body.name) } : {}),
+            ...(body?.walletAddress ? { walletAddress: String(body.walletAddress) } : {}),
+            roles: { ...m.roles, ...((body?.roles as Partial<Member['roles']>) ?? {}) },
+            updatedAt: nowIso(),
+          }
+        : m,
+    );
+    return ok({ data: members.find((m) => m.id === id) });
+  }
+  if (p.startsWith('/members/') && method === 'DELETE') {
+    const id = p.split('/')[2];
+    members = members.filter((m) => m.id !== id);
+    return ok({ success: true });
+  }
+
+  /* ───────────────── Multisig config (Squads v4-style) ───────────────── */
+  if (p === '/multisig' && method === 'GET') {
+    return ok({ data: { ...multisig, memberCount: members.length } });
+  }
+  if (p === '/multisig' && method === 'PATCH') {
+    const next = Number(body?.threshold);
+    const signerCount = members.filter((m) => m.roles.signer).length;
+    if (Number.isFinite(next) && next >= 1 && next <= Math.max(1, signerCount)) {
+      multisig = { ...multisig, threshold: Math.round(next), updatedAt: nowIso() };
+    }
+    return ok({ data: { ...multisig, memberCount: members.length } });
+  }
+
+  /* ───────────────── Vaults (sub-bóvedas / Vault PDAs) ───────────────── */
+  if (p === '/vaults' && method === 'GET') return ok({ data: vaults });
+  if (p === '/vaults' && method === 'POST') {
+    const index = vaults.length;
+    const vault: Vault = {
+      id: rid('vault'),
+      index,
+      label: String(body?.label ?? `Bóveda ${index}`),
+      address: `Vau1t${Math.random().toString(36).slice(2, 10)}${'x'.repeat(30)}`.slice(0, 44),
+      description: String(body?.description ?? ''),
+      isDefault: false,
+      usdValue: 0,
+      solBalance: '0.0000',
+      tokens: [],
+      createdAt: nowIso(),
+    };
+    vaults = [...vaults, vault];
+    return created({ data: vault });
+  }
+
+  /* ───────────────── Proposals (create → vote → execute) ───────────────── */
+  if (p === '/proposals' && method === 'GET') {
+    const status = search.get('status');
+    const list = status ? proposals.filter((pr) => pr.status === status) : proposals;
+    const sorted = [...list].sort((a, b) => b.index - a.index);
+    return ok({ data: sorted });
+  }
+  if (p === '/proposals' && method === 'POST') {
+    multisig = { ...multisig, transactionIndex: multisig.transactionIndex + 1 };
+    const me = members.find((m) => m.id === currentMemberId());
+    const type = (body?.type as Proposal['type']) ?? 'transfer';
+    const mint = String(body?.mint ?? MINTS.USDC);
+    const proposal: Proposal = {
+      id: rid('prop'),
+      index: multisig.transactionIndex,
+      type,
+      title: String(body?.title ?? 'Nueva propuesta'),
+      vaultId: String(body?.vaultId ?? vaults[0]?.id ?? ''),
+      vaultLabel: type === 'config' ? 'Configuración del multisig' : vaultLabelFor(String(body?.vaultId ?? '')),
+      amount: String(body?.amount ?? ''),
+      mint,
+      symbol: symbolForMint(mint),
+      destination: String(body?.destination ?? ''),
+      destinationLabel: String(body?.destinationLabel ?? ''),
+      memo: String(body?.memo ?? ''),
+      status: 'active',
+      threshold: multisig.threshold,
+      approvals: [],
+      rejections: [],
+      createdBy: me?.id ?? currentMemberId(),
+      createdByName: me?.name ?? 'Tú',
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      executedAt: null,
+      executedSig: null,
+    };
+    proposals = [proposal, ...proposals];
+    return created({ data: proposal });
+  }
+
+  const propMatch = p.match(/^\/proposals\/([^/]+)\/(approve|reject|execute|cancel|activate)$/);
+  if (propMatch && method === 'POST') {
+    const [, id, action] = propMatch;
+    const meId = currentMemberId();
+    proposals = proposals.map((pr) => {
+      if (pr.id !== id) return pr;
+      const approvals = pr.approvals.filter((x) => x !== meId);
+      const rejections = pr.rejections.filter((x) => x !== meId);
+      if (action === 'activate') {
+        return { ...pr, status: 'active', updatedAt: nowIso() };
+      }
+      if (action === 'cancel') {
+        return { ...pr, status: 'cancelled', updatedAt: nowIso() };
+      }
+      if (action === 'approve') {
+        approvals.push(meId);
+        const status = approvals.length >= pr.threshold ? 'approved' : 'active';
+        return { ...pr, approvals, rejections, status, updatedAt: nowIso() };
+      }
+      if (action === 'reject') {
+        rejections.push(meId);
+        const signerCount = members.filter((m) => m.roles.signer).length;
+        const status = rejections.length > signerCount - pr.threshold ? 'rejected' : pr.status;
+        return { ...pr, approvals, rejections, status, updatedAt: nowIso() };
+      }
+      if (action === 'execute') {
+        const now = nowIso();
+        const executedSig = mockSig();
+        // Executed transfers show up in the transaction history.
+        if (pr.type === 'transfer' && pr.destination) {
+          transfers = [
+            {
+              id: rid('txf'),
+              merchantId: MOCK_MERCHANT_PROFILE.id!,
+              fromWallet: MOCK_USER.wallet,
+              toWallet: pr.destination,
+              reference: pr.title,
+              toNickname: pr.destinationLabel || null,
+              mint: pr.mint,
+              symbol: pr.symbol,
+              decimals: decimalsForMint(pr.mint),
+              amount: pr.amount,
+              rawAmount: String(Math.round(Number(pr.amount || 0) * 10 ** decimalsForMint(pr.mint))),
+              signature: executedSig,
+              status: 'confirmed',
+              errorMessage: null,
+              createdAt: now,
+              confirmedAt: now,
+            },
+            ...transfers,
+          ];
+        }
+        return { ...pr, status: 'executed', executedAt: now, executedSig, updatedAt: now };
+      }
+      return pr;
+    });
+    return ok({ data: proposals.find((pr) => pr.id === id) });
   }
 
   /* ───────────────── Payment requests ───────────────── */

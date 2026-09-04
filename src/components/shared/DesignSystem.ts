@@ -4,10 +4,21 @@ import styled from "styled-components";
 import { motion } from "framer-motion";
 
 export const GlassCard = styled(motion.div)<{ $variant?: "default" | "hero" }>`
-  background: var(--lx-surface, #17181E);
-  border: 1px solid var(--lx-border, rgba(255, 255, 255, 0.08));
-  border-radius: var(--lx-radius, 12px);
-  box-shadow: none;
+  background: ${({ $variant }) =>
+    $variant === "hero"
+      ? "linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(13, 15, 22, 0.95))"
+      : "rgba(18, 20, 28, 0.8)"};
+  border: 1px solid
+    ${({ $variant }) =>
+      $variant === "hero"
+        ? "rgba(96, 165, 250, 0.28)"
+        : "rgba(255, 255, 255, 0.12)"};
+  border-radius: 24px;
+  backdrop-filter: blur(24px);
+  box-shadow: ${({ $variant }) =>
+    $variant === "hero"
+      ? "0 24px 60px -16px rgba(0, 0, 0, 0.85), 0 0 35px rgba(37, 99, 235, 0.18)"
+      : "0 16px 40px -12px rgba(0, 0, 0, 0.7)"};
   padding: var(--lx-pad, 24px);
   position: relative;
   overflow: hidden;
@@ -15,23 +26,23 @@ export const GlassCard = styled(motion.div)<{ $variant?: "default" | "hero" }>`
 `;
 
 export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "glass" }>`
-  font-family: 'Inter', 'Outfit', sans-serif;
-  font-size: 14px;
-  font-weight: 600;
-  border-radius: var(--lx-radius-sm, 8px);
-  padding: 10px 18px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 9999px;
+  padding: 9px 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   cursor: pointer;
-  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  transition: all 0.2s ease;
   border: 1px solid transparent;
   white-space: nowrap;
 
   &:focus-visible {
     outline: none;
-    box-shadow: var(--lx-ring, 0 0 0 3px rgba(255, 255, 255, 0.14));
+    box-shadow: 0 0 0 2px #60A5FA, 0 0 12px rgba(96, 165, 250, 0.4);
   }
 
   &:disabled {
@@ -39,78 +50,88 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
     cursor: not-allowed;
   }
 
-  /* Primary — high-contrast white with near-black label (Squads "Send"). */
+  /* Primary — Official Luxor Electric Blue Gradient */
   ${({ $variant }) =>
     ($variant === "primary" || !$variant) &&
     `
-    background: var(--lx-primary, #FFFFFF);
-    color: var(--lx-primary-text, #0F1015);
+    background: linear-gradient(135deg, #60A5FA, #2563EB);
+    color: #FFFFFF;
+    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
     &:hover:not(:disabled) {
-      background: var(--lx-primary-hover, #E2E8F0);
+      background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.5);
+      transform: translateY(-1px);
     }
   `}
 
-  /* Secondary — outlined, neutral. */
+  /* Secondary — Outlined glass pill */
   ${({ $variant }) =>
     $variant === "secondary" &&
     `
-    background: var(--lx-fill, rgba(255,255,255,0.05));
-    color: var(--lx-text-muted, #8A8F9E);
-    border: 1px solid var(--lx-border-strong, rgba(255,255,255,0.12));
+    background: rgba(255, 255, 255, 0.05);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(12px);
     &:hover:not(:disabled) {
-      background: var(--lx-fill-hover, rgba(255,255,255,0.10));
-      color: var(--lx-text, #F1F5F9);
-      border-color: var(--lx-border-hover, rgba(255,255,255,0.18));
+      background: rgba(255, 255, 255, 0.10);
+      color: #FFFFFF;
+      border-color: rgba(96, 165, 250, 0.4);
+      transform: translateY(-1px);
     }
   `}
 
-  /* Glass — subtle translucent fill. */
+  /* Glass — Translucent pill fill */
   ${({ $variant }) =>
     $variant === "glass" &&
     `
-    background: var(--lx-fill, rgba(255,255,255,0.05));
-    color: var(--lx-text-muted, #8A8F9E);
-    border: 1px solid var(--lx-border, rgba(255,255,255,0.08));
+    background: rgba(96, 165, 250, 0.1);
+    color: #60A5FA;
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    backdrop-filter: blur(12px);
     &:hover:not(:disabled) {
-      background: var(--lx-fill-hover, rgba(255,255,255,0.10));
-      color: var(--lx-text, #F1F5F9);
-      border-color: var(--lx-border-hover, rgba(255,255,255,0.18));
+      background: rgba(96, 165, 250, 0.18);
+      color: #FFFFFF;
+      border-color: rgba(96, 165, 250, 0.45);
+      transform: translateY(-1px);
     }
   `}
 `;
 
 export const HeroTitle = styled.h1`
-  font-family: 'Inter', 'Outfit', sans-serif;
-  font-size: 28px;
-  font-weight: 600;
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 500;
   letter-spacing: -0.02em;
-  color: var(--lx-text, #F5F7FB);
+  color: #FFFFFF;
   line-height: 1.15;
   margin: 0;
 
   @media (min-width: 768px) {
-    font-size: 34px;
+    font-size: 30px;
   }
 `;
 
 export const EyebrowBadge = styled.span`
-  font-family: 'Inter', 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: var(--lx-text-dim, #66728A);
+  color: #60A5FA;
   display: inline-block;
   margin-bottom: 6px;
 `;
 
-/** Retained for API compatibility — now a flat neutral, no gradient. */
 export const GradientText = styled.span`
-  color: var(--lx-text, #F1F5F9);
+  background: linear-gradient(to right, #60A5FA, #2563EB);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 500;
 `;
 
 export const OnChainDataText = styled.span`
   font-family: monospace;
-  font-size: 14px;
-  color: var(--lx-text, #F1F5F9);
+  font-size: 13px;
+  color: #F1F5F9;
 `;
