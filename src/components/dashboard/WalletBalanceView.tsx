@@ -269,11 +269,6 @@ export function WalletBalanceView({
           <HeaderRow>
             <div>
               {isLoading ? (
-                <SkeletonBox $width="110px" $height="14px" $borderRadius="4px" style={{ marginBottom: '8px' }} />
-              ) : (
-                <EyebrowBadge>On-Chain Treasury</EyebrowBadge>
-              )}
-              {isLoading ? (
                 <SkeletonBox $width="150px" $height="24px" $borderRadius="6px" />
               ) : (
                 <Title>
@@ -312,11 +307,6 @@ export function WalletBalanceView({
           </HeaderRow>
 
           <BalanceSection>
-            {isLoading ? (
-              <SkeletonBox $width="90px" $height="12px" $borderRadius="4px" style={{ marginBottom: '6px' }} />
-            ) : (
-              <BalanceLabel>Total Solana</BalanceLabel>
-            )}
             {isLoading ? (
               <SkeletonBox $width="200px" $height="42px" $borderRadius="12px" />
             ) : isError ? (
@@ -360,9 +350,10 @@ export function WalletBalanceView({
           {/* Tokens section */}
           {!isLoading && !isError && data?.tokens && data.tokens.length > 0 && (
             <TokenList>
-              <BalanceLabel>SPL Utility Tokens</BalanceLabel>
               {data.tokens.map((token, index) => {
                 const symbol = token.symbol || "SPL";
+                const num = Number(token.uiAmount) || 0;
+                const formatted = num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                 return (
                   <TokenRow key={token.mint + index}>
                     <TokenInfo>
@@ -371,7 +362,7 @@ export function WalletBalanceView({
                       </TokenIconCircle>
                       <TokenSymbol>{symbol}</TokenSymbol>
                     </TokenInfo>
-                    <TokenAmount>{formatBalance(token.uiAmount)}</TokenAmount>
+                    <TokenAmount>{formatBalance(formatted)}</TokenAmount>
                   </TokenRow>
                 );
               })}

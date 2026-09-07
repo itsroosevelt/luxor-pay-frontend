@@ -1,17 +1,47 @@
 'use client';
 
-import { Home, Compass, Droplets, TrendingUp, Activity, Coins, HelpCircle } from 'lucide-react';
+import {
+  Home,
+  Compass,
+  Zap,
+  Flame,
+  Radio,
+  Headphones,
+  Activity,
+  Coins,
+  Droplets,
+  TrendingUp,
+  LayoutDashboard,
+} from 'lucide-react';
 import { PortalShellLayout } from '@/components/portals/PortalShellLayout';
-import type { PortalNavItem } from '@/components/portals/PortalNav';
+import type { PortalNavSection } from '@/components/portals/PortalNav';
 
-const NAV_ITEMS: PortalNavItem[] = [
-  { href: '/token-launcher', label: 'Home', icon: Home },
-  { href: '/token-launcher/explore', label: 'Explore', icon: Compass },
-  { href: '/token-launcher/liquidity', label: 'DEX Liquidity', icon: Droplets },
-  { href: '/token-launcher/pools', label: 'My Pools & Tokens', icon: TrendingUp },
-  { href: '/token-launcher/terminal', label: 'Trading Terminal', icon: Activity },
-  { href: '/token-launcher/lxr', label: '$LXR', icon: Coins },
-  { href: 'mailto:support@luxorpay.app', label: 'Support', icon: HelpCircle, external: true },
+const LAUNCHER_SECTIONS: PortalNavSection[] = [
+  {
+    title: 'Pump & DEX',
+    items: [
+      { href: '/token-launcher', label: 'Home', icon: Home },
+      { href: '/token-launcher/explore', label: 'Explore', icon: Compass },
+      { href: '/token-launcher/go', label: 'GO', icon: Zap },
+      { href: '/token-launcher/mayhem', label: 'Mayhem', icon: Flame },
+      { href: '/token-launcher/live', label: 'Live', icon: Radio },
+      { href: '/token-launcher/support', label: 'Support', icon: Headphones },
+      { href: '/token-launcher/terminal', label: 'Terminal', icon: Activity },
+      { href: '/token-launcher/lxr', label: '$LXR', icon: Coins },
+    ],
+  },
+  {
+    title: 'Pools & Tokens',
+    items: [
+      { href: '/token-launcher/pools', label: 'My Pools & Tokens', icon: TrendingUp },
+    ],
+  },
+  {
+    title: 'Navigation',
+    items: [
+      { href: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard },
+    ],
+  },
 ];
 
 export default function TokenLauncherLayout({ children }: { children: React.ReactNode }) {
@@ -19,7 +49,7 @@ export default function TokenLauncherLayout({ children }: { children: React.Reac
     <PortalShellLayout
       current="launcher"
       portalName="Launcher & DEX Liquidity"
-      navItems={NAV_ITEMS}
+      sections={LAUNCHER_SECTIONS}
       ctaLabel="Create Token"
       ctaHref="/token-launcher/create"
     >

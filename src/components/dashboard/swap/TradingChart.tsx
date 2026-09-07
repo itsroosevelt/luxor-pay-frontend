@@ -6,10 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, Layers } from 'lucide-react';
 
 const ChartCard = styled.div`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 24px;
-  padding: 24px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -165,17 +164,16 @@ const TabButton = styled.button<{ $active?: boolean }>`
 `;
 
 const EmptyOrdersCard = styled.div`
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 20px;
-  padding: 40px 20px;
+  background: transparent;
+  border: none;
+  padding: 30px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
   text-align: center;
-  min-height: 180px;
+  min-height: 160px;
 `;
 
 export function TradingChart() {

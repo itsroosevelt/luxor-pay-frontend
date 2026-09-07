@@ -241,31 +241,35 @@ html, body {
   box-shadow: var(--lx-ring);
 }
 
-/* Page header band — clean, unboxed title area */
+/* Page header band — clean, unboxed title area matching /dashboard */
+.lx-page-header,
 .lx-app .lx-page-header {
   padding: 24px 24px 12px 24px;
   border-bottom: none;
   background: transparent;
 }
 @media (min-width: 768px) {
+  .lx-page-header,
   .lx-app .lx-page-header {
-    padding: 28px 260px 16px 32px;
+    padding: 28px 360px 16px 32px;
   }
 }
+.lx-page-title,
 .lx-app .lx-page-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 500;
   letter-spacing: -0.02em;
-  color: var(--lx-text);
+  color: #FFFFFF;
   margin: 0;
   line-height: 1.15;
 }
+.lx-page-subtitle,
 .lx-app .lx-page-subtitle {
   margin-top: 4px;
   font-family: 'Montserrat', sans-serif;
   font-size: 13px;
-  color: var(--lx-text-muted);
+  color: rgba(255, 255, 255, 0.6);
   font-weight: 300;
 }
 

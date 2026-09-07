@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { signOut, onAuthStateChanged, type User } from 'firebase/auth';
 import { useEffect, useState } from 'react';
-import { Menu, X, Check, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, X, Check, LogOut, User as UserIcon, ArrowDownToLine } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { ensureMerchantProfile } from '@/lib/merchants-api';
 import { useMerchant } from '@/context/MerchantContext';
@@ -15,19 +15,27 @@ import { OnrampProgressBanner } from './OnrampProgressBanner';
 import { OnrampResultModal } from './OnrampResultModal';
 import { TopWalletBar } from './TopWalletBar';
 import { FundWalletButton } from './FundWalletButton';
-import { Sidebar, SidebarContent } from './Sidebar';
+import { Sidebar, SidebarContent, hydrateSectionsIcons, type NavSection } from './Sidebar';
 import { SupportCenterDrawer } from './SupportCenterDrawer';
 import { QrOperationsModal } from './overview/QrOperationsModal';
 import { TransferModal } from './overview/TransferModal';
 import { TransferSuccessModal } from './overview/TransferSuccessModal';
 import { PaymentRequestModal } from './overview/PaymentRequestModal';
+import { OfframpModal } from './OfframpModal';
 import { Transfer } from '@/lib/transfers-api';
 
 const LOGO_SRC =
   'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b';
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({
+  children,
+  customSections,
+}: {
+  children: React.ReactNode;
+  customSections?: NavSection[];
+}) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -35,11 +43,45 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [isSupportDrawerOpen, setIsSupportDrawerOpen] = useState(false);
   const { profile, setProfile, isKycModalOpen, setIsKycModalOpen } = useMerchant();
 
+  const [persistedPortalSections, setPersistedPortalSections] = useState<NavSection[] | undefined>(undefined);
+
+  useEffect(() => {
+    if (customSections && customSections.length > 0) {
+      try {
+        sessionStorage.setItem('luxor_active_portal_sections', JSON.stringify(customSections));
+        setPersistedPortalSections(customSections);
+      } catch (e) {
+        console.error('Failed to save portal sections:', e);
+      }
+    } else if (pathname === '/dashboard/settings' || pathname === '/dashboard/profile') {
+      try {
+        const saved = sessionStorage.getItem('luxor_active_portal_sections');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setPersistedPortalSections(hydrateSectionsIcons(parsed));
+        }
+      } catch (e) {
+        console.error('Failed to load portal sections:', e);
+      }
+    } else if (pathname === '/dashboard') {
+      try {
+        sessionStorage.removeItem('luxor_active_portal_sections');
+        setPersistedPortalSections(undefined);
+      } catch (e) {
+        console.error('Failed to clear portal sections:', e);
+      }
+    }
+  }, [customSections, pathname]);
+
+  const activeCustomSections = customSections || persistedPortalSections;
+
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isTransferSuccessModalOpen, setIsTransferSuccessModalOpen] = useState(false);
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
   const [isPaymentRequestModalOpen, setIsPaymentRequestModalOpen] = useState(false);
+
+  const [isOfframpOpen, setIsOfframpOpen] = useState(false);
 
   const extendedUser = user as (User & { displayName?: string; photoURL?: string }) | null;
   const displayName =
@@ -106,6 +148,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const handleSignOut = async () => {
     sessionStorage.removeItem('luxor_kyc_dismissed');
     sessionStorage.removeItem('luxor_merchant_profile');
+    sessionStorage.removeItem('luxor_active_portal_sections');
     await signOut(auth);
     router.push('/');
   };
@@ -130,6 +173,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         profile={profile}
         onSignOut={handleSignOut}
         onOpenSupportCenter={() => setIsSupportDrawerOpen(true)}
+        customSections={activeCustomSections}
       />
 
       {/* Main content */}
@@ -172,7 +216,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               className="fixed inset-0 bg-black/70 backdrop-blur-sm"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            <aside className="relative flex h-full w-[280px] max-w-[85vw] flex-col bg-[#0A0B0E] border-l border-white/10 animate-in slide-in-from-right duration-200">
+            <aside className="relative flex h-full w-[240px] max-w-[85vw] flex-col bg-[#0A0B0E] border-l border-white/10 animate-in slide-in-from-right duration-200">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(false)}
@@ -186,6 +230,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 onSignOut={handleSignOut}
                 onNavigate={() => setIsMobileMenuOpen(false)}
                 onOpenSupportCenter={() => setIsSupportDrawerOpen(true)}
+                customSections={activeCustomSections}
               />
             </aside>
           </div>
@@ -254,7 +299,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         onClose={() => setIsSupportDrawerOpen(false)}
       />
 
-      {/* Account dropdown menu — shared for desktop + mobile */}
+      <OfframpModal
+        isOpen={isOfframpOpen}
+        onClose={() => setIsOfframpOpen(false)}
+        solBalance={null}
+      />
+
+      {/* Account dropdown menu / Floating Profile Panel — shared for desktop + mobile */}
       {isAccountMenuOpen && user && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setIsAccountMenuOpen(false)} />
@@ -266,15 +317,16 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               borderRadius: '24px',
               boxShadow: '0 24px 60px -16px rgba(0, 0, 0, 0.95), 0 0 40px rgba(0, 0, 0, 0.8)',
             }}
-            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[340px] max-w-[calc(100vw-2rem)] p-6 text-[color:var(--lx-text)] animate-in fade-in slide-in-from-top-2 duration-200"
+            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[380px] max-w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-6 text-[color:var(--lx-text)] animate-in fade-in slide-in-from-top-2 duration-200 space-y-4 scrollbar-thin"
           >
-            <p className="text-center text-xs text-gray-400 font-mono truncate mb-4">{user.email}</p>
+            <p className="text-center text-xs text-gray-400 font-mono truncate mb-2">{user.email}</p>
 
+            {/* Avatar & Verification Status */}
             <div className="flex flex-col items-center text-center">
               <div className="rounded-full ring-2 ring-white/10">{renderAvatar(72)}</div>
-              <h3 className="mt-3 text-lg font-light text-white">Hi, {displayName}!</h3>
+              <h3 className="mt-3 text-lg font-light text-white">Hello, {displayName}!</h3>
               {profile?.businessName && (
-                <p className="text-xs text-gray-500 mt-0.5">{profile.businessName}</p>
+                <p className="text-xs text-gray-400 mt-0.5">{profile.businessName}</p>
               )}
 
               <div className="mt-2.5">
@@ -294,16 +346,32 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <Link
-              href="/dashboard/profile"
-              onClick={() => setIsAccountMenuOpen(false)}
-              className="mt-4 w-full flex items-center justify-center gap-2 py-2 rounded-full border border-white/15 bg-white/[0.04] hover:bg-white/[0.08] text-white transition-all text-xs font-medium"
-            >
-              <UserIcon size={14} /> Manage Profile & Statements
-            </Link>
-
+            {/* Cash Out / Offramp Button */}
             {kycVerified && (
-              <div className="mt-2.5 w-full">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsAccountMenuOpen(false);
+                  setIsOfframpOpen(true);
+                }}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white transition-all text-left group"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <ArrowDownToLine size={16} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-white">Cash Out (MoonPay)</p>
+                    <p className="text-[11px] text-gray-400">SOL → Bank · Card · SEPA</p>
+                  </div>
+                </div>
+                <span className="text-gray-400 group-hover:text-white transition-colors">→</span>
+              </button>
+            )}
+
+            {/* Fund Wallet Button */}
+            {kycVerified && (
+              <div className="w-full">
                 <FundWalletButton
                   merchantWallet={profile?.merchantWallet}
                   onTrigger={() => setIsAccountMenuOpen(false)}
@@ -311,12 +379,31 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
 
+            {/* Manage Profile Button */}
+            <Link
+              href="/dashboard/profile"
+              onClick={() => setIsAccountMenuOpen(false)}
+              className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white transition-all text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center flex-shrink-0">
+                  <UserIcon size={16} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white">Manage Profile & Statements</p>
+                  <p className="text-[11px] text-gray-400">Account details & statements</p>
+                </div>
+              </div>
+              <span className="text-gray-400 group-hover:text-white transition-colors">→</span>
+            </Link>
+
+            {/* Disconnect / Sign Out */}
             <button
               type="button"
               onClick={handleSignOut}
-              className="mt-6 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-red-400 hover:bg-red-400/10 transition-colors text-sm font-medium"
             >
-              <LogOut size={16} /> Sign out
+              <LogOut size={16} /> Sign Out
             </button>
           </div>
         </>

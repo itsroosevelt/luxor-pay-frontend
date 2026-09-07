@@ -1,53 +1,158 @@
-import { TrendingUp, ExternalLink } from 'lucide-react';
+'use client';
 
-const POOLS = [
-  { symbol: 'LXR', pair: 'LXR / SOL', dex: 'Raydium AMM', liquidity: '$145,280.00', status: 'Activo' },
+import React from 'react';
+import styled from 'styled-components';
+import { TrendingUp, ExternalLink, Plus, Lock } from 'lucide-react';
+import Link from 'next/link';
+
+interface PoolItem {
+  id: string;
+  symbol: string;
+  pair: string;
+  dex: string;
+  tvl: string;
+  volume24h: string;
+  myLiquidity: string;
+  feesEarned: string;
+  status: 'Active' | 'Locked' | 'Migrated';
+  feeTier: string;
+}
+
+const POOLS: PoolItem[] = [
+  {
+    id: 'pool-1',
+    symbol: 'LXR',
+    pair: 'LXR / SOL',
+    dex: 'Raydium AMM V4',
+    tvl: '$145,280.00',
+    volume24h: '$38,420.00',
+    myLiquidity: '$12,450.00',
+    feesEarned: '$342.18',
+    status: 'Active',
+    feeTier: '0.25%',
+  },
+  {
+    id: 'pool-2',
+    symbol: 'BIDET',
+    pair: 'BIDET / SOL',
+    dex: 'Meteora DLMM',
+    tvl: '$89,120.00',
+    volume24h: '$112,050.00',
+    myLiquidity: '$5,200.00',
+    feesEarned: '$189.50',
+    status: 'Active',
+    feeTier: '1.00%',
+  },
+  {
+    id: 'pool-3',
+    symbol: 'zDOG',
+    pair: 'zDOG / USDC',
+    dex: 'Raydium CLMM',
+    tvl: '$42,900.00',
+    volume24h: '$15,800.00',
+    myLiquidity: '$1,800.00',
+    feesEarned: '$45.20',
+    status: 'Locked',
+    feeTier: '0.30%',
+  },
 ];
+
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background: #0a0a0a;
+  color: #ededed;
+  font-family: 'Montserrat', sans-serif;
+`;
+
+const ContentLayout = styled.div`
+  padding: 32px 40px 60px 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px;
+  }
+`;
 
 export default function PoolsPage() {
   return (
-    <>
+    <PageContainer>
       <header className="lx-page-header">
-        <h1 className="lx-page-title">Mis Pools & Tokens</h1>
-        <p className="lx-page-subtitle">Activos y pools de liquidez que has creado desde este portal.</p>
+        <div>
+          <h1 className="lx-page-title flex items-center gap-3">
+            <TrendingUp size={28} className="text-white" /> My Pools &amp; Tokens
+          </h1>
+          <p className="lx-page-subtitle">
+            Manage your deployed tokens, track DEX liquidity pool performance, and claim accrued LP fees.
+          </p>
+        </div>
       </header>
 
-      <div className="w-full max-w-[1100px] p-6 md:p-8 space-y-6">
+      <ContentLayout>
+        {/* Pools Table (Frameless / Directly on canvas) */}
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp size={18} className="text-white/60" />
-            <h2 className="text-[16px] font-medium text-white">Pools &amp; activos registrados</h2>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <TrendingUp size={18} className="text-white/60" />
+              <h2 className="text-base font-semibold text-white font-['Outfit']">Registered DEX Pools &amp; Assets</h2>
+              <span className="text-xs text-gray-400 font-mono ml-2">(3 Registered)</span>
+            </div>
+            <Link
+              href="/token-launcher"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-['Outfit'] font-semibold text-xs hover:bg-gray-200 transition-colors shrink-0 shadow-lg"
+            >
+              <Plus size={15} /> Create New Pool
+            </Link>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm font-mono">
               <thead>
-                <tr className="border-b border-white/10">
-                  <th className="pb-3 font-medium text-xs text-white/50">Token / Par</th>
-                  <th className="pb-3 font-medium text-xs text-white/50">DEX</th>
-                  <th className="pb-3 font-medium text-xs text-white/50">Liquidez</th>
-                  <th className="pb-3 font-medium text-xs text-white/50">Estado</th>
-                  <th className="pb-3 text-right font-medium text-xs text-white/50">Acción</th>
+                <tr className="border-b border-white/15 text-xs text-gray-400 font-normal">
+                  <th className="pb-3">Token / Pair</th>
+                  <th className="pb-3">DEX Venue</th>
+                  <th className="pb-3">Fee Tier</th>
+                  <th className="pb-3">Total Pool TVL</th>
+                  <th className="pb-3">24h Volume</th>
+                  <th className="pb-3">My Liquidity</th>
+                  <th className="pb-3">Fees Earned</th>
+                  <th className="pb-3">Status</th>
+                  <th className="pb-3 text-right">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/10">
+              <tbody className="divide-y divide-white/5 text-xs">
                 {POOLS.map((p) => (
-                  <tr key={p.pair}>
-                    <td className="py-3.5">
-                      <div className="flex items-center gap-3">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-semibold bg-white/10 border border-white/15 text-white">
+                  <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-4">
+                      <div className="flex items-center gap-3 font-['Outfit'] font-medium text-sm text-white">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold bg-white/10 border border-white/20 text-white">
                           {p.symbol}
                         </span>
-                        <span className="font-medium text-white">{p.pair}</span>
+                        <span>{p.pair}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 text-white/60">{p.dex}</td>
-                    <td className="py-3.5 font-mono text-white">{p.liquidity}</td>
-                    <td className="py-3.5"><span className="lx-status">{p.status}</span></td>
-                    <td className="py-3.5 text-right">
-                      <a href="https://raydium.io" target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-white/60 hover:text-white transition-colors">
-                        Ver en DEX <ExternalLink size={12} />
+                    <td className="py-4 text-gray-300">{p.dex}</td>
+                    <td className="py-4 text-gray-400">{p.feeTier}</td>
+                    <td className="py-4 font-bold text-white">{p.tvl}</td>
+                    <td className="py-4 text-gray-300">{p.volume24h}</td>
+                    <td className="py-4 font-bold text-white">{p.myLiquidity}</td>
+                    <td className="py-4 text-gray-300">{p.feesEarned}</td>
+                    <td className="py-4">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-white/10 border border-white/20 text-white">
+                        {p.status === 'Locked' && <Lock size={10} />}
+                        {p.status}
+                      </span>
+                    </td>
+                    <td className="py-4 text-right">
+                      <a
+                        href="https://raydium.io"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-white transition-colors"
+                      >
+                        View on DEX <ExternalLink size={12} />
                       </a>
                     </td>
                   </tr>
@@ -56,7 +161,7 @@ export default function PoolsPage() {
             </table>
           </div>
         </div>
-      </div>
-    </>
+      </ContentLayout>
+    </PageContainer>
   );
 }

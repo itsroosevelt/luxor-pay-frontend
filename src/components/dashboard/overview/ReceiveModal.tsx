@@ -203,7 +203,7 @@ export function ReceiveModal({
 
   const handleCreateLink = () => {
     onClose();
-    router.push('/dashboard/links');
+    router.push('/payment-portal/links');
   };
 
   const handleAskForPayment = () => {

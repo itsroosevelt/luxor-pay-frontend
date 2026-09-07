@@ -239,7 +239,7 @@ export default function DashboardOverviewPage() {
       <div className="p-6 md:p-8 w-full max-w-[1600px] mx-auto space-y-8">
         {pendingInboxCount > 0 && (
           <Link
-            href="/dashboard/requests"
+            href="/payment-portal/requests"
             className="flex items-center justify-between gap-4 p-4 transition-colors hover:bg-white/[0.03]"
             style={{
               background: 'var(--lx-surface)',
@@ -313,8 +313,8 @@ export default function DashboardOverviewPage() {
         {merchantWallet && <DashboardExtraPanelsContainer />}
 
         <div className="grid md:grid-cols-3 gap-5">
-          <StatCard label="Payment links" value={stats.links} href="/dashboard/links" />
-          <StatCard label="POS devices" value={stats.pos} href="/dashboard/settings?tab=pos" />
+          <StatCard label="Payment links" value={stats.links} href="/payment-portal/links" />
+          <StatCard label="POS devices" value={stats.pos} href="/payment-portal/pos" />
           <StatCard label="API" value="Ready" href="/dashboard/settings?tab=developers" isText />
         </div>
 
@@ -323,7 +323,7 @@ export default function DashboardOverviewPage() {
           <h2 className="text-xl font-semibold mb-4 tracking-tight" style={{ color: 'var(--lx-text)' }}>Quick start</h2>
           <div className="grid gap-3">
             <QuickLink
-              href="/dashboard/links"
+              href="/payment-portal/links"
               icon={LinkIcon}
               title="Create a payment link"
               description="Share a checkout URL on your website or social media."

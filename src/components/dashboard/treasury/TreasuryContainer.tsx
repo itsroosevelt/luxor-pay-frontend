@@ -36,14 +36,14 @@ const short = (a: string) => (a.length > 16 ? `${a.slice(0, 6)}…${a.slice(-6)}
 
 function SummaryTile({ value, label, icon: Icon }: { value: number | string; label: string; icon: typeof Coins }) {
   return (
-    <div className="lx-card flex flex-col justify-between gap-6 !p-5">
-      <div className="flex items-start justify-between">
-        <span className="text-3xl font-semibold tracking-tight" style={{ color: 'var(--lx-text)' }}>{value}</span>
-        <span className="flex h-7 w-7 items-center justify-center rounded-md" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)' }}>
-          <Icon size={14} style={{ color: 'var(--lx-text-muted)' }} />
-        </span>
+    <div className="p-5 rounded-3xl bg-white/[0.03] border border-white/10 flex items-center justify-between font-mono">
+      <div>
+        <span className="text-2xl font-bold text-white font-['Outfit'] block">{value}</span>
+        <span className="text-xs text-gray-400 font-['Montserrat'] mt-1 block">{label}</span>
       </div>
-      <span className="text-sm" style={{ color: 'var(--lx-text-muted)' }}>{label}</span>
+      <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white">
+        <Icon size={18} />
+      </div>
     </div>
   );
 }
@@ -69,7 +69,7 @@ export function TreasuryContainer() {
   const [vaultDesc, setVaultDesc] = useState('');
   const [creating, setCreating] = useState(false);
 
-  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copied'); };
+  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copied to clipboard'); };
 
   const totalVaultUsd = vaults.reduce((s, v) => s + v.usdValue, 0);
 
@@ -80,7 +80,7 @@ export function TreasuryContainer() {
     try {
       await createVault({ label: vaultLabel.trim(), description: vaultDesc.trim() });
       setVaultLabel(''); setVaultDesc(''); setVaultModalOpen(false);
-      toast.success('Vault created (Vault PDA derived from multisig)');
+      toast.success('Vault created successfully (Derived PDA)');
     } catch { toast.error('Could not create vault'); }
     finally { setCreating(false); }
   };
@@ -88,7 +88,7 @@ export function TreasuryContainer() {
   if (!merchantWallet) {
     return (
       <div className="p-6 md:p-8">
-        <div className="lx-card text-sm" style={{ borderColor: 'var(--lx-warning)', background: 'rgba(245, 158, 11, 0.06)', color: '#FDE68A' }}>
+        <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-sm font-mono">
           Add your Solana wallet in Settings to view your treasury.
         </div>
       </div>
@@ -99,125 +99,172 @@ export function TreasuryContainer() {
 
   return (
     <div className="mx-auto w-full max-w-[1600px] space-y-6 p-6 md:p-8">
-      {/* 1 · Total balance + actions */}
-      <WalletBalanceView
-        data={balance.data}
-        isLoading={balance.isLoading}
-        isError={balance.isError}
-        errorMessage={balance.errorMessage}
-        refetch={balance.refetch}
-        isPrivacyMode={balance.isPrivacyMode}
-        togglePrivacyMode={balance.togglePrivacyMode}
-        isKycVerified={profile?.kyc ?? false}
-        onVerifyClick={() => setIsKycModalOpen(true)}
-        onSendClick={() => setIsTransferOpen(true)}
-        onDepositClick={() => setIsQrOpen(true)}
-        onTradeClick={() => router.push('/dashboard/swap')}
-        merchantWallet={merchantWallet}
-      />
+      {/* 1 · Total balance (Half-width) + Multisig Policy Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="lg:col-span-6">
+          <WalletBalanceView
+            data={balance.data}
+            isLoading={balance.isLoading}
+            isError={balance.isError}
+            errorMessage={balance.errorMessage}
+            refetch={balance.refetch}
+            isPrivacyMode={balance.isPrivacyMode}
+            togglePrivacyMode={balance.togglePrivacyMode}
+            isKycVerified={profile?.kyc ?? false}
+            onVerifyClick={() => setIsKycModalOpen(true)}
+            onSendClick={() => setIsTransferOpen(true)}
+            onDepositClick={() => setIsQrOpen(true)}
+            onTradeClick={() => router.push('/dashboard/swap')}
+            merchantWallet={merchantWallet}
+          />
+        </div>
 
-      {/* 2 · Multisig policy */}
-      <section className="lx-card" style={{ display: 'flex', flexWrap: 'wrap', gap: 24, alignItems: 'center', justifyContent: 'space-between' }}>
-        <div className="flex items-start gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)' }}>
-            <ShieldCheck size={16} style={{ color: 'var(--lx-text-muted)' }} />
-          </span>
-          <div>
-            <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Multisig Treasury · Squads v4</p>
-            <button type="button" onClick={() => config && copy(config.address)}
-              className="inline-flex items-center gap-1.5 font-mono text-[13px]" style={{ color: 'var(--lx-text)' }}>
-              {config ? short(config.address) : '—'} <Copy size={12} />
-            </button>
-          </div>
+        {/* 2 · Multisig policy card (Right Half) */}
+        <div className="lg:col-span-6 flex flex-col justify-between">
+          <section className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 h-full flex flex-col justify-between space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white shrink-0">
+                  <ShieldCheck size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-white font-['Outfit']">
+                    Multisig Treasury
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => config && copy(config.address)}
+                    className="inline-flex items-center gap-1.5 font-mono text-xs text-gray-400 hover:text-white transition-colors mt-0.5"
+                  >
+                    {config ? short(config.address) : '—'} <Copy size={11} />
+                  </button>
+                </div>
+              </div>
+
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-white/10 text-white border border-white/15">
+                {config ? `${config.threshold}-of-N Threshold` : '2-of-N Threshold'}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-4 border-y border-white/5 font-mono text-xs">
+              <div>
+                <span className="text-gray-400 block text-[11px]">Active Vaults</span>
+                <span className="text-white font-bold text-lg">{vaults.length}</span>
+              </div>
+              <div className="text-right">
+                <span className="text-gray-400 block text-[11px]">Signers Policy</span>
+                <span className="text-white font-bold text-sm">{config ? `${config.threshold}-of-N Squads` : '2-of-3 Squads'}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard/members')}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-white font-['Outfit'] hover:bg-white/20 transition-colors"
+              >
+                <Users size={14} /> Members &amp; Policy <ArrowUpRight size={13} />
+              </button>
+            </div>
+          </section>
         </div>
-        <div className="flex flex-wrap items-center gap-6">
-          <div>
-            <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Threshold</p>
-            <p className="text-[15px] font-semibold tabular-nums" style={{ color: 'var(--lx-text)' }}>
-              {config ? `${config.threshold}-of-N` : '—'}
-            </p>
-          </div>
-          <button type="button" onClick={() => router.push('/dashboard/members')}
-            className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-[13px] font-medium"
-            style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border-strong)', color: 'var(--lx-text-muted)' }}>
-            <Users size={14} /> Members &amp; Policy <ArrowUpRight size={13} />
-          </button>
-        </div>
-      </section>
+      </div>
 
       {/* 3 · Vaults */}
-      <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold tracking-tight" style={{ color: 'var(--lx-text)' }}>
-            Vaults <span style={{ color: 'var(--lx-text-dim)' }}>· {vaults.length}</span>
-          </h2>
-          <button type="button" onClick={() => setVaultModalOpen(true)}
-            className="lx-btn lx-btn-primary">
+      <section className="space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold text-white font-['Outfit']">
+              Vaults
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-white/10 text-gray-300 border border-white/15">
+              {vaults.length}
+            </span>
+            {!tLoading && vaults.length > 0 && (
+              <span className="text-xs font-mono text-gray-400 border-l border-white/10 pl-3">
+                Total: <strong className="text-white">{usd(totalVaultUsd)}</strong>
+              </span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setVaultModalOpen(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-['Outfit'] font-semibold text-xs hover:bg-gray-200 transition-colors"
+          >
             <Plus size={15} /> Create Vault
           </button>
         </div>
 
         {tLoading && (
-          <div className="flex items-center justify-center gap-2 py-12 text-sm" style={{ color: 'var(--lx-text-muted)' }}>
+          <div className="flex items-center justify-center gap-2 py-12 text-xs font-mono text-gray-400">
             <Loader2 size={18} className="animate-spin" /> Loading vaults…
           </div>
         )}
         {tError && (
-          <div className="flex items-center gap-3 rounded-xl p-4 text-sm" style={{ background: 'var(--lx-danger-soft)', border: '1px solid var(--lx-danger)', color: 'var(--lx-danger)' }}>
+          <div className="flex items-center gap-3 rounded-2xl p-4 text-xs font-mono bg-red-500/10 border border-red-500/20 text-red-300">
             <AlertTriangle size={16} /> {tErr || 'Error loading vaults'}
           </div>
         )}
 
         {!tLoading && !tError && (
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <AnimatePresence>
               {vaults.map((v) => (
                 <motion.div
                   key={v.id}
                   layout
-                  initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
                   transition={{ type: 'spring', bounce: 0.26, duration: 0.42 }}
-                  className="lx-card"
-                  style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 18 }}
+                  className="p-5 rounded-3xl bg-white/[0.02] border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-4"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
-                        <Landmark size={15} />
-                      </span>
-                      <div>
-                        <p className="text-[14px] font-semibold" style={{ color: 'var(--lx-text)' }}>{v.label}</p>
-                        <p className="font-mono text-[11px]" style={{ color: 'var(--lx-text-dim)' }}>#{v.index} · {short(v.address)}</p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-9 h-9 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white shrink-0">
+                        <Landmark size={16} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-white font-['Outfit'] truncate">{v.label}</p>
                       </div>
                     </div>
                     {v.isDefault && (
-                      <span className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold" style={{ background: 'var(--lx-fill-hover)', color: 'var(--lx-text-muted)' }}>Default</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-white/10 text-gray-300 border border-white/15 shrink-0">
+                        Default
+                      </span>
                     )}
                   </div>
 
-                  <p className="text-[12.5px]" style={{ color: 'var(--lx-text-muted)' }}>{v.description || '—'}</p>
+                  <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{v.description || '—'}</p>
 
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <p className="lx-eyebrow" style={{ marginBottom: 2 }}>Value</p>
-                      <p className="text-[20px] font-semibold tracking-tight tabular-nums" style={{ color: 'var(--lx-text)' }}>{usd(v.usdValue)}</p>
-                    </div>
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                    <p className="text-xl font-bold font-mono text-white">{usd(v.usdValue)}</p>
                     <div className="flex gap-1.5">
                       {v.tokens.filter((t) => Number(t.uiAmount) > 0).map((t) => (
-                        <span key={t.mint} className="rounded-md px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
+                        <span
+                          key={t.mint}
+                          className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white/10 border border-white/15 text-white"
+                        >
                           {t.symbol}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="flex gap-2 pt-1">
-                    <button type="button" onClick={() => router.push('/dashboard/transactions')}
-                      className="lx-btn lx-btn-secondary flex-1 !py-1.5 text-[12px]">
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => router.push('/dashboard/transactions')}
+                      className="flex-1 py-2 rounded-full bg-white/5 border border-white/15 text-xs font-['Outfit'] font-medium text-white hover:bg-white/10 transition-colors text-center"
+                    >
                       View transactions
                     </button>
-                    <button type="button" onClick={() => copy(v.address)}
-                      className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
+                    <button
+                      type="button"
+                      onClick={() => copy(v.address)}
+                      className="w-8 h-8 rounded-full bg-white/5 border border-white/15 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"
+                      title="Copy address"
+                    >
                       <Copy size={13} />
                     </button>
                   </div>
@@ -226,19 +273,11 @@ export function TreasuryContainer() {
             </AnimatePresence>
           </div>
         )}
-
-        {!tLoading && vaults.length > 0 && (
-          <p className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>
-            Total Vault Assets: <span className="tabular-nums" style={{ color: 'var(--lx-text-muted)' }}>{usd(totalVaultUsd)}</span>
-          </p>
-        )}
       </section>
 
-      {/* 4 · Holdings summary */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <SummaryTile value={balance.isLoading ? '—' : coinCount} label="Coins" icon={Coins} />
-        <SummaryTile value={0} label="Stakes" icon={Layers} />
-        <SummaryTile value={0} label="NFTs" icon={ImageIcon} />
+      {/* 4 · Asset Holdings Tile */}
+      <div className="w-full">
+        <SummaryTile value={balance.isLoading ? '—' : coinCount} label="Active Coins & Treasury Assets" icon={Coins} />
       </div>
 
       {/* Create-vault modal */}

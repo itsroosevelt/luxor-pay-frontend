@@ -1,11 +1,15 @@
-import { Metadata } from 'next';
-import { ContactsContainer } from '@/components/dashboard/contacts/ContactsContainer';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Contactos & Directorio | Luxor Pay',
-  description: 'Gestiona tus contactos frecuentes y transferencias en la red Luxor Pay.',
-};
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function ContactsPage() {
-  return <ContactsContainer />;
+export default function DashboardContactsRedirect() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/payment-portal/contacts');
+  }, [router]);
+
+  return null;
 }
+

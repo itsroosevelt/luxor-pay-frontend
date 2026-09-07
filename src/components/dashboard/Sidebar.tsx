@@ -21,7 +21,6 @@ import {
   Landmark,
   CandlestickChart,
   Layers,
-  Link as LinkIcon,
   QrCode,
   Code2,
   UserCircle,
@@ -32,9 +31,11 @@ import {
   ChevronLeft,
   ExternalLink,
   Repeat,
-  FileText,
   Sparkles,
   Rocket,
+  Clock,
+  Link2,
+  FileText,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import type { MerchantProfile } from '@luxor/contracts';
@@ -63,28 +64,29 @@ export type NavSection = {
   items: NavNode[];
 };
 
+export const DEFAULT_PORTAL_SHORTCUTS: NavNode[] = [
+  { kind: 'link', href: '/payment-portal/links', label: 'Payment Links', icon: Clock },
+  { kind: 'link', href: '/payment-portal/pos', label: 'POS Terminal', icon: Clock },
+  { kind: 'link', href: '/payment-portal/requests', label: 'Payment Requests', icon: Clock },
+  { kind: 'link', href: '/token-launcher', label: 'Token Launcher', icon: Clock },
+];
+
 export const NAV_SECTIONS: NavSection[] = [
   {
     title: 'Overview',
     items: [
       { kind: 'link', href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
-      { kind: 'link', href: '/dashboard/transactions', label: 'Transactions', icon: Zap },
     ],
+  },
+  {
+    title: 'Shortcuts',
+    items: DEFAULT_PORTAL_SHORTCUTS,
   },
   {
     title: 'Portals',
     items: [
-      { kind: 'link', href: '/token-launcher', label: 'Launcher & DEX', icon: Rocket },
-      { kind: 'link', href: '/payment-portal', label: 'POS & Payments', icon: QrCode },
-    ],
-  },
-  {
-    title: 'Payments',
-    items: [
-      { kind: 'link', href: '/dashboard/links', label: 'Payment Links', icon: LinkIcon },
-      { kind: 'link', href: '/dashboard/pos', label: 'POS Terminal', icon: QrCode },
-      { kind: 'link', href: '/dashboard/requests', label: 'Payment Requests', icon: FileText },
-      { kind: 'link', href: '/dashboard/contacts', label: 'Contacts', icon: Users },
+      { kind: 'link', href: '/token-launcher', label: 'Launcher & DEX', icon: Rocket, external: true },
+      { kind: 'link', href: '/payment-portal', label: 'POS & Payments', icon: QrCode, external: true },
     ],
   },
   {
@@ -100,6 +102,8 @@ export const NAV_SECTIONS: NavSection[] = [
           { href: '/dashboard/members', label: 'Multisig Signers' },
         ],
       },
+      { kind: 'link', href: '/dashboard/transactions', label: 'Transactions', icon: Zap },
+      { kind: 'link', href: '/dashboard/members', label: 'Members', icon: Users },
       { kind: 'link', href: '/dashboard/swap', label: 'Trade', icon: CandlestickChart },
       { kind: 'link', href: '/dashboard/stake', label: 'Stake', icon: Layers },
     ],
@@ -107,8 +111,6 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: 'System & Devs',
     items: [
-      { kind: 'link', href: '/dashboard/profile', label: 'Profile', icon: UserCircle },
-      { kind: 'link', href: '/dashboard/members', label: 'Members', icon: Users },
       { kind: 'link', href: '/dashboard/subscription', label: 'Subscription', icon: Sparkles },
       {
         kind: 'group',
@@ -116,11 +118,22 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Developers',
         icon: Code2,
         children: [
-          { href: '/dashboard/settings?tab=developers', label: 'API Keys & Secrets', tab: 'developers' },
-          { href: '/dashboard/developers', label: 'Webhooks & Docs' },
+          { href: '/dashboard/developers/token-manager', label: 'Token Manager' },
+          { href: '/dashboard/developers/tx-builder', label: 'Tx Builder' },
+          { href: '/dashboard/developers/programs', label: 'Programs' },
         ],
       },
-      { kind: 'link', href: '/dashboard/settings', label: 'Settings', icon: Settings },
+      {
+        kind: 'group',
+        id: 'settings',
+        label: 'Settings',
+        icon: Settings,
+        children: [
+          { href: '/dashboard/settings', label: 'General', tab: 'general' },
+          { href: '/dashboard/settings?tab=developers', label: 'Developers & API', tab: 'developers' },
+          { href: '/dashboard/settings?tab=pos', label: 'POS Devices', tab: 'pos' },
+        ],
+      },
     ],
   },
 ];
@@ -145,10 +158,74 @@ function useActiveMatcher() {
 
 /* ─────────────────────────── Sub-components ─────────────────────────── */
 
+const ICON_MAP: Record<string, typeof LayoutDashboard> = {
+  '/dashboard': LayoutDashboard,
+  '/payment-portal/links': Link2,
+  '/payment-portal/pos': QrCode,
+  '/payment-portal/requests': FileText,
+  '/payment-portal/treasury': Landmark,
+  '/payment-portal/transactions': Zap,
+  '/payment-portal/customers': Users,
+  '/payment-portal/contacts': Users,
+  '/token-launcher': Rocket,
+  '/token-launcher/explore': CandlestickChart,
+  '/token-launcher/pools': Layers,
+  '/token-launcher/terminal': CandlestickChart,
+  '/token-launcher/mayhem': Zap,
+  '/token-launcher/live': Sparkles,
+  '/token-launcher/support': HelpCircle,
+  '/token-launcher/go': Rocket,
+  '/token-launcher/lxr': Sparkles,
+  '/dashboard/treasury': Landmark,
+  '/dashboard/members': Users,
+  '/dashboard/transactions': Zap,
+  '/dashboard/contacts': Users,
+  '/dashboard/swap': CandlestickChart,
+  '/dashboard/stake': Layers,
+  '/dashboard/subscription': Sparkles,
+  '/dashboard/settings': Settings,
+  '/dashboard/profile': UserCircle,
+  '/dashboard/developers/token-manager': Code2,
+  '/dashboard/developers/tx-builder': Code2,
+  '/dashboard/developers/programs': Code2,
+};
+
+export function getSafeIcon(iconCandidate: any, href?: string): typeof LayoutDashboard {
+  if (typeof iconCandidate === 'function' || (typeof iconCandidate === 'object' && iconCandidate !== null && '$$typeof' in iconCandidate)) {
+    return iconCandidate;
+  }
+  if (href && ICON_MAP[href]) {
+    return ICON_MAP[href];
+  }
+  return Link2;
+}
+
+export function hydrateSectionsIcons(sections: NavSection[]): NavSection[] {
+  return sections.map((sec) => ({
+    ...sec,
+    items: sec.items.map((node) => {
+      if (node.kind === 'group') {
+        return {
+          ...node,
+          icon: getSafeIcon(node.icon, node.children?.[0]?.href),
+          children: node.children.map((child) => ({
+            ...child,
+            icon: getSafeIcon((child as any).icon, child.href),
+          })),
+        };
+      }
+      return {
+        ...node,
+        icon: getSafeIcon(node.icon, node.href),
+      };
+    }),
+  }));
+}
+
 function NavLinkRow({
   href,
   label,
-  icon: Icon,
+  icon: IconCandidate,
   active,
   isCollapsed,
   external,
@@ -156,19 +233,21 @@ function NavLinkRow({
 }: {
   href: string;
   label: string;
-  icon: typeof LayoutDashboard;
+  icon?: any;
   active: boolean;
   isCollapsed?: boolean;
   external?: boolean;
   onNavigate?: () => void;
 }) {
+  const Icon = getSafeIcon(IconCandidate, href);
+
   const content = (
     <>
-      <Icon size={18} className={clsx('shrink-0 transition-colors', active ? 'text-white' : 'group-hover:text-white')} />
+      <Icon size={14} className={clsx('shrink-0 transition-colors', active ? 'text-white' : 'group-hover:text-white')} />
       {!isCollapsed && (
-        <span className="truncate flex-1 text-left flex items-center justify-between gap-1.5">
+        <span className="truncate flex-1 text-left flex items-center justify-between gap-1">
           <span className="truncate">{label}</span>
-          {external && <ExternalLink size={12} className="text-gray-400 group-hover:text-white shrink-0" />}
+          {external && <ExternalLink size={11} className="text-gray-400 group-hover:text-white shrink-0" />}
         </span>
       )}
     </>
@@ -177,8 +256,8 @@ function NavLinkRow({
   const className = clsx(
     'group flex items-center transition-all duration-200',
     isCollapsed
-      ? 'justify-center rounded-full w-10 h-10 mx-auto'
-      : 'gap-2.5 rounded-full px-3 py-2 text-[13.5px] font-medium',
+      ? 'justify-center rounded-full w-9 h-9 mx-auto'
+      : 'gap-2 rounded-full px-2.5 py-1 text-[11.5px] font-medium',
     active
       ? 'bg-white/[0.08] text-white border border-white/20 shadow-sm font-semibold'
       : 'text-gray-400 border border-transparent hover:text-white hover:bg-white/[0.05]',
@@ -226,7 +305,7 @@ function NavGroup({
   const [override, setOverride] = useState<boolean | null>(null);
   const open = override ?? containsActive;
 
-  const Icon = node.icon;
+  const Icon = getSafeIcon(node.icon, node.children?.[0]?.href);
 
   if (isCollapsed) {
     const firstHref = node.children[0]?.href ?? '/dashboard';
@@ -236,13 +315,13 @@ function NavGroup({
         onClick={onNavigate}
         title={node.label}
         className={clsx(
-          'flex h-10 w-10 mx-auto items-center justify-center rounded-full transition-all duration-200',
+          'flex h-9 w-9 mx-auto items-center justify-center rounded-full transition-all duration-200',
           containsActive
             ? 'bg-white/[0.08] text-white border border-white/20 shadow-sm'
             : 'text-gray-400 hover:text-white hover:bg-white/[0.05]',
         )}
       >
-        <Icon size={18} className={containsActive ? 'text-white' : ''} />
+        <Icon size={14} className={containsActive ? 'text-white' : ''} />
       </Link>
     );
   }
@@ -254,22 +333,22 @@ function NavGroup({
         onClick={() => setOverride(!open)}
         aria-expanded={open}
         className={clsx(
-          'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors',
+          'flex w-full items-center gap-2 rounded-full px-2.5 py-1 text-[11.5px] font-medium transition-colors',
           containsActive && !open
             ? 'text-white'
             : 'text-gray-400 hover:text-white hover:bg-white/[0.04]',
         )}
       >
-        <Icon size={16} className="shrink-0" />
+        <Icon size={14} className="shrink-0" />
         <span className="truncate flex-1 text-left">{node.label}</span>
         <ChevronDown
-          size={14}
+          size={12}
           className={clsx('shrink-0 text-gray-500 transition-transform duration-200', open && 'rotate-180')}
         />
       </button>
 
       {open && (
-        <div className="mt-1 ml-[18px] flex flex-col gap-0.5 border-l border-white/10 pl-2.5">
+        <div className="mt-0.5 ml-3 flex flex-col gap-0.5 border-l border-white/10 pl-2">
           {node.children.map((child) => {
             const active = isLeafActive(child);
             if (child.external) {
@@ -281,10 +360,10 @@ function NavGroup({
                   rel="noopener noreferrer"
                   onClick={onNavigate}
                   title={`${child.label} (Abre en ventana externa)`}
-                  className="rounded-md px-2.5 py-1.5 text-[12.5px] font-medium transition-colors text-gray-400 hover:text-white hover:bg-white/[0.04] flex items-center justify-between"
+                  className="rounded-md px-2 py-0.5 text-[10.5px] font-medium transition-colors text-gray-400 hover:text-white hover:bg-white/[0.04] flex items-center justify-between"
                 >
                   <span className="truncate">{child.label}</span>
-                  <ExternalLink size={12} className="text-gray-500 shrink-0 ml-1" />
+                  <ExternalLink size={11} className="text-gray-500 shrink-0 ml-1" />
                 </a>
               );
             }
@@ -295,7 +374,7 @@ function NavGroup({
                 onClick={onNavigate}
                 aria-current={active ? 'page' : undefined}
                 className={clsx(
-                  'rounded-md px-2.5 py-1.5 text-[12.5px] font-medium transition-colors',
+                  'rounded-md px-2 py-0.5 text-[10.5px] font-medium transition-colors',
                   active ? 'bg-[#20232B] text-white font-semibold' : 'text-gray-500 hover:text-white hover:bg-white/[0.04]',
                 )}
               >
@@ -320,6 +399,8 @@ export interface SidebarContentProps {
   onOpenSupportCenter?: () => void;
   isCollapsed?: boolean;
   onToggleCollapse?: () => void;
+  /** Optional custom navigation sections for satellite portals */
+  customSections?: NavSection[];
 }
 
 function SidebarInner({
@@ -328,8 +409,101 @@ function SidebarInner({
   onOpenSupportCenter,
   isCollapsed,
   onToggleCollapse,
+  customSections,
 }: SidebarContentProps) {
+  const pathname = usePathname();
   const { isLeafActive } = useActiveMatcher();
+  const [portalShortcuts, setPortalShortcuts] = useState<NavNode[]>(DEFAULT_PORTAL_SHORTCUTS);
+
+  // Dynamic portal page history tracking
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('luxor_recent_portal_pages');
+      let currentItems: { href: string; label: string }[] = saved ? JSON.parse(saved) : [];
+
+      if (!Array.isArray(currentItems)) currentItems = [];
+
+      // Check if current route is a portal page
+      const knownPortalPages: Record<string, string> = {
+        '/payment-portal/links': 'Payment Links',
+        '/payment-portal/pos': 'POS Terminal',
+        '/payment-portal/requests': 'Payment Requests',
+        '/payment-portal/treasury': 'Saldos POS',
+        '/payment-portal/transactions': 'Transacciones POS',
+        '/payment-portal/customers': 'Clientes POS',
+        '/payment-portal/contacts': 'Contacts & Directory',
+        '/token-launcher': 'Token Launcher',
+        '/token-launcher/explore': 'Explore DEX',
+        '/token-launcher/pools': 'My Pools & Tokens',
+        '/token-launcher/terminal': 'Trading Terminal',
+      };
+
+      const matchedLabel = knownPortalPages[pathname];
+      if (matchedLabel) {
+        currentItems = [{ href: pathname, label: matchedLabel }, ...currentItems.filter((i) => i.href !== pathname)].slice(0, 4);
+        localStorage.setItem('luxor_recent_portal_pages', JSON.stringify(currentItems));
+      }
+
+      const knownPortalIcons: Record<string, typeof LayoutDashboard> = {
+        '/payment-portal/links': Link2,
+        '/payment-portal/pos': QrCode,
+        '/payment-portal/requests': FileText,
+        '/payment-portal/treasury': Landmark,
+        '/payment-portal/transactions': Zap,
+        '/payment-portal/customers': Users,
+        '/payment-portal/contacts': Users,
+        '/token-launcher': Rocket,
+        '/token-launcher/explore': CandlestickChart,
+        '/token-launcher/pools': Layers,
+        '/token-launcher/terminal': CandlestickChart,
+      };
+
+      if (currentItems.length > 0) {
+        const merged: NavNode[] = [
+          ...currentItems.map((ci) => ({
+            kind: 'link' as const,
+            href: ci.href,
+            label: ci.label,
+            icon: Clock,
+          })),
+          ...DEFAULT_PORTAL_SHORTCUTS,
+        ];
+        // Deduplicate by href and take top 4
+        const uniqueMap = new Map<string, NavNode>();
+        merged.forEach((item) => {
+          if ('href' in item && !uniqueMap.has(item.href)) {
+            uniqueMap.set(item.href, { ...item, icon: Clock });
+          }
+        });
+        setPortalShortcuts(Array.from(uniqueMap.values()).slice(0, 4));
+      }
+    } catch (e) {
+      console.error('Failed to load recent portal pages:', e);
+    }
+  }, [pathname]);
+
+  const activeSections = useMemo(() => {
+    if (customSections && customSections.length > 0) {
+      return customSections.map((sec) => {
+        if (sec.title === 'Shortcuts' || sec.title === 'Accesos directos' || sec.title?.toUpperCase() === 'SHORTCUTS') {
+          return {
+            ...sec,
+            items: sec.items.map((item) => ({ ...item, icon: Clock })),
+          };
+        }
+        return sec;
+      });
+    }
+    return NAV_SECTIONS.map((sec) => {
+      if (sec.title === 'Shortcuts' || sec.title === 'Accesos directos' || sec.title?.toUpperCase() === 'SHORTCUTS') {
+        return {
+          ...sec,
+          items: portalShortcuts.map((item) => ({ ...item, icon: Clock })),
+        };
+      }
+      return sec;
+    });
+  }, [customSections, portalShortcuts]);
 
   return (
     <div className="flex h-full flex-col">
@@ -373,8 +547,13 @@ function SidebarInner({
 
       {/* 2 · Primary navigation with structured categories */}
       <nav className="mt-3 flex-1 space-y-4 overflow-y-auto px-2.5 pb-2">
-        {NAV_SECTIONS.map((section, idx) => (
-          <div key={section.title || idx} className="space-y-1">
+        {activeSections.map((section, idx) => {
+          if (isCollapsed && (section.title === 'Shortcuts' || section.title === 'Accesos directos')) {
+            return null;
+          }
+
+          return (
+            <div key={section.title || idx} className="space-y-1">
             {!isCollapsed && section.title && (
               <div className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
                 {section.title}
@@ -410,7 +589,8 @@ function SidebarInner({
               })}
             </div>
           </div>
-        ))}
+        );
+      })}
       </nav>
 
       {/* 4 · Footer */}
@@ -485,7 +665,7 @@ export function Sidebar(props: SidebarContentProps) {
     <aside
       className={clsx(
         'hidden md:flex shrink-0 flex-col h-screen border-r border-white/10 bg-[#08090D] z-40 transition-all duration-300 ease-in-out',
-        isCollapsed ? 'w-[76px]' : 'w-[260px]',
+        isCollapsed ? 'w-[76px]' : 'w-[220px]',
       )}
     >
       <SidebarContent
