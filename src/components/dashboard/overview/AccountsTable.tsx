@@ -289,7 +289,7 @@ export function AccountsTable({
   }, [balanceData?.tokens]);
 
   const { data: solPriceData } = useTokenPrice('SOL');
-  const solPrice = solPriceData ?? 145;
+  const solPrice = solPriceData ?? 168.42;
 
   // Parse REAL SOL balance
   const numSol = balanceData?.solBalance

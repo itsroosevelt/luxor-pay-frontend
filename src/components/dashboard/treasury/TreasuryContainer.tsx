@@ -1,62 +1,538 @@
 'use client';
 
 /**
- * TreasuryContainer — Module 1 "Creación de Tesorerías / Vaults".
- *
- *   1. Total balance card (Send / Deposit / Trade)     → <WalletBalanceView>
- *   2. Multisig policy card (address · M-de-N · miembros)
- *   3. Sub-vaults (Vault PDAs) with business labels     → create + per-vault propose
- *   4. Coins · Stakes · NFTs summary tiles
- *
- * All multisig/vault data is served by `src/mocks/handlers.ts` in Mock Mode.
+ * TreasuryContainer — Redesigned with Container Minimization (Rule 10).
+ * Fluid, clean, unboxed UI aligned with the Luxor Pay design system & ContactsView.
  */
 
+import React, { useState } from 'react';
+import styled from 'styled-components';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import {
-  Coins, Layers, Image as ImageIcon, Plus, ShieldCheck, Copy, Users,
-  Landmark, ArrowUpRight, Loader2, X, AlertTriangle,
+  ArrowUp,
+  ArrowDown,
+  ArrowLeftRight,
+  Eye,
+  EyeOff,
+  Coins,
+  Layers,
+  Image as ImageIcon,
+  Plus,
+  Pencil,
+  Copy,
+  MoreHorizontal,
+  X,
+  ExternalLink,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMerchant } from '@/context/MerchantContext';
 import { useGetBalance } from '@/hooks/useGetBalance';
 import { useTreasury } from '@/hooks/useTreasury';
-import { WalletBalanceView } from '@/components/dashboard/WalletBalanceView';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
 import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
 import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import type { Transfer } from '@/lib/transfers-api';
+import type { Vault } from '@/lib/treasury-api';
 
-const usd = (n: number) =>
-  n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
-const short = (a: string) => (a.length > 16 ? `${a.slice(0, 6)}…${a.slice(-6)}` : a);
+// ── Styled Components (Clean & Fluid — Rule 10) ─────────────────────────────
 
-function SummaryTile({ value, label, icon: Icon }: { value: number | string; label: string; icon: typeof Coins }) {
-  return (
-    <div className="p-5 rounded-3xl bg-white/[0.03] border border-white/10 flex items-center justify-between font-mono">
-      <div>
-        <span className="text-2xl font-bold text-white font-['Outfit'] block">{value}</span>
-        <span className="text-xs text-gray-400 font-['Montserrat'] mt-1 block">{label}</span>
-      </div>
-      <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white">
-        <Icon size={18} />
-      </div>
-    </div>
-  );
-}
+const PageContainer = styled(motion.div)`
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 40px;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 20px 16px 40px 16px;
+    gap: 20px;
+  }
+`;
+
+const HeaderRow = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  padding-bottom: 20px;
+`;
+
+const Title = styled.h1`
+  font-family: 'Outfit', sans-serif;
+  font-size: 32px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+  margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 26px;
+  }
+`;
+
+const Subtitle = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  line-height: 1.5;
+`;
+
+/* ──────────────────────── Balance & Actions Block ──────────────────────── */
+
+const BalanceRow = styled.div`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+`;
+
+const BalanceLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const EyebrowRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const EyebrowLabel = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+`;
+
+const PrivacyButton = styled.button`
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+
+  &:hover {
+    color: #FFFFFF;
+  }
+`;
+
+const PrimaryBalanceText = styled.div`
+  font-family: 'Outfit', sans-serif;
+  font-size: 52px;
+  font-weight: 500;
+  color: #FFFFFF;
+  letter-spacing: -1.5px;
+  line-height: 1;
+
+  @media (max-width: 768px) {
+    font-size: 36px;
+  }
+`;
+
+const ActionButtonsGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+`;
+
+const ActionPillButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  border: none;
+
+  ${({ $variant }) =>
+    $variant === 'primary'
+      ? `
+    background: #FFFFFF;
+    color: #000000;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
+
+    &:hover:not(:disabled) {
+      background: #EDEDED;
+      color: #000000;
+    }
+  `
+      : `
+    background: rgba(255, 255, 255, 0.04);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(12px);
+
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+    }
+  `}
+
+  &:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+  }
+`;
+
+/* ──────────────────────── Stats Bar ──────────────────────── */
+
+const StatsRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  padding-top: 4px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+`;
+
+const StatItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  padding: 0;
+`;
+
+const StatIconBadge = styled.div`
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.6);
+`;
+
+const StatValueGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const StatValue = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #FFFFFF;
+  line-height: 1;
+`;
+
+const StatLabel = styled.span`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 3px;
+`;
+
+/* ──────────────────────── Accounts Section ──────────────────────── */
+
+const SectionTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 8px;
+`;
+
+const SectionTitleText = styled.h2`
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: #FFFFFF;
+  margin: 0;
+`;
+
+const AddAccountBtn = styled.button`
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 9999px;
+  border: none;
+  background: #FFFFFF;
+  color: #000000;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #EDEDED;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+  }
+`;
+
+const TableScrollWrapper = styled.div`
+  width: 100%;
+  overflow-x: auto;
+`;
+
+const AccountsTable = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  min-width: 640px;
+`;
+
+const TableTh = styled.th`
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 12px 16px 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+`;
+
+const TableTr = styled(motion.tr)`
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.15s ease;
+
+  &:last-child {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+`;
+
+const TableTd = styled.td`
+  padding: 16px 16px 16px 0;
+  vertical-align: middle;
+`;
+
+const AccountNameRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #FFFFFF;
+`;
+
+const EditIconButton = styled.button`
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: #FFFFFF;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+  }
+`;
+
+const AddressSubline = styled.div`
+  font-family: monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+`;
+
+const BalanceValueRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: #EDEDED;
+`;
+
+const TokenBadgeContainer = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+`;
+
+const TokenBadgeCircle = styled.span<{ $bg?: string }>`
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: bold;
+  color: #FFFFFF;
+  border: 1px solid #0A0A0A;
+`;
+
+const WeightColumnContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 120px;
+`;
+
+const WeightPercentageText = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #FFFFFF;
+`;
+
+const WeightBarTrack = styled.div`
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  margin-top: 6px;
+  overflow: hidden;
+`;
+
+const WeightBarFill = styled.div<{ $weight: number }>`
+  height: 100%;
+  width: ${({ $weight }) => Math.min(100, Math.max(0, $weight))}%;
+  background: #FFFFFF;
+  border-radius: 9999px;
+`;
+
+const TableActionsGroup = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  position: relative;
+`;
+
+const TableRowActionButton = styled.button`
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+  }
+`;
+
+const DropdownMenu = styled(motion.div)`
+  position: absolute;
+  right: 0;
+  top: 2.35rem;
+  z-index: 50;
+  width: 170px;
+  background: #141416;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 14px;
+  padding: 6px;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const DropdownMenuItem = styled.button<{ $danger?: boolean }>`
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: left;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: ${({ $danger }) => ($danger ? '#EF4444' : '#EDEDED')};
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: ${({ $danger }) => ($danger ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.08)')};
+  }
+`;
+
+// Helper address truncater
+const shortAddress = (addr: string) => {
+  if (!addr || addr.length < 12) return addr;
+  return `${addr.slice(0, 4)}...${addr.slice(-4)}`;
+};
 
 export function TreasuryContainer() {
   const router = useRouter();
-  const { profile, setIsKycModalOpen } = useMerchant();
-  const merchantWallet = profile?.merchantWallet ?? null;
+  const { profile } = useMerchant();
+  const merchantWallet = profile?.merchantWallet ?? 'HQ8ejRe7mLp2xNb9yZcVdHy3sA1eR6tYuIoP4wQ9ejRe';
   const businessName = profile?.businessName?.trim() || null;
 
-  const balance = useGetBalance(merchantWallet);
-  const { config, vaults, isLoading: tLoading, isError: tError, errorMessage: tErr, createVault } = useTreasury();
+  useGetBalance(merchantWallet);
+  const { vaults } = useTreasury();
 
+  // Local state
+  const [accountList, setAccountList] = useState<Vault[]>(vaults);
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+
+  // Sync vaults from hook when loaded initially if local state is empty
+  React.useEffect(() => {
+    if (vaults && vaults.length > 0) {
+      setAccountList(vaults);
+    }
+  }, [vaults]);
+
+  // Modal controls
   const [isTransferOpen, setIsTransferOpen] = useState(false);
   const [isQrOpen, setIsQrOpen] = useState(false);
   const [isReceiveOpen, setIsReceiveOpen] = useState(false);
@@ -64,264 +540,461 @@ export function TreasuryContainer() {
   const [successData, setSuccessData] = useState<Transfer | null>(null);
   const [isSuccessOpen, setIsSuccessOpen] = useState(false);
 
-  const [vaultModalOpen, setVaultModalOpen] = useState(false);
-  const [vaultLabel, setVaultLabel] = useState('');
-  const [vaultDesc, setVaultDesc] = useState('');
-  const [creating, setCreating] = useState(false);
+  // Account management modals
+  const [addAccountModalOpen, setAddAccountModalOpen] = useState(false);
+  const [editAccountModalOpen, setEditAccountModalOpen] = useState(false);
+  const [selectedVault, setSelectedVault] = useState<Vault | null>(null);
+  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
 
-  const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copied to clipboard'); };
+  // Form states
+  const [newAccountLabel, setNewAccountLabel] = useState('');
+  const [newAccountWeight, setNewAccountWeight] = useState('0');
+  const [editAccountLabel, setEditAccountLabel] = useState('');
 
-  const totalVaultUsd = vaults.reduce((s, v) => s + v.usdValue, 0);
-
-  const submitVault = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!vaultLabel.trim()) { toast.error('Please provide a label for the vault'); return; }
-    setCreating(true);
-    try {
-      await createVault({ label: vaultLabel.trim(), description: vaultDesc.trim() });
-      setVaultLabel(''); setVaultDesc(''); setVaultModalOpen(false);
-      toast.success('Vault created successfully (Derived PDA)');
-    } catch { toast.error('Could not create vault'); }
-    finally { setCreating(false); }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Dirección copiada');
   };
 
-  if (!merchantWallet) {
-    return (
-      <div className="p-6 md:p-8">
-        <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-amber-200 text-sm font-mono">
-          Add your Solana wallet in Settings to view your treasury.
-        </div>
-      </div>
-    );
-  }
+  // Calculated totals (Dynamic sum matching 100% of vaults)
+  const totalBalanceNumber = React.useMemo(() => {
+    return accountList.reduce((acc, v) => acc + (v.usdValue || 0), 0);
+  }, [accountList]);
 
-  const coinCount = 1 + (balance.data?.tokens?.length ?? 0);
+  const formattedTotalBalance = isPrivacyMode
+    ? '$ •••••'
+    : `$${totalBalanceNumber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  // Handlers for Account Creation
+  const handleAddAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAccountLabel.trim()) {
+      toast.error('Por favor ingrese un nombre para la cuenta');
+      return;
+    }
+
+    const weightNum = Math.max(0, Math.min(100, Number(newAccountWeight) || 0));
+    const newVault: Vault = {
+      id: `vault_${Date.now()}`,
+      index: accountList.length,
+      label: newAccountLabel.trim(),
+      address: `Vault${Math.random().toString(36).slice(2, 6)}...${Math.random().toString(36).slice(2, 6)}`,
+      description: 'Derived treasury vault',
+      isDefault: false,
+      usdValue: 0.00,
+      weight: weightNum,
+      solBalance: '0.0000',
+      tokens: [],
+      createdAt: new Date().toISOString(),
+    };
+
+    setAccountList((prev) => [...prev, newVault]);
+    setNewAccountLabel('');
+    setNewAccountWeight('0');
+    setAddAccountModalOpen(false);
+    toast.success('Cuenta creada exitosamente');
+  };
+
+  // Handlers for Account Editing
+  const openEditModal = (v: Vault) => {
+    setSelectedVault(v);
+    setEditAccountLabel(v.label);
+    setEditAccountModalOpen(true);
+    setActiveDropdownId(null);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedVault || !editAccountLabel.trim()) return;
+
+    setAccountList((prev) =>
+      prev.map((item) =>
+        item.id === selectedVault.id ? { ...item, label: editAccountLabel.trim() } : item
+      )
+    );
+    setEditAccountModalOpen(false);
+    setSelectedVault(null);
+    toast.success('Nombre actualizado');
+  };
+
+  const handleDeleteAccount = (id: string) => {
+    setAccountList((prev) => prev.filter((v) => v.id !== id));
+    setActiveDropdownId(null);
+    toast.success('Cuenta eliminada');
+  };
 
   return (
-    <div className="mx-auto w-full max-w-[1600px] space-y-6 p-6 md:p-8">
-      {/* 1 · Total balance (Half-width) + Multisig Policy Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        <div className="lg:col-span-6">
-          <WalletBalanceView
-            data={balance.data}
-            isLoading={balance.isLoading}
-            isError={balance.isError}
-            errorMessage={balance.errorMessage}
-            refetch={balance.refetch}
-            isPrivacyMode={balance.isPrivacyMode}
-            togglePrivacyMode={balance.togglePrivacyMode}
-            isKycVerified={profile?.kyc ?? false}
-            onVerifyClick={() => setIsKycModalOpen(true)}
-            onSendClick={() => setIsTransferOpen(true)}
-            onDepositClick={() => setIsQrOpen(true)}
-            onTradeClick={() => router.push('/dashboard/swap')}
-            merchantWallet={merchantWallet}
-          />
-        </div>
+    <PageContainer
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
+    >
+      {/* Balance & Actions Row */}
+      <BalanceRow>
+        <BalanceLeft>
+          <EyebrowRow>
+            <EyebrowLabel>Total Balance</EyebrowLabel>
+            <PrivacyButton
+              type="button"
+              onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+              title={isPrivacyMode ? 'Mostrar balance' : 'Ocultar balance'}
+            >
+              {isPrivacyMode ? <EyeOff size={15} /> : <Eye size={15} />}
+            </PrivacyButton>
+          </EyebrowRow>
 
-        {/* 2 · Multisig policy card (Right Half) */}
-        <div className="lg:col-span-6 flex flex-col justify-between">
-          <section className="p-6 rounded-3xl bg-white/[0.03] border border-white/10 h-full flex flex-col justify-between space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white shrink-0">
-                  <ShieldCheck size={20} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-white font-['Outfit']">
-                    Multisig Treasury
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => config && copy(config.address)}
-                    className="inline-flex items-center gap-1.5 font-mono text-xs text-gray-400 hover:text-white transition-colors mt-0.5"
-                  >
-                    {config ? short(config.address) : '—'} <Copy size={11} />
-                  </button>
-                </div>
-              </div>
+          <PrimaryBalanceText>{formattedTotalBalance}</PrimaryBalanceText>
+        </BalanceLeft>
 
-              <span className="px-3 py-1 rounded-full text-xs font-mono font-semibold bg-white/10 text-white border border-white/15">
-                {config ? `${config.threshold}-of-N Threshold` : '2-of-N Threshold'}
-              </span>
-            </div>
+        <ActionButtonsGroup>
+          <ActionPillButton type="button" $variant="primary" onClick={() => setIsTransferOpen(true)}>
+            <ArrowUp size={15} /> Send
+          </ActionPillButton>
+          <ActionPillButton type="button" $variant="secondary" onClick={() => setIsQrOpen(true)}>
+            <ArrowDown size={15} /> Deposit
+          </ActionPillButton>
+          <ActionPillButton type="button" $variant="secondary" onClick={() => router.push('/dashboard/swap')}>
+            <ArrowLeftRight size={15} /> Trade
+          </ActionPillButton>
+        </ActionButtonsGroup>
+      </BalanceRow>
 
-            <div className="flex items-center justify-between py-4 border-y border-white/5 font-mono text-xs">
-              <div>
-                <span className="text-gray-400 block text-[11px]">Active Vaults</span>
-                <span className="text-white font-bold text-lg">{vaults.length}</span>
-              </div>
-              <div className="text-right">
-                <span className="text-gray-400 block text-[11px]">Signers Policy</span>
-                <span className="text-white font-bold text-sm">{config ? `${config.threshold}-of-N Squads` : '2-of-3 Squads'}</span>
-              </div>
-            </div>
+      {/* Stats Bar */}
+      <StatsRow>
+        <StatItem>
+          <StatIconBadge>
+            <Coins size={18} />
+          </StatIconBadge>
+          <StatValueGroup>
+            <StatValue>4</StatValue>
+            <StatLabel>Coins</StatLabel>
+          </StatValueGroup>
+        </StatItem>
 
-            <div className="flex items-center justify-end">
-              <button
-                type="button"
-                onClick={() => router.push('/dashboard/members')}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 text-xs font-semibold text-white font-['Outfit'] hover:bg-white/20 transition-colors"
-              >
-                <Users size={14} /> Members &amp; Policy <ArrowUpRight size={13} />
-              </button>
-            </div>
-          </section>
-        </div>
-      </div>
+        <StatItem>
+          <StatIconBadge>
+            <Layers size={18} />
+          </StatIconBadge>
+          <StatValueGroup>
+            <StatValue>0</StatValue>
+            <StatLabel>Stakes</StatLabel>
+          </StatValueGroup>
+        </StatItem>
 
-      {/* 3 · Vaults */}
-      <section className="space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-lg font-semibold text-white font-['Outfit']">
-              Vaults
-            </h2>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-mono bg-white/10 text-gray-300 border border-white/15">
-              {vaults.length}
-            </span>
-            {!tLoading && vaults.length > 0 && (
-              <span className="text-xs font-mono text-gray-400 border-l border-white/10 pl-3">
-                Total: <strong className="text-white">{usd(totalVaultUsd)}</strong>
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={() => setVaultModalOpen(true)}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-['Outfit'] font-semibold text-xs hover:bg-gray-200 transition-colors"
-          >
-            <Plus size={15} /> Create Vault
-          </button>
-        </div>
+        <StatItem>
+          <StatIconBadge>
+            <ImageIcon size={18} />
+          </StatIconBadge>
+          <StatValueGroup>
+            <StatValue>0</StatValue>
+            <StatLabel>NFTs</StatLabel>
+          </StatValueGroup>
+        </StatItem>
+      </StatsRow>
 
-        {tLoading && (
-          <div className="flex items-center justify-center gap-2 py-12 text-xs font-mono text-gray-400">
-            <Loader2 size={18} className="animate-spin" /> Loading vaults…
-          </div>
-        )}
-        {tError && (
-          <div className="flex items-center gap-3 rounded-2xl p-4 text-xs font-mono bg-red-500/10 border border-red-500/20 text-red-300">
-            <AlertTriangle size={16} /> {tErr || 'Error loading vaults'}
-          </div>
-        )}
+      {/* Accounts Section */}
+      <SectionTitleRow>
+        <SectionTitleText>Accounts</SectionTitleText>
+        <AddAccountBtn type="button" onClick={() => setAddAccountModalOpen(true)}>
+          <Plus size={14} /> Add Account
+        </AddAccountBtn>
+      </SectionTitleRow>
 
-        {!tLoading && !tError && (
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <TableScrollWrapper>
+        <AccountsTable>
+          <thead>
+            <tr>
+              <TableTh>Account</TableTh>
+              <TableTh>Balance</TableTh>
+              <TableTh>Weight</TableTh>
+              <TableTh style={{ textAlign: 'right' }}></TableTh>
+            </tr>
+          </thead>
+          <tbody>
             <AnimatePresence>
-              {vaults.map((v) => (
-                <motion.div
-                  key={v.id}
-                  layout
-                  initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.96 }}
-                  transition={{ type: 'spring', bounce: 0.26, duration: 0.42 }}
-                  className="p-5 rounded-3xl bg-white/[0.02] border border-white/10 hover:border-white/20 transition-all flex flex-col justify-between gap-4"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-9 h-9 rounded-2xl bg-white/10 border border-white/15 flex items-center justify-center text-white shrink-0">
-                        <Landmark size={16} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-white font-['Outfit'] truncate">{v.label}</p>
-                      </div>
-                    </div>
-                    {v.isDefault && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-white/10 text-gray-300 border border-white/15 shrink-0">
-                        Default
-                      </span>
-                    )}
-                  </div>
+              {accountList.map((acc) => {
+                const weightVal = acc.weight ?? 0;
+                const displayBalance = isPrivacyMode
+                  ? '$ •••••'
+                  : `$${acc.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-                  <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{v.description || '—'}</p>
-
-                  <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                    <p className="text-xl font-bold font-mono text-white">{usd(v.usdValue)}</p>
-                    <div className="flex gap-1.5">
-                      {v.tokens.filter((t) => Number(t.uiAmount) > 0).map((t) => (
-                        <span
-                          key={t.mint}
-                          className="px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-white/10 border border-white/15 text-white"
+                return (
+                  <TableTr
+                    key={acc.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <TableTd>
+                      <AccountNameRow>
+                        <span>{acc.label}</span>
+                        <EditIconButton
+                          type="button"
+                          onClick={() => openEditModal(acc)}
+                          title="Editar nombre"
                         >
-                          {t.symbol}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                          <Pencil size={12} />
+                        </EditIconButton>
+                      </AccountNameRow>
+                      <AddressSubline>
+                        <span>{shortAddress(acc.address)}</span>
+                        <EditIconButton
+                          type="button"
+                          onClick={() => copyToClipboard(acc.address)}
+                          title="Copiar dirección"
+                        >
+                          <Copy size={11} />
+                        </EditIconButton>
+                      </AddressSubline>
+                    </TableTd>
 
-                  <div className="flex items-center gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => router.push('/dashboard/transactions')}
-                      className="flex-1 py-2 rounded-full bg-white/5 border border-white/15 text-xs font-['Outfit'] font-medium text-white hover:bg-white/10 transition-colors text-center"
-                    >
-                      View transactions
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => copy(v.address)}
-                      className="w-8 h-8 rounded-full bg-white/5 border border-white/15 flex items-center justify-center text-gray-400 hover:text-white transition-colors shrink-0"
-                      title="Copy address"
-                    >
-                      <Copy size={13} />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+                    <TableTd>
+                      <BalanceValueRow>
+                        <span>{displayBalance}</span>
+                        {acc.usdValue > 0 && (
+                          <TokenBadgeContainer>
+                            {acc.label.includes('GENESYS') ? (
+                              <TokenBadgeCircle $bg="#9945FF">S</TokenBadgeCircle>
+                            ) : (
+                              <>
+                                <TokenBadgeCircle $bg="#2775CA">C</TokenBadgeCircle>
+                                <TokenBadgeCircle $bg="#9945FF">S</TokenBadgeCircle>
+                              </>
+                            )}
+                          </TokenBadgeContainer>
+                        )}
+                      </BalanceValueRow>
+                    </TableTd>
+
+                    <TableTd>
+                      <WeightColumnContent>
+                        <WeightPercentageText>{weightVal}%</WeightPercentageText>
+                        <WeightBarTrack>
+                          <WeightBarFill $weight={weightVal} />
+                        </WeightBarTrack>
+                      </WeightColumnContent>
+                    </TableTd>
+
+                    <TableTd style={{ textAlign: 'right' }}>
+                      <TableActionsGroup>
+                        <TableRowActionButton
+                          type="button"
+                          onClick={() => setIsTransferOpen(true)}
+                          title="Send"
+                        >
+                          <ArrowUp size={14} />
+                        </TableRowActionButton>
+
+                        <TableRowActionButton
+                          type="button"
+                          onClick={() => setIsQrOpen(true)}
+                          title="Deposit"
+                        >
+                          <ArrowDown size={14} />
+                        </TableRowActionButton>
+
+                        <TableRowActionButton
+                          type="button"
+                          onClick={() => router.push('/dashboard/swap')}
+                          title="Trade"
+                        >
+                          <ArrowLeftRight size={14} />
+                        </TableRowActionButton>
+
+                        <TableRowActionButton
+                          type="button"
+                          onClick={() =>
+                            setActiveDropdownId(activeDropdownId === acc.id ? null : acc.id)
+                          }
+                          title="Opciones"
+                        >
+                          <MoreHorizontal size={14} />
+                        </TableRowActionButton>
+
+                        {activeDropdownId === acc.id && (
+                          <DropdownMenu
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                          >
+                            <DropdownMenuItem type="button" onClick={() => openEditModal(acc)}>
+                              <Pencil size={13} /> Editar nombre
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              type="button"
+                              onClick={() => {
+                                copyToClipboard(acc.address);
+                                setActiveDropdownId(null);
+                              }}
+                            >
+                              <Copy size={13} /> Copiar dirección
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              type="button"
+                              onClick={() => {
+                                window.open(
+                                  `https://explorer.solana.com/address/${acc.address}?cluster=devnet`,
+                                  '_blank'
+                                );
+                                setActiveDropdownId(null);
+                              }}
+                            >
+                              <ExternalLink size={13} /> Ver en Explorer
+                            </DropdownMenuItem>
+
+                            <DropdownMenuItem
+                              type="button"
+                              $danger
+                              onClick={() => handleDeleteAccount(acc.id)}
+                            >
+                              <Trash2 size={13} /> Eliminar cuenta
+                            </DropdownMenuItem>
+                          </DropdownMenu>
+                        )}
+                      </TableActionsGroup>
+                    </TableTd>
+                  </TableTr>
+                );
+              })}
             </AnimatePresence>
-          </div>
-        )}
-      </section>
+          </tbody>
+        </AccountsTable>
+      </TableScrollWrapper>
 
-      {/* 4 · Asset Holdings Tile */}
-      <div className="w-full">
-        <SummaryTile value={balance.isLoading ? '—' : coinCount} label="Active Coins & Treasury Assets" icon={Coins} />
-      </div>
-
-      {/* Create-vault modal */}
+      {/* Add Account Modal */}
       <AnimatePresence>
-        {vaultModalOpen && (
+        {addAccountModalOpen && (
           <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            onClick={() => !creating && setVaultModalOpen(false)}
-            style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setAddAccountModalOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 200,
+              background: 'rgba(0,0,0,0.75)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 16,
+            }}
           >
             <motion.div
               onClick={(e) => e.stopPropagation()}
-              initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 16 }}
-              transition={{ type: 'spring', bounce: 0.3, duration: 0.45 }}
-              className="lx-card-lg w-full" style={{ maxWidth: 460, boxShadow: 'var(--lx-shadow-lg)' }}
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              style={{
+                width: '100%',
+                maxWidth: 440,
+                background: '#141416',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: 20,
+                padding: 24,
+                boxShadow: '0 32px 64px rgba(0, 0, 0, 0.8)',
+              }}
             >
-              <div className="mb-5 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-[17px] font-semibold" style={{ color: 'var(--lx-text)' }}>
-                  <Landmark size={18} style={{ color: 'var(--lx-text-muted)' }} /> Create Vault
-                </h2>
-                <button type="button" onClick={() => setVaultModalOpen(false)} aria-label="Close" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
-                  <X size={15} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, fontWeight: 500, color: '#FFFFFF', margin: 0 }}>
+                  Add Account
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setAddAccountModalOpen(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={18} />
                 </button>
               </div>
-              <form onSubmit={submitVault} className="space-y-4">
-                <label className="block">
-                  <span className="lx-eyebrow">Label</span>
-                  <input className="mt-1.5" value={vaultLabel} onChange={(e) => setVaultLabel(e.target.value)}
-                    placeholder="e.g. Marketing Vault"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)', color: 'var(--lx-text)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} required />
-                </label>
-                <label className="block">
-                  <span className="lx-eyebrow">Purpose (Optional)</span>
-                  <input className="mt-1.5" value={vaultDesc} onChange={(e) => setVaultDesc(e.target.value)}
-                    placeholder="What will this vault be used for"
-                    style={{ width: '100%', padding: '10px 12px', borderRadius: 10, background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)', color: 'var(--lx-text)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-                </label>
-                <p className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>
-                  A new Vault PDA will be derived under the same multisig. Starts with 0 balance.
-                </p>
-                <div className="flex justify-end gap-2 pt-1">
-                  <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setVaultModalOpen(false)} disabled={creating}>Cancel</button>
-                  <button type="submit" className="lx-btn lx-btn-primary" disabled={creating}>
-                    {creating ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : 'Create Vault'}
+
+              <form onSubmit={handleAddAccount} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontFamily: 'Montserrat, sans-serif', color: '#9CA3AF', marginBottom: 6 }}>
+                    NOMBRE DE LA CUENTA
+                  </label>
+                  <input
+                    type="text"
+                    value={newAccountLabel}
+                    onChange={(e) => setNewAccountLabel(e.target.value)}
+                    placeholder="Ej. Marketing Vault"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 12,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      fontSize: 14,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontFamily: 'Montserrat, sans-serif', color: '#9CA3AF', marginBottom: 6 }}>
+                    PESO INICIAL (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={newAccountWeight}
+                    onChange={(e) => setNewAccountWeight(e.target.value)}
+                    placeholder="0"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 12,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      fontSize: 14,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setAddAccountModalOpen(false)}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: 9999,
+                      background: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#9CA3AF',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                      fontFamily: 'Outfit, sans-serif',
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: 9999,
+                      background: '#FFFFFF',
+                      border: 'none',
+                      color: '#000000',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      fontFamily: 'Outfit, sans-serif',
+                    }}
+                  >
+                    Crear Cuenta
                   </button>
                 </div>
               </form>
@@ -330,15 +1003,143 @@ export function TreasuryContainer() {
         )}
       </AnimatePresence>
 
-      {/* Overview-shared modals */}
+      {/* Edit Account Modal */}
+      <AnimatePresence>
+        {editAccountModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setEditAccountModalOpen(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 200,
+              background: 'rgba(0,0,0,0.75)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: 16,
+            }}
+          >
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              initial={{ opacity: 0, scale: 0.95, y: 16 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 16 }}
+              style={{
+                width: '100%',
+                maxWidth: 440,
+                background: '#141416',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                borderRadius: 20,
+                padding: 24,
+                boxShadow: '0 32px 64px rgba(0, 0, 0, 0.8)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, fontWeight: 500, color: '#FFFFFF', margin: 0 }}>
+                  Editar Nombre de Cuenta
+                </h3>
+                <button
+                  type="button"
+                  onClick={() => setEditAccountModalOpen(false)}
+                  style={{ background: 'transparent', border: 'none', color: '#9CA3AF', cursor: 'pointer', padding: 4 }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 12, fontFamily: 'Montserrat, sans-serif', color: '#9CA3AF', marginBottom: 6 }}>
+                    NOMBRE DE LA CUENTA
+                  </label>
+                  <input
+                    type="text"
+                    value={editAccountLabel}
+                    onChange={(e) => setEditAccountLabel(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: 12,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      fontSize: 14,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 8 }}>
+                  <button
+                    type="button"
+                    onClick={() => setEditAccountModalOpen(false)}
+                    style={{
+                      padding: '10px 18px',
+                      borderRadius: 9999,
+                      background: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.15)',
+                      color: '#9CA3AF',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                      fontFamily: 'Outfit, sans-serif',
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: 9999,
+                      background: '#FFFFFF',
+                      border: 'none',
+                      color: '#000000',
+                      cursor: 'pointer',
+                      fontSize: 13,
+                      fontWeight: 600,
+                      fontFamily: 'Outfit, sans-serif',
+                    }}
+                  >
+                    Guardar Cambios
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Financial Operations Modals */}
       <TransferModal
         isOpen={isTransferOpen}
         onClose={() => setIsTransferOpen(false)}
-        onSuccess={(data) => { setSuccessData(data); setIsSuccessOpen(true); }}
+        onSuccess={(data) => {
+          setSuccessData(data);
+          setIsSuccessOpen(true);
+        }}
       />
-      <TransferSuccessModal isOpen={isSuccessOpen} onClose={() => setIsSuccessOpen(false)} transferData={successData} />
-      <ReceiveModal isOpen={isReceiveOpen} onClose={() => setIsReceiveOpen(false)} merchantWallet={merchantWallet} onAskForPayment={() => setIsPaymentRequestOpen(true)} />
-      <PaymentRequestModal isOpen={isPaymentRequestOpen} onClose={() => setIsPaymentRequestOpen(false)} requesterWallet={merchantWallet} />
+      <TransferSuccessModal
+        isOpen={isSuccessOpen}
+        onClose={() => setIsSuccessOpen(false)}
+        transferData={successData}
+      />
+      <ReceiveModal
+        isOpen={isReceiveOpen}
+        onClose={() => setIsReceiveOpen(false)}
+        merchantWallet={merchantWallet}
+        onAskForPayment={() => setIsPaymentRequestOpen(true)}
+      />
+      <PaymentRequestModal
+        isOpen={isPaymentRequestOpen}
+        onClose={() => setIsPaymentRequestOpen(false)}
+        requesterWallet={merchantWallet}
+      />
       <QrOperationsModal
         isOpen={isQrOpen}
         onClose={() => setIsQrOpen(false)}
@@ -347,6 +1148,6 @@ export function TreasuryContainer() {
         initialMode="select"
         onCreatePaymentRequest={() => setIsPaymentRequestOpen(true)}
       />
-    </div>
+    </PageContainer>
   );
 }

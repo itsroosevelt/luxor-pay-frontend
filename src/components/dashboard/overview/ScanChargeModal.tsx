@@ -249,6 +249,44 @@ const InfoValue = styled.span`
   white-space: nowrap;
 `;
 
+const StrongText = styled.strong`
+  color: var(--lx-text);
+`;
+
+const MonoInfoValue = styled(InfoValue)`
+  font-family: monospace;
+`;
+
+const HighlightInfoValue = styled(InfoValue)`
+  color: var(--lx-text);
+  font-weight: 600;
+`;
+
+const SuccessStepContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 16px;
+`;
+
+const TitleNoMargin = styled(Title)`
+  margin: 0;
+`;
+
+const SubtitleNoMargin = styled(Subtitle)`
+  margin: 0;
+`;
+
+const FullWidthInfoCard = styled(InfoCard)`
+  width: 100%;
+  margin: 12px 0 24px 0;
+`;
+
+const FullWidthButton = styled(Button)`
+  width: 100%;
+`;
+
 export function ScanChargeModal({
   isOpen,
   onClose,
@@ -432,7 +470,7 @@ export function ScanChargeModal({
               <Title>Scanning QR</Title>
               {linkName ? (
                 <Subtitle>
-                  Charge for <strong style={{ color: '#E2E8F0' }}>{linkName}</strong>. Align the client's wallet QR code inside the frame.
+                  Charge for <StrongText>{linkName}</StrongText>. Align the client's wallet QR code inside the frame.
                 </Subtitle>
               ) : (
                 <Subtitle>Align the client's wallet QR code inside the frame.</Subtitle>
@@ -465,7 +503,7 @@ export function ScanChargeModal({
               <Title>Confirm Charge</Title>
               {linkName ? (
                 <Subtitle>
-                  Verify the charge details for <strong style={{ color: '#E2E8F0' }}>{linkName}</strong> before confirming.
+                  Verify the charge details for <StrongText>{linkName}</StrongText> before confirming.
                 </Subtitle>
               ) : (
                 <Subtitle>Verify the charge details before confirming.</Subtitle>
@@ -480,15 +518,15 @@ export function ScanChargeModal({
                 )}
                 <InfoRow>
                   <InfoLabel>Amount</InfoLabel>
-                  <InfoValue style={{ color: '#E2E8F0', fontWeight: 600 }}>
+                  <HighlightInfoValue>
                     {formData.amount} {getSelectedTokenSymbol()}
-                  </InfoValue>
+                  </HighlightInfoValue>
                 </InfoRow>
                 <InfoRow>
                   <InfoLabel>Client (Wallet)</InfoLabel>
-                  <InfoValue style={{ fontFamily: 'monospace' }}>
+                  <MonoInfoValue>
                     {clientWallet}
-                  </InfoValue>
+                  </MonoInfoValue>
                 </InfoRow>
               </InfoCard>
 
@@ -509,24 +547,24 @@ export function ScanChargeModal({
 
           {/* STEP 4: SUCCESS */}
           {step === 4 && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: '16px' }}>
+            <SuccessStepContainer>
               <CheckCircle size={64} color="#E2E8F0" />
-              <Title style={{ margin: 0 }}>Charge Completed!</Title>
-              <Subtitle style={{ margin: 0 }}>
+              <TitleNoMargin>Charge Completed!</TitleNoMargin>
+              <SubtitleNoMargin>
                 The transfer of {formData.amount} {getSelectedTokenSymbol()} was confirmed on-chain.
-              </Subtitle>
+              </SubtitleNoMargin>
               
-              <InfoCard style={{ width: '100%', margin: '12px 0 24px 0' }}>
+              <FullWidthInfoCard>
                 <InfoRow>
                   <InfoLabel>Source Address</InfoLabel>
-                  <InfoValue style={{ fontFamily: 'monospace' }}>{clientWallet}</InfoValue>
+                  <MonoInfoValue>{clientWallet}</MonoInfoValue>
                 </InfoRow>
-              </InfoCard>
+              </FullWidthInfoCard>
 
-              <Button type="button" $variant="primary" onClick={handleClose} style={{ width: '100%' }}>
+              <FullWidthButton type="button" $variant="primary" onClick={handleClose}>
                 Finish
-              </Button>
-            </div>
+              </FullWidthButton>
+            </SuccessStepContainer>
           )}
         </ModalContent>
       </Overlay>

@@ -37,9 +37,9 @@ const DEFAULT_TOKENS: TokenItem[] = [
     id: 'token-lxr',
     name: 'Luxor',
     symbol: 'LXR',
-    mintAddress: '7Qm6vWdth8K9pX2mL1jF3nB5v8K9pX2mL1jF3nB5v8K',
-    supply: '2,025,000,000',
-    valueUsd: '$0.00',
+    mintAddress: '3kxGSxkvuFGu3NJjzuAAXMHjVvpWarXwHQsguxVbiBHE',
+    supply: '1,000,000,000',
+    valueUsd: '$0.0731',
     decimals: 9,
   },
 ];

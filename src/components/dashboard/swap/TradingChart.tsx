@@ -203,19 +203,19 @@ export function TradingChart() {
 
         {/* Stats */}
         <div>
-          <BigPrice>$101.47</BigPrice>
+          <BigPrice>$168.42</BigPrice>
           <StatsRow className="mt-2">
             <StatItem>
               <span className="label">24h change</span>
-              <span className="value negative">-2.47%</span>
+              <span className="value positive">+2.47%</span>
             </StatItem>
             <StatItem>
               <span className="label">24h High</span>
-              <span className="value">$104.86</span>
+              <span className="value">$172.50</span>
             </StatItem>
             <StatItem>
               <span className="label">24h Low</span>
-              <span className="value">$100.04</span>
+              <span className="value">$164.10</span>
             </StatItem>
           </StatsRow>
         </div>

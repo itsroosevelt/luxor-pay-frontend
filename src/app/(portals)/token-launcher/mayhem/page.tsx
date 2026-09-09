@@ -248,7 +248,7 @@ export default function MayhemPage() {
                 </p>
               </div>
               <div className="text-xs font-mono text-gray-400">
-                <span className="text-white font-bold">6,577</span> coins minted in the last 24h.
+                <span className="text-white font-semibold">6,577</span> coins minted in the last 24h.
               </div>
             </div>
           </header>
@@ -434,13 +434,13 @@ export default function MayhemPage() {
 
         {/* Live Metrics Strip */}
         <div className="flex items-center gap-4 text-xs font-mono text-gray-400 py-3 mb-6 border-y border-white/10 flex-wrap">
-          <span><strong className="text-white">58</strong> active coins</span>
+          <span><strong className="text-gray-200">58</strong> active coins</span>
           <span>·</span>
-          <span><strong className="text-white">$3.9M</strong> agent vol 24h</span>
+          <span><strong className="text-gray-200">$3.9M</strong> agent vol 24h</span>
           <span>·</span>
-          <span><strong className="text-white">6,577</strong> launched 24h</span>
+          <span><strong className="text-gray-200">6,577</strong> launched 24h</span>
           <span>·</span>
-          <span><strong className="text-white">5,391</strong> traders 24h</span>
+          <span><strong className="text-gray-200">5,391</strong> traders 24h</span>
         </div>
 
         {/* Live Ticker Strip - Clean frameless strip */}
@@ -449,10 +449,10 @@ export default function MayhemPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> LIVE
           </span>
           <div className="flex items-center gap-6 truncate text-gray-300">
-            <span>BUY <strong className="text-white">AMA</strong> <span className="text-white">+0.04 SOL</span></span>
-            <span>SELL <strong className="text-white">56DZ...pump</strong> <span className="text-white">+0.03 SOL</span></span>
-            <span>BUY <strong className="text-white">JIBWAR</strong> <span className="text-gray-400">-0.02 SOL</span></span>
-            <span>BUY <strong className="text-white">wow</strong> <span className="text-white">+0.01 SOL</span></span>
+            <span>BUY <strong className="text-white">AMA</strong> <span className="text-emerald-400/80 font-medium">+0.04 SOL</span></span>
+            <span>SELL <strong className="text-white">56DZ...pump</strong> <span className="text-emerald-400/80 font-medium">+0.03 SOL</span></span>
+            <span>BUY <strong className="text-white">JIBWAR</strong> <span className="text-rose-400/80 font-medium">-0.02 SOL</span></span>
+            <span>BUY <strong className="text-white">wow</strong> <span className="text-emerald-400/80 font-medium">+0.01 SOL</span></span>
           </div>
         </div>
 
@@ -486,7 +486,7 @@ export default function MayhemPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="text-white font-bold">{t.profit24h}</p>
+                      <p className="text-emerald-400/90 font-semibold">{t.profit24h}</p>
                       <p className="text-[10px] text-gray-500">{t.profit7d}</p>
                     </div>
                     <button type="button" className="px-3 py-1 rounded-full bg-white/10 hover:bg-white/20 text-white text-[11px] font-semibold transition-colors">
@@ -524,7 +524,7 @@ export default function MayhemPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-white font-bold">{c.netInflow}</p>
+                    <p className="text-emerald-400/90 font-semibold">{c.netInflow}</p>
                     <p className="text-[10px] text-gray-500">MC {c.marketCap}</p>
                   </div>
                 </div>

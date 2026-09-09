@@ -32,9 +32,9 @@ function PortalTransactionsInner() {
     <>
       <header className="lx-page-header">
         <div>
-          <h1 className="lx-page-title">Transacciones</h1>
+          <h1 className="lx-page-title">Transactions</h1>
           <p className="lx-page-subtitle">
-            Historial de transferencias y pagos liquidados en el Terminal POS y Payment Links.
+            History of transfers and settled payments from POS Terminals and Payment Links.
           </p>
         </div>
       </header>

@@ -60,7 +60,7 @@ export function OverviewChartContainer() {
   const chartData = useMemo<DataPoint[]>(() => {
     if (!balanceData || !merchantWallet) return [];
 
-    const solPrice = new Decimal(solPriceData ?? 145.0);
+    const solPrice = new Decimal(solPriceData ?? 168.42);
     const walletLower = merchantWallet.toLowerCase();
 
     // 1. Calculate current total balance in USD (Rule 8: Cero Flotantes precision math)

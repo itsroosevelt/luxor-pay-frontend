@@ -64,9 +64,33 @@ const DateHeader = styled.h4`
   font-family: 'Montserrat', sans-serif;
   font-size: 12px;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.4);
   margin: 12px 0 6px 0;
+
+  .month-name {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 400;
+  }
+
+  .day-number {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 600;
+  }
 `;
+
+const renderFormattedDateHeader = (dateKey: string) => {
+  const match = dateKey.match(/^([A-Za-z]+)\s*(\d+)?$/);
+  if (match) {
+    const month = match[1];
+    const day = match[2];
+    return (
+      <>
+        <span className="month-name">{month}</span>
+        {day && <span className="day-number"> {day}</span>}
+      </>
+    );
+  }
+  return dateKey;
+};
 
 const FlowGrid = styled.div`
   display: flex;
@@ -110,32 +134,34 @@ const FlowSubtitle = styled.span`
   text-transform: capitalize;
 `;
 
-const COLOR_SENT = "#F87171";
-const COLOR_RECEIVED = "#E2E8F0";
-const COLOR_FAILED = "#FBBF24";
-
 const FlowIconBadge = styled.div<{ $visualType: 'in' | 'out' | 'failed' }>`
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
-  background: ${({ $visualType }) => (
-    $visualType === 'failed'
-      ? 'rgba(251, 191, 36, 0.12)'
-      : $visualType === 'in'
-      ? 'rgba(255, 255, 255, 0.12)'
-      : 'rgba(248, 113, 113, 0.12)'
-  )};
-  color: ${({ $visualType }) => (
-    $visualType === 'failed'
-      ? COLOR_FAILED
-      : $visualType === 'in'
-      ? COLOR_RECEIVED
-      : COLOR_SENT
-  )};
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.2s ease;
+
+  ${({ $visualType }) =>
+    $visualType === 'out'
+      ? `
+    background: var(--lx-danger-soft, rgba(248, 113, 113, 0.12));
+    border: 1px solid var(--lx-danger-border, rgba(248, 113, 113, 0.2));
+    color: var(--lx-danger, #F87171);
+  `
+      : $visualType === 'failed'
+      ? `
+    background: var(--lx-warning-soft, rgba(234, 179, 8, 0.12));
+    border: 1px solid var(--lx-warning-border, rgba(234, 179, 8, 0.2));
+    color: var(--lx-warning, #EAB308);
+  `
+      : `
+    background: var(--lx-success-soft, rgba(16, 185, 129, 0.12));
+    border: 1px solid var(--lx-success-border, rgba(16, 185, 129, 0.2));
+    color: var(--lx-success, #34D399);
+  `}
 `;
 
 const FlowAmount = styled.span`
@@ -210,7 +236,7 @@ export function DashboardExtraPanelsView({ flows }: DashboardExtraPanelsViewProp
           <ScrollableFlowContainer>
             {flows.map((group) => (
               <div key={group.dateKey}>
-                <DateHeader>{group.dateKey}</DateHeader>
+                <DateHeader>{renderFormattedDateHeader(group.dateKey)}</DateHeader>
                 <FlowGrid>
                   {group.items.map((flow) => {
                     const statusUpper = (flow.status || '').toUpperCase();

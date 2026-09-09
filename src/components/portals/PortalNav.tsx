@@ -231,11 +231,11 @@ export function PortalNav({
                 );
 
                 return item.external ? (
-                  <a key={item.href} href={item.href} className={className}>
+                  <a key={`${item.href}-${item.label}`} href={item.href} className={className}>
                     {content}
                   </a>
                 ) : (
-                  <Link key={item.href} href={item.href} className={className} aria-current={active ? 'page' : undefined}>
+                  <Link key={`${item.href}-${item.label}`} href={item.href} className={className} aria-current={active ? 'page' : undefined}>
                     {content}
                   </Link>
                 );

@@ -161,14 +161,12 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
           </div>
           <div className="min-w-0">
             <h2
-              className="text-lg font-semibold text-[#EDEDED]"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              className="text-lg font-semibold text-[#EDEDED] font-sans"
             >
               Account Statements
             </h2>
             <p
-              className="text-xs text-gray-400 mt-0.5"
-              style={{ fontFamily: "Montserrat, sans-serif" }}
+              className="text-xs text-gray-400 mt-0.5 font-body"
             >
               {monthsLoading
                 ? "Loading available months…"
@@ -191,8 +189,7 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
       {isOpen && (
         <div className="px-6 pb-6 pt-1 border-t border-white/5">
           <p
-            className="text-xs text-gray-500 mb-4"
-            style={{ fontFamily: "Montserrat, sans-serif" }}
+            className="text-xs text-gray-500 mb-4 font-body"
           >
             Oldest on the left → newest closed month on the right. Click a card to open the statement.
           </p>
@@ -205,8 +202,7 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
             </div>
           ) : monthOptions.length === 0 ? (
             <p
-              className="text-sm text-gray-400 py-6 text-center"
-              style={{ fontFamily: "Montserrat, sans-serif" }}
+              className="text-sm text-gray-400 py-6 text-center font-body"
             >
               Statements appear after a calendar month has ended.
             </p>
@@ -225,8 +221,7 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
                     </div>
                   </div>
                   <p
-                    className="text-base font-semibold text-[#EDEDED]"
-                    style={{ fontFamily: "Outfit, sans-serif" }}
+                    className="text-base font-semibold text-[#EDEDED] font-sans"
                   >
                     {option.label}
                   </p>
@@ -253,8 +248,7 @@ export function AccountStatementViewer({}: AccountStatementViewerProps) {
               <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-white/10">
                 <div className="min-w-0">
                   <h3
-                    className="text-base font-semibold text-[#EDEDED] truncate"
-                    style={{ fontFamily: "Outfit, sans-serif" }}
+                    className="text-base font-semibold text-[#EDEDED] truncate font-sans"
                   >
                     Account Statement
                   </h3>

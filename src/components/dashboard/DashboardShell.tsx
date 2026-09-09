@@ -323,18 +323,24 @@ export function DashboardShell({
 
             {/* Avatar & Verification Status */}
             <div className="flex flex-col items-center text-center">
-              <div className="rounded-full ring-2 ring-white/10">{renderAvatar(72)}</div>
+              <div className="relative rounded-full ring-2 ring-white/10">
+                {renderAvatar(72)}
+                {kycVerified && (
+                  <span
+                    className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-black border-2 border-[#121316] flex items-center justify-center shadow-md"
+                    title="Verified Merchant"
+                  >
+                    <Check size={11} className="stroke-[3]" />
+                  </span>
+                )}
+              </div>
               <h3 className="mt-3 text-lg font-light text-white">Hello, {displayName}!</h3>
               {profile?.businessName && (
                 <p className="text-xs text-gray-400 mt-0.5">{profile.businessName}</p>
               )}
 
-              <div className="mt-2.5">
-                {kycVerified ? (
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.1em] px-3.5 py-1 rounded-full bg-emerald-950/40 text-emerald-400 border border-emerald-800/50">
-                    <Check size={12} className="stroke-[3]" /> VERIFIED
-                  </span>
-                ) : (
+              <div className="mt-3 flex flex-col items-center gap-2.5">
+                {!kycVerified && (
                   <button
                     type="button"
                     onClick={() => { setIsAccountMenuOpen(false); setIsKycModalOpen(true); }}
@@ -343,6 +349,15 @@ export function DashboardShell({
                     Verify identity
                   </button>
                 )}
+
+                {/* Google-Style "Manage your Luxor Account" Pill Button */}
+                <Link
+                  href="/dashboard/profile"
+                  onClick={() => setIsAccountMenuOpen(false)}
+                  className="inline-flex items-center justify-center px-5 py-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs font-medium transition-all shadow-sm hover:border-white/40"
+                >
+                  Manage your Luxor Account
+                </Link>
               </div>
             </div>
 
@@ -378,24 +393,6 @@ export function DashboardShell({
                 />
               </div>
             )}
-
-            {/* Manage Profile Button */}
-            <Link
-              href="/dashboard/profile"
-              onClick={() => setIsAccountMenuOpen(false)}
-              className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white transition-all text-left group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-white/10 border border-white/15 text-white flex items-center justify-center flex-shrink-0">
-                  <UserIcon size={16} />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-white">Manage Profile & Statements</p>
-                  <p className="text-[11px] text-gray-400">Account details & statements</p>
-                </div>
-              </div>
-              <span className="text-gray-400 group-hover:text-white transition-colors">→</span>
-            </Link>
 
             {/* Disconnect / Sign Out */}
             <button

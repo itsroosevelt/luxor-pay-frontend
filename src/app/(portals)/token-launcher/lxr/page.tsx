@@ -37,7 +37,7 @@ interface LxrStat {
 
 const STATS: LxrStat[] = [
   { label: 'Token Price', value: '$0.0731', sub: '+12.8% (24h)', icon: TrendingUp },
-  { label: 'Market Cap', value: '$2.13M', sub: 'FDV $18.2M', icon: Coins },
+  { label: 'Market Cap', value: '$73.1M', sub: 'FDV $73.1M', icon: Coins },
   { label: 'Liquidity Pool', value: '$227,380', sub: 'Raydium & Meteora', icon: Droplets },
   { label: 'Token Holders', value: '312', sub: 'On-chain wallets', icon: Users },
 ];
@@ -54,10 +54,10 @@ const FEE_TIERS = [
 ];
 
 const TOKENOMICS = [
-  { category: 'Community Treasury', percentage: 40, amount: '100,000,000,000 LXR' },
-  { category: 'Staking & Yield Rewards', percentage: 25, amount: '62,500,000,000 LXR' },
-  { category: 'DEX Liquidity Pools', percentage: 20, amount: '50,000,000,000 LXR' },
-  { category: 'Ecosystem Development', percentage: 15, amount: '37,500,000,000 LXR' },
+  { category: 'Community Treasury', percentage: 40, amount: '400,000,000 LXR' },
+  { category: 'Staking & Yield Rewards', percentage: 25, amount: '250,000,000 LXR' },
+  { category: 'DEX Liquidity Pools', percentage: 20, amount: '200,000,000 LXR' },
+  { category: 'Ecosystem Development', percentage: 15, amount: '150,000,000 LXR' },
 ];
 
 const PageContainer = styled.div`

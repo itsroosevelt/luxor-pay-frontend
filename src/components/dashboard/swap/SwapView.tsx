@@ -346,17 +346,17 @@ export function SwapView({
   onToggleDirection
 }: SwapViewProps) {
   const [tradeMode, setTradeMode] = useState<'limit' | 'swap' | 'dca'>('limit');
-  const [limitPrice, setLimitPrice] = useState('101.773658');
+  const [limitPrice, setLimitPrice] = useState('168.420000');
   const [expiry, setExpiry] = useState('never');
 
   const outputTokenSymbol = catalogTokens.find(t => t.mint === outputMint)?.symbol || 'USDC';
   const isSolToToken = swapDirection === 'sol-to-token';
 
-  const solBalance = balanceData?.solBalance || '0.18';
+  const solBalance = balanceData?.solBalance || '107.47';
   const tokenBalance = balanceData?.tokens.find(t => t.mint === outputMint)?.uiAmount || '0.00';
   const activeSellBalance = isSolToToken ? solBalance : tokenBalance;
 
-  const estimatedUsd = (parseFloat(amount || '0') * 101.47).toFixed(2);
+  const estimatedUsd = (parseFloat(amount || '0') * 168.42).toFixed(2);
 
   return (
     <ViewContainer>
@@ -387,7 +387,7 @@ export function SwapView({
             <AccountSelectorGroup>
               <FieldLabel>Choose Account</FieldLabel>
               <SelectBox>
-                <span>GENESYS <span className="text-white/40 text-xs ml-1">$18.78</span></span>
+                <span>GENESYS <span className="text-white/40 text-xs ml-1">$45,250.00</span></span>
                 <ChevronDown size={16} className="text-white/50" />
               </SelectBox>
             </AccountSelectorGroup>
@@ -440,7 +440,7 @@ export function SwapView({
               <LimitPriceBox>
                 <div className="flex justify-between items-center px-1">
                   <FieldLabel>Limit price</FieldLabel>
-                  <MarketRateBtn onClick={() => setLimitPrice('101.47')}>Market rate</MarketRateBtn>
+                  <MarketRateBtn onClick={() => setLimitPrice('168.42')}>Market rate</MarketRateBtn>
                 </div>
                 <LimitPriceInputRow>
                   <BigInput
@@ -494,7 +494,7 @@ export function SwapView({
                 <BigInput
                   type="text"
                   placeholder="0"
-                  value={amount ? (parseFloat(amount) * (parseFloat(limitPrice) || 101.47)).toFixed(2) : '0'}
+                  value={amount ? (parseFloat(amount) * (parseFloat(limitPrice) || 168.42)).toFixed(2) : '0'}
                   readOnly
                 />
                 <TokenSelectPill>

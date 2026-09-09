@@ -83,10 +83,27 @@ const IconBadge = styled.div<{ $visualType: 'sent' | 'received' | 'failed' }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.03);
-  color: #EDEDED;
-  border: 1px solid rgba(255, 255, 255, 0.08);
   flex-shrink: 0;
+  transition: all 0.2s ease;
+
+  ${({ $visualType }) =>
+    $visualType === 'sent'
+      ? `
+    background: var(--lx-danger-soft, rgba(248, 113, 113, 0.12));
+    border: 1px solid var(--lx-danger-border, rgba(248, 113, 113, 0.2));
+    color: var(--lx-danger, #F87171);
+  `
+      : $visualType === 'failed'
+      ? `
+    background: var(--lx-warning-soft, rgba(234, 179, 8, 0.12));
+    border: 1px solid var(--lx-warning-border, rgba(234, 179, 8, 0.2));
+    color: var(--lx-warning, #EAB308);
+  `
+      : `
+    background: var(--lx-success-soft, rgba(16, 185, 129, 0.12));
+    border: 1px solid var(--lx-success-border, rgba(16, 185, 129, 0.2));
+    color: var(--lx-success, #34D399);
+  `}
 `;
 
 const TokenCircle = styled.span<{ $symbol?: string }>`

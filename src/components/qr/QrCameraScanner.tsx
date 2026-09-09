@@ -56,9 +56,21 @@ const ScanOverlay = styled.div`
   }
 `;
 
+const ScannerError = styled.div`
+  color: var(--lx-danger);
+  margin-bottom: 24px;
+  text-align: center;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+`;
+
+const HiddenCanvas = styled.canvas`
+  display: none;
+`;
+
 export interface QrCameraScannerProps {
   enabled: boolean;
-  onDetect: (data: string) => void;
+  onDetect: (text: string) => void;
   cameraErrorMessage?: string;
   borderRadius?: number;
   margin?: string;
@@ -68,8 +80,8 @@ export function QrCameraScanner({
   enabled,
   onDetect,
   cameraErrorMessage,
-  borderRadius,
-  margin,
+  borderRadius = 24,
+  margin = '0 0 24px 0',
 }: QrCameraScannerProps) {
   const { videoRef, canvasRef, error } = useQrScanner({
     enabled,
@@ -79,9 +91,9 @@ export function QrCameraScanner({
 
   if (error) {
     return (
-      <div style={{ color: '#F87171', marginBottom: '24px', textAlign: 'center' }}>
+      <ScannerError>
         {error}
-      </div>
+      </ScannerError>
     );
   }
 
@@ -91,7 +103,7 @@ export function QrCameraScanner({
         <VideoElement ref={videoRef} />
         <ScanOverlay />
       </CameraContainer>
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <HiddenCanvas ref={canvasRef} />
     </>
   );
 }

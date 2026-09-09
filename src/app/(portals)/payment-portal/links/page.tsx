@@ -101,18 +101,41 @@ const ModalCloseButton = styled.button`
 
 const FormHeader = styled.h2`
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 500;
-  color: #FFFFFF;
+  color: var(--lx-text);
+  margin-top: 0;
+  margin-bottom: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 20px 0;
-  padding-right: 36px;
+`;
 
-  svg {
-    color: #E2E8F0;
-  }
+const DangerFormHeader = styled(FormHeader)`
+  color: var(--lx-danger);
+`;
+
+const ModalFormActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+`;
+
+const DeleteModalText = styled.p`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 14px;
+  color: var(--lx-text-muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+`;
+
+const ContentHeaderAction = styled.div`
+  display: flex;
+  justify-content: flex-end;
+`;
+
+const UrlDotSeparator = styled.span`
+  color: var(--lx-border);
 `;
 
 const InputGrid = styled.div`
@@ -683,7 +706,7 @@ export default function PortalPaymentLinksPage() {
                     </Select>
                   </InputGroup>
                 </InputGrid>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <ModalFormActions>
                   <Button type="button" $variant="secondary" onClick={() => setIsFormOpen(false)} disabled={creating}>
                     Cancel
                   </Button>
@@ -698,7 +721,7 @@ export default function PortalPaymentLinksPage() {
                       </>
                     )}
                   </Button>
-                </div>
+                </ModalFormActions>
               </form>
             </ModalBox>
           </Overlay>
@@ -774,7 +797,7 @@ export default function PortalPaymentLinksPage() {
                     </Select>
                   </InputGroup>
                 </InputGrid>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <ModalFormActions>
                   <Button type="button" $variant="secondary" onClick={() => setEditingLink(null)} disabled={updating}>
                     Cancel
                   </Button>
@@ -789,7 +812,7 @@ export default function PortalPaymentLinksPage() {
                       </>
                     )}
                   </Button>
-                </div>
+                </ModalFormActions>
               </form>
             </ModalBox>
           </Overlay>
@@ -814,13 +837,13 @@ export default function PortalPaymentLinksPage() {
                 <X size={16} />
               </ModalCloseButton>
 
-              <FormHeader style={{ color: '#F87171' }}>
+              <DangerFormHeader>
                 <Trash2 size={20} /> Delete Payment Link
-              </FormHeader>
-              <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: '14px', color: 'rgba(255, 255, 255, 0.7)', marginBottom: '24px', lineHeight: 1.5 }}>
+              </DangerFormHeader>
+              <DeleteModalText>
                 Are you sure you want to delete this payment link? This action cannot be undone and customers will no longer be able to use it.
-              </p>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              </DeleteModalText>
+              <ModalFormActions>
                 <Button type="button" $variant="secondary" onClick={() => setDeletingLinkId(null)} disabled={deleting}>
                   Cancel
                 </Button>
@@ -835,18 +858,18 @@ export default function PortalPaymentLinksPage() {
                     </>
                   )}
                 </DangerButton>
-              </div>
+              </ModalFormActions>
             </ModalBox>
           </Overlay>
         )}
       </AnimatePresence>
 
       <ContentLayout>
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <ContentHeaderAction>
           <Button $variant="primary" onClick={() => setIsFormOpen(true)}>
             <Plus size={15} /> Create Link
           </Button>
-        </div>
+        </ContentHeaderAction>
 
         {loading ? (
           <LoadingState>
@@ -875,7 +898,7 @@ export default function PortalPaymentLinksPage() {
                     <LinkDetails>
                       <strong>{link.amount} {link.currency}</strong>
                       <UrlSection>
-                        <span style={{ color: 'rgba(255, 255, 255, 0.2)' }}>•</span>
+                        <UrlDotSeparator>•</UrlDotSeparator>
                         <span>/pay/link/{link.id}</span>
                       </UrlSection>
                     </LinkDetails>

@@ -147,10 +147,16 @@ function useActiveMatcher() {
 
   const isLeafActive = (leaf: { href: string; tab?: string; exact?: boolean; external?: boolean }) => {
     if (leaf.external) return false;
-    const [path] = leaf.href.split('?');
+    const [path, queryStr] = leaf.href.split('?');
     if (leaf.tab) return pathname.startsWith('/dashboard/settings') && currentTab === leaf.tab;
+    if (queryStr) {
+      return pathname === path && searchParams.toString().includes(queryStr);
+    }
+    if (searchParams.get('mode') && !queryStr) {
+      return false;
+    }
     if (leaf.exact) return pathname === path;
-    return pathname === path || pathname.startsWith(`${path}/`);
+    return pathname === path || (pathname.startsWith(`${path}/`) && path !== '/payment-portal');
   };
 
   return { isLeafActive };
@@ -576,7 +582,7 @@ function SidebarInner({
                 }
                 return (
                   <NavLinkRow
-                    key={node.href}
+                    key={`${node.href}-${node.label}`}
                     href={node.href}
                     label={node.label}
                     icon={node.icon}

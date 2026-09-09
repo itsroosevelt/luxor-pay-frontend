@@ -6,23 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   QrCode,
   Plus,
-  Smartphone,
-  CheckCircle2,
-  ArrowRight,
-  Monitor,
   Wifi,
   WifiOff,
   Zap,
-  DollarSign,
-  Layers,
-  Copy,
-  ExternalLink,
-  X,
-  RotateCcw,
-  ShieldCheck,
   CreditCard,
-  Building2,
-  Sliders,
+  X,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -81,7 +70,7 @@ const INITIAL_DEVICES: PosDevice[] = [
   },
 ];
 
-// ─── Styled Components ────────────────────────────────────────────────────────
+// ─── Styled Components (Monochrome Portal Theme) ──────────────────────────────
 
 const PageContainer = styled.div`
   display: flex;
@@ -93,107 +82,65 @@ const PageContainer = styled.div`
 `;
 
 const ContentLayout = styled.div`
-  padding: 32px 40px 60px 40px;
+  padding: 64px 40px 60px 40px;
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
 
   @media (max-width: 768px) {
     padding: 20px 16px 40px 16px;
-    gap: 24px;
+    gap: 20px;
   }
 `;
 
 const HeaderSection = styled.header`
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+`;
+
+const HeaderTextGroup = styled.div`
+  display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 `;
 
 const Title = styled.h1`
   font-family: 'Outfit', sans-serif;
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 500;
-  letter-spacing: -0.02em;
+  letter-spacing: -1px;
   color: #ffffff;
   margin: 0;
-  line-height: 1.15;
 `;
 
 const Subtitle = styled.p`
   font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.6);
-  margin: 4px 0 0 0;
-`;
-
-const StatsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 16px;
-
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 1024px) {
-    grid-template-columns: repeat(4, 1fr);
-  }
-`;
-
-const StatCard = styled.div`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(40px);
-  border-radius: 24px;
-  padding: 20px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6);
-  transition: border-color 0.2s ease;
-
-  &:hover {
-    border-color: rgba(96, 165, 250, 0.3);
-  }
-`;
-
-const StatLabel = styled.div`
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.6);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const StatValue = styled.div`
-  font-family: 'Outfit', sans-serif;
-  font-size: 26px;
-  font-weight: 500;
-  color: #ffffff;
-  letter-spacing: -0.5px;
+  margin: 0;
 `;
 
 const ActionRow = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
 `;
 
 const ButtonBase = styled.button<{ $variant?: 'primary' | 'secondary' | 'ghost' }>`
   font-family: 'Outfit', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   border-radius: 9999px;
-  padding: 12px 24px;
+  padding: 9px 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -209,121 +156,209 @@ const ButtonBase = styled.button<{ $variant?: 'primary' | 'secondary' | 'ghost' 
     background: #FFFFFF;
     color: #000000;
     &:hover:not(:disabled) {
-      background: #2563EB;
-      color: #FFFFFF;
-      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+      background: rgba(255, 255, 255, 0.85);
+      color: #000000;
     }
   `}
 
   ${({ $variant }) =>
     ($variant === 'secondary' || !$variant) &&
     `
-    background: transparent;
-    color: #60A5FA;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.05);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     &:hover:not(:disabled) {
-      background: rgba(96, 165, 250, 0.1);
-      border-color: #60A5FA;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+  `}
+
+  ${({ $variant }) =>
+    $variant === 'ghost' &&
+    `
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    &:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.05);
+      color: #FFFFFF;
     }
   `}
 `;
 
-const DevicesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(1, 1fr);
-  gap: 20px;
-
-  @media (min-width: 768px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
+/* Unified Data Table (Borderless Canvas Layout) */
+const TableWrapper = styled(motion.div)`
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  width: 100%;
+  overflow-x: auto;
 `;
 
-const DeviceCard = styled.div`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(40px);
-  border-radius: 28px;
-  padding: 24px;
+const Table = styled.table`
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+`;
+
+const Th = styled.th`
+  background: transparent;
+  padding: 12px 16px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--lx-text-dim);
+  border-bottom: 1px solid var(--lx-border);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+`;
+
+const ThRight = styled(Th)`
+  text-align: right;
+`;
+
+const Td = styled.td`
+  padding: 16px;
+  font-size: 14px;
+  color: var(--lx-text);
+  border-bottom: 1px solid var(--lx-border);
+  vertical-align: middle;
+`;
+
+const DeviceCell = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6);
-  transition: all 0.2s ease;
-
-  &:hover {
-    border-color: rgba(96, 165, 250, 0.4);
-  }
+  gap: 2px;
 `;
 
-const DeviceHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+const LocationTd = styled(Td)`
+  color: var(--lx-text-muted);
+  font-size: 13px;
 `;
 
-const DeviceBadge = styled.span<{ $online?: boolean }>`
+const VolumeTd = styled(Td)`
   font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 12px;
-  border-radius: 9999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-
-  ${({ $online }) =>
-    $online
-      ? `
-    background: rgba(52, 211, 153, 0.15);
-    color: #34D399;
-    border: 1px solid rgba(52, 211, 153, 0.3);
-  `
-      : `
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  `}
-`;
-
-const DeviceName = styled.h3`
-  font-family: 'Outfit', sans-serif;
-  font-size: 18px;
   font-weight: 500;
-  color: #ffffff;
+  color: var(--lx-text);
+`;
+
+const ActiveTd = styled(Td)`
+  color: var(--lx-text-dim);
+  font-size: 13px;
+`;
+
+const ActionTdRight = styled(Td)`
+  text-align: right;
+`;
+
+const ActionRowGroup = styled.div`
+  display: inline-flex;
+  gap: 8px;
+  justify-content: flex-end;
+`;
+
+const ModalHeaderRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const ModalTitleH3 = styled.h3`
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  color: var(--lx-text);
   margin: 0;
 `;
 
-const SerialText = styled.p`
-  font-family: monospace;
+const ModalSubtitleText = styled.p`
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 4px 0 0 0;
+  color: var(--lx-text-dim);
+  margin: 0;
 `;
 
-const MetricRow = styled.div`
+const ModalCloseButton = styled.button`
+  background: none;
+  border: none;
+  color: var(--lx-text-muted);
+  cursor: pointer;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-
-  span {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
-  }
-
-  strong {
-    font-family: 'Outfit', sans-serif;
-    font-size: 15px;
-    color: #ffffff;
+  justify-content: center;
+  transition: color 0.2s ease;
+  &:hover {
+    color: var(--lx-text);
   }
 `;
 
-/* Virtual Keypad Terminal Modal */
+const ModalFormCol = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+`;
 
+const FormLabelText = styled.label`
+  font-size: 12px;
+  color: var(--lx-text-muted);
+  display: block;
+  margin-bottom: 6px;
+`;
+
+const QrCodeContainer = styled.div`
+  background: #FFFFFF;
+  padding: 24px;
+  border-radius: 24px;
+  display: inline-block;
+`;
+
+const QrCodeSerial = styled.p`
+  color: #000000;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: monospace;
+  margin: 8px 0 0 0;
+`;
+
+const Tr = styled.tr`
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  &:last-child ${Td} {
+    border-bottom: 1px solid var(--lx-border);
+  }
+`;
+
+const DeviceNameText = styled.span`
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+`;
+
+const SerialText = styled.span`
+  font-family: monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+`;
+
+const StatusBadge = styled.span<{ $online?: boolean }>`
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.06);
+  color: ${({ $online }) => ($online ? '#ffffff' : 'rgba(255, 255, 255, 0.4)')};
+  border: 1px solid rgba(255, 255, 255, 0.12);
+`;
+
+/* Modal Styles */
 const ModalOverlay = styled(motion.div)`
   position: fixed;
   inset: 0;
@@ -339,7 +374,7 @@ const ModalOverlay = styled(motion.div)`
 const KeypadModalBox = styled(motion.div)`
   background: #0a0a0a;
   border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 32px;
+  border-radius: 28px;
   box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.9);
   width: 100%;
   max-width: 420px;
@@ -350,7 +385,7 @@ const KeypadModalBox = styled(motion.div)`
 `;
 
 const KeypadDisplay = styled.div`
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   padding: 20px;
@@ -358,7 +393,7 @@ const KeypadDisplay = styled.div`
 
   .currency-tag {
     font-size: 12px;
-    color: #60a5fa;
+    color: rgba(255, 255, 255, 0.6);
     font-family: 'Outfit', sans-serif;
     font-weight: 600;
     letter-spacing: 1px;
@@ -393,8 +428,8 @@ const KeypadButton = styled.button`
   transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(96, 165, 250, 0.15);
-    border-color: #60a5fa;
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
   }
 
   &:active {
@@ -479,70 +514,88 @@ export default function PosTerminalsPage() {
       <ContentLayout>
         {/* Header Section */}
         <HeaderSection>
-          <Title>POS Terminals &amp; Point of Sale</Title>
-          <Subtitle>
-            Pair physical devices, manage virtual registers, and process in-person QR payments on Solana.
-          </Subtitle>
+          <HeaderTextGroup>
+            <Title>POS Terminals &amp; Point of Sale</Title>
+            <Subtitle>
+              Pair physical devices, manage virtual registers, and process in-person QR payments on Solana.
+            </Subtitle>
+          </HeaderTextGroup>
+
+          <ActionRow>
+            <ButtonBase $variant="secondary" onClick={() => handleOpenVirtualPos()}>
+              <QrCode size={15} /> Open Virtual POS Keypad
+            </ButtonBase>
+            <ButtonBase $variant="primary" onClick={() => setIsRegisterOpen(true)}>
+              <Plus size={15} /> Pair New Device
+            </ButtonBase>
+          </ActionRow>
         </HeaderSection>
 
-        {/* Actions Row */}
-        <ActionRow>
-          <ButtonBase $variant="primary" onClick={() => setIsRegisterOpen(true)}>
-            <Plus size={18} /> Pair New Device
-          </ButtonBase>
+        {/* Unified Table View (No Card Containers) */}
+        <TableWrapper
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Table>
+            <thead>
+              <Tr>
+                <Th>Terminal / Device Name</Th>
+                <Th>Location</Th>
+                <Th>24h Volume</Th>
+                <Th>Last Active</Th>
+                <Th>Status</Th>
+                <ThRight>Actions</ThRight>
+              </Tr>
+            </thead>
+            <tbody>
+              {devices.map((device) => (
+                <Tr key={device.id}>
+                  <Td>
+                    <DeviceCell>
+                      <DeviceNameText>{device.name}</DeviceNameText>
+                      <SerialText>{device.serialNumber}</SerialText>
+                    </DeviceCell>
+                  </Td>
+                  <LocationTd>
+                    {device.location}
+                  </LocationTd>
+                  <VolumeTd>
+                    ${device.dailyVolume.toLocaleString('en-US', { minimumFractionDigits: 2 })} {device.currency}
+                  </VolumeTd>
+                  <ActiveTd>
+                    {device.lastActive}
+                  </ActiveTd>
+                  <Td>
+                    <StatusBadge $online={device.status === 'online'}>
+                      {device.status === 'online' ? <Wifi size={11} /> : <WifiOff size={11} />}
+                      {device.status === 'online' ? 'Online' : 'Offline'}
+                    </StatusBadge>
+                  </Td>
+                  <ActionTdRight>
+                    <ActionRowGroup>
+                      <ButtonBase
+                        $variant="secondary"
+                        onClick={() => handleOpenVirtualPos(device)}
+                      >
+                        <CreditCard size={13} /> Charge
+                      </ButtonBase>
 
-          <ButtonBase $variant="secondary" onClick={() => handleOpenVirtualPos()}>
-            <QrCode size={18} /> Open Virtual POS Keypad
-          </ButtonBase>
-        </ActionRow>
-
-        {/* Devices List */}
-        <DevicesGrid>
-          {devices.map((device) => (
-            <DeviceCard key={device.id}>
-              <DeviceHeader>
-                <div>
-                  <DeviceName>{device.name}</DeviceName>
-                  <SerialText>{device.serialNumber} • {device.location}</SerialText>
-                </div>
-                <DeviceBadge $online={device.status === 'online'}>
-                  {device.status === 'online' ? <Wifi size={12} /> : <WifiOff size={12} />}
-                  {device.status === 'online' ? 'Online' : 'Offline'}
-                </DeviceBadge>
-              </DeviceHeader>
-
-              <MetricRow>
-                <span>24h Transactions</span>
-                <strong>${device.dailyVolume.toLocaleString('en-US', { minimumFractionDigits: 2 })} {device.currency}</strong>
-              </MetricRow>
-
-              <MetricRow>
-                <span>Last Activity</span>
-                <strong>{device.lastActive}</strong>
-              </MetricRow>
-
-              <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <ButtonBase
-                  $variant="secondary"
-                  style={{ flex: 1, padding: '8px 16px', fontSize: '13px' }}
-                  onClick={() => handleOpenVirtualPos(device)}
-                >
-                  <CreditCard size={14} /> Charge Now
-                </ButtonBase>
-
-                <ButtonBase
-                  $variant="ghost"
-                  style={{ padding: '8px 14px', fontSize: '13px', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)' }}
-                  onClick={() => {
-                    toast.success(`Pairing QR generated for ${device.name}`);
-                  }}
-                >
-                  <QrCode size={14} /> Pair QR
-                </ButtonBase>
-              </div>
-            </DeviceCard>
-          ))}
-        </DevicesGrid>
+                      <ButtonBase
+                        $variant="ghost"
+                        onClick={() => {
+                          toast.success(`Pairing QR generated for ${device.name}`);
+                        }}
+                      >
+                        <QrCode size={13} /> Pair QR
+                      </ButtonBase>
+                    </ActionRowGroup>
+                  </ActionTdRight>
+                </Tr>
+              ))}
+            </tbody>
+          </Table>
+        </TableWrapper>
       </ContentLayout>
 
       {/* Modal: Pair Device */}
@@ -560,84 +613,53 @@ export default function PosTerminalsPage() {
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '20px', color: '#FFFFFF', margin: 0 }}>
+              <ModalHeaderRow>
+                <ModalTitleH3>
                   Pair POS Terminal
-                </h3>
-                <button
+                </ModalTitleH3>
+                <ModalCloseButton
                   onClick={() => setIsRegisterOpen(false)}
-                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}
                 >
                   <X size={18} />
-                </button>
-              </div>
+                </ModalCloseButton>
+              </ModalHeaderRow>
 
-              <form onSubmit={handleRegisterDevice} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <ModalFormCol onSubmit={handleRegisterDevice}>
                 <div>
-                  <label style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', display: 'block', marginBottom: '6px' }}>
+                  <FormLabelText>
                     Till / Register Name
-                  </label>
+                  </FormLabelText>
                   <input
                     type="text"
                     required
                     placeholder="e.g. Cashier #03 - Flagship Store"
                     value={deviceName}
                     onChange={(e) => setDeviceName(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      color: '#ffffff',
-                      fontSize: '14px',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm outline-none box-border focus:border-blue-400"
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', display: 'block', marginBottom: '6px' }}>
+                  <FormLabelText>
                     Store Location
-                  </label>
+                  </FormLabelText>
                   <input
                     type="text"
                     placeholder="e.g. Downtown Store"
                     value={deviceLocation}
                     onChange={(e) => setDeviceLocation(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      color: '#ffffff',
-                      fontSize: '14px',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm outline-none box-border focus:border-blue-400"
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', display: 'block', marginBottom: '6px' }}>
+                  <FormLabelText>
                     Default Settlement Asset
-                  </label>
+                  </FormLabelText>
                   <select
                     value={deviceCurrency}
                     onChange={(e) => setDeviceCurrency(e.target.value as PosDevice['currency'])}
-                    style={{
-                      width: '100%',
-                      padding: '12px 16px',
-                      borderRadius: '12px',
-                      background: '#0a0a0a',
-                      border: '1px solid rgba(255,255,255,0.15)',
-                      color: '#ffffff',
-                      fontSize: '14px',
-                      outline: 'none',
-                      boxSizing: 'border-box',
-                    }}
+                    className="w-full px-4 py-3 rounded-xl bg-[#0A0A0A] border border-white/15 text-white text-sm outline-none box-border"
                   >
                     <option value="USDC">USDC (Solana SPL)</option>
                     <option value="SOL">SOL (Native)</option>
@@ -645,10 +667,10 @@ export default function PosTerminalsPage() {
                   </select>
                 </div>
 
-                <ButtonBase type="submit" $variant="primary" disabled={isPairing} style={{ marginTop: '10px' }}>
+                <ButtonBase type="submit" $variant="primary" disabled={isPairing}>
                   {isPairing ? 'Linking Terminal...' : 'Complete Pairing'}
                 </ButtonBase>
-              </form>
+              </ModalFormCol>
             </KeypadModalBox>
           </ModalOverlay>
         )}
@@ -669,22 +691,21 @@ export default function PosTerminalsPage() {
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <ModalHeaderRow>
                 <div>
-                  <h3 style={{ fontFamily: 'Outfit, sans-serif', fontSize: '18px', color: '#FFFFFF', margin: 0 }}>
+                  <ModalTitleH3>
                     Virtual POS Keypad
-                  </h3>
-                  <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', margin: 0 }}>
+                  </ModalTitleH3>
+                  <ModalSubtitleText>
                     {activeDeviceForPos?.name || 'Main Register'}
-                  </p>
+                  </ModalSubtitleText>
                 </div>
-                <button
+                <ModalCloseButton
                   onClick={() => setIsVirtualPosOpen(false)}
-                  style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}
                 >
                   <X size={18} />
-                </button>
-              </div>
+                </ModalCloseButton>
+              </ModalHeaderRow>
 
               {!qrGenerated ? (
                 <>
@@ -701,17 +722,17 @@ export default function PosTerminalsPage() {
                     ))}
                   </KeypadGrid>
 
-                  <div style={{ display: 'flex', gap: '10px' }}>
+                  <div className="flex gap-2.5">
                     <KeypadButton
                       onClick={() => handleKeypadPress('C')}
-                      style={{ flex: 1, fontSize: '14px', background: 'rgba(255,255,255,0.03)' }}
+                      className="flex-1 text-sm bg-white/[0.03]"
                     >
                       Clear
                     </KeypadButton>
 
                     <ButtonBase
                       $variant="primary"
-                      style={{ flex: 2, height: '56px', fontSize: '16px' }}
+                      className="flex-[2] h-[56px] text-base"
                       disabled={parseFloat(chargeAmount) <= 0}
                       onClick={() => setQrGenerated(true)}
                     >
@@ -720,30 +741,30 @@ export default function PosTerminalsPage() {
                   </div>
                 </>
               ) : (
-                <div style={{ textAlign: 'center', padding: '10px 0' }}>
-                  <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', margin: '0 0 16px 0' }}>
+                <div className="text-center py-2.5">
+                  <p className="text-white/70 text-sm mb-4">
                     Scan QR with any Solana Pay Wallet to complete purchase
                   </p>
 
-                  <div style={{ background: '#FFFFFF', padding: '24px', borderRadius: '24px', display: 'inline-block' }}>
+                  <QrCodeContainer>
                     <img
                       src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=solana:luxor_pos?amount=${chargeAmount}`}
                       alt="Solana Pay QR"
-                      style={{ width: '180px', height: '180px' }}
+                      className="w-[180px] h-[180px]"
                     />
-                    <p style={{ color: '#000000', fontSize: '16px', fontWeight: 700, fontFamily: 'monospace', margin: '8px 0 0 0' }}>
+                    <QrCodeSerial>
                       ${chargeAmount} USDC
-                    </p>
-                  </div>
+                    </QrCodeSerial>
+                  </QrCodeContainer>
 
-                  <p style={{ fontSize: '12px', color: '#34D399', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginTop: '16px' }}>
+                  <p className="text-xs text-white/60 flex items-center justify-center gap-1.5 mt-4">
                     <Zap size={14} /> Listening for instant vault settlement...
                   </p>
 
-                  <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <div className="flex gap-2.5 mt-5">
                     <ButtonBase
                       $variant="secondary"
-                      style={{ flex: 1 }}
+                      className="flex-1"
                       onClick={() => setQrGenerated(false)}
                     >
                       Back to Keypad
@@ -751,7 +772,7 @@ export default function PosTerminalsPage() {
 
                     <ButtonBase
                       $variant="primary"
-                      style={{ flex: 1 }}
+                      className="flex-1"
                       onClick={() => {
                         toast.success(`Payment of $${chargeAmount} USDC received!`);
                         setChargeAmount('0');

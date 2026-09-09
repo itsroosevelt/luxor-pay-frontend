@@ -32,6 +32,7 @@ export interface Vault {
   description: string;
   isDefault: boolean;
   usdValue: number;
+  weight?: number;
   solBalance: string;
   tokens: VaultToken[];
   createdAt: string;

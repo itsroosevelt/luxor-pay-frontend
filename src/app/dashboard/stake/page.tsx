@@ -866,7 +866,7 @@ export default function SquadsStakePage() {
             <StatBlock>
               <StatLabelText>SOL</StatLabelText>
               <SolPriceFlex>
-                <SolPriceText>$103.80</SolPriceText>
+                <SolPriceText>$168.42</SolPriceText>
                 <MiniSparklineSvg />
               </SolPriceFlex>
             </StatBlock>
