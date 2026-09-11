@@ -128,14 +128,8 @@ export default function LxrTokenPage() {
       {/* Header with Title and Web3 Quick Actions */}
       <header className="lx-page-header">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-mono font-bold uppercase tracking-wider text-white flex items-center gap-1">
-              <ShieldCheck size={11} /> Verified Token
-            </span>
-            <span className="text-xs font-mono text-gray-400">Solana SPL</span>
-          </div>
           <h1 className="lx-page-title flex items-center gap-3">
-            <Coins size={26} className="text-white" /> $LXR Ecosystem Token
+            <Coins size={28} className="text-white shrink-0" /> $LXR Ecosystem Token
           </h1>
           <p className="lx-page-subtitle">
             The native utility and governance token powering the Luxor Pay Web3 ecosystem.
@@ -238,7 +232,7 @@ export default function LxrTokenPage() {
               {FEE_TIERS.map((tier) => (
                 <div
                   key={tier.name}
-                  className={`p-3.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                  className={`p-3.5 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                     tier.active
                       ? 'bg-white/10 border-white/30 text-white'
                       : 'bg-white/[0.02] border-white/5 text-gray-400 hover:border-white/10'
@@ -378,7 +372,7 @@ export default function LxrTokenPage() {
                   type="number"
                   value={stakeAmount}
                   onChange={(e) => setStakeAmount(e.target.value)}
-                  className="w-full bg-white/[0.03] border border-white/10 focus:border-white/30 rounded-xl px-4 py-2.5 text-sm font-mono text-white outline-none transition-colors"
+                  className="w-full bg-white/[0.03] border border-white/10 focus:border-white/30 rounded-full px-4 py-2.5 text-sm font-mono text-white outline-none transition-colors"
                   placeholder="Enter amount..."
                   required
                 />

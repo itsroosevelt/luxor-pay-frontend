@@ -94,7 +94,7 @@ export default function PoolsPage() {
       <header className="lx-page-header">
         <div>
           <h1 className="lx-page-title flex items-center gap-3">
-            <TrendingUp size={28} className="text-white" /> My Pools &amp; Tokens
+            <TrendingUp size={28} className="text-white shrink-0" /> My Pools &amp; Tokens
           </h1>
           <p className="lx-page-subtitle">
             Manage your deployed tokens, track DEX liquidity pool performance, and claim accrued LP fees.

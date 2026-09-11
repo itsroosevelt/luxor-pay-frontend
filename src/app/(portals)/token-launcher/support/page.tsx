@@ -44,7 +44,7 @@ export default function SupportPage() {
       <header className="lx-page-header border-b border-white/10 pb-4">
         <div>
           <h1 className="lx-page-title flex items-center gap-3">
-            <Headphones size={28} className="text-white" /> Support & Help Center
+            <Headphones size={28} className="text-white shrink-0" /> Support &amp; Help Center
           </h1>
           <p className="lx-page-subtitle">
             Get 24/7 assistance, read token launch guides, or contact our support team.

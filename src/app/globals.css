@@ -261,24 +261,24 @@ html, body {
 @media (min-width: 1280px) {
   .lx-page-header,
   .lx-app .lx-page-header {
-    padding: 28px 460px 16px 32px;
+    padding: 24px 32px 16px 32px;
   }
 }
 .lx-page-title,
 .lx-app .lx-page-title {
   font-family: 'Outfit', sans-serif;
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 500;
   letter-spacing: -0.02em;
   color: #FFFFFF;
   margin: 0;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 .lx-page-subtitle,
 .lx-app .lx-page-subtitle {
   margin-top: 4px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 13px;
+  font-size: 13.5px;
   color: rgba(255, 255, 255, 0.6);
   font-weight: 300;
 }

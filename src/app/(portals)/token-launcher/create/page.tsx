@@ -70,7 +70,7 @@ export default function CreateTokenPage() {
       <header className="lx-page-header">
         <div>
           <h1 className="lx-page-title flex items-center gap-3">
-            <Rocket size={28} className="text-white" /> Create a Token
+            <Rocket size={28} className="text-white shrink-0" /> Create Token
           </h1>
           <p className="lx-page-subtitle">
             Deploy an SPL token with automatic bonding curve &amp; liquidity pool on Solana in seconds.

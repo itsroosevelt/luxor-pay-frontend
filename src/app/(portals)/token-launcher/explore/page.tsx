@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { ChevronDown, SlidersHorizontal, LayoutGrid } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal, LayoutGrid, Compass } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ExploreCoin {
@@ -162,7 +162,9 @@ export default function ExploreCoinsPage() {
     <PageContainer>
       <header className="lx-page-header">
         <div>
-          <h1 className="lx-page-title">Explore coins</h1>
+          <h1 className="lx-page-title flex items-center gap-3">
+            <Compass size={28} className="text-white shrink-0" /> Explore DEX Tokens
+          </h1>
           <p className="lx-page-subtitle">
             Discover new meme coins, top movers, and viral bonding curves.
           </p>

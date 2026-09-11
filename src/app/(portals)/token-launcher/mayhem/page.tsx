@@ -203,7 +203,7 @@ export default function MayhemPage() {
       <header className="lx-page-header">
         <div>
           <h1 className="lx-page-title flex items-center gap-3">
-            <Flame size={28} className="text-white" /> Mayhem AI Token Launcher
+            <Flame size={28} className="text-white shrink-0" /> Mayhem AI Token Launcher
           </h1>
           <p className="lx-page-subtitle">
             Name your token, pick Auto or Manual, and let the Mayhem AI agent manage automated liquidity trading for its first 24 hours.

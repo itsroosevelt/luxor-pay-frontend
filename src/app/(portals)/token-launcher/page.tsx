@@ -23,6 +23,7 @@ import {
   ArrowUpRight,
   ShieldCheck,
   Zap,
+  Rocket,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -164,8 +165,8 @@ export default function TokenLauncherHomePage() {
       {/* Header Section (Pure Monochrome) */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-white/10">
         <div>
-          <h1 className="font-['Outfit'] text-2xl md:text-3xl font-medium tracking-tight text-white">
-            Token Launcher &amp; DEX
+          <h1 className="font-['Outfit'] text-2xl md:text-3xl font-medium tracking-tight text-white flex items-center gap-3">
+            <Rocket size={28} className="text-white shrink-0" /> Token Launcher &amp; DEX
           </h1>
           <p className="text-xs md:text-sm font-light text-white/60 mt-1">
             Explore trending Solana tokens, trader callouts, and launch new liquidity pools.

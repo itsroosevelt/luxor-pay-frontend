@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Radio, Play, Users, MessageSquare, Send, Sparkles, Activity, ShieldCheck } from 'lucide-react';
+import { Radio, Play, Users, MessageSquare, Send, ChevronRight, Eye, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Stream {
@@ -14,6 +14,26 @@ interface Stream {
   tokenName: string;
   marketCap: string;
   bgGradient: string;
+}
+
+interface StreamCardItem {
+  id: string;
+  title: string;
+  symbol: string;
+  streamer: string;
+  viewers: string;
+  marketCap: string;
+  imageUrl: string;
+}
+
+interface ClipItem {
+  id: string;
+  title: string;
+  symbol: string;
+  streamer: string;
+  views: string;
+  marketCap: string;
+  imageUrl: string;
 }
 
 const LIVE_STREAMS: Stream[] = [
@@ -49,6 +69,42 @@ const LIVE_STREAMS: Stream[] = [
   },
 ];
 
+const MOST_VIEWERS: StreamCardItem[] = [
+  { id: 'mv1', title: 'BaldDegen', symbol: 'BDG', streamer: 'balddegen', viewers: '102 viewers', marketCap: '$2.81K', imageUrl: 'https://picsum.photos/seed/bdg/300/180' },
+  { id: 'mv2', title: 'Cope Cat', symbol: 'COPECAT', streamer: 'copecat', viewers: '70 viewers', marketCap: '$2.78K', imageUrl: 'https://picsum.photos/seed/copecat/300/180' },
+  { id: 'mv3', title: 'Pump Mental Health', symbol: 'HOTLINE', streamer: 'hotline', viewers: '4 viewers', marketCap: '$10.9K', imageUrl: 'https://picsum.photos/seed/hotline/300/180' },
+  { id: 'mv4', title: 'GTA VI Token', symbol: 'GTA6', streamer: 'gta6', viewers: '2 viewers', marketCap: '$2.81K', imageUrl: 'https://picsum.photos/seed/gta6/300/180' },
+  { id: 'mv5', title: 'VOXIE Stream', symbol: 'VOXIE', streamer: 'voxie', viewers: '2 viewers', marketCap: '$62.0K', imageUrl: 'https://picsum.photos/seed/voxie/300/180' },
+  { id: 'mv6', title: 'Stonk Wars', symbol: 'STONK', streamer: 'stonkWars', viewers: '1 viewer', marketCap: '$4.96K', imageUrl: 'https://picsum.photos/seed/stonkwars/300/180' },
+];
+
+const HIGHEST_MC: StreamCardItem[] = [
+  { id: 'hm1', title: 'BULLENCIAGA', symbol: 'BULLEN', streamer: 'bullen', viewers: '45 viewers', marketCap: '$211K', imageUrl: 'https://picsum.photos/seed/bullen/300/180' },
+  { id: 'hm2', title: 'VOXIE Pro', symbol: 'VOXIE', streamer: 'voxie', viewers: '18 viewers', marketCap: '$62.0K', imageUrl: 'https://picsum.photos/seed/voxie2/300/180' },
+  { id: 'hm3', title: 'elchef Live', symbol: 'elchef', streamer: 'elchef', viewers: '12 viewers', marketCap: '$51.7K', imageUrl: 'https://picsum.photos/seed/elchef/300/180' },
+  { id: 'hm4', title: 'PrivateDAO', symbol: 'PDAO', streamer: 'pdao', viewers: '8 viewers', marketCap: '$37.5K', imageUrl: 'https://picsum.photos/seed/pdao/300/180' },
+  { id: 'hm5', title: 'Stuck to 5M', symbol: 'STUCK', streamer: 'stuck', viewers: '1 viewer', marketCap: '$32.8K', imageUrl: 'https://picsum.photos/seed/stuck/300/180' },
+  { id: 'hm6', title: 'Hotline Solana', symbol: 'HOTLINE', streamer: 'hotline', viewers: '4 viewers', marketCap: '$10.9K', imageUrl: 'https://picsum.photos/seed/hotline2/300/180' },
+];
+
+const TRENDING_CLIPS: ClipItem[] = [
+  { id: 'tc1', title: 'Snowball bot moving...', symbol: 'snowball', streamer: 'snowball', views: '243K views', marketCap: '$140K', imageUrl: 'https://picsum.photos/seed/snowball/300/180' },
+  { id: 'tc2', title: 'Sheeeeeit AMA', symbol: 'Joker', streamer: 'joker', views: '223K views', marketCap: '$44.7K', imageUrl: 'https://picsum.photos/seed/joker/300/180' },
+  { id: 'tc3', title: 'XerisCoin Pump', symbol: 'XERIS', streamer: 'xeris', views: '153K views', marketCap: '$3.14M', imageUrl: 'https://picsum.photos/seed/xeris/300/180' },
+  { id: 'tc4', title: 'aman Sol Stream', symbol: 'SOL', streamer: 'aman', views: '122K views', marketCap: '$78.6K', imageUrl: 'https://picsum.photos/seed/aman/300/180' },
+  { id: 'tc5', title: 'aceabase Clash', symbol: '$ACE', streamer: 'aceabase', views: '107K views', marketCap: '$2.36K', imageUrl: 'https://picsum.photos/seed/ace/300/180' },
+  { id: 'tc6', title: 'grand Grandma Token', symbol: 'Grandma', streamer: 'grand', views: '104K views', marketCap: '$20.1K', imageUrl: 'https://picsum.photos/seed/grand/300/180' },
+];
+
+const POPULAR_PAST_STREAMS: ClipItem[] = [
+  { id: 'ps1', title: 'Solana Dev Workshop', symbol: 'SOL', streamer: 'soldev', views: '89K views', marketCap: '$1.2M', imageUrl: 'https://picsum.photos/seed/past1/300/180' },
+  { id: 'ps2', title: 'Meme Launch Party', symbol: 'MEME', streamer: 'memeking', views: '72K views', marketCap: '$540K', imageUrl: 'https://picsum.photos/seed/past2/300/180' },
+  { id: 'ps3', title: 'Liquidity Pool Lock', symbol: 'LP', streamer: 'lplock', views: '64K views', marketCap: '$320K', imageUrl: 'https://picsum.photos/seed/past3/300/180' },
+  { id: 'ps4', title: 'Tokenomics Q&A', symbol: 'LXR', streamer: 'luxor', views: '58K views', marketCap: '$73M', imageUrl: 'https://picsum.photos/seed/past4/300/180' },
+  { id: 'ps5', title: 'Trading Competition', symbol: 'TRADE', streamer: 'trader', views: '49K views', marketCap: '$180K', imageUrl: 'https://picsum.photos/seed/past5/300/180' },
+  { id: 'ps6', title: 'Multisig Governance', symbol: 'GOV', streamer: 'gov', views: '41K views', marketCap: '$950K', imageUrl: 'https://picsum.photos/seed/past6/300/180' },
+];
+
 const PageContainer = styled.div`
   min-height: 100vh;
   background: #0a0a0a;
@@ -57,14 +113,14 @@ const PageContainer = styled.div`
 `;
 
 const ContentLayout = styled.div`
-  padding: 32px 40px 60px 40px;
-  max-width: 1600px;
+  padding: 24px 32px 60px 32px;
+  max-width: 1700px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 
   @media (max-width: 768px) {
-    padding: 20px 16px;
+    padding: 16px;
   }
 `;
 
@@ -84,12 +140,28 @@ export default function LivePage() {
     setChatMessage('');
   };
 
+  const handleSelectStreamCard = (card: StreamCardItem) => {
+    setActiveStream({
+      id: card.id,
+      title: `${card.title.toUpperCase()} LIVE STREAM`,
+      streamer: card.streamer,
+      viewers: Number(card.viewers.split(' ')[0]) || 120,
+      tokenSymbol: card.symbol,
+      tokenName: card.title,
+      marketCap: card.marketCap,
+      bgGradient: 'from-white/10 to-black/90',
+    });
+    toast.success(`Switched to stream: ${card.title}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <PageContainer>
+      {/* Upper Portal Header */}
       <header className="lx-page-header">
         <div>
           <h1 className="lx-page-title flex items-center gap-3">
-            <Radio size={28} className="text-white" /> Live Token Streams
+            <Radio size={28} className="text-white shrink-0" /> Live Token Streams
           </h1>
           <p className="lx-page-subtitle">
             Watch live developer streams, voice AMAs, and real-time token minting feeds.
@@ -97,7 +169,8 @@ export default function LivePage() {
         </div>
       </header>
 
-      <ContentLayout>
+      <ContentLayout className="space-y-10">
+        {/* 1 · Main Video Player & Live Chat Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Video Stream Container */}
           <div className="lg:col-span-2 space-y-4">
@@ -124,7 +197,7 @@ export default function LivePage() {
               </p>
             </div>
 
-            {/* Stream Grid Selector */}
+            {/* Stream Selector Pills */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {LIVE_STREAMS.map((s) => (
                 <div
@@ -179,8 +252,240 @@ export default function LivePage() {
             </form>
           </div>
         </div>
+
+        {/* 2 · Unboxed Category Rows (Rule 10 Minimal Containers) */}
+        
+        {/* SECTION A: Most Viewers */}
+        <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <h2 className="font-['Outfit'] text-base font-bold text-white flex items-center gap-2">
+              Most Viewers
+            </h2>
+            <button
+              type="button"
+              onClick={() => toast.info('Viewing all Most Viewers streams')}
+              className="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+            >
+              Show all <ChevronRight size={13} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {MOST_VIEWERS.map((card) => (
+              <div
+                key={card.id}
+                onClick={() => handleSelectStreamCard(card)}
+                className="group cursor-pointer space-y-2"
+              >
+                {/* Thumbnail */}
+                <div className="aspect-video w-full rounded-2xl bg-white/5 border border-white/10 overflow-hidden relative group-hover:border-white/30 transition-all">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  
+                  {/* Live Badge */}
+                  <div className="absolute top-2 left-2 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-mono font-bold text-white uppercase tracking-wider border border-white/20 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> LIVE
+                  </div>
+
+                  {/* Market Cap Badge */}
+                  <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold text-white border border-white/10">
+                    {card.marketCap}
+                  </div>
+
+                  {/* Viewer Count overlay */}
+                  <div className="absolute bottom-2 left-2 text-[10px] font-mono text-gray-200 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                    {card.viewers}
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-bold text-white shrink-0 font-mono">
+                    {card.title.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-['Outfit'] text-xs font-semibold text-white truncate group-hover:text-gray-300 transition-colors">
+                      {card.title}
+                    </p>
+                    <p className="text-[10px] font-mono text-gray-400 truncate">{card.symbol}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION B: Highest Market Cap */}
+        <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <h2 className="font-['Outfit'] text-base font-bold text-white flex items-center gap-2">
+              Highest Market Cap
+            </h2>
+            <button
+              type="button"
+              onClick={() => toast.info('Viewing all Highest Market Cap streams')}
+              className="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+            >
+              Show all <ChevronRight size={13} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {HIGHEST_MC.map((card) => (
+              <div
+                key={card.id}
+                onClick={() => handleSelectStreamCard(card)}
+                className="group cursor-pointer space-y-2"
+              >
+                {/* Thumbnail */}
+                <div className="aspect-video w-full rounded-2xl bg-white/5 border border-white/10 overflow-hidden relative group-hover:border-white/30 transition-all">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={card.imageUrl} alt={card.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  
+                  {/* Live Badge */}
+                  <div className="absolute top-2 left-2 bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-mono font-bold text-white uppercase tracking-wider border border-white/20 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> LIVE
+                  </div>
+
+                  {/* Market Cap Badge */}
+                  <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold text-white border border-white/10">
+                    {card.marketCap}
+                  </div>
+
+                  {/* Viewer Count overlay */}
+                  <div className="absolute bottom-2 left-2 text-[10px] font-mono text-gray-200 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-sm">
+                    {card.viewers}
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-bold text-white shrink-0 font-mono">
+                    {card.title.charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-['Outfit'] text-xs font-semibold text-white truncate group-hover:text-gray-300 transition-colors">
+                      {card.title}
+                    </p>
+                    <p className="text-[10px] font-mono text-gray-400 truncate">{card.symbol}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION C: Trending Clips */}
+        <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <h2 className="font-['Outfit'] text-base font-bold text-white flex items-center gap-2">
+              Trending Clips
+            </h2>
+            <button
+              type="button"
+              onClick={() => toast.info('Viewing all Trending Clips')}
+              className="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+            >
+              Show all <ChevronRight size={13} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {TRENDING_CLIPS.map((clip) => (
+              <div
+                key={clip.id}
+                onClick={() => toast.info(`Playing clip: ${clip.title}`)}
+                className="group cursor-pointer space-y-2"
+              >
+                {/* Thumbnail */}
+                <div className="aspect-video w-full rounded-2xl bg-white/5 border border-white/10 overflow-hidden relative group-hover:border-white/30 transition-all">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={clip.imageUrl} alt={clip.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+
+                  {/* Market Cap Badge */}
+                  <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold text-white border border-white/10">
+                    {clip.marketCap}
+                  </div>
+
+                  {/* Views Count overlay */}
+                  <div className="absolute bottom-2 left-2 text-[10px] font-mono text-gray-200 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-sm flex items-center gap-1">
+                    <Eye size={10} /> {clip.views}
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-bold text-white shrink-0 font-mono">
+                    {clip.streamer.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-['Outfit'] text-xs font-semibold text-white truncate group-hover:text-gray-300 transition-colors">
+                      {clip.title}
+                    </p>
+                    <p className="text-[10px] font-mono text-gray-400 truncate">{clip.symbol}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* SECTION D: Popular Past Streams */}
+        <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <h2 className="font-['Outfit'] text-base font-bold text-white flex items-center gap-2">
+              Popular Past Streams
+            </h2>
+            <button
+              type="button"
+              onClick={() => toast.info('Viewing all Popular Past Streams')}
+              className="text-xs font-mono text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+            >
+              Show all <ChevronRight size={13} />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+            {POPULAR_PAST_STREAMS.map((clip) => (
+              <div
+                key={clip.id}
+                onClick={() => toast.info(`Playing past stream: ${clip.title}`)}
+                className="group cursor-pointer space-y-2"
+              >
+                {/* Thumbnail */}
+                <div className="aspect-video w-full rounded-2xl bg-white/5 border border-white/10 overflow-hidden relative group-hover:border-white/30 transition-all">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={clip.imageUrl} alt={clip.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+
+                  {/* Market Cap Badge */}
+                  <div className="absolute top-2 right-2 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full text-[9.5px] font-mono font-bold text-white border border-white/10">
+                    {clip.marketCap}
+                  </div>
+
+                  {/* Views Count overlay */}
+                  <div className="absolute bottom-2 left-2 text-[10px] font-mono text-gray-200 bg-black/60 px-2 py-0.5 rounded-md backdrop-blur-sm flex items-center gap-1">
+                    <Eye size={10} /> {clip.views}
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex items-center gap-2 pt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[10px] font-bold text-white shrink-0 font-mono">
+                    {clip.streamer.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-['Outfit'] text-xs font-semibold text-white truncate group-hover:text-gray-300 transition-colors">
+                      {clip.title}
+                    </p>
+                    <p className="text-[10px] font-mono text-gray-400 truncate">{clip.symbol}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </ContentLayout>
     </PageContainer>
   );
 }
-

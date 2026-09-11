@@ -226,7 +226,7 @@ export default function GoBountiesPage() {
       <header className="lx-page-header">
         <div>
           <h1 className="lx-page-title flex items-center gap-3">
-            <Zap size={28} className="text-white" /> GO Bounties &amp; Rewards
+            <Zap size={28} className="text-white shrink-0" /> GO Bounties &amp; Rewards
           </h1>
           <p className="lx-page-subtitle">
             Community bounties and viral submissions gaining momentum on Solana.
