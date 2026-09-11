@@ -33,25 +33,37 @@ const POOLS: PoolItem[] = [
   },
   {
     id: 'pool-2',
-    symbol: 'BIDET',
-    pair: 'BIDET / SOL',
+    symbol: 'LXR',
+    pair: 'LXR / USDC',
     dex: 'Meteora DLMM',
-    tvl: '$89,120.00',
-    volume24h: '$112,050.00',
-    myLiquidity: '$5,200.00',
-    feesEarned: '$189.50',
+    tvl: '$82,100.00',
+    volume24h: '$15,800.00',
+    myLiquidity: '$8,500.00',
+    feesEarned: '$215.40',
     status: 'Active',
-    feeTier: '1.00%',
+    feeTier: '0.15%',
   },
   {
     id: 'pool-3',
-    symbol: 'zDOG',
-    pair: 'zDOG / USDC',
+    symbol: 'USDC',
+    pair: 'USDC / SOL',
     dex: 'Raydium CLMM',
-    tvl: '$42,900.00',
-    volume24h: '$15,800.00',
-    myLiquidity: '$1,800.00',
-    feesEarned: '$45.20',
+    tvl: '$1,240,500.00',
+    volume24h: '$420,150.00',
+    myLiquidity: '$25,000.00',
+    feesEarned: '$512.80',
+    status: 'Active',
+    feeTier: '0.05%',
+  },
+  {
+    id: 'pool-4',
+    symbol: 'USDT',
+    pair: 'USDT / SOL',
+    dex: 'Orca Whirlpools',
+    tvl: '$425,900.00',
+    volume24h: '$85,400.00',
+    myLiquidity: '$5,400.00',
+    feesEarned: '$94.20',
     status: 'Locked',
     feeTier: '0.30%',
   },
@@ -97,17 +109,17 @@ export default function PoolsPage() {
             <div className="flex items-center gap-2">
               <TrendingUp size={18} className="text-white/60" />
               <h2 className="text-base font-semibold text-white font-['Outfit']">Registered DEX Pools &amp; Assets</h2>
-              <span className="text-xs text-gray-400 font-mono ml-2">(3 Registered)</span>
+              <span className="text-xs text-gray-400 font-mono ml-2">(4 Registered)</span>
             </div>
             <Link
-              href="/token-launcher"
+              href="/token-launcher/create"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-black font-['Outfit'] font-semibold text-xs hover:bg-gray-200 transition-colors shrink-0 shadow-lg"
             >
               <Plus size={15} /> Create New Pool
             </Link>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             <table className="w-full text-left text-sm font-mono">
               <thead>
                 <tr className="border-b border-white/15 text-xs text-gray-400 font-normal">

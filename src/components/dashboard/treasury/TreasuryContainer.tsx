@@ -47,43 +47,13 @@ const PageContainer = styled(motion.div)`
   width: 100%;
   max-width: 1600px;
   margin: 0 auto;
-  padding: 40px;
+  padding: 24px 40px 60px 40px;
   box-sizing: border-box;
 
   @media (max-width: 768px) {
     padding: 20px 16px 40px 16px;
     gap: 20px;
   }
-`;
-
-const HeaderRow = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding-bottom: 20px;
-`;
-
-const Title = styled.h1`
-  font-family: 'Outfit', sans-serif;
-  font-size: 32px;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-  color: #FFFFFF;
-  margin: 0;
-
-  @media (max-width: 768px) {
-    font-size: 26px;
-  }
-`;
-
-const Subtitle = styled.p`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  color: rgba(255, 255, 255, 0.5);
-  margin: 0;
-  line-height: 1.5;
 `;
 
 /* ──────────────────────── Balance & Actions Block ──────────────────────── */

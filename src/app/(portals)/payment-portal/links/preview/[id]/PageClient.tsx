@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import { getPaymentLink } from '@/lib/payments-api';
 import { PaymentLink } from '@luxor/contracts';
-import { ArrowLeft, Monitor, Smartphone, ShoppingBag, Store, Wallet, Calendar, DollarSign, Copy, Check, Lock, RefreshCw, Wifi, Battery, Signal, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ArrowLeft, Monitor, Smartphone, ShoppingBag, Store, Wallet, Calendar, DollarSign, Copy, Check, Lock, RefreshCw, Wifi, Battery, Signal, ChevronLeft, ChevronRight, Plus, ShieldCheck, ArrowUpRight, ArrowDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
 import { Decimal } from 'decimal.js';
@@ -151,22 +151,17 @@ const ContentGrid = styled.div`
   align-items: start;
   
   @media (min-width: 1024px) {
-    grid-template-columns: 380px 1fr;
+    grid-template-columns: 340px 1fr;
     gap: 32px;
   }
 `;
 
-const MetaCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(20px);
-  border-radius: 20px;
-  padding: 24px;
+const DetailsInfoSection = styled(motion.div)`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   height: fit-content;
-  box-shadow: 0 8px 32px -8px rgba(0, 0, 0, 0.5);
+  padding: 8px 0;
 `;
 
 const MetaCardTitle = styled.h3`
@@ -598,7 +593,7 @@ const SimulatedAmountText = styled.div<{ $mode: 'desktop' | 'mobile' }>`
   font-size: ${({ $mode }) => ($mode === 'mobile' ? '32px' : '38px')};
   font-weight: 500;
   letter-spacing: -1px;
-  background: linear-gradient(to right, #E2E8F0, #10B981);
+  background: linear-gradient(to right, #60A5FA, #2563EB);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 4px;
@@ -609,7 +604,101 @@ const SimulatedCurrencyText = styled.div<{ $mode: 'desktop' | 'mobile' }>`
   font-size: ${({ $mode }) => ($mode === 'mobile' ? '12px' : '13px')};
   font-weight: 300;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: ${({ $mode }) => ($mode === 'mobile' ? '20px' : '24px')};
+  margin-bottom: ${({ $mode }) => ($mode === 'mobile' ? '12px' : '16px')};
+`;
+
+const SimulatedDetailsBox = styled.div<{ $mode: 'desktop' | 'mobile' }>`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: ${({ $mode }) => ($mode === 'mobile' ? '12px 14px' : '14px 18px')};
+  margin: ${({ $mode }) => ($mode === 'mobile' ? '12px 0 16px 0' : '16px 0 20px 0')};
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+`;
+
+const SimulatedAccountSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+`;
+
+const SimulatedAccountRow = styled.div<{ $mode: 'desktop' | 'mobile' }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  .account-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: ${({ $mode }) => ($mode === 'mobile' ? '10px' : '11px')};
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .account-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+  }
+
+  .account-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: ${({ $mode }) => ($mode === 'mobile' ? '11px' : '12px')};
+    font-weight: 500;
+    color: #FFFFFF;
+  }
+
+  .account-wallet {
+    font-family: monospace;
+    font-size: ${({ $mode }) => ($mode === 'mobile' ? '9px' : '10px')};
+    color: rgba(255, 255, 255, 0.6);
+  }
+`;
+
+const SimulatedFlowArrowRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -4px 0;
+  color: rgba(96, 165, 250, 0.6);
+`;
+
+const SimulatedDetailRow = styled.div<{ $mode: 'desktop' | 'mobile' }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: ${({ $mode }) => ($mode === 'mobile' ? '11px' : '12px')};
+
+  .label {
+    font-family: 'Montserrat', sans-serif;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .value {
+    font-family: 'Outfit', sans-serif;
+    color: #FFFFFF;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .monospace {
+    font-family: monospace;
+    font-size: ${({ $mode }) => ($mode === 'mobile' ? '10px' : '11px')};
+    color: rgba(255, 255, 255, 0.9);
+  }
 `;
 
 const SimulatedPayButton = styled.div<{ $mode: 'desktop' | 'mobile' }>`
@@ -814,7 +903,7 @@ export default function PreviewPaymentLinkPage() {
       </MobileBackRow>
 
       <ContentGrid>
-        <MetaCard>
+        <DetailsInfoSection>
           <MetaCardTitle>
             Link Details
           </MetaCardTitle>
@@ -841,18 +930,20 @@ export default function PreviewPaymentLinkPage() {
 
           <DetailRow>
             <DetailLabel>
-              <DollarSign size={15} />
-              <span>Amount</span>
+              <ArrowUpRight size={15} style={{ color: '#60A5FA' }} />
+              <span>Payer Account</span>
             </DetailLabel>
-            <DetailValue className="notranslate" translate="no" style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 600, color: '#E2E8F0' }}>
-              {link.amount} {link.currency}
+            <DetailValue className="notranslate" translate="no">
+              <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+                Connected Wallet (HSVNd7...PqN)
+              </span>
             </DetailValue>
           </DetailRow>
 
           <DetailRow>
             <DetailLabel>
-              <Wallet size={15} />
-              <span>Target Wallet</span>
+              <Wallet size={15} style={{ color: '#34D399' }} />
+              <span>Destination Account</span>
             </DetailLabel>
             <DetailValue className="notranslate" translate="no">
               <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
@@ -863,6 +954,46 @@ export default function PreviewPaymentLinkPage() {
                   {copiedWallet ? <Check size={12} className="text-green-400" /> : <Copy size={12} />}
                 </CopyButton>
               )}
+            </DetailValue>
+          </DetailRow>
+
+          <DetailRow>
+            <DetailLabel>
+              <ShieldCheck size={15} style={{ color: '#34D399' }} />
+              <span>Network</span>
+            </DetailLabel>
+            <DetailValue>
+              Solana Mainnet
+            </DetailValue>
+          </DetailRow>
+
+          <DetailRow>
+            <DetailLabel>
+              <DollarSign size={15} />
+              <span>Subtotal</span>
+            </DetailLabel>
+            <DetailValue className="notranslate" translate="no">
+              {link.amount} {link.currency}
+            </DetailValue>
+          </DetailRow>
+
+          <DetailRow>
+            <DetailLabel>
+              <DollarSign size={15} />
+              <span>Est. Network Fee</span>
+            </DetailLabel>
+            <DetailValue style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '13px' }}>
+              ~0.000005 SOL
+            </DetailValue>
+          </DetailRow>
+
+          <DetailRow>
+            <DetailLabel>
+              <DollarSign size={15} />
+              <span>Total Amount</span>
+            </DetailLabel>
+            <DetailValue className="notranslate" translate="no" style={{ fontFamily: 'Outfit, sans-serif', fontWeight: 600, color: '#60A5FA' }}>
+              {link.amount} {link.currency}
             </DetailValue>
           </DetailRow>
 
@@ -881,7 +1012,7 @@ export default function PreviewPaymentLinkPage() {
               })}
             </DetailValue>
           </DetailRow>
-        </MetaCard>
+        </DetailsInfoSection>
 
         <PreviewColumn>
           <MobilePreviewControls>
@@ -974,8 +1105,64 @@ export default function PreviewPaymentLinkPage() {
                       <SimulatedCurrencyText $mode="desktop">
                         {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 9 : 2)} {link.currency}
                       </SimulatedCurrencyText>
+
+                      <SimulatedDetailsBox $mode="desktop">
+                        <SimulatedAccountSection>
+                          <SimulatedAccountRow $mode="desktop">
+                            <div className="account-label">
+                              <ArrowUpRight size={11} style={{ color: '#60A5FA' }} /> Payer Account
+                            </div>
+                            <div className="account-info">
+                              <span className="account-name">Connected Wallet</span>
+                              <span className="account-wallet">HSVNd7...PqN</span>
+                            </div>
+                          </SimulatedAccountRow>
+
+                          <SimulatedFlowArrowRow>
+                            <ArrowDown size={12} />
+                          </SimulatedFlowArrowRow>
+
+                          <SimulatedAccountRow $mode="desktop">
+                            <div className="account-label">
+                              <Wallet size={11} style={{ color: '#34D399' }} /> Destination Account
+                            </div>
+                            <div className="account-info">
+                              <span className="account-name">{link.businessName || 'Demo Merchant'}</span>
+                              <span className="account-wallet">
+                                {link.merchantWallet ? `${link.merchantWallet.slice(0, 6)}...${link.merchantWallet.slice(-6)}` : '7xKXt...osgAsU'}
+                              </span>
+                            </div>
+                          </SimulatedAccountRow>
+                        </SimulatedAccountSection>
+
+                        <SimulatedDetailRow $mode="desktop">
+                          <span className="label">Item / Concept</span>
+                          <span className="value">{link.name}</span>
+                        </SimulatedDetailRow>
+                        <SimulatedDetailRow $mode="desktop">
+                          <span className="label">Network</span>
+                          <span className="value">
+                            <ShieldCheck size={11} style={{ color: '#34D399' }} /> Solana Mainnet
+                          </span>
+                        </SimulatedDetailRow>
+                        <SimulatedDetailRow $mode="desktop">
+                          <span className="label">Subtotal</span>
+                          <span className="value">{parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} {link.currency}</span>
+                        </SimulatedDetailRow>
+                        <SimulatedDetailRow $mode="desktop">
+                          <span className="label">Est. Network Fee</span>
+                          <span className="value" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>~0.000005 SOL</span>
+                        </SimulatedDetailRow>
+                        <SimulatedDetailRow $mode="desktop" style={{ paddingTop: '6px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                          <span className="label" style={{ color: '#FFFFFF' }}>Total to Transfer</span>
+                          <span className="value" style={{ color: '#60A5FA', fontWeight: 600 }}>
+                            {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} {link.currency}
+                          </span>
+                        </SimulatedDetailRow>
+                      </SimulatedDetailsBox>
+
                       <SimulatedPayButton $mode="desktop">
-                        Pay Now
+                        Confirm & Pay {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} {link.currency}
                       </SimulatedPayButton>
                     </SimulatedCheckoutCard>
                   </SimulatedMainContent>
@@ -1038,8 +1225,52 @@ export default function PreviewPaymentLinkPage() {
                       <SimulatedCurrencyText $mode="mobile">
                         {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 9 : 2)} {link.currency}
                       </SimulatedCurrencyText>
+
+                      <SimulatedDetailsBox $mode="mobile">
+                        <SimulatedAccountSection>
+                          <SimulatedAccountRow $mode="mobile">
+                            <div className="account-label">
+                              <ArrowUpRight size={10} style={{ color: '#60A5FA' }} /> Payer
+                            </div>
+                            <div className="account-info">
+                              <span className="account-name">Payer Wallet</span>
+                              <span className="account-wallet">HSVNd7...PqN</span>
+                            </div>
+                          </SimulatedAccountRow>
+
+                          <SimulatedFlowArrowRow>
+                            <ArrowDown size={10} />
+                          </SimulatedFlowArrowRow>
+
+                          <SimulatedAccountRow $mode="mobile">
+                            <div className="account-label">
+                              <Wallet size={10} style={{ color: '#34D399' }} /> Destination
+                            </div>
+                            <div className="account-info">
+                              <span className="account-name">{link.businessName || 'Merchant'}</span>
+                              <span className="account-wallet">
+                                {link.merchantWallet ? `${link.merchantWallet.slice(0, 5)}...${link.merchantWallet.slice(-5)}` : '7xKXt...osgAsU'}
+                              </span>
+                            </div>
+                          </SimulatedAccountRow>
+                        </SimulatedAccountSection>
+
+                        <SimulatedDetailRow $mode="mobile">
+                          <span className="label">Network</span>
+                          <span className="value">
+                            <ShieldCheck size={10} style={{ color: '#34D399' }} /> Solana
+                          </span>
+                        </SimulatedDetailRow>
+                        <SimulatedDetailRow $mode="mobile">
+                          <span className="label">Total</span>
+                          <span className="value" style={{ color: '#60A5FA', fontWeight: 600 }}>
+                            {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} {link.currency}
+                          </span>
+                        </SimulatedDetailRow>
+                      </SimulatedDetailsBox>
+
                       <SimulatedPayButton $mode="mobile">
-                        Pay Now
+                        Confirm & Pay {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} {link.currency}
                       </SimulatedPayButton>
                     </SimulatedCheckoutCard>
                   </SimulatedMainContent>

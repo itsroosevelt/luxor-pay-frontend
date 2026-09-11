@@ -9,9 +9,10 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Wallet, ShieldCheck, ArrowUpRight, ArrowDown } from 'lucide-react';
 import { Decimal } from 'decimal.js';
 import { useTokenPrice } from '@/hooks/useTokenPrice';
+
 const PageWrapper = styled.div`
   min-height: 100vh;
   background: #000000;
@@ -83,9 +84,9 @@ const CheckoutCard = styled(motion.div)`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
-  padding: 40px;
+  padding: 36px 32px;
   width: 100%;
-  max-width: 480px;
+  max-width: 500px;
   text-align: center;
   box-shadow: 0 32px 64px -16px rgba(0,0,0,0.8);
 `;
@@ -105,26 +106,127 @@ const ProductName = styled.div`
   font-size: 28px;
   font-weight: 500;
   color: #FFFFFF;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 `;
 
 const AmountText = styled.div`
   font-family: 'Outfit', sans-serif;
-  font-size: 56px;
+  font-size: 52px;
   font-weight: 500;
   letter-spacing: -2px;
   background: linear-gradient(to right, #60A5FA, #2563EB);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 `;
 
 const CurrencyText = styled.div`
   font-family: 'Montserrat', sans-serif;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.6);
-  margin-bottom: 40px;
+  margin-bottom: 20px;
+`;
+
+const PaymentDetailsBox = styled.div`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 16px 0 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: left;
+`;
+
+const AccountSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+`;
+
+const AccountRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  .account-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .account-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .account-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: #FFFFFF;
+  }
+
+  .account-wallet {
+    font-family: monospace;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+  }
+`;
+
+const FlowArrowRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -4px 0;
+  color: rgba(96, 165, 250, 0.6);
+`;
+
+const DetailsSection = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+const DetailRow = styled.div<{ $bold?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+
+  .label {
+    font-family: 'Montserrat', sans-serif;
+    color: ${({ $bold }) => ($bold ? '#FFFFFF' : 'rgba(255, 255, 255, 0.5)')};
+    font-weight: ${({ $bold }) => ($bold ? '500' : '400')};
+  }
+
+  .value {
+    font-family: 'Outfit', sans-serif;
+    color: #FFFFFF;
+    font-weight: ${({ $bold }) => ($bold ? '600' : '500')};
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .monospace {
+    font-family: monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+  }
 `;
 
 const PayButton = styled.button`
@@ -344,6 +446,70 @@ export default function PayLinkPage() {
                 {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 9 : 2)} {link.currency}
               </CurrencyText>
 
+              {/* Payment Details & Accounts Breakdown */}
+              <PaymentDetailsBox>
+                <AccountSection>
+                  {/* Payer Account (Cuenta de Envío) */}
+                  <AccountRow>
+                    <div className="account-label">
+                      <ArrowUpRight size={13} style={{ color: '#60A5FA' }} /> Payer Account
+                    </div>
+                    <div className="account-info">
+                      <span className="account-name">
+                        {user ? (user.displayName || user.email?.split('@')[0] || 'Connected Payer Wallet') : 'Sin Conectar'}
+                      </span>
+                      <span className="account-wallet">
+                        {user ? 'HSVNd7...PqN' : 'Inicia sesión para transferir'}
+                      </span>
+                    </div>
+                  </AccountRow>
+
+                  <FlowArrowRow>
+                    <ArrowDown size={14} />
+                  </FlowArrowRow>
+
+                  {/* Merchant Account (Cuenta de Destino) */}
+                  <AccountRow>
+                    <div className="account-label">
+                      <Wallet size={13} style={{ color: '#34D399' }} /> Destination Account
+                    </div>
+                    <div className="account-info">
+                      <span className="account-name">{link.businessName || 'Demo Coffee Co.'}</span>
+                      <span className="account-wallet">
+                        {link.merchantWallet ? `${link.merchantWallet.slice(0, 6)}...${link.merchantWallet.slice(-6)}` : '7xKXt...osgAsU'}
+                      </span>
+                    </div>
+                  </AccountRow>
+                </AccountSection>
+
+                <DetailsSection>
+                  <DetailRow>
+                    <span className="label">Item / Concept</span>
+                    <span className="value">{link.name}</span>
+                  </DetailRow>
+                  <DetailRow>
+                    <span className="label">Network</span>
+                    <span className="value">
+                      <ShieldCheck size={13} style={{ color: '#34D399' }} /> Solana Mainnet
+                    </span>
+                  </DetailRow>
+                  <DetailRow>
+                    <span className="label">Subtotal</span>
+                    <span className="value">{parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} {link.currency}</span>
+                  </DetailRow>
+                  <DetailRow>
+                    <span className="label">Est. Network Fee</span>
+                    <span className="value" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>~0.000005 SOL</span>
+                  </DetailRow>
+                  <DetailRow $bold style={{ paddingTop: '8px', borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}>
+                    <span className="label">Total to Transfer</span>
+                    <span className="value" style={{ color: '#60A5FA', fontSize: '15px' }}>
+                      {parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} {link.currency}
+                    </span>
+                  </DetailRow>
+                </DetailsSection>
+              </PaymentDetailsBox>
+
               {error && (
                 <div className="mb-4 text-red-400 text-sm">
                   {error}
@@ -357,7 +523,7 @@ export default function PayLinkPage() {
               )}
 
               <PayButton onClick={handlePay} disabled={creating || geoStatus !== 'granted'}>
-                {!user ? 'Login to Pay' : creating ? 'Processing Payment...' : geoStatus === 'loading' ? 'Requesting Location...' : geoStatus === 'denied' ? 'Location Required' : 'Pay Now'}
+                {!user ? 'Login to Pay' : creating ? 'Processing Payment...' : geoStatus === 'loading' ? 'Requesting Location...' : geoStatus === 'denied' ? 'Location Required' : `Confirm & Pay ${parseFloat(String(link.amount || '0')).toFixed(link.currency === 'SOL' ? 4 : 2)} ${link.currency}`}
               </PayButton>
             </CheckoutCard>
           ) : (

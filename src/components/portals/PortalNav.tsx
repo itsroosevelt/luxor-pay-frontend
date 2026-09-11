@@ -91,71 +91,73 @@ export function PortalNav({
 
   const isLeafActive = (href: string) => {
     const [path] = href.split('?');
-    if (path === '/dashboard') return pathname === '/dashboard';
+    if (path === '/dashboard' || path === '/token-launcher' || path === '/payment-portal') {
+      return pathname === path;
+    }
     return pathname === path || pathname.startsWith(`${path}/`);
   };
 
   return (
     <aside
-      className="hidden h-full w-[200px] flex-shrink-0 flex-col md:flex"
+      className="hidden h-full w-[260px] flex-shrink-0 flex-col md:flex"
       style={{ borderRight: '1px solid var(--lx-border)', background: 'var(--lx-bg-elev)' }}
     >
       {/* 1. Workspace Header Selector (Stripe Style) */}
       <div
-        className="flex items-center justify-between gap-2 px-3 pt-3.5 pb-2.5 cursor-pointer hover:bg-white/[0.03] transition-colors"
+        className="flex items-center justify-between gap-2.5 px-4 pt-4 pb-3 cursor-pointer hover:bg-white/[0.03] transition-colors"
         style={{ borderBottom: '1px solid var(--lx-border)' }}
         title="Workspace active: Udreamms LLC"
       >
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-white/10 text-[10px] font-bold text-white shadow-inner border border-white/10">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/10 text-[12px] font-bold text-white shadow-inner border border-white/10">
             {merchantName.charAt(0).toUpperCase()}
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="truncate text-[12px] font-semibold text-white tracking-tight flex items-center gap-1">
+            <span className="truncate text-[13.5px] font-semibold text-white tracking-tight flex items-center gap-1.5">
               <span className="truncate">{merchantName}</span>
-              <ChevronDown size={12} className="text-gray-400 shrink-0" />
+              <ChevronDown size={13} className="text-gray-400 shrink-0" />
             </span>
           </div>
         </div>
       </div>
 
       {/* Portal Category Identifier */}
-      <div className="flex items-center justify-between px-3 pt-2 pb-0.5">
-        <p className="truncate text-[9.5px] font-bold uppercase tracking-widest text-gray-500">
+      <div className="flex items-center justify-between px-4 pt-2.5 pb-1">
+        <p className="truncate text-[11px] font-bold uppercase tracking-widest text-gray-400">
           {portalName}
         </p>
       </div>
 
-      <nav className="mt-1 flex-1 space-y-2 overflow-y-auto px-2 pb-2.5 scrollbar-thin">
+      <nav className="mt-1 flex-1 space-y-2 overflow-y-auto px-3 pb-3 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {/* Main Dashboard Return Button */}
         <Link
           href="/dashboard"
-          className="mb-1 flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[11px] font-medium text-gray-300 transition-all hover:bg-white/[0.08] hover:text-white"
+          className="mb-1.5 flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[12px] font-medium text-gray-300 transition-all hover:bg-white/[0.08] hover:text-white"
           title="Return to Main Dashboard"
         >
-          <ArrowLeft size={13} className="shrink-0 text-gray-400" />
+          <ArrowLeft size={14} className="shrink-0 text-gray-400" />
           <span className="truncate">Main Dashboard</span>
         </Link>
 
         {ctaHref && ctaLabel && (
           <Link
             href={ctaHref}
-            className="mb-1.5 flex items-center justify-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11.5px] font-semibold transition-transform hover:scale-[1.02]"
+            className="mb-2 flex items-center justify-center gap-1.5 rounded-full px-3 py-2 text-[12.5px] font-semibold transition-transform hover:scale-[1.02]"
             style={{ background: '#FFFFFF', color: '#000000' }}
           >
-            <Plus size={14} /> {ctaLabel}
+            <Plus size={15} /> {ctaLabel}
           </Link>
         )}
 
         {/* Sections list */}
         {effectiveSections.map((sec, idx) => (
-          <div key={sec.title || idx} className="space-y-0.5">
+          <div key={sec.title || idx} className="space-y-1">
             {sec.title && (
-              <p className="px-2 pt-1.5 pb-0.5 text-[9.5px] font-bold uppercase tracking-widest text-gray-500">
+              <p className="px-2.5 pt-2 pb-1 text-[11px] font-bold uppercase tracking-widest text-gray-400">
                 {sec.title}
               </p>
             )}
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {sec.items.map((item, itemIdx) => {
                 if (item.kind === 'group') {
                   const hasActiveChild = item.children.some((c) => isLeafActive(c.href));
@@ -168,22 +170,22 @@ export function PortalNav({
                         type="button"
                         onClick={() => toggleGroup(item.id)}
                         className={clsx(
-                          'flex w-full items-center justify-between rounded-full px-2.5 py-1 text-[11.5px] font-medium transition-colors',
+                          'flex w-full items-center justify-between rounded-full px-3 py-1.5 text-[13.5px] font-medium transition-colors',
                           hasActiveChild ? 'text-white font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'
                         )}
                       >
-                        <div className="flex items-center gap-2 truncate">
-                          <Icon size={14} className={clsx('shrink-0', hasActiveChild ? 'text-white' : 'text-gray-400')} />
+                        <div className="flex items-center gap-2.5 truncate">
+                          <Icon size={16} className={clsx('shrink-0', hasActiveChild ? 'text-white' : 'text-gray-400')} />
                           <span className="truncate">{item.label}</span>
                         </div>
                         <ChevronDown
-                          size={12}
+                          size={13}
                           className={clsx('shrink-0 text-gray-500 transition-transform duration-200', isOpen && 'rotate-180')}
                         />
                       </button>
 
                       {isOpen && (
-                        <div className="mt-0.5 ml-3 flex flex-col gap-0.5 border-l border-white/10 pl-2">
+                        <div className="mt-1 ml-3.5 flex flex-col gap-1 border-l border-white/10 pl-2.5">
                           {item.children.map((child) => {
                             const active = isLeafActive(child.href);
                             return (
@@ -191,7 +193,7 @@ export function PortalNav({
                                 key={child.href}
                                 href={child.href}
                                 className={clsx(
-                                  'rounded-md px-2 py-0.5 text-[10.5px] font-medium transition-colors truncate',
+                                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors truncate',
                                   active
                                     ? 'bg-white/[0.1] text-white font-semibold shadow-xs'
                                     : 'text-gray-400 hover:text-white hover:bg-white/[0.04]'
@@ -211,7 +213,7 @@ export function PortalNav({
                 const active = isLeafActive(item.href);
                 const Icon = item.icon || Clock;
                 const className = clsx(
-                  'group flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-all duration-200',
+                  'group flex items-center gap-2.5 rounded-full border px-3 py-1.5 text-[13.5px] font-medium transition-all duration-200',
                   active
                     ? 'border-white/20 bg-white/[0.08] font-semibold text-white shadow-sm'
                     : 'border-transparent text-gray-400 hover:bg-white/[0.05] hover:text-white'
@@ -231,7 +233,13 @@ export function PortalNav({
                 );
 
                 return item.external ? (
-                  <a key={`${item.href}-${item.label}`} href={item.href} className={className}>
+                  <a
+                    key={`${item.href}-${item.label}`}
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={className}
+                  >
                     {content}
                   </a>
                 ) : (

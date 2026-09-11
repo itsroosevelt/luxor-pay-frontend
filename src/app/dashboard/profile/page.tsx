@@ -321,7 +321,7 @@ export default function ProfilePage() {
                     <button
                       type="submit"
                       disabled={saving}
-                      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white text-black hover:bg-[#10B981] hover:text-white text-xs font-medium transition-all shadow-md disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-[#E2E8F0]"
+                      className="inline-flex items-center gap-2 px-6 py-2 rounded-full bg-white text-black hover:bg-[#2563EB] hover:text-white text-xs font-medium transition-all shadow-md disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-[#E2E8F0]"
                     >
                       {saving ? (
                         <>

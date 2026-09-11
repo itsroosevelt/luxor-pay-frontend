@@ -65,44 +65,44 @@ const MAYHEM_TRADERS: MayhemTrader[] = [
 const WINNING_COINS: WinningCoin[] = [
   {
     rank: 1,
-    name: 'Zuko',
-    symbol: 'Zuko',
-    address: '8QMT...pump',
-    state: 'AGENT ENDED',
+    name: 'Luxor Yield',
+    symbol: '$LXR-Y',
+    address: '3kxG...lxr',
+    state: 'AGENT ACTIVE',
     volume: '$246.2k',
     traders: 78,
     netInflow: '+$12.8K',
-    marketCap: '$748.93',
+    marketCap: '$748.9k',
   },
   {
     rank: 2,
-    name: 'Regret Wall',
-    symbol: '$REGRET',
-    address: '6osC...pump',
+    name: 'Solana Agent Pay',
+    symbol: '$SOL-AI',
+    address: 'EPjF...sol',
     state: 'AGENT PAUSED',
     volume: '$17.4k',
-    traders: 7,
+    traders: 24,
     netInflow: '+$5.7K',
-    marketCap: '$10.4k',
+    marketCap: '$110.4k',
   },
   {
     rank: 3,
-    name: 'Buttensor',
-    symbol: 'Buttensor',
-    address: '7TSv...pump',
+    name: 'Luxor Vault Token',
+    symbol: '$LXR-V',
+    address: 'Es9v...lxr',
     state: 'AGENT ENDED',
     volume: '$160.1k',
     traders: 39,
     netInflow: '+$4.8K',
-    marketCap: '$26.82',
+    marketCap: '$260.8k',
   },
 ];
 
 const SCREENER_COINS: ScreenerCoin[] = [
-  { rank: 1, name: 'A Memecoin Agency', symbol: '$AMA', marketCap: '$5.9k', volume: '$51.48', state: 'AGENT ACTIVE' },
-  { rank: 2, name: 'Mayhem Doge', symbol: '$MDOGE', marketCap: '$12.4k', volume: '$1.2k', state: 'AGENT ACTIVE' },
-  { rank: 3, name: 'Zuko AI', symbol: '$ZUKO', marketCap: '$748k', volume: '$246.2k', state: 'AGENT ENDED' },
-  { rank: 4, name: 'Regret Wall', symbol: '$REGRET', marketCap: '$10.4k', volume: '$17.4k', state: 'AGENT PAUSED' },
+  { rank: 1, name: 'Luxor Token', symbol: '$LXR', marketCap: '$73.1M', volume: '$51.4k', state: 'AGENT ACTIVE' },
+  { rank: 2, name: 'Solana', symbol: '$SOL', marketCap: '$78.4B', volume: '$1.2M', state: 'AGENT ACTIVE' },
+  { rank: 3, name: 'Luxor Yield', symbol: '$LXR-Y', marketCap: '$748k', volume: '$246.2k', state: 'AGENT ENDED' },
+  { rank: 4, name: 'USD Coin', symbol: '$USDC', marketCap: '$34.2B', volume: '$17.4M', state: 'AGENT PAUSED' },
 ];
 
 const PageContainer = styled.div`
@@ -172,7 +172,6 @@ const TogglePill = styled.button<{ $active: boolean }>`
 `;
 
 export default function MayhemPage() {
-  const [showBanner, setShowBanner] = useState(true);
   const [screenerFilter, setScreenerFilter] = useState<'All' | 'Active' | 'Paused' | 'Ended'>('All');
 
   // Form State for Launch Coin
@@ -200,33 +199,18 @@ export default function MayhemPage() {
 
   return (
     <PageContainer>
-      {/* Top Banner Announcement */}
-      <AnimatePresence>
-        {showBanner && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-black/90 border-b border-white/5 px-6 py-2.5 flex items-center justify-between text-xs font-mono"
-          >
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded bg-white/10 text-white font-bold uppercase border border-white/15">
-                MAYHEM
-              </span>
-              <span className="text-white">
-                <strong>$wow</strong> just launched with Mayhem AI Agent
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowBanner(false)}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <X size={14} />
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Header Row (Unboxed Main Dashboard Pattern) */}
+      <header className="lx-page-header">
+        <div>
+          <h1 className="lx-page-title flex items-center gap-3">
+            <Flame size={28} className="text-white" /> Mayhem AI Token Launcher
+          </h1>
+          <p className="lx-page-subtitle">
+            Name your token, pick Auto or Manual, and let the Mayhem AI agent manage automated liquidity trading for its first 24 hours.
+            <span className="ml-2 font-mono text-xs text-gray-400">· <strong className="text-white">6,577</strong> coins minted 24h</span>
+          </p>
+        </div>
+      </header>
 
       <ContentLayout>
         {/* Main Section: Try your hand. Launch a coin */}
@@ -236,22 +220,6 @@ export default function MayhemPage() {
           transition={{ duration: 0.4 }}
           className="mb-10"
         >
-          {/* Header Row */}
-          <header className="lx-page-header border-b border-white/10 pb-4 mb-6">
-            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2">
-              <div>
-                <h1 className="lx-page-title">
-                  Try your hand. Launch a coin.
-                </h1>
-                <p className="lx-page-subtitle">
-                  Name it, pick Auto or Manual, and the agent trades it for its first 24 hours.
-                </p>
-              </div>
-              <div className="text-xs font-mono text-gray-400">
-                <span className="text-white font-semibold">6,577</span> coins minted in the last 24h.
-              </div>
-            </div>
-          </header>
 
           {/* Form and Explanation Grid - Clean Fluid Layout without Heavy Container Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
@@ -449,10 +417,10 @@ export default function MayhemPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> LIVE
           </span>
           <div className="flex items-center gap-6 truncate text-gray-300">
-            <span>BUY <strong className="text-white">AMA</strong> <span className="text-emerald-400/80 font-medium">+0.04 SOL</span></span>
-            <span>SELL <strong className="text-white">56DZ...pump</strong> <span className="text-emerald-400/80 font-medium">+0.03 SOL</span></span>
-            <span>BUY <strong className="text-white">JIBWAR</strong> <span className="text-rose-400/80 font-medium">-0.02 SOL</span></span>
-            <span>BUY <strong className="text-white">wow</strong> <span className="text-emerald-400/80 font-medium">+0.01 SOL</span></span>
+            <span>BUY <strong className="text-white">LXR</strong> <span className="text-emerald-400/80 font-medium">+0.04 SOL</span></span>
+            <span>SELL <strong className="text-white">USDC</strong> <span className="text-emerald-400/80 font-medium">+0.03 SOL</span></span>
+            <span>BUY <strong className="text-white">USDT</strong> <span className="text-rose-400/80 font-medium">-0.02 SOL</span></span>
+            <span>BUY <strong className="text-white">LXR</strong> <span className="text-emerald-400/80 font-medium">+0.01 SOL</span></span>
           </div>
         </div>
 

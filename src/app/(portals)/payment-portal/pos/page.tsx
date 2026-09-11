@@ -12,6 +12,11 @@ import {
   CreditCard,
   X,
   CheckCircle2,
+  Store,
+  DollarSign,
+  Activity,
+  Info,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -82,27 +87,25 @@ const PageContainer = styled.div`
 `;
 
 const ContentLayout = styled.div`
-  padding: 64px 40px 60px 40px;
+  padding: 24px 40px 60px 40px;
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 20px;
 
   @media (max-width: 768px) {
-    padding: 20px 16px 40px 16px;
-    gap: 20px;
+    padding: 16px 16px 40px 16px;
+    gap: 16px;
   }
 `;
 
 const HeaderSection = styled.header`
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 4px;
 `;
 
 const HeaderTextGroup = styled.div`
@@ -113,7 +116,7 @@ const HeaderTextGroup = styled.div`
 
 const Title = styled.h1`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 500;
   letter-spacing: -1px;
   color: #ffffff;
@@ -125,6 +128,22 @@ const Subtitle = styled.p`
   font-size: 14px;
   font-weight: 300;
   color: rgba(255, 255, 255, 0.6);
+  margin: 0;
+`;
+
+const TableControlsRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 4px;
+`;
+
+const TableSectionTitle = styled.h2`
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.85);
   margin: 0;
 `;
 
@@ -184,6 +203,67 @@ const ButtonBase = styled.button<{ $variant?: 'primary' | 'secondary' | 'ghost' 
       color: #FFFFFF;
     }
   `}
+`;
+
+const StatsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  width: 100%;
+`;
+
+const StatCard = styled.div`
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const StatHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+
+  svg {
+    color: #60A5FA;
+  }
+`;
+
+const StatValue = styled.div`
+  font-family: 'Outfit', sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  color: #FFFFFF;
+`;
+
+const StatSubtitle = styled.div`
+  font-family: 'Montserrat', sans-serif;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+`;
+
+const InfoBanner = styled.div`
+  background: rgba(37, 99, 235, 0.06);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+
+  svg {
+    color: #60A5FA;
+    flex-shrink: 0;
+  }
 `;
 
 /* Unified Data Table (Borderless Canvas Layout) */
@@ -261,20 +341,25 @@ const ActionRowGroup = styled.div`
 const ModalHeaderRow = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  margin-top: -4px;
 `;
 
 const ModalTitleH3 = styled.h3`
   font-family: 'Outfit', sans-serif;
-  font-size: 20px;
-  color: var(--lx-text);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+  color: #ffffff;
   margin: 0;
 `;
 
 const ModalSubtitleText = styled.p`
-  font-size: 12px;
-  color: var(--lx-text-dim);
-  margin: 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 4px 0 0 0;
 `;
 
 const ModalCloseButton = styled.button`
@@ -520,16 +605,17 @@ export default function PosTerminalsPage() {
               Pair physical devices, manage virtual registers, and process in-person QR payments on Solana.
             </Subtitle>
           </HeaderTextGroup>
-
-          <ActionRow>
-            <ButtonBase $variant="secondary" onClick={() => handleOpenVirtualPos()}>
-              <QrCode size={15} /> Open Virtual POS Keypad
-            </ButtonBase>
-            <ButtonBase $variant="primary" onClick={() => setIsRegisterOpen(true)}>
-              <Plus size={15} /> Pair New Device
-            </ButtonBase>
-          </ActionRow>
         </HeaderSection>
+
+        {/* Toolbar & Action Row (Placed Lower Down) */}
+        <TableControlsRow>
+          <TableSectionTitle>
+            Configured Terminals ({devices.length})
+          </TableSectionTitle>
+          <ButtonBase $variant="primary" onClick={() => setIsRegisterOpen(true)}>
+            <Plus size={15} /> Pair POS Terminal
+          </ButtonBase>
+        </TableControlsRow>
 
         {/* Unified Table View (No Card Containers) */}
         <TableWrapper
@@ -613,10 +699,15 @@ export default function PosTerminalsPage() {
               exit={{ scale: 0.95, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <ModalHeaderRow>
-                <ModalTitleH3>
-                  Pair POS Terminal
-                </ModalTitleH3>
+              <ModalHeaderRow className="pb-3 border-b border-white/10 mb-1">
+                <div>
+                  <ModalTitleH3>
+                    Pair POS Terminal
+                  </ModalTitleH3>
+                  <ModalSubtitleText>
+                    Connect a physical or virtual payment register to your vault
+                  </ModalSubtitleText>
+                </div>
                 <ModalCloseButton
                   onClick={() => setIsRegisterOpen(false)}
                 >
@@ -624,7 +715,7 @@ export default function PosTerminalsPage() {
                 </ModalCloseButton>
               </ModalHeaderRow>
 
-              <ModalFormCol onSubmit={handleRegisterDevice}>
+              <ModalFormCol onSubmit={handleRegisterDevice} className="pt-2">
                 <div>
                   <FormLabelText>
                     Till / Register Name
@@ -635,7 +726,7 @@ export default function PosTerminalsPage() {
                     placeholder="e.g. Cashier #03 - Flagship Store"
                     value={deviceName}
                     onChange={(e) => setDeviceName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm outline-none box-border focus:border-blue-400"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm outline-none box-border focus:border-blue-500 transition-colors"
                   />
                 </div>
 
@@ -648,7 +739,7 @@ export default function PosTerminalsPage() {
                     placeholder="e.g. Downtown Store"
                     value={deviceLocation}
                     onChange={(e) => setDeviceLocation(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm outline-none box-border focus:border-blue-400"
+                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white text-sm outline-none box-border focus:border-blue-500 transition-colors"
                   />
                 </div>
 
@@ -659,7 +750,7 @@ export default function PosTerminalsPage() {
                   <select
                     value={deviceCurrency}
                     onChange={(e) => setDeviceCurrency(e.target.value as PosDevice['currency'])}
-                    className="w-full px-4 py-3 rounded-xl bg-[#0A0A0A] border border-white/15 text-white text-sm outline-none box-border"
+                    className="w-full px-4 py-3 rounded-xl bg-[#0A0A0A] border border-white/15 text-white text-sm outline-none box-border focus:border-blue-500 transition-colors"
                   >
                     <option value="USDC">USDC (Solana SPL)</option>
                     <option value="SOL">SOL (Native)</option>
@@ -667,9 +758,11 @@ export default function PosTerminalsPage() {
                   </select>
                 </div>
 
-                <ButtonBase type="submit" $variant="primary" disabled={isPairing}>
-                  {isPairing ? 'Linking Terminal...' : 'Complete Pairing'}
-                </ButtonBase>
+                <div className="pt-6 mt-4 border-t border-white/10">
+                  <ButtonBase type="submit" $variant="primary" disabled={isPairing} className="w-full h-[46px] text-sm font-semibold">
+                    {isPairing ? 'Linking Terminal...' : 'Pair POS Terminal'}
+                  </ButtonBase>
+                </div>
               </ModalFormCol>
             </KeypadModalBox>
           </ModalOverlay>

@@ -49,18 +49,20 @@ const PROGRAMS: ProgramItem[] = [
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
+// ─── Styled Components ────────────────────────────────────────────────────────
+
 const PageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   background: #0a0a0a;
   color: #ededed;
   font-family: 'Montserrat', sans-serif;
-  display: flex;
-  flex-direction: column;
 `;
 
 const ContentLayout = styled.div`
-  padding: 64px 40px 60px 40px;
-  max-width: 1400px;
+  padding: 0 40px 60px 40px;
+  max-width: 1600px;
   margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
@@ -69,73 +71,76 @@ const ContentLayout = styled.div`
   gap: 28px;
 
   @media (max-width: 768px) {
-    padding: 20px 16px 40px 16px;
+    padding: 0 16px 40px 16px;
     gap: 20px;
   }
 `;
 
 const HeaderRow = styled.div`
+  padding: 28px 32px 16px 32px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
   flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px 12px 16px;
+  }
 `;
 
 const HeaderTitleGroup = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 6px;
 `;
 
 const TitleText = styled.h1`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 500;
   color: #ffffff;
   margin: 0;
-  letter-spacing: -1.5px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 `;
 
 const SubtitleText = styled.p`
+  margin-top: 4px;
   font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 300;
-  color: rgba(255, 255, 255, 0.7);
-  margin: 0;
-  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0;
+  line-height: 1.5;
 `;
 
 const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 24px;
   max-width: 900px;
 
   @media (max-width: 640px) {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 `;
 
 const StatCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(40px);
-  border-radius: 20px;
-  padding: 16px 20px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 0 16px 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.6);
 `;
 
 const StatLabel = styled.span`
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -143,18 +148,18 @@ const StatLabel = styled.span`
 
 const StatValue = styled.span`
   font-family: 'Outfit', sans-serif;
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 28px;
+  font-weight: 500;
   color: #ffffff;
+  letter-spacing: -0.5px;
 `;
 
 const TableWrapper = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(40px);
-  border-radius: 24px;
-  overflow: hidden;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  overflow-x: auto;
+  width: 100%;
 `;
 
 const Table = styled.table`
@@ -164,19 +169,18 @@ const Table = styled.table`
 `;
 
 const Th = styled.th`
-  background: rgba(255, 255, 255, 0.04);
-  padding: 14px 20px;
+  background: transparent;
+  padding: 12px 16px 12px 0;
   font-family: 'Outfit', sans-serif;
   font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.4);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
 `;
 
 const Td = styled.td`
-  padding: 18px 20px;
+  padding: 16px 16px 16px 0;
   font-size: 14px;
   color: #ededed;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -187,24 +191,24 @@ const Tr = styled.tr`
   transition: background 0.15s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
   }
 
   &:last-child ${Td} {
-    border-bottom: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 `;
 
 const ProgramIconBox = styled.div`
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60a5fa;
+  color: #ffffff;
   flex-shrink: 0;
 `;
 
@@ -253,9 +257,9 @@ const StatusBadge = styled.span`
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: rgba(16, 185, 129, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 `;
 
 // ─── Component ───────────────────────────────────────────────────────────────
@@ -271,58 +275,56 @@ export default function ProgramsPage() {
   };
 
   return (
-    <PageContainer>
-      <ContentLayout>
-        <HeaderRow>
-          <HeaderTitleGroup>
-            <TitleText>
-              <Code2 size={30} style={{ color: '#60A5FA' }} /> Solana Smart Contracts
-            </TitleText>
-            <SubtitleText>
-              Deployed smart contract program IDs, BPF loader status, and multi-sig upgrade authorities.
-            </SubtitleText>
-          </HeaderTitleGroup>
-        </HeaderRow>
+    <PageContainer suppressHydrationWarning>
+      <HeaderRow>
+        <HeaderTitleGroup>
+          <TitleText>Solana Smart Contracts</TitleText>
+          <SubtitleText>
+            Deployed smart contract program IDs, BPF loader status, and multi-sig upgrade authorities.
+          </SubtitleText>
+        </HeaderTitleGroup>
+      </HeaderRow>
 
+      <ContentLayout suppressHydrationWarning>
         <StatsGrid>
           <StatCard
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.3 }}
           >
             <StatLabel>
-              <Cpu size={14} style={{ color: '#60A5FA' }} /> Total Programs
+              <Cpu size={13} /> <span>Total Programs</span>
             </StatLabel>
-            <StatValue>{PROGRAMS.length}</StatValue>
+            <StatValue><span>{PROGRAMS.length}</span></StatValue>
           </StatCard>
 
           <StatCard
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
+            transition={{ duration: 0.3, delay: 0.05 }}
           >
             <StatLabel>
-              <ShieldCheck size={14} style={{ color: '#34D399' }} /> Security Status
+              <ShieldCheck size={13} /> <span>Security Status</span>
             </StatLabel>
-            <StatValue>100% Verified</StatValue>
+            <StatValue><span>100% Verified</span></StatValue>
           </StatCard>
 
           <StatCard
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
           >
             <StatLabel>
-              <Terminal size={14} style={{ color: '#F59E0B' }} /> BPF Network
+              <Terminal size={13} /> <span>BPF Network</span>
             </StatLabel>
-            <StatValue>Solana Mainnet</StatValue>
+            <StatValue><span>Solana Mainnet</span></StatValue>
           </StatCard>
         </StatsGrid>
 
         <TableWrapper
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ type: 'spring', bounce: 0.3, duration: 0.7 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
         >
           <Table>
             <thead>
@@ -344,7 +346,7 @@ export default function ProgramsPage() {
                       <div>
                         <ProgramName>{prog.name}</ProgramName>
                         <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.4)', marginTop: '2px' }}>
-                          Version {prog.version} · Deployed {prog.deployedDate}
+                          <span>Version {prog.version} · Deployed {prog.deployedDate}</span>
                         </div>
                       </div>
                     </div>
@@ -355,10 +357,13 @@ export default function ProgramsPage() {
                         {prog.programId.slice(0, 8)}...{prog.programId.slice(-6)}
                       </ProgramIdText>
                       <CopyButton
+                        type="button"
                         onClick={() => handleCopy(prog.programId, prog.id)}
                         title="Copy Program ID"
                       >
-                        {copiedId === prog.id ? <Check size={13} style={{ color: '#34D399' }} /> : <Copy size={13} />}
+                        <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                          {copiedId === prog.id ? <Check size={13} style={{ color: '#34D399' }} /> : <Copy size={13} />}
+                        </span>
                       </CopyButton>
                       <a
                         href={`https://solscan.io/account/${prog.programId}`}
@@ -372,11 +377,11 @@ export default function ProgramsPage() {
                     </div>
                   </Td>
                   <Td style={{ color: 'rgba(255, 255, 255, 0.6)', fontSize: '13px' }}>
-                    {prog.authority}
+                    <span>{prog.authority}</span>
                   </Td>
                   <Td style={{ textAlign: 'right' }}>
                     <StatusBadge>
-                      <ShieldCheck size={11} /> {prog.status}
+                      <ShieldCheck size={11} /> <span>{prog.status}</span>
                     </StatusBadge>
                   </Td>
                 </Tr>

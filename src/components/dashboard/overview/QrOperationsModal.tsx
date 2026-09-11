@@ -470,8 +470,9 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     background: #FFFFFF;
     color: #000000;
     &:hover {
-      background: #10B981;
+      background: #2563EB;
       color: #FFFFFF;
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.45);
     }
   `}
 

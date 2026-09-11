@@ -9,14 +9,21 @@ import {
   Headphones,
   Activity,
   Coins,
-  Droplets,
   TrendingUp,
   LayoutDashboard,
+  QrCode,
 } from 'lucide-react';
 import { PortalShellLayout } from '@/components/portals/PortalShellLayout';
 import type { PortalNavSection } from '@/components/portals/PortalNav';
 
 const LAUNCHER_SECTIONS: PortalNavSection[] = [
+  {
+    title: 'Portals',
+    items: [
+      { href: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard, external: true },
+      { href: '/payment-portal', label: 'POS & Payments', icon: QrCode, external: true },
+    ],
+  },
   {
     title: 'Pump & DEX',
     items: [
@@ -25,7 +32,6 @@ const LAUNCHER_SECTIONS: PortalNavSection[] = [
       { href: '/token-launcher/go', label: 'GO', icon: Zap },
       { href: '/token-launcher/mayhem', label: 'Mayhem', icon: Flame },
       { href: '/token-launcher/live', label: 'Live', icon: Radio },
-      { href: '/token-launcher/support', label: 'Support', icon: Headphones },
       { href: '/token-launcher/terminal', label: 'Terminal', icon: Activity },
       { href: '/token-launcher/lxr', label: '$LXR', icon: Coins },
     ],
@@ -34,12 +40,6 @@ const LAUNCHER_SECTIONS: PortalNavSection[] = [
     title: 'Pools & Tokens',
     items: [
       { href: '/token-launcher/pools', label: 'My Pools & Tokens', icon: TrendingUp },
-    ],
-  },
-  {
-    title: 'Navigation',
-    items: [
-      { href: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard },
     ],
   },
 ];

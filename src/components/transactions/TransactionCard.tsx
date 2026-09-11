@@ -301,8 +301,9 @@ const DrawerButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   border: ${({ $variant }) => ($variant === 'secondary' ? '1px solid rgba(255, 255, 255, 0.08)' : 'none')};
 
   &:hover {
-    background: ${({ $variant }) => ($variant === 'primary' ? '#10B981' : 'rgba(255, 255, 255, 0.1)')};
+    background: ${({ $variant }) => ($variant === 'primary' ? '#2563EB' : 'rgba(255, 255, 255, 0.1)')};
     color: #FFFFFF;
+    ${({ $variant }) => $variant === 'primary' && 'box-shadow: 0 0 20px rgba(37, 99, 235, 0.45);'}
   }
   
   &:focus-visible {
@@ -334,26 +335,38 @@ const TimelineStep = styled.div`
 `;
 
 const TimelineDot = styled.div<{ $status?: string }>`
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border-radius: 9999px;
   background: ${({ $status }) => {
-    if ($status === 'done') return 'rgba(255, 255, 255, 0.15)';
-    if ($status === 'failed') return 'rgba(239, 68, 68, 0.15)';
-    if ($status === 'pending') return 'rgba(59, 130, 246, 0.15)';
+    if ($status === 'done') return 'rgba(16, 185, 129, 0.2)';
+    if ($status === 'failed') return 'rgba(239, 68, 68, 0.2)';
+    if ($status === 'pending') return 'rgba(245, 158, 11, 0.2)';
     return 'rgba(255, 255, 255, 0.08)';
   }};
+  border: ${({ $status }) => {
+    if ($status === 'done') return '1px solid rgba(16, 185, 129, 0.4)';
+    if ($status === 'failed') return '1px solid rgba(239, 68, 68, 0.4)';
+    if ($status === 'pending') return '1px solid rgba(245, 158, 11, 0.4)';
+    return '1px solid rgba(255, 255, 255, 0.1)';
+  }};
   color: ${({ $status }) => {
-    if ($status === 'done') return '#E2E8F0';
-    if ($status === 'failed') return '#FCA5A5';
-    if ($status === 'pending') return '#E2E8F0';
+    if ($status === 'done') return '#34D399';
+    if ($status === 'failed') return '#F87171';
+    if ($status === 'pending') return '#FBBF24';
     return 'rgba(255, 255, 255, 0.4)';
+  }};
+  box-shadow: ${({ $status }) => {
+    if ($status === 'done') return '0 0 10px rgba(16, 185, 129, 0.35)';
+    if ($status === 'failed') return '0 0 10px rgba(239, 68, 68, 0.35)';
+    if ($status === 'pending') return '0 0 10px rgba(245, 158, 11, 0.35)';
+    return 'none';
   }};
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  margin-top: 2px;
+  margin-top: 1px;
 `;
 
 const TimelineInfo = styled.div`

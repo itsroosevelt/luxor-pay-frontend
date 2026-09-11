@@ -205,7 +205,7 @@ const PageContainer = styled.div`
 `;
 
 const ContentLayout = styled.div`
-  padding: 32px 40px 60px 40px;
+  padding: 0 40px 60px 40px;
   max-width: 1600px;
   margin: 0 auto;
   width: 100%;
@@ -215,7 +215,7 @@ const ContentLayout = styled.div`
   gap: 28px;
 
   @media (max-width: 768px) {
-    padding: 20px 16px 40px 16px;
+    padding: 0 16px 40px 16px;
     gap: 20px;
   }
 `;
@@ -246,6 +246,9 @@ const SubTabsRow = styled.div`
   align-items: center;
   gap: 24px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  overflow-x: auto;
+  flex-wrap: nowrap;
+  padding-bottom: 2px;
 `;
 
 const SubTabButton = styled.button<{ $active?: boolean }>`
@@ -445,6 +448,12 @@ const SearchFilterGroup = styled.div`
   gap: 12px;
   flex: 1;
   max-width: 500px;
+  width: 100%;
+
+  @media (max-width: 640px) {
+    max-width: 100%;
+    flex-wrap: wrap;
+  }
 `;
 
 const SearchInputWrapper = styled.div`
@@ -514,19 +523,18 @@ const CardsGrid = styled(motion.div)`
 `;
 
 const StakeCard = styled.div`
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 20px;
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  padding: 16px 0 20px 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 20px;
-  transition: all 0.25s ease;
+  gap: 16px;
+  transition: all 0.2s ease;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom-color: rgba(255, 255, 255, 0.25);
+    border-bottom-color: rgba(255, 255, 255, 0.2);
   }
 `;
 
@@ -536,17 +544,18 @@ const CardHeader = styled.div`
   gap: 12px;
 `;
 
-const PoolLogoBadge = styled.div<{ $bgColor?: string }>`
+const PoolLogoBadge = styled.div`
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: ${({ $bgColor }) => $bgColor || '#FFFFFF'};
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000000;
+  color: #FFFFFF;
   font-family: 'Outfit', sans-serif;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   flex-shrink: 0;
 `;
@@ -607,7 +616,7 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   font-size: 13px;
   font-weight: 500;
   border-radius: 9999px;
-  padding: 9px 16px;
+  padding: 8px 16px;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -616,24 +625,24 @@ const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
   ${({ $variant }) =>
     $variant === 'secondary'
       ? `
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.04);
     color: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
 
     &:hover {
       background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
       color: #FFFFFF;
     }
   `
       : `
-    background: rgba(255, 255, 255, 0.1);
-    color: #FFFFFF;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: #FFFFFF;
+    color: #000000;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
 
     &:hover {
-      background: #FFFFFF;
+      background: #EDEDED;
       color: #000000;
-      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.2);
     }
   `}
 `;
@@ -837,27 +846,31 @@ export default function SquadsStakePage() {
 
   return (
     <PageContainer>
-      <ContentLayout>
-        {/* Title Header */}
-        <HeaderSection>
-          <Title>Stake</Title>
+      <header className="lx-page-header">
+        <div>
+          <h1 className="lx-page-title">Stake</h1>
+          <p className="lx-page-subtitle">
+            Liquid staking pools, validator node delegation, and MEV yield rewards on Solana.
+          </p>
+        </div>
+      </header>
 
-          {/* Sub-Tabs: Liquid / Validator */}
-          <SubTabsRow>
-            <SubTabButton
-              $active={activeTab === 'liquid'}
-              onClick={() => setActiveTab('liquid')}
-            >
-              Liquid
-            </SubTabButton>
-            <SubTabButton
-              $active={activeTab === 'validator'}
-              onClick={() => setActiveTab('validator')}
-            >
-              Validator
-            </SubTabButton>
-          </SubTabsRow>
-        </HeaderSection>
+      <ContentLayout>
+        {/* Sub-Tabs: Liquid / Validator */}
+        <SubTabsRow>
+          <SubTabButton
+            $active={activeTab === 'liquid'}
+            onClick={() => setActiveTab('liquid')}
+          >
+            Liquid
+          </SubTabButton>
+          <SubTabButton
+            $active={activeTab === 'validator'}
+            onClick={() => setActiveTab('validator')}
+          >
+            Validator
+          </SubTabButton>
+        </SubTabsRow>
 
         {/* Squads Overview Header Card */}
         <OverviewCard>
@@ -922,7 +935,7 @@ export default function SquadsStakePage() {
               <StakeCard key={pool.id}>
                 <div>
                   <CardHeader>
-                    <PoolLogoBadge $bgColor={pool.logoColor}>
+                    <PoolLogoBadge>
                       {pool.tokenSymbol.charAt(0)}
                     </PoolLogoBadge>
                     <PoolTitle>{pool.name}</PoolTitle>
@@ -1006,7 +1019,7 @@ export default function SquadsStakePage() {
                 <StakeCard key={val.id}>
                   <div>
                     <CardHeader>
-                      <PoolLogoBadge $bgColor={val.logoColor}>
+                      <PoolLogoBadge>
                         {val.name.charAt(0)}
                       </PoolLogoBadge>
                       <PoolTitle>{val.name}</PoolTitle>

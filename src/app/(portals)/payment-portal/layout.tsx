@@ -9,11 +9,19 @@ import {
   Wallet,
   Zap,
   LayoutDashboard,
+  Rocket,
 } from 'lucide-react';
 import { PortalShellLayout } from '@/components/portals/PortalShellLayout';
 import type { PortalNavSection } from '@/components/portals/PortalNav';
 
 const POS_PORTAL_SECTIONS: PortalNavSection[] = [
+  {
+    title: 'Portals',
+    items: [
+      { href: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard, external: true },
+      { href: '/token-launcher', label: 'Launcher & DEX', icon: Rocket, external: true },
+    ],
+  },
   {
     title: 'General',
     items: [
@@ -29,12 +37,6 @@ const POS_PORTAL_SECTIONS: PortalNavSection[] = [
       { href: '/payment-portal/pos', label: 'POS Terminals', icon: QrCode },
       { href: '/payment-portal/links', label: 'Payment Links', icon: LinkIcon },
       { href: '/payment-portal/requests', label: 'Payment Requests', icon: FileText },
-    ],
-  },
-  {
-    title: 'Reports & System',
-    items: [
-      { href: '/dashboard', label: 'Main Dashboard', icon: LayoutDashboard },
     ],
   },
 ];

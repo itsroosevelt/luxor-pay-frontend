@@ -15,6 +15,7 @@ import {
   ExternalLink,
   Send,
   X,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { Contact } from '@/lib/contacts-api';
 import { toast } from 'sonner';
@@ -38,7 +39,7 @@ const PageContainer = styled(motion.div)`
   flex-direction: column;
   gap: 24px;
   width: 100%;
-  padding: 68px 40px 64px 40px;
+  padding: 36px 40px 64px 40px;
   box-sizing: border-box;
 
   @media (max-width: 768px) {
@@ -128,11 +129,45 @@ const RightControlsGroup = styled.div`
   flex-wrap: wrap;
 `;
 
+const SearchFilterWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 240px;
+  max-width: 430px;
+`;
+
 const SearchContainer = styled.div`
   position: relative;
   flex: 1;
-  min-width: 240px;
-  max-width: 380px;
+  width: 100%;
+`;
+
+const FilterIconButton = styled.button<{ $active?: boolean }>`
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: ${({ $active }) => ($active ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)')};
+  border: 1px solid ${({ $active }) => ($active ? 'rgba(255, 255, 255, 0.25)' : 'rgba(255, 255, 255, 0.08)')};
+  color: ${({ $active }) => ($active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.6)')};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #FFFFFF;
+    outline-offset: 2px;
+  }
 `;
 
 const SearchInput = styled.input`
@@ -227,7 +262,7 @@ const ContactsGrid = styled.div`
     grid-template-columns: repeat(2, 1fr);
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 1280px) {
     grid-template-columns: repeat(3, 1fr);
   }
 `;
@@ -242,6 +277,7 @@ const ContactCard = styled(motion.div)`
   flex-direction: column;
   gap: 14px;
   transition: opacity 0.2s;
+  min-width: 0;
 
   &:hover {
     opacity: 0.9;
@@ -253,6 +289,7 @@ const CardHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  min-width: 0;
 `;
 
 const AvatarNameGroup = styled.div`
@@ -302,7 +339,7 @@ const FavoriteBadge = styled.span`
   font-family: 'Outfit', sans-serif;
   font-size: 10px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  color: #F59E0B;
   display: inline-flex;
   align-items: center;
   gap: 3px;
@@ -315,11 +352,14 @@ const ActionsContainer = styled.div`
   flex-shrink: 0;
 `;
 
-const IconButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+const IconButton = styled.button<{ $active?: boolean; $danger?: boolean; $favorite?: boolean }>`
+  background: ${({ $active, $favorite }) =>
+    $favorite && $active ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.04)'};
+  border: 1px solid ${({ $active, $favorite }) =>
+    $favorite && $active ? 'rgba(245, 158, 11, 0.3)' : 'rgba(255, 255, 255, 0.06)'};
   border-radius: 8px;
-  color: ${({ $active }) => ($active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)')};
+  color: ${({ $active, $favorite }) =>
+    $favorite && $active ? '#F59E0B' : $active ? '#FFFFFF' : 'rgba(255, 255, 255, 0.4)'};
   cursor: pointer;
   padding: 6px;
   display: flex;
@@ -328,9 +368,9 @@ const IconButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
   transition: all 0.2s;
 
   &:hover {
-    color: #FFFFFF;
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
+    color: ${({ $favorite }) => ($favorite ? '#F59E0B' : '#FFFFFF')};
+    background: ${({ $favorite }) => ($favorite ? 'rgba(245, 158, 11, 0.2)' : 'rgba(255, 255, 255, 0.08)')};
+    border-color: ${({ $favorite }) => ($favorite ? 'rgba(245, 158, 11, 0.4)' : 'rgba(255, 255, 255, 0.15)')};
   }
 
   &:disabled {
@@ -339,7 +379,7 @@ const IconButton = styled.button<{ $active?: boolean; $danger?: boolean }>`
   }
 
   &:focus-visible {
-    outline: 2px solid #FFFFFF;
+    outline: 2px solid #F59E0B;
     outline-offset: 2px;
   }
 `;
@@ -355,18 +395,23 @@ const AddressPill = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 `;
 
 const AddressMonospace = styled.span`
   font-family: monospace;
   font-size: 11.5px;
   color: rgba(255, 255, 255, 0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const AddressActions = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
 `;
 
 const MiniButton = styled.button`
@@ -394,6 +439,7 @@ const DataGrid = styled.div`
   gap: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   padding-top: 12px;
+  min-width: 0;
 `;
 
 const DataRow = styled.div`
@@ -402,6 +448,7 @@ const DataRow = styled.div`
   justify-content: space-between;
   gap: 12px;
   font-size: 13px;
+  min-width: 0;
 `;
 
 const Label = styled.span`
@@ -411,6 +458,7 @@ const Label = styled.span`
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.35);
+  flex-shrink: 0;
 `;
 
 const Value = styled.span`
@@ -421,6 +469,8 @@ const Value = styled.span`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  text-align: right;
 `;
 
 const SendLinkButton = styled.button`
@@ -538,22 +588,33 @@ export function ContactsView({
 
       {/* Toolbar */}
       <ToolbarRow>
-        <SearchContainer>
-          <SearchIconWrapper>
-            <Search size={14} />
-          </SearchIconWrapper>
-          <SearchInput
-            type="text"
-            placeholder="Search contacts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <ClearSearchButton onClick={() => setSearchQuery('')}>
-              <X size={12} />
-            </ClearSearchButton>
-          )}
-        </SearchContainer>
+        <SearchFilterWrapper>
+          <SearchContainer>
+            <SearchIconWrapper>
+              <Search size={14} />
+            </SearchIconWrapper>
+            <SearchInput
+              type="text"
+              placeholder="Search contacts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <ClearSearchButton onClick={() => setSearchQuery('')}>
+                <X size={12} />
+              </ClearSearchButton>
+            )}
+          </SearchContainer>
+
+          <FilterIconButton
+            type="button"
+            $active={showFavoritesOnly}
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            title={showFavoritesOnly ? 'Show all contacts' : 'Filter favorites'}
+          >
+            <SlidersHorizontal size={14} />
+          </FilterIconButton>
+        </SearchFilterWrapper>
 
         <RightControlsGroup>
           <FilterGroup>
@@ -561,7 +622,7 @@ export function ContactsView({
               All ({contacts.length})
             </FilterTab>
             <FilterTab $active={showFavoritesOnly} onClick={() => setShowFavoritesOnly(true)}>
-              Favorites ★
+              Favorites <Star size={12} style={{ marginLeft: 3, color: '#F59E0B', fill: showFavoritesOnly ? '#F59E0B' : 'none' }} />
             </FilterTab>
           </FilterGroup>
 
@@ -623,11 +684,12 @@ export function ContactsView({
                     <IconButton
                       type="button"
                       $active={isFav}
+                      $favorite
                       onClick={() => onToggleFavoriteClick(contact)}
                       disabled={togglingFavoriteId === contact.id}
                       title={isFav ? 'Remove favorite' : 'Mark favorite'}
                     >
-                      <Star size={13} fill={isFav ? 'currentColor' : 'none'} />
+                      <Star size={13} fill={isFav ? '#F59E0B' : 'none'} color={isFav ? '#F59E0B' : 'currentColor'} />
                     </IconButton>
                     <IconButton
                       type="button"

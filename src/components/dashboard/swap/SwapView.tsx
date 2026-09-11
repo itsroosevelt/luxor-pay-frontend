@@ -24,12 +24,15 @@ const ModeHeader = styled.div`
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   padding-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 12px;
 `;
 
 const ModeTabs = styled.div`
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
 `;
 
 const ModeTab = styled.button<{ $active?: boolean }>`
@@ -85,12 +88,14 @@ const TradeCard = styled(motion.div)`
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
 `;
 
 const AccountSelectorGroup = styled.div`
   display: flex;
   flex-direction: column;
   gap: 6px;
+  width: 100%;
 `;
 
 const FieldLabel = styled.label`
@@ -126,6 +131,7 @@ const SectionBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 `;
 
 const SectionHeader = styled.div`
@@ -139,17 +145,24 @@ const AmountInputRow = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
 `;
 
 const BigInput = styled.input`
+  flex: 1;
+  min-width: 0;
   width: 100%;
   background: transparent;
   border: none;
   outline: none;
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 600;
   color: #FFFFFF;
+
+  @media (min-width: 640px) {
+    font-size: 32px;
+  }
 
   &::placeholder {
     color: rgba(255, 255, 255, 0.25);
@@ -180,6 +193,7 @@ const TokenSelectPill = styled.div`
   border-radius: 9999px;
   padding: 6px 14px;
   cursor: pointer;
+  flex-shrink: 0;
 
   select {
     position: absolute;
@@ -349,6 +363,28 @@ export function SwapView({
   const [limitPrice, setLimitPrice] = useState('168.420000');
   const [expiry, setExpiry] = useState('never');
 
+  // DCA State
+  const [dcaEveryVal, setDcaEveryVal] = useState('1');
+  const [dcaUnit, setDcaUnit] = useState('Minute');
+  const [dcaOverVal, setDcaOverVal] = useState('2');
+  const [dcaMinPrice, setDcaMinPrice] = useState('');
+  const [dcaMaxPrice, setDcaMaxPrice] = useState('');
+
+  const sanitizeNumericInput = (val: string) => {
+    let cleaned = val.replace(/[^0-9.]/g, '');
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = `${parts[0]}.${parts.slice(1).join('')}`;
+    }
+    return cleaned;
+  };
+
+  const handleKeyDownNoInvalidChars = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (['e', 'E', '+', '-'].includes(e.key)) {
+      e.preventDefault();
+    }
+  };
+
   const outputTokenSymbol = catalogTokens.find(t => t.mint === outputMint)?.symbol || 'USDC';
   const isSolToToken = swapDirection === 'sol-to-token';
 
@@ -356,7 +392,20 @@ export function SwapView({
   const tokenBalance = balanceData?.tokens.find(t => t.mint === outputMint)?.uiAmount || '0.00';
   const activeSellBalance = isSolToToken ? solBalance : tokenBalance;
 
-  const estimatedUsd = (parseFloat(amount || '0') * 168.42).toFixed(2);
+  const numAmount = parseFloat(amount) || 0;
+  const price = parseFloat(limitPrice) || 168.42;
+
+  const calculatedBuyAmount = isSolToToken
+    ? numAmount > 0 ? (numAmount * price).toFixed(2) : '0'
+    : numAmount > 0 && price > 0 ? (numAmount / price).toFixed(4) : '0';
+
+  const estimatedSellUsd = isSolToToken
+    ? (numAmount * price).toFixed(2)
+    : numAmount.toFixed(2);
+
+  const estimatedBuyUsd = isSolToToken
+    ? (numAmount * price).toFixed(2)
+    : (parseFloat(calculatedBuyAmount) * price).toFixed(2);
 
   return (
     <ViewContainer>
@@ -400,10 +449,12 @@ export function SwapView({
 
               <AmountInputRow>
                 <BigInput
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="0"
                   value={amount}
-                  onChange={(e) => onAmountChange(e.target.value)}
+                  onKeyDown={handleKeyDownNoInvalidChars}
+                  onChange={(e) => onAmountChange(sanitizeNumericInput(e.target.value))}
                 />
                 <TokenSelectPill>
                   <span className="font-semibold text-sm text-white">{isSolToToken ? 'SOL' : outputTokenSymbol}</span>
@@ -411,8 +462,8 @@ export function SwapView({
                   <select
                     value={isSolToToken ? 'SOL' : outputMint}
                     onChange={(e) => {
-                      if (e.target.value === 'SOL' && !isSolToToken) {
-                        onToggleDirection();
+                      if (e.target.value === 'SOL') {
+                        if (!isSolToToken) onToggleDirection();
                       } else {
                         onOutputMintChange(e.target.value);
                       }
@@ -427,7 +478,7 @@ export function SwapView({
               </AmountInputRow>
 
               <SubValueRow>
-                <span>~${estimatedUsd}</span>
+                <span>~${estimatedSellUsd}</span>
                 <div className="flex items-center gap-1.5">
                   <span>{activeSellBalance}</span>
                   <MaxBtn onClick={() => onAmountChange(activeSellBalance)}>MAX</MaxBtn>
@@ -440,13 +491,15 @@ export function SwapView({
               <LimitPriceBox>
                 <div className="flex justify-between items-center px-1">
                   <FieldLabel>Limit price</FieldLabel>
-                  <MarketRateBtn onClick={() => setLimitPrice('168.42')}>Market rate</MarketRateBtn>
+                  <MarketRateBtn onClick={() => setLimitPrice('168.420000')}>Market rate</MarketRateBtn>
                 </div>
                 <LimitPriceInputRow>
                   <BigInput
                     type="text"
+                    inputMode="decimal"
                     value={limitPrice}
-                    onChange={(e) => setLimitPrice(e.target.value)}
+                    onKeyDown={handleKeyDownNoInvalidChars}
+                    onChange={(e) => setLimitPrice(sanitizeNumericInput(e.target.value))}
                     style={{ fontSize: '20px' }}
                   />
                   <CurrencyBadge>USDC</CurrencyBadge>
@@ -479,6 +532,95 @@ export function SwapView({
               </AccountSelectorGroup>
             )}
 
+            {/* DCA Mode Controls */}
+            {tradeMode === 'dca' && (
+              <>
+                {/* Every & Over Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center pt-1 w-full">
+                  {/* Every */}
+                  <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                    <FieldLabel>Every</FieldLabel>
+                    <div className="flex items-center gap-2 border-b border-white/10 pb-1 min-w-0 w-full">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={dcaEveryVal}
+                        onKeyDown={handleKeyDownNoInvalidChars}
+                        onChange={(e) => setDcaEveryVal(sanitizeNumericInput(e.target.value))}
+                        className="w-10 shrink-0 bg-transparent border-none outline-none font-['Outfit'] text-2xl font-semibold text-white"
+                      />
+                      <div className="relative flex-1 min-w-0 flex items-center justify-between bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2 text-white text-xs font-medium cursor-pointer">
+                        <span className="truncate">{dcaUnit}</span>
+                        <ChevronDown size={14} className="text-white/50 shrink-0 ml-1" />
+                        <select
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                          value={dcaUnit}
+                          onChange={(e) => setDcaUnit(e.target.value)}
+                        >
+                          <option value="Minute">Minute</option>
+                          <option value="Hour">Hour</option>
+                          <option value="Day">Day</option>
+                          <option value="Week">Week</option>
+                          <option value="Month">Month</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Over */}
+                  <div className="flex flex-col gap-1.5 min-w-0 w-full">
+                    <FieldLabel>Over</FieldLabel>
+                    <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1 min-w-0 w-full">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={dcaOverVal}
+                        onKeyDown={handleKeyDownNoInvalidChars}
+                        onChange={(e) => setDcaOverVal(sanitizeNumericInput(e.target.value))}
+                        className="w-12 shrink-0 bg-transparent border-none outline-none font-['Outfit'] text-2xl font-semibold text-white"
+                      />
+                      <span className="text-white text-sm font-medium truncate shrink-0">Orders</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price range (optional) */}
+                <div className="flex flex-col gap-2 pt-2 w-full">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs w-full">
+                    <FieldLabel className="shrink-0">Price range (optional)</FieldLabel>
+                    <span className="text-white/40 text-[11px] font-mono truncate">
+                      Rate: {price.toFixed(6)} USDC per SOL
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 w-full">
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Min price"
+                      value={dcaMinPrice}
+                      onKeyDown={handleKeyDownNoInvalidChars}
+                      onChange={(e) => setDcaMinPrice(sanitizeNumericInput(e.target.value))}
+                      className="min-w-0 flex-1 w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs text-white outline-none focus:border-white/25 transition-colors"
+                    />
+                    <span className="text-white/40 font-bold shrink-0">-</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="Max price"
+                      value={dcaMaxPrice}
+                      onKeyDown={handleKeyDownNoInvalidChars}
+                      onChange={(e) => setDcaMaxPrice(sanitizeNumericInput(e.target.value))}
+                      className="min-w-0 flex-1 w-full bg-white/[0.04] border border-white/10 rounded-xl px-3 py-2 sm:px-3.5 sm:py-2.5 text-xs text-white outline-none focus:border-white/25 transition-colors"
+                    />
+                  </div>
+                  <p className="flex items-start gap-1.5 text-[11px] text-white/40 mt-1 leading-snug">
+                    <Info size={13} className="shrink-0 mt-0.5 text-white/50" />
+                    DCA will only execute when the market price is within your min/max range.
+                  </p>
+                </div>
+              </>
+            )}
+
             {/* Direction Invert Button */}
             <InvertButton type="button" onClick={onToggleDirection}>
               <ArrowUpDown size={16} />
@@ -494,7 +636,7 @@ export function SwapView({
                 <BigInput
                   type="text"
                   placeholder="0"
-                  value={amount ? (parseFloat(amount) * (parseFloat(limitPrice) || 168.42)).toFixed(2) : '0'}
+                  value={calculatedBuyAmount}
                   readOnly
                 />
                 <TokenSelectPill>
@@ -508,16 +650,19 @@ export function SwapView({
                       }
                     }}
                   >
-                    {catalogTokens.map(t => (
-                      <option key={t.mint} value={t.mint}>{t.symbol}</option>
-                    ))}
-                    <option value="SOL">SOL</option>
+                    {isSolToToken ? (
+                      catalogTokens.map(t => (
+                        <option key={t.mint} value={t.mint}>{t.symbol}</option>
+                      ))
+                    ) : (
+                      <option value="SOL">SOL</option>
+                    )}
                   </select>
                 </TokenSelectPill>
               </AmountInputRow>
 
               <SubValueRow>
-                <span>~${estimatedUsd}</span>
+                <span>~${estimatedBuyUsd}</span>
               </SubValueRow>
             </SectionBox>
 

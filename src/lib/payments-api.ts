@@ -59,7 +59,28 @@ export async function getPaymentLink(id: string): Promise<any> {
   return json.data as any;
 }
 
-export async function createPaymentLink(token: string, data: { name: string, businessName: string, amount: number, currency: string }): Promise<any> {
+export async function createPaymentLink(token: string, data: {
+  name: string;
+  businessName: string;
+  amount: number;
+  currency: string;
+  merchantWallet?: string;
+  description?: string;
+  category?: string;
+  sku?: string;
+  imageUrl?: string;
+  pricingType?: 'fixed' | 'custom';
+  allowQuantity?: boolean;
+  features?: string[];
+  collectShipping?: boolean;
+  collectPhone?: boolean;
+  collectTaxId?: boolean;
+  collectCustomNote?: boolean;
+  redirectUrl?: string;
+  lxrDiscountPercent?: number;
+  maxUses?: number;
+  expiresAt?: string;
+}): Promise<any> {
   const res = await fetch(apiUrl('/payment-links'), {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
@@ -70,7 +91,28 @@ export async function createPaymentLink(token: string, data: { name: string, bus
   return json.data as any;
 }
 
-export async function updatePaymentLink(token: string, id: string, data: { name?: string, businessName?: string, amount?: number, currency?: string }): Promise<any> {
+export async function updatePaymentLink(token: string, id: string, data: {
+  name?: string;
+  businessName?: string;
+  amount?: number;
+  currency?: string;
+  merchantWallet?: string;
+  description?: string;
+  category?: string;
+  sku?: string;
+  imageUrl?: string;
+  pricingType?: 'fixed' | 'custom';
+  allowQuantity?: boolean;
+  features?: string[];
+  collectShipping?: boolean;
+  collectPhone?: boolean;
+  collectTaxId?: boolean;
+  collectCustomNote?: boolean;
+  redirectUrl?: string;
+  lxrDiscountPercent?: number;
+  maxUses?: number;
+  expiresAt?: string;
+}): Promise<any> {
   const res = await fetch(apiUrl(`/payment-links/${id}`), {
     method: 'PUT',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

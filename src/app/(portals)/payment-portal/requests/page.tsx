@@ -18,6 +18,8 @@ import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequ
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import {
+  Search,
+  SlidersHorizontal,
   Inbox,
   Send,
   Clock,
@@ -136,10 +138,10 @@ function formatDate(dateStr?: string) {
 }
 
 const STATUS_CONFIG = {
-  PENDING: { label: 'Pending', color: '#EDEDED', bg: 'rgba(255,255,255,0.06)', border: 'rgba(255,255,255,0.15)', Icon: Clock },
-  PAID:    { label: 'Paid',    color: '#FFFFFF', bg: 'rgba(255,255,255,0.1)',  border: 'rgba(255,255,255,0.25)', Icon: CheckCircle2 },
-  EXPIRED: { label: 'Expired', color: '#A1A1AA', bg: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.1)', Icon: XCircle },
-  CANCELLED:{ label: 'Cancelled',color:'#A1A1AA', bg:'rgba(255,255,255,0.04)', border:'rgba(255,255,255,0.1)',  Icon: Ban },
+  PENDING: { label: 'Pending', color: '#FBBF24', bg: 'rgba(251, 191, 36, 0.12)', border: 'rgba(251, 191, 36, 0.3)', Icon: Clock },
+  PAID:    { label: 'Paid',    color: '#34D399', bg: 'rgba(52, 211, 153, 0.12)', border: 'rgba(52, 211, 153, 0.3)', Icon: CheckCircle2 },
+  EXPIRED: { label: 'Expired', color: '#9CA3AF', bg: 'rgba(156, 163, 175, 0.1)', border: 'rgba(156, 163, 175, 0.2)', Icon: XCircle },
+  CANCELLED:{ label: 'Cancelled',color:'#F87171', bg: 'rgba(248, 113, 113, 0.12)', border: 'rgba(248, 113, 113, 0.3)', Icon: Ban },
 } as const;
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -425,7 +427,7 @@ function PaymentModal({
                   padding: '14px',
                   borderRadius: '9999px',
                   border: 'none',
-                  background: (isBusy || isDone) ? 'rgba(16, 185, 129,0.4)' : 'linear-gradient(135deg,#10B981,#3B82F6)',
+                  background: (isBusy || isDone) ? 'rgba(37, 99, 235,0.4)' : 'linear-gradient(135deg,#60A5FA,#2563EB)',
                   color: '#FFFFFF',
                   fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
                   cursor: (isBusy || isDone) ? 'not-allowed' : 'pointer',
@@ -730,7 +732,7 @@ function UpdateModal({
                   style={{
                     width: '100%', padding: '14px',
                     borderRadius: '9999px', border: 'none',
-                    background: (!expirationDate || isBusy) ? 'rgba(16, 185, 129,0.4)' : 'linear-gradient(135deg,#10B981,#3B82F6)',
+                    background: (!expirationDate || isBusy) ? 'rgba(37, 99, 235,0.4)' : 'linear-gradient(135deg,#60A5FA,#2563EB)',
                     color: '#FFFFFF',
                     fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
                     cursor: (!expirationDate || isBusy) ? 'not-allowed' : 'pointer',
@@ -1279,7 +1281,7 @@ function ResendModal({
               style={{
                 width: '100%', padding: '14px',
                 borderRadius: '9999px', border: 'none',
-                background: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 'rgba(16, 185, 129,0.4)' : 'linear-gradient(135deg,#10B981,#3B82F6)',
+                background: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 'rgba(37, 99, 235,0.4)' : 'linear-gradient(135deg,#60A5FA,#2563EB)',
                 color: '#FFFFFF',
                 fontFamily: 'Outfit, sans-serif', fontSize: '15px', fontWeight: 600,
                 cursor: (isBusy || (type === 'EMAIL' && !emailTarget.trim()) || (type === 'PHONE' && !phoneNumber.trim())) ? 'not-allowed' : 'pointer',
@@ -1676,80 +1678,92 @@ export default function PortalPaymentRequestsPage() {
 
       <div className="p-6 md:p-10 w-full max-w-[1600px] mx-auto space-y-6">
 
-        {/* Stripe-style Top Action & Filter Controls */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-white/10">
-          {/* Left: Tab Bar */}
-          <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 p-1 rounded-xl w-fit">
-            {tabs.map(({ id, label, Icon }) => {
-              const isActive = activeTab === id;
-              return (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => setActiveTab(id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                    isActive
-                      ? 'bg-white text-black shadow-md'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                  style={{ fontFamily: 'Outfit, sans-serif' }}
-                >
-                  <Icon size={14} />
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+        {/* Top Control Toolbar */}
+        <div className="space-y-3 pb-4 border-b border-white/10">
+          {/* Row 1: Tab Bar (Inbox / Sent) + Create Request Button */}
+          <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
+            {/* Tab Bar (Inbox / Sent) */}
+            <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 p-1 rounded-full w-fit shrink-0">
+              {tabs.map(({ id, label, Icon }) => {
+                const isActive = activeTab === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setActiveTab(id)}
+                    className={`flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                      isActive
+                        ? 'bg-white text-black shadow-md'
+                        : 'text-gray-400 hover:text-white'
+                    }`}
+                    style={{ fontFamily: 'Outfit, sans-serif' }}
+                  >
+                    <Icon size={14} />
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Right: Actions */}
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={handleExportCsv}
-              className="px-3.5 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs font-mono font-medium transition-all"
-            >
-              Export CSV
-            </button>
+            {/* Create Request Action Button (Positioned next to Inbox/Sent tabs on Row 1) */}
             <button
               type="button"
               onClick={() => setIsCreateModalOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white text-black font-bold hover:bg-gray-200 text-xs transition-all shadow-md"
+              className="flex items-center gap-1.5 px-4 sm:px-5 py-2 rounded-full bg-white text-black font-bold hover:bg-gray-200 text-xs transition-all shadow-md shrink-0 ml-auto"
               style={{ fontFamily: 'Outfit, sans-serif' }}
             >
               <Send size={14} /> Create Request
             </button>
           </div>
-        </div>
 
-        {/* Status Filters & Search Bar Row (Stripe Invoicing Pattern) */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
-          {/* Status Filter Pills */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {(['ALL', 'PENDING', 'PAID', 'EXPIRED', 'CANCELLED'] as const).map((st) => (
-              <button
-                key={st}
-                type="button"
-                onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1 rounded-full border text-[11px] font-semibold transition-all ${
-                  statusFilter === st
-                    ? 'bg-white/15 text-white border-white/30'
-                    : 'bg-transparent text-gray-400 border-white/5 hover:text-white'
-                }`}
-              >
-                {st}
-              </button>
-            ))}
-          </div>
-
-          {/* Search Box */}
-          <div className="relative flex items-center min-w-[240px]">
+          {/* Row 2: Integrated Search Bar Pill */}
+          <div className="relative flex items-center w-full">
+            <Search size={14} className="absolute left-3.5 text-white/40 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search invoice # or memo..."
-              className="w-full bg-white/[0.03] border border-white/10 focus:border-white/30 rounded-xl px-3.5 py-1.5 text-xs text-white placeholder-gray-500 outline-none transition-colors"
+              placeholder={statusFilter === 'ALL' ? "Search invoice # or memo..." : `Filter: ${statusFilter} · Search...`}
+              className="w-full bg-white/5 border border-white/12 focus:border-white/30 rounded-full py-2 pl-9 pr-24 text-xs text-white placeholder-white/40 outline-none transition-all box-border font-mono"
             />
+
+            {/* Integrated Filter Button & Active Status Badge */}
+            <div className="absolute right-2.5 flex items-center gap-1.5 font-mono">
+              {statusFilter !== 'ALL' && (
+                <button
+                  type="button"
+                  onClick={() => setStatusFilter('ALL')}
+                  className="px-2 py-0.5 rounded-full bg-white/20 hover:bg-white/30 text-[10px] font-bold text-white flex items-center gap-1 transition-colors"
+                  title="Clear filter"
+                >
+                  <span>{statusFilter}</span>
+                  <X size={10} />
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => {
+                  const filterOptions: ('ALL' | 'PENDING' | 'PAID' | 'EXPIRED' | 'CANCELLED')[] = [
+                    'ALL',
+                    'PENDING',
+                    'PAID',
+                    'EXPIRED',
+                    'CANCELLED',
+                  ];
+                  const nextIdx = (filterOptions.indexOf(statusFilter) + 1) % filterOptions.length;
+                  const nextFilter = filterOptions[nextIdx];
+                  setStatusFilter(nextFilter);
+                  toast.info(`Filter: ${nextFilter}`);
+                }}
+                className={`p-1.5 rounded-full transition-colors flex items-center justify-center ${
+                  statusFilter !== 'ALL' ? 'text-white bg-white/20' : 'text-white/50 hover:text-white hover:bg-white/10'
+                }`}
+                title={`Filter status (Current: ${statusFilter})`}
+              >
+                <SlidersHorizontal size={13} />
+              </button>
+            </div>
           </div>
         </div>
 

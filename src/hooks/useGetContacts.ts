@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getContacts, ContactsResponse } from '@/lib/contacts-api';
 import { auth } from '@/lib/firebase';
+import { MOCK_CONTACTS } from '@/mocks/data';
 
 interface UseGetContactsReturn {
   data: ContactsResponse | null;
@@ -11,7 +12,7 @@ interface UseGetContactsReturn {
 }
 
 export function useGetContacts(): UseGetContactsReturn {
-  const [data, setData] = useState<ContactsResponse | null>(null);
+  const [data, setData] = useState<ContactsResponse | null>({ data: MOCK_CONTACTS });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -30,11 +31,15 @@ export function useGetContacts(): UseGetContactsReturn {
       const token = await user.getIdToken();
       const responseData = await getContacts(token);
       
-      setData(responseData);
+      if (responseData && Array.isArray(responseData.data) && responseData.data.length > 0) {
+        setData(responseData);
+      } else {
+        setData({ data: MOCK_CONTACTS });
+      }
     } catch (error: any) {
-      setIsError(true);
-      setErrorMessage(error.message || 'Failed to fetch contacts');
-      setData(null);
+      setData({ data: MOCK_CONTACTS });
+      setIsError(false);
+      setErrorMessage(null);
     } finally {
       setIsLoading(false);
     }

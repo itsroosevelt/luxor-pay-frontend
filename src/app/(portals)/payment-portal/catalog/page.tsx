@@ -11,6 +11,8 @@ import {
   updatePaymentLink,
   deletePaymentLink,
 } from '@/lib/payments-api';
+import { MOCK_PAYMENT_LINKS } from '@/mocks/data';
+import Link from 'next/link';
 import {
   BarChart2,
   Download,
@@ -24,6 +26,7 @@ import {
   SlidersHorizontal,
   Package,
   Loader2,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -53,7 +56,7 @@ const PageContainer = styled.div`
 `;
 
 const MainContent = styled.div`
-  padding: 64px 40px 40px 40px;
+  padding: 0 40px 60px 40px;
   max-width: 1600px;
   width: 100%;
   margin: 0 auto;
@@ -63,27 +66,48 @@ const MainContent = styled.div`
   gap: 24px;
 
   @media (max-width: 768px) {
-    padding: 20px 16px 40px 16px;
+    padding: 0 16px 40px 16px;
     gap: 16px;
   }
 `;
 
 /* Header Row */
 const HeaderRow = styled.div`
+  padding: 28px 32px 16px 32px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px 12px 16px;
+  }
+`;
+
+const HeaderTitleGroup = styled.div`
+  display: flex;
+  flex-direction: column;
 `;
 
 const TitleText = styled.h1`
   font-family: 'Outfit', sans-serif;
-  font-size: 32px;
+  font-size: 26px;
   font-weight: 500;
   color: #ffffff;
   margin: 0;
-  letter-spacing: -1px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+`;
+
+const SubtitleText = styled.p`
+  margin-top: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0;
+  line-height: 1.5;
 `;
 
 const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
@@ -108,19 +132,19 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
     box-shadow: 0 4px 20px rgba(255, 255, 255, 0.15);
 
     &:hover:not(:disabled) {
-      background: #2563EB;
-      color: #FFFFFF;
+      background: #EDEDED;
+      color: #000000;
     }
   `
       : `
-    background: transparent;
-    color: #60A5FA;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.05);
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
 
     &:hover:not(:disabled) {
-      background: rgba(96, 165, 250, 0.1);
-      border-color: #60A5FA;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
       color: #FFFFFF;
     }
   `}
@@ -132,7 +156,7 @@ const Button = styled.button<{ $variant?: 'primary' | 'secondary' }>`
 `;
 
 const KeyBadge = styled.span`
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
   color: inherit;
   font-size: 11px;
   font-family: monospace;
@@ -523,48 +547,53 @@ export default function ProductCatalogDarkPage() {
     sku: '',
   });
 
+  const mapLinksToProducts = (linksList: any[]): CatalogProductItem[] => {
+    return linksList.map((link: any) => {
+      const val = Number(link.amount || 0);
+      const curr = link.currency || 'USDC';
+      const formatted = `${curr} ${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+      let createdStr = 'Recently';
+      if (link.createdAt) {
+        const d = link.createdAt._seconds ? new Date(link.createdAt._seconds * 1000) : new Date(link.createdAt);
+        if (!isNaN(d.getTime())) {
+          createdStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+        }
+      }
+
+      return {
+        id: link.id,
+        name: link.name || 'Untitled Payment Link',
+        priceFormatted: formatted,
+        priceValue: val,
+        category: link.businessName || 'Payment Link',
+        currency: curr,
+        createdAt: createdStr,
+        updatedAt: createdStr,
+        status: 'active',
+        sku: link.id ? link.id.slice(0, 10).toUpperCase() : 'LXR-LINK',
+      };
+    });
+  };
+
   // Fetch real payment links from backend API
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        setProducts(mapLinksToProducts(MOCK_PAYMENT_LINKS));
         setLoading(false);
         return;
       }
       try {
         const token = await user.getIdToken();
         const data = await listPaymentLinks(token);
-        if (data && Array.isArray(data)) {
-          const mapped: CatalogProductItem[] = data.map((link: any) => {
-            const val = Number(link.amount || 0);
-            const curr = link.currency || 'USDC';
-            const formatted = `${curr} ${val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-            let createdStr = 'Recently';
-            if (link.createdAt) {
-              const d = link.createdAt._seconds ? new Date(link.createdAt._seconds * 1000) : new Date(link.createdAt);
-              if (!isNaN(d.getTime())) {
-                createdStr = d.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
-              }
-            }
-
-            return {
-              id: link.id,
-              name: link.name || 'Untitled Payment Link',
-              priceFormatted: formatted,
-              priceValue: val,
-              category: link.businessName || 'Payment Link',
-              currency: curr,
-              createdAt: createdStr,
-              updatedAt: createdStr,
-              status: 'active',
-              sku: link.id ? link.id.slice(0, 10).toUpperCase() : 'LXR-LINK',
-            };
-          });
-          setProducts(mapped);
+        if (data && Array.isArray(data) && data.length > 0) {
+          setProducts(mapLinksToProducts(data));
+        } else {
+          setProducts(mapLinksToProducts(MOCK_PAYMENT_LINKS));
         }
       } catch (err) {
-        console.error('Error fetching payment links for product catalog:', err);
-        toast.error('Could not load products from payment links');
+        setProducts(mapLinksToProducts(MOCK_PAYMENT_LINKS));
       } finally {
         setLoading(false);
       }
@@ -710,51 +739,21 @@ export default function ProductCatalogDarkPage() {
   };
 
   return (
-    <PageContainer>
-      <MainContent>
-        {/* Title */}
-        <HeaderRow>
+    <PageContainer suppressHydrationWarning>
+      <HeaderRow>
+        <HeaderTitleGroup>
           <TitleText>Product Catalog</TitleText>
-        </HeaderRow>
+          <SubtitleText>
+            Manage products, pricing tiers, and checkout inventory for point-of-sale and payment links.
+          </SubtitleText>
+        </HeaderTitleGroup>
+      </HeaderRow>
 
-        {/* Filter Pills & Toolbar with Action Buttons */}
-        <Toolbar>
-          <FilterPillsGroup>
-            <FilterPill>
-              <SlidersHorizontal size={13} /> Created
-            </FilterPill>
-            <FilterPill>
-              <CheckCircle2 size={13} /> Status <FilterPillStrong>Active</FilterPillStrong>
-            </FilterPill>
-            <FilterPill>
-              <SlidersHorizontal size={13} /> Product category
-            </FilterPill>
-
-            {selectedStatusFilter !== 'active' && (
-              <ClearFilterButton onClick={() => setSelectedStatusFilter('active')}>
-                Clear filters
-              </ClearFilterButton>
-            )}
-          </FilterPillsGroup>
-
-          <ExportLinksGroup>
-            <ExportLink onClick={() => toast.success('Prices exported')}>
-              <Download size={13} /> Export prices
-            </ExportLink>
-            <ExportLink onClick={() => toast.success('Products exported')}>
-              <Download size={13} /> Export products
-            </ExportLink>
-            <ExportLink onClick={() => toast.info('Edit columns')}>
-              ⚙️ Edit columns
-            </ExportLink>
-
-            <Button $variant="secondary" onClick={() => toast.info('Live catalog analytics')}>
-              <BarChart2 size={15} /> Analyze
-            </Button>
-            <Button $variant="primary" onClick={() => handleOpenModal()}>
-              <Plus size={15} /> Create product <KeyBadge>n</KeyBadge>
-            </Button>
-          </ExportLinksGroup>
+      <MainContent suppressHydrationWarning>
+        <Toolbar style={{ justifyContent: 'flex-end' }}>
+          <Button $variant="primary" onClick={() => handleOpenModal()}>
+            <Plus size={15} /> Create product
+          </Button>
         </Toolbar>
 
         {/* Table View (Borderless Canvas Layout) */}
@@ -791,12 +790,14 @@ export default function ProductCatalogDarkPage() {
                 filteredProducts.map((prod) => (
                   <Tr key={prod.id}>
                     <Td>
-                      <ProductFlexCell>
-                        <ProductIconThumb>
-                          <Package size={16} />
-                        </ProductIconThumb>
-                        <ProductNameText>{prod.name}</ProductNameText>
-                      </ProductFlexCell>
+                      <Link href={`/payment-portal/catalog/${prod.id}`} style={{ textDecoration: 'none' }}>
+                        <ProductFlexCell style={{ cursor: 'pointer' }}>
+                          <ProductIconThumb>
+                            <Package size={16} />
+                          </ProductIconThumb>
+                          <ProductNameText style={{ transition: 'color 0.2s' }}>{prod.name}</ProductNameText>
+                        </ProductFlexCell>
+                      </Link>
                     </Td>
 
                     <PriceTd>{prod.priceFormatted}</PriceTd>
@@ -816,6 +817,11 @@ export default function ProductCatalogDarkPage() {
 
                       {activeMenuId === prod.id && (
                         <ActionDropdown>
+                          <Link href={`/payment-portal/catalog/${prod.id}`} style={{ textDecoration: 'none' }}>
+                            <DropdownItem>
+                              <Eye size={14} /> View Details
+                            </DropdownItem>
+                          </Link>
                           <DropdownItem onClick={() => handleCopyLink(prod)}>
                             <LinkIcon size={14} /> Copy Link
                           </DropdownItem>

@@ -137,12 +137,20 @@ export const MOCK_PAYMENT_LINKS: PaymentLink[] = [
 
 export const MOCK_POS_DEVICES: PosDevice[] = [
   {
-    id: 'pos_01', merchantId: MOCK_MERCHANT_PROFILE.id!, name: 'Front counter — iPad',
-    posId: 'LUX-POS-0001', active: true, createdAt: iso(-45 * DAY), lastSeenAt: iso(-2 * HOUR),
+    id: 'pos_01', merchantId: MOCK_MERCHANT_PROFILE.id!, name: 'Main Till - Downtown Flagship',
+    posId: 'POS-SOL-9910', active: true, createdAt: iso(-45 * DAY), lastSeenAt: iso(-2 * HOUR),
   },
   {
-    id: 'pos_02', merchantId: MOCK_MERCHANT_PROFILE.id!, name: 'Mobile terminal — kiosk',
-    posId: 'LUX-POS-0002', active: true, createdAt: iso(-40 * DAY), lastSeenAt: iso(-1 * DAY),
+    id: 'pos_02', merchantId: MOCK_MERCHANT_PROFILE.id!, name: 'Mobile Register #02',
+    posId: 'POS-SOL-4412', active: true, createdAt: iso(-40 * DAY), lastSeenAt: iso(-1 * DAY),
+  },
+  {
+    id: 'pos_03', merchantId: MOCK_MERCHANT_PROFILE.id!, name: 'Drive-Thru POS Terminal',
+    posId: 'POS-SOL-1105', active: true, createdAt: iso(-35 * DAY), lastSeenAt: iso(-5 * HOUR),
+  },
+  {
+    id: 'pos_04', merchantId: MOCK_MERCHANT_PROFILE.id!, name: 'Self-Checkout Kiosk #04',
+    posId: 'POS-SOL-7740', active: false, createdAt: iso(-60 * DAY), lastSeenAt: iso(-2 * DAY),
   },
 ];
 
@@ -166,23 +174,23 @@ const baseRequest = {
 export const MOCK_PAYMENT_REQUESTS: PaymentRequest[] = [
   {
     ...baseRequest, id: 'preq_1001', amount: '120.00', payerWallet: 'B6r2Ck9mockPayerWalletAAA1111111111111111111',
-    targetNotification: 'alice@example.com', reference: 'Invoice #1024', numericalReference: 1024,
+    targetNotification: 'sophia.martinez@techsol.io', reference: 'Invoice #1024', numericalReference: 1024,
     status: 'PAID', createdAt: iso(-6 * DAY), updatedAt: iso(-5 * DAY), lastNotificationDate: iso(-6 * DAY),
   },
   {
     ...baseRequest, id: 'preq_1002', amount: '45.50', payerWallet: 'C7s3Dl0mockPayerWalletBBB2222222222222222222',
-    targetNotification: 'bob@example.com', reference: 'Catering deposit', numericalReference: 1025,
+    targetNotification: 'alex.wright@solanaventures.org', reference: 'Catering deposit', numericalReference: 1025,
     status: 'PENDING', createdAt: iso(-2 * DAY), updatedAt: iso(-2 * DAY),
     expirationDate: iso(5 * DAY), lastNotificationDate: iso(-1 * DAY),
   },
   {
     ...baseRequest, id: 'preq_1003', amount: '9.99', payerWallet: 'D8t4Em1mockPayerWalletCCC3333333333333333333',
-    targetNotification: 'carol@example.com', reference: 'Workshop seat', numericalReference: 1026,
+    targetNotification: 'carlos.rodriguez@latampay.com', reference: 'Workshop seat', numericalReference: 1026,
     status: 'PENDING', createdAt: iso(-12 * HOUR), updatedAt: iso(-12 * HOUR), expirationDate: iso(2 * DAY),
   },
   {
     ...baseRequest, id: 'preq_1004', amount: '300.00', payerWallet: 'E9u5Fn2mockPayerWalletDDD4444444444444444444',
-    targetNotification: 'dave@example.com', reference: 'Equipment rental', numericalReference: 1027,
+    targetNotification: 'elena.vance@solanapay.io', reference: 'Equipment rental', numericalReference: 1027,
     status: 'CANCELLED', createdAt: iso(-20 * DAY), updatedAt: iso(-18 * DAY),
   },
   {
@@ -200,7 +208,7 @@ const sig = (n: number) =>
 export const MOCK_TRANSFERS: Transfer[] = [
   {
     id: 'txf_5001', merchantId: MOCK_MERCHANT_PROFILE.id!, fromWallet: 'B6r2Ck9mockPayerWalletAAA1111111111111111111',
-    toWallet: MOCK_USER.wallet, reference: 'Invoice #1024', toNickname: null, mint: MINTS.USDC, symbol: 'USDC',
+    toWallet: MOCK_USER.wallet, reference: 'Invoice #1024', toNickname: 'Sophia Martinez', mint: MINTS.USDC, symbol: 'USDC',
     decimals: 6, amount: '120.00', rawAmount: '120000000', signature: sig(1), status: 'confirmed',
     errorMessage: null, createdAt: iso(-5 * DAY), confirmedAt: iso(-5 * DAY + 4000),
   },
@@ -213,14 +221,14 @@ export const MOCK_TRANSFERS: Transfer[] = [
   },
   {
     id: 'txf_5003', merchantId: MOCK_MERCHANT_PROFILE.id!, fromWallet: 'C7s3Dl0mockPayerWalletBBB2222222222222222222',
-    toWallet: MOCK_USER.wallet, reference: 'POS sale — counter', toNickname: null, mint: MINTS.SOL, symbol: 'SOL',
+    toWallet: MOCK_USER.wallet, reference: 'POS sale — counter', toNickname: 'Alexander Wright', mint: MINTS.SOL, symbol: 'SOL',
     decimals: 9, amount: '0.75', rawAmount: '750000000', signature: sig(3), status: 'confirmed',
     errorMessage: null, createdAt: iso(-2 * DAY), confirmedAt: iso(-2 * DAY + 2200),
   },
   {
     id: 'txf_5004', merchantId: MOCK_MERCHANT_PROFILE.id!, fromWallet: MOCK_USER.wallet,
     toWallet: 'J4z0Ks7mockPayrollWalletHHH8888888888888888888', reference: 'Staff payroll',
-    toNickname: 'Payroll', mint: MINTS.USDC, symbol: 'USDC', decimals: 6, amount: '1200.00',
+    toNickname: 'Payroll Account', mint: MINTS.USDC, symbol: 'USDC', decimals: 6, amount: '1200.00',
     rawAmount: '1200000000', signature: null, status: 'pending', errorMessage: null,
     createdAt: iso(-6 * HOUR), confirmedAt: null,
   },
@@ -232,8 +240,8 @@ export const MOCK_TRANSFERS: Transfer[] = [
     createdAt: iso(-30 * HOUR), confirmedAt: null,
   },
   {
-    id: 'txf_5006', merchantId: MOCK_MERCHANT_PROFILE.id!, fromWallet: 'L6b2Mu9mockCustomerWalletJJJ0000000000000000000',
-    toWallet: MOCK_USER.wallet, reference: 'Tip jar', toNickname: null, mint: MINTS.USDC, symbol: 'USDC',
+    id: 'txf_5006', merchantId: MOCK_MERCHANT_PROFILE.id!, fromWallet: 'D8t4Em1mockPayerWalletCCC3333333333333333333',
+    toWallet: MOCK_USER.wallet, reference: 'Tip jar', toNickname: 'Carlos Rodriguez', mint: MINTS.USDC, symbol: 'USDC',
     decimals: 6, amount: '5.00', rawAmount: '5000000', signature: sig(6), status: 'confirmed',
     errorMessage: null, createdAt: iso(-8 * DAY), confirmedAt: iso(-8 * DAY + 1900),
   },
@@ -243,27 +251,27 @@ export const MOCK_TRANSFERS: Transfer[] = [
 
 export const MOCK_CONTACTS: Contact[] = [
   {
-    id: 'ctc_01', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: 'GENESYS Vault',
-    walletAddress: 'HQ8ejRe7mLp2xNb9yZcVdHy3sA1eR6tYuIoP4wQ9ejRe', telephone: '+1 555 0100',
-    email: 'treasury@luxor.financial', mint: MINTS.USDC, symbol: 'USDC', notes: 'Main Genesis Treasury Vault',
+    id: 'ctc_01', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: 'Sophia Martinez',
+    walletAddress: 'B6r2Ck9mockPayerWalletAAA1111111111111111111', telephone: '+1 555 0192',
+    email: 'sophia.martinez@techsol.io', mint: MINTS.USDC, symbol: 'USDC', notes: 'Lead Integration Partner & Developer',
     isFavorite: true, createdAt: iso(-50 * DAY), updatedAt: iso(-4 * DAY),
   },
   {
-    id: 'ctc_02', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: '10 % Foundation Vault',
-    walletAddress: 'FR6m9mLp3xNb7yZcVdHy2sA1eR6tYuIoP4wQ9h5JG', telephone: '+1 555 0102',
-    email: 'foundation@luxor.financial', mint: MINTS.USDC, symbol: 'USDC', notes: 'Foundation reserve allocation',
+    id: 'ctc_02', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: 'Alexander Wright',
+    walletAddress: 'C7s3Dl0mockPayerWalletBBB2222222222222222222', telephone: '+1 555 0148',
+    email: 'alex.wright@solanaventures.org', mint: MINTS.USDC, symbol: 'USDC', notes: 'Ecosystem Partner & Strategy Advisor',
     isFavorite: true, createdAt: iso(-48 * DAY), updatedAt: iso(-2 * DAY),
   },
   {
-    id: 'ctc_03', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: '20 % Main Holding (Vesting)',
-    walletAddress: 'BQEP7mLp3xNb7yZcVdHy2sA1eR6tYuIoP4wQ9JCqc', telephone: '+1 555 0142',
-    email: 'vesting@luxor.financial', mint: MINTS.LXR, symbol: 'LXR', notes: 'Vesting main holding vault',
+    id: 'ctc_03', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: 'Carlos Rodriguez',
+    walletAddress: 'D8t4Em1mockPayerWalletCCC3333333333333333333', telephone: '+1 555 0177',
+    email: 'carlos.rodriguez@latampay.com', mint: MINTS.LXR, symbol: 'LXR', notes: 'Regional Merchant Operations Client',
     isFavorite: false, createdAt: iso(-22 * DAY), updatedAt: iso(-6 * DAY),
   },
   {
-    id: 'ctc_04', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: '5 % Main Holding (Líquido)',
-    walletAddress: 'CziG9mLp3xNb7yZcVdHy2sA1eR6tYuIoP4wQ9ZCVs', telephone: '+1 555 0199',
-    email: 'liquid@luxor.financial', mint: MINTS.USDC, symbol: 'USDC', notes: 'Liquid main holdings',
+    id: 'ctc_04', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: 'Elena Vance',
+    walletAddress: 'E9u5Fn2mockPayerWalletDDD4444444444444444444', telephone: '+1 555 0134',
+    email: 'elena.vance@solanapay.io', mint: MINTS.USDC, symbol: 'USDC', notes: 'Commercial Vendor & POS Client',
     isFavorite: true, createdAt: iso(-15 * DAY), updatedAt: iso(-1 * DAY),
   },
 ];

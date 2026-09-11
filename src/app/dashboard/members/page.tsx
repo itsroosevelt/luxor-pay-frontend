@@ -32,12 +32,15 @@ const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}
 
 function RoleChip({
   role, active, onClick, disabled,
-}: { role: MemberRoleKey; active: boolean; onClick?: () => void; disabled?: boolean }) {
+}: { role: MemberRoleKey; active: boolean; onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void; disabled?: boolean }) {
   const meta = MEMBER_ROLE_META[role];
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick?.(e);
+      }}
       disabled={disabled}
       title={disabled ? meta.description : `${meta.description} — clic para cambiar`}
       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors disabled:cursor-default"

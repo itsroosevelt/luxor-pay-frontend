@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import {
+  Zap,
   Search,
   Star,
   Flame,
@@ -224,12 +225,11 @@ export default function GoBountiesPage() {
       {/* Standard Header */}
       <header className="lx-page-header">
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 font-bold mb-0.5">
-            BOUNTIES
-          </p>
-          <h1 className="lx-page-title">Trending</h1>
+          <h1 className="lx-page-title flex items-center gap-3">
+            <Zap size={28} className="text-white" /> GO Bounties &amp; Rewards
+          </h1>
           <p className="lx-page-subtitle">
-            Bounties and submissions gaining momentum in the community.
+            Community bounties and viral submissions gaining momentum on Solana.
           </p>
         </div>
       </header>
@@ -281,7 +281,7 @@ export default function GoBountiesPage() {
             {tab === 'Bounties' && <span className="ml-1 text-xs text-gray-300 font-mono">77</span>}
             {tab === 'Submissions' && <span className="ml-1 text-xs text-gray-500 font-mono">24.5k</span>}
             {activeTab === tab && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500 rounded-full" />
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full" />
             )}
           </button>
         ))}
@@ -300,7 +300,7 @@ export default function GoBountiesPage() {
                     className="p-4 rounded-2xl bg-white/[0.03] space-y-3 sm:col-span-2 lg:col-span-1"
                   >
                     <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-[10px]">
+                      <div className="w-6 h-6 rounded-full bg-white/20 text-white flex items-center justify-center font-bold text-[10px]">
                         U
                       </div>
                       <span className="text-xs font-semibold text-white font-['Outfit']">
@@ -314,7 +314,7 @@ export default function GoBountiesPage() {
                         value={updateText}
                         onChange={(e) => setUpdateText(e.target.value)}
                         placeholder="Share your progress or post links..."
-                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-500 outline-none focus:border-blue-500/50 resize-none font-sans"
+                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-xs text-white placeholder-gray-500 outline-none focus:border-white/30 resize-none font-sans"
                       />
                       <div className="flex items-center justify-between text-[10px] font-mono text-gray-500">
                         <span>{updateText.length}/2000</span>
@@ -344,7 +344,7 @@ export default function GoBountiesPage() {
 
                   <div className="p-4 space-y-3">
                     {item.tokenBadge && (
-                      <span className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-mono text-blue-400 font-semibold">
+                      <span className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] font-mono text-gray-300 font-semibold">
                         {item.tokenBadge.symbol} • MC {item.tokenBadge.marketCap}
                       </span>
                     )}
@@ -369,7 +369,7 @@ export default function GoBountiesPage() {
           <button
             type="button"
             onClick={() => toast.success('Opening Create Bounty flow')}
-            className="w-full py-3 px-4 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold font-['Outfit'] text-sm flex items-center justify-center gap-2 transition-colors shadow-lg shadow-blue-600/25"
+            className="w-full py-3 px-4 rounded-full bg-white hover:bg-gray-200 text-black font-bold font-['Outfit'] text-sm flex items-center justify-center gap-2 transition-all shadow-md"
           >
             <Plus size={18} /> Create bounty
           </button>

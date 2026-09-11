@@ -248,14 +248,20 @@ html, body {
 /* Page header band — clean, unboxed title area matching /dashboard */
 .lx-page-header,
 .lx-app .lx-page-header {
-  padding: 24px 24px 12px 24px;
+  padding: 16px 16px 10px 16px;
   border-bottom: none;
   background: transparent;
 }
 @media (min-width: 768px) {
   .lx-page-header,
   .lx-app .lx-page-header {
-    padding: 28px 360px 16px 32px;
+    padding: 20px 24px 12px 24px;
+  }
+}
+@media (min-width: 1280px) {
+  .lx-page-header,
+  .lx-app .lx-page-header {
+    padding: 28px 460px 16px 32px;
   }
 }
 .lx-page-title,
@@ -314,21 +320,31 @@ html, body {
   color: #60A5FA;
 }
 
-/* ── Sleek Scrollbar ── */
+/* ── Sleek & Invisible Scrollbars ── */
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 0px;
+  height: 0px;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.3);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 9999px;
+  background: transparent;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(96, 165, 250, 0.5);
-}

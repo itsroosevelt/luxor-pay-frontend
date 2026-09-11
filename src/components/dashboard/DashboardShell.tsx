@@ -239,7 +239,7 @@ export function DashboardShell({
         {/* Page content */}
         <div className="relative flex-1 min-w-0 overflow-x-hidden">
           {/* Desktop top-right controls */}
-          <div className="hidden md:flex items-center gap-2.5 absolute top-3.5 right-6 z-30">
+          <div className="hidden xl:flex items-center gap-2.5 absolute top-3.5 right-6 z-30">
             <TopWalletBar
               merchantWallet={profile?.merchantWallet}
               onQrClick={() => setIsQrModalOpen(true)}
@@ -317,7 +317,7 @@ export function DashboardShell({
               borderRadius: '24px',
               boxShadow: '0 24px 60px -16px rgba(0, 0, 0, 0.95), 0 0 40px rgba(0, 0, 0, 0.8)',
             }}
-            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[380px] max-w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-6 text-[color:var(--lx-text)] animate-in fade-in slide-in-from-top-2 duration-200 space-y-4 scrollbar-thin"
+            className="fixed top-16 right-4 md:top-20 md:right-8 z-50 w-[380px] max-w-[calc(100vw-2rem)] max-h-[85vh] overflow-y-auto p-6 text-[color:var(--lx-text)] animate-in fade-in slide-in-from-top-2 duration-200 space-y-4 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           >
             <p className="text-center text-xs text-gray-400 font-mono truncate mb-2">{user.email}</p>
 
