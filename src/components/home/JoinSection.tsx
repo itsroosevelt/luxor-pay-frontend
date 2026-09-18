@@ -4,7 +4,7 @@ import { BlueParticles } from '@/components/shared/BlueParticles';
 
 export function JoinSection() {
     return (
-        <section className="py-32 md:py-48 px-6 bg-transparent relative overflow-hidden">
+        <section className="py-20 md:py-32 lg:py-48 px-6 bg-transparent relative overflow-hidden">
             <BlueParticles variant="section" />
             {/* Subtle glow background */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-white/5 blur-[100px] rounded-full pointer-events-none" />

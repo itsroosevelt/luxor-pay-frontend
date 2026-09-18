@@ -57,7 +57,7 @@ export function ShowcaseSection() {
     const prevSlide = () => setActiveIdx((prev) => (prev - 1 + items.length) % items.length);
 
     return (
-        <section className="py-32 md:py-48 px-6 md:px-12 bg-transparent overflow-hidden border-t border-white/5 relative">
+        <section className="py-20 md:py-32 lg:py-48 px-6 md:px-12 bg-transparent overflow-hidden border-t border-white/5 relative">
             <BlueParticles variant="section" />
             <div className="max-w-[1600px] mx-auto">
                 {/* Header Grid */}

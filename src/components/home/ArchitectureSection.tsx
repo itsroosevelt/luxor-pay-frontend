@@ -10,7 +10,7 @@ export function ArchitectureSection() {
         },
         { 
             title: "Programmed Autonomy", 
-            desc: "LXR operates under open-source rules on Solana. No central entity can change the rules of use, giving you complete security." 
+            desc: "STR operates under open-source rules on Solana. No central entity can change the rules of use, giving you complete security." 
         },
         { 
             title: "Circular Economy", 

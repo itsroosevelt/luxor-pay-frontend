@@ -327,7 +327,7 @@ export function BracketsSection() {
     return (
         <section
             ref={sectionRef}
-            className="py-32 md:py-48 px-6 md:px-16 bg-transparent border-t border-white/5 relative overflow-hidden min-h-[600px] flex items-center"
+            className="py-20 md:py-32 lg:py-48 px-6 md:px-16 bg-transparent border-t border-white/5 relative overflow-hidden min-h-[600px] flex items-center"
             onMouseLeave={() => {
                 setHoveredSide(null);
                 setCenterPos(null);

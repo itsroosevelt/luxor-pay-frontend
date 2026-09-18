@@ -18,7 +18,7 @@ const REVIEWS = [
 
 export function ReviewsSection() {
     return (
-        <section className="py-32 md:py-48 bg-transparent border-t border-white/5 relative overflow-hidden">
+        <section className="py-20 md:py-32 lg:py-48 bg-transparent border-t border-white/5 relative overflow-hidden">
             <BlueParticles variant="section" />
             <div className="w-full max-w-[1800px] mx-auto px-6 md:px-12">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 md:mb-24 gap-6">

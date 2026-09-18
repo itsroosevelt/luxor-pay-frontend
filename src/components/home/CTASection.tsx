@@ -4,7 +4,7 @@ import { BlueParticles } from '@/components/shared/BlueParticles';
 
 export function CTASection() {
     return (
-        <section className="py-32 md:py-48 px-4 md:px-8 relative overflow-hidden bg-transparent border-t border-white/5">
+        <section className="py-20 md:py-32 lg:py-48 px-4 md:px-8 relative overflow-hidden bg-transparent border-t border-white/5">
             <BlueParticles variant="section" />
             <motion.div 
                 initial={{ opacity: 0, scale: 0.85, y: 40 }}
