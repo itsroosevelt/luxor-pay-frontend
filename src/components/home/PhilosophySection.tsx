@@ -10,11 +10,11 @@ export function PhilosophySection() {
         },
         { 
             title: "Backing and Stability", 
-            desc: "Built on Solana's ultra-fast infrastructure, Luxor integrates digital dollar efficiency so the global economy reaches every corner." 
+            desc: "Built on Solana's ultra-fast infrastructure, Sterling integrates digital dollar efficiency so the global economy reaches every corner." 
         },
         { 
             title: "For All Generations", 
-            desc: "From digital natives to those looking to modernize centuries-old businesses. Luxor is easy, accessible, and universal." 
+            desc: "From digital natives to those looking to modernize centuries-old businesses. Sterling is easy, accessible, and universal." 
         },
     ];
 
@@ -27,7 +27,7 @@ export function PhilosophySection() {
         >
             <InfoSection 
                 title="Our Philosophy: The Hemisphere of Abundance"
-                subtitle="Born in Salt Lake City, Luxor aligns with the innovation values of the western tech corridor. We believe abundance is not awaited, it is created."
+                subtitle="Born in Salt Lake City, Sterling aligns with the innovation values of the western tech corridor. We believe abundance is not awaited, it is created."
                 items={items}
                 imageSrc="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
                 imageClassName="object-contain p-12"

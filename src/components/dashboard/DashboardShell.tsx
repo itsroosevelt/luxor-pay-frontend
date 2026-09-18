@@ -48,14 +48,14 @@ export function DashboardShell({
   useEffect(() => {
     if (customSections && customSections.length > 0) {
       try {
-        sessionStorage.setItem('luxor_active_portal_sections', JSON.stringify(customSections));
+        sessionStorage.setItem('sterling_active_portal_sections', JSON.stringify(customSections));
         setPersistedPortalSections(customSections);
       } catch (e) {
         console.error('Failed to save portal sections:', e);
       }
     } else if (pathname === '/dashboard/settings' || pathname === '/dashboard/profile') {
       try {
-        const saved = sessionStorage.getItem('luxor_active_portal_sections');
+        const saved = sessionStorage.getItem('sterling_active_portal_sections');
         if (saved) {
           const parsed = JSON.parse(saved);
           setPersistedPortalSections(hydrateSectionsIcons(parsed));
@@ -65,7 +65,7 @@ export function DashboardShell({
       }
     } else if (pathname === '/dashboard') {
       try {
-        sessionStorage.removeItem('luxor_active_portal_sections');
+        sessionStorage.removeItem('sterling_active_portal_sections');
         setPersistedPortalSections(undefined);
       } catch (e) {
         console.error('Failed to clear portal sections:', e);
@@ -129,7 +129,7 @@ export function DashboardShell({
         const p = await ensureMerchantProfile(token, currentUser.email ?? '');
         setProfile(p);
 
-        if (p && !p.kyc && !sessionStorage.getItem('luxor_kyc_dismissed')) {
+        if (p && !p.kyc && !sessionStorage.getItem('sterling_kyc_dismissed')) {
           setIsKycModalOpen(true);
         }
       } catch (e) {
@@ -142,13 +142,13 @@ export function DashboardShell({
 
   const handleCloseKyc = () => {
     setIsKycModalOpen(false);
-    sessionStorage.setItem('luxor_kyc_dismissed', 'true');
+    sessionStorage.setItem('sterling_kyc_dismissed', 'true');
   };
 
   const handleSignOut = async () => {
-    sessionStorage.removeItem('luxor_kyc_dismissed');
-    sessionStorage.removeItem('luxor_merchant_profile');
-    sessionStorage.removeItem('luxor_active_portal_sections');
+    sessionStorage.removeItem('sterling_kyc_dismissed');
+    sessionStorage.removeItem('sterling_merchant_profile');
+    sessionStorage.removeItem('sterling_active_portal_sections');
     await signOut(auth);
     router.push('/');
   };
@@ -185,8 +185,8 @@ export function DashboardShell({
         >
           <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold tracking-tight text-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO_SRC} alt="Luxor Pay" className="h-8 w-8 object-contain" />
-            <span>Luxor <span className="text-gray-400 font-medium">Pay</span></span>
+            <img src={LOGO_SRC} alt="Sterling" className="h-8 w-8 object-contain" />
+            <span>Sterling</span>
           </Link>
           <div className="flex items-center gap-2">
             <button
@@ -350,13 +350,13 @@ export function DashboardShell({
                   </button>
                 )}
 
-                {/* Google-Style "Manage your Luxor Account" Pill Button */}
+                {/* Google-Style "Manage your Sterling Account" Pill Button */}
                 <Link
                   href="/dashboard/profile"
                   onClick={() => setIsAccountMenuOpen(false)}
                   className="inline-flex items-center justify-center px-5 py-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white text-xs font-medium transition-all shadow-sm hover:border-white/40"
                 >
-                  Manage your Luxor Account
+                  Manage your Sterling Account
                 </Link>
               </div>
             </div>

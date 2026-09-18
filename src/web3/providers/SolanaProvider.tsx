@@ -30,7 +30,7 @@ export const SolanaProvider = ({ children }: { children: React.ReactNode }) => {
       new SolflareWalletAdapter(),
       new SolanaMobileWalletAdapter({
         addressSelector: createDefaultAddressSelector(),
-        appIdentity: { name: 'Luxor Pay', icon: '/icon.jpg' },
+        appIdentity: { name: 'Sterling Pay', icon: '/icon.jpg' },
         authorizationResultCache: createDefaultAuthorizationResultCache(),
         cluster: network,
         onWalletNotFound: createDefaultWalletNotFoundHandler()

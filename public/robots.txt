@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /dashboard/
 
-Sitemap: https://luxorpay.app/sitemap.xml
+Sitemap: https://sterlingpay.app/sitemap.xml

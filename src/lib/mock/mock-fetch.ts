@@ -115,7 +115,7 @@ export function installMockFetch(): void {
   };
 
   // eslint-disable-next-line no-console
-  console.info('%c[Luxor Pay] Mock Mode active — backend & auth are simulated', 'color:#10B981;font-weight:bold');
+  console.info('%c[Sterling Pay] Mock Mode active — backend & auth are simulated', 'color:#10B981;font-weight:bold');
 }
 
 if (IS_MOCK_MODE) {

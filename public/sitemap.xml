@@ -2,14 +2,14 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <!-- Página Principal -->
   <url>
-    <loc>https://luxorpay.app/</loc>
+    <loc>https://sterlingpay.app/</loc>
     <lastmod>2026-06-29</lastmod>
     <priority>1.00</priority>
   </url>
 
   <!-- Login -->
   <url>
-    <loc>https://luxorpay.app/login</loc>
+    <loc>https://sterlingpay.app/login</loc>
     <lastmod>2026-06-29</lastmod>
     <priority>0.80</priority>
   </url>

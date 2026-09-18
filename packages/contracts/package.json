@@ -1,8 +1,8 @@
 {
-  "name": "@luxor/contracts",
+  "name": "@sterling/contracts",
   "version": "0.1.0",
   "private": true,
-  "description": "Shared types and Zod schemas — publish as luxor-contracts when splitting repos",
+  "description": "Shared types and Zod schemas — publish as sterling-contracts when splitting repos",
   "type": "module",
   "exports": {
     ".": "./src/index.ts"

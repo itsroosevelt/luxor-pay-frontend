@@ -279,7 +279,7 @@ export const PrivacyView = () => {
           <Eyebrow>Trust, Security & Global Compliance</Eyebrow>
           <Title>Global Privacy Architecture</Title>
           <Subtitle>
-            Luxor Pay is committed to data sovereignty, user privacy, and global regulatory compliance across non-custodial Web3 financial infrastructure and fiat gateway integrations.
+            Sterling is committed to data sovereignty, user privacy, and global regulatory compliance across non-custodial Web3 financial infrastructure and fiat gateway integrations.
           </Subtitle>
           <LastUpdated>Effective Date: August 24, 2026 | Version 2.4</LastUpdated>
         </HeaderSection>
@@ -293,11 +293,11 @@ export const PrivacyView = () => {
             <SectionTitle>1. Executive Privacy Architecture</SectionTitle>
           </CardHeader>
           <Paragraph>
-            Luxor Pay ("Luxor", "we", "us", or "our") operates a global decentralized payment infrastructure and merchant Web3 gateway. This Global Privacy Architecture explains how personal information, technical telemetry, and transactional metadata are processed when you interact with our web applications, developer APIs, payment links, and integrated fiat-to-crypto gateways (including third-party partners such as <HighlightText>MoonPay</HighlightText>).
+            Sterling ("we", "us", or "our") operates a global decentralized payment infrastructure and merchant Web3 gateway. This Global Privacy Architecture explains how personal information, technical telemetry, and transactional metadata are processed when you interact with our web applications, developer APIs, payment links, and integrated fiat-to-crypto gateways (including third-party partners such as <HighlightText>MoonPay</HighlightText>).
           </Paragraph>
           <CalloutBox>
             <p>
-              <strong>Core Privacy Guarantee:</strong> Luxor Pay is built on non-custodial Web3 architecture. We do not store, control, or possess access to your private cryptographic keys, wallet seed phrases, or unencrypted financial credentials. You maintain full self-sovereignty over your digital assets at all times.
+              <strong>Core Privacy Guarantee:</strong> Sterling is built on non-custodial Web3 architecture. We do not store, control, or possess access to your private cryptographic keys, wallet seed phrases, or unencrypted financial credentials. You maintain full self-sovereignty over your digital assets at all times.
             </p>
           </CalloutBox>
         </GlassCard>
@@ -311,7 +311,7 @@ export const PrivacyView = () => {
             <SectionTitle>2. Information We Collect</SectionTitle>
           </CardHeader>
           <Paragraph>
-            We adhere strictly to the principle of <strong>Data Minimization</strong> under international regulations. The data collected depends on how you interact with the Luxor Pay infrastructure:
+            We adhere strictly to the principle of <strong>Data Minimization</strong> under international regulations. The data collected depends on how you interact with the Sterling infrastructure:
           </Paragraph>
 
           <SectionSubtitle>A. Public On-Chain Information</SectionSubtitle>
@@ -323,7 +323,7 @@ export const PrivacyView = () => {
               <strong>Public Wallet Addresses:</strong> Cryptographic public keys (e.g., <CodeTag>Solana Base58 addresses</CodeTag>) used to initiate or receive token payments.
             </ListItem>
             <ListItem>
-              <strong>On-Chain Metadata:</strong> Transaction signatures, timestamp, token amounts (SOL, USDC, LXR, EURC), smart contract interactions, and program instructions.
+              <strong>On-Chain Metadata:</strong> Transaction signatures, timestamp, token amounts (SOL, USDC, STR, EURC), smart contract interactions, and program instructions.
             </ListItem>
           </List>
 
@@ -342,14 +342,14 @@ export const PrivacyView = () => {
 
           <SectionSubtitle>C. Third-Party Fiat On/Off-Ramp Data (MoonPay & Gateway Partners)</SectionSubtitle>
           <Paragraph>
-            Luxor Pay integrates with regulated Virtual Asset Service Providers (VASPs) and licensed payment processors, including <HighlightText>MoonPay Ltd</HighlightText>, to facilitate fiat-to-crypto card processing, bank transfers, and local payout solutions.
+            Sterling integrates with regulated Virtual Asset Service Providers (VASPs) and licensed payment processors, including <HighlightText>MoonPay Ltd</HighlightText>, to facilitate fiat-to-crypto card processing, bank transfers, and local payout solutions.
           </Paragraph>
           <List>
             <ListItem>
               <strong>KYC / Identity Verification:</strong> Know Your Customer (KYC), Know Your Business (KYB), Anti-Money Laundering (AML), and Identity Verification data (such as passports, government IDs, facial biometric verification, and proof of address) are collected and processed <strong>directly by MoonPay</strong> in accordance with MoonPay's Privacy Policy.
             </ListItem>
             <ListItem>
-              <strong>Payment Card & Banking Data:</strong> Credit card numbers, CVVs, and bank account details are handled exclusively by PCI-DSS Level 1 compliant processors (MoonPay, Stripe). Luxor Pay never receives, processes, or stores raw payment card numbers.
+              <strong>Payment Card & Banking Data:</strong> Credit card numbers, CVVs, and bank account details are handled exclusively by PCI-DSS Level 1 compliant processors (MoonPay, Stripe). Sterling never receives, processes, or stores raw payment card numbers.
             </ListItem>
           </List>
         </GlassCard>
@@ -394,13 +394,13 @@ export const PrivacyView = () => {
               <strong>Right to Delete:</strong> Request deletion of off-chain personal records held in our databases.
             </ListItem>
             <ListItem>
-              <strong>No Sale of Personal Information:</strong> Luxor Pay <strong>does not sell, rent, or trade</strong> personal user data or merchant metadata to third-party data brokers or advertisers.
+              <strong>No Sale of Personal Information:</strong> Sterling <strong>does not sell, rent, or trade</strong> personal user data or merchant metadata to third-party data brokers or advertisers.
             </ListItem>
           </List>
 
           <SectionSubtitle>US CLOUD Act & International Law Enforcement Requests</SectionSubtitle>
           <Paragraph>
-            In compliance with the US Clarifying Lawful Overseas Use of Data (CLOUD) Act and mutual legal assistance treaties (MLAT), Luxor Pay evaluates all valid subpoenas, court orders, and law enforcement requests. Data disclosures are heavily vetted by legal counsel and strictly restricted to lawfully mandated parameters.
+            In compliance with the US Clarifying Lawful Overseas Use of Data (CLOUD) Act and mutual legal assistance treaties (MLAT), Sterling evaluates all valid subpoenas, court orders, and law enforcement requests. Data disclosures are heavily vetted by legal counsel and strictly restricted to lawfully mandated parameters.
           </Paragraph>
         </GlassCard>
 
@@ -417,7 +417,7 @@ export const PrivacyView = () => {
           </Paragraph>
           <CalloutBox>
             <p>
-              <strong>Public Ledger Notice:</strong> Transactions broadcast to the Solana network are immutable, public, and permanently stored on decentralized validator nodes across the globe. Neither Luxor Pay nor any third party possesses the technical ability to modify, erase, or mask data recorded on-chain.
+              <strong>Public Ledger Notice:</strong> Transactions broadcast to the Solana network are immutable, public, and permanently stored on decentralized validator nodes across the globe. Neither Sterling nor any third party possesses the technical ability to modify, erase, or mask data recorded on-chain.
             </p>
           </CalloutBox>
           <Paragraph>
@@ -434,20 +434,20 @@ export const PrivacyView = () => {
             <SectionTitle>5. Cryptographic Security & Privacy Enquiries</SectionTitle>
           </CardHeader>
           <Paragraph>
-            Luxor Pay implements military-grade AES-256 encryption for all data at rest and TLS 1.3 protocol for all transit channels. Our web infrastructure undergoes continuous automated security assessments and third-party code audits.
+            Sterling implements military-grade AES-256 encryption for all data at rest and TLS 1.3 protocol for all transit channels. Our web infrastructure undergoes continuous automated security assessments and third-party code audits.
           </Paragraph>
           <Paragraph>
             If you have questions regarding this Privacy Architecture, wish to exercise your data subject rights (GDPR/CCPA), or submit a formal compliance request, please contact our Legal & Privacy Office:
           </Paragraph>
           <List>
             <ListItem>
-              <strong>Data Protection Officer (DPO):</strong> <CodeTag>privacy@luxorpay.app</CodeTag>
+              <strong>Data Protection Officer (DPO):</strong> <CodeTag>privacy@sterlingpay.app</CodeTag>
             </ListItem>
             <ListItem>
-              <strong>Legal & Compliance Desk:</strong> <CodeTag>legal@luxorpay.app</CodeTag>
+              <strong>Legal & Compliance Desk:</strong> <CodeTag>legal@sterlingpay.app</CodeTag>
             </ListItem>
             <ListItem>
-              <strong>Official Ecosystem Portal:</strong> <a href="https://luxorpay.app" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>https://luxorpay.app</a>
+              <strong>Official Ecosystem Portal:</strong> <a href="https://sterlingpay.app" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>https://sterlingpay.app</a>
             </ListItem>
           </List>
         </GlassCard>

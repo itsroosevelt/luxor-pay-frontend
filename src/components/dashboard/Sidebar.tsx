@@ -1,10 +1,10 @@
 'use client';
 
 /**
- * Sidebar — Squads.xyz-inspired navigation rail for the Luxor Pay dashboard.
+ * Sidebar — Squads.xyz-inspired navigation rail for the Sterling Pay dashboard.
  *
- * Layout (top → bottom):
- *   1. Brand (Luxor Pay logo + wordmark + collapse toggle)
+ * Structure:
+ *   1. Brand (Sterling Pay logo + wordmark + collapse toggle)
  *   2. Primary navigation (flat links + collapsible groups + external portal redirects)
  *   3. Footer (Contacts · Help & Support · Sign out)
  *
@@ -38,7 +38,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import type { MerchantProfile } from '@luxor/contracts';
+import type { MerchantProfile } from '@sterling/contracts';
 import { PortalSwitcher } from './PortalSwitcher';
 
 const LOGO_SRC =
@@ -183,7 +183,7 @@ const ICON_MAP: Record<string, typeof LayoutDashboard> = {
   '/token-launcher/live': Sparkles,
   '/token-launcher/support': HelpCircle,
   '/token-launcher/go': Rocket,
-  '/token-launcher/lxr': Sparkles,
+  '/token-launcher/str': Sparkles,
   '/dashboard/treasury': Landmark,
   '/dashboard/members': Users,
   '/dashboard/transactions': Zap,
@@ -426,7 +426,7 @@ function SidebarInner({
   // Dynamic portal page history tracking
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('luxor_recent_portal_pages');
+      const saved = localStorage.getItem('sterling_recent_portal_pages');
       let currentItems: { href: string; label: string }[] = saved ? JSON.parse(saved) : [];
 
       if (!Array.isArray(currentItems)) currentItems = [];
@@ -451,7 +451,7 @@ function SidebarInner({
         // filter out existing entry to put it at the top
         const filtered = currentItems.filter((i) => i.href !== pathname);
         const updated = [{ href: pathname, label: matchedLabel }, ...filtered].slice(0, 5);
-        localStorage.setItem('luxor_recent_portal_pages', JSON.stringify(updated));
+        localStorage.setItem('sterling_recent_portal_pages', JSON.stringify(updated));
 
         // update state with icons
         const dynamicNodes: NavNode[] = updated.map((item) => ({
@@ -511,15 +511,15 @@ function SidebarInner({
             aria-label="Expand menu"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO_SRC} alt="Luxor Pay" className="h-7 w-7 object-contain group-hover:scale-110 transition-transform" />
+            <img src={LOGO_SRC} alt="Sterling Pay" className="h-7 w-7 object-contain group-hover:scale-110 transition-transform" />
           </button>
         ) : (
           <>
             <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={LOGO_SRC} alt="Luxor Pay" className="h-7 w-7 object-contain flex-shrink-0" />
+              <img src={LOGO_SRC} alt="Sterling" className="h-7 w-7 object-contain flex-shrink-0" />
               <span className="text-lg font-semibold tracking-tight text-white">
-                Luxor <span className="text-gray-400 font-medium">Pay</span>
+                Sterling
               </span>
             </Link>
 
@@ -640,16 +640,16 @@ export function Sidebar(props: SidebarContentProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('luxor_sidebar_collapsed');
-    if (saved === 'true') {
-      setIsCollapsed(true);
+    const saved = localStorage.getItem('sterling_sidebar_collapsed');
+    if (saved !== null) {
+      setIsCollapsed(saved === 'true');
     }
   }, []);
 
   const handleToggleCollapse = () => {
     setIsCollapsed((prev) => {
       const next = !prev;
-      localStorage.setItem('luxor_sidebar_collapsed', String(next));
+      localStorage.setItem('sterling_sidebar_collapsed', String(next));
       return next;
     });
   };

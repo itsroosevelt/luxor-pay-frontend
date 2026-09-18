@@ -26,7 +26,7 @@ export interface PortalTarget {
 
 export const MAIN_PORTAL: PortalTarget = {
   key: 'main',
-  label: 'Luxor Pay',
+  label: 'Sterling Pay',
   description: 'Main portal — dashboard, treasury, and transactions',
   baseUrl: '/dashboard',
 };

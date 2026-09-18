@@ -58,7 +58,7 @@ export default function LandingPage() {
         <div className="flex items-center gap-12">
           <Link href="/" className="text-xl font-normal tracking-tight flex items-center gap-2 hover:opacity-90 transition-opacity">
             <img src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b" alt="Logo" className="h-10 w-10 object-contain" />
-            <span>Luxor <span className="text-primary">Pay</span></span>
+            <span>Sterling</span>
           </Link>
 
           {/* Desktop Menu */}

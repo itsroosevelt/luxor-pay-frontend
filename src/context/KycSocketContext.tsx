@@ -13,6 +13,7 @@ import { io, Socket } from 'socket.io-client';
 import { getApiBaseUrl } from '@/lib/api-client';
 import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { useMerchant } from '@/context/MerchantContext';
+import type { MerchantProfile } from '@sterling/contracts';
 
 /* ─── Types ────────────────────────────────────────────────────────────── */
 
@@ -91,7 +92,7 @@ export function KycSocketProvider({ children }: { children: ReactNode }) {
         setVerificationActive(true);
         setKycResult(null);
         setTimeout(() => {
-          setProfile((prev) => (prev ? { ...prev, kyc: true, kycStatus: 'VERIFIED' } : prev));
+          setProfile((prev: MerchantProfile | null) => (prev ? { ...prev, kyc: true, kycStatus: 'VERIFIED' } : prev));
           setVerificationActive(false);
           setKycResult('success');
         }, 1600);
@@ -144,7 +145,7 @@ export function KycSocketProvider({ children }: { children: ReactNode }) {
         setKycPayload(payload);
 
         // Update the merchant profile in the parent context in real-time
-        setProfile((prev) => {
+        setProfile((prev: MerchantProfile | null) => {
           if (!prev) return null;
           return {
             ...prev,

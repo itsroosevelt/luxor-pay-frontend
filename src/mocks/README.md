@@ -1,6 +1,6 @@
 # Frontend Mock Mode
 
-Run the entire Luxor Pay UI with **no backend and no Firebase** — for
+Run the entire Sterling Pay UI with **no backend and no Firebase** — for
 maquetación, visual QA, and demos.
 
 ## Enable

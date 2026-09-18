@@ -9,7 +9,7 @@ export function InnovationSection() {
         },
         { 
             title: "Access to Experiences", 
-            desc: "Your LXR balance is your ticket to events, advanced tools, and premium ecosystem features." 
+            desc: "Your STR balance is your ticket to events, advanced tools, and premium ecosystem features." 
         },
         { 
             title: "Savings on Consumption", 
@@ -23,9 +23,9 @@ export function InnovationSection() {
 
     return (
         <InfoSection 
-            title="What exactly is Luxor?"
-            subtitle="Luxor (LXR) is the native utility token of the Luxor ecosystem. It's not a passive asset; it's an active tool designed for those who build, entrepreneur, and consume in the new digital economy."
-            description="By using LXR, you don't just hold an asset on Solana; you gain superpowers within our network:"
+            title="What exactly is Sterling?"
+            subtitle="Sterling (STR) is the native utility token of the Sterling ecosystem. It's not a passive asset; it's an active tool designed for those who build, entrepreneur, and consume in the new digital economy."
+            description="By using STR, you don't just hold an asset on Solana; you gain superpowers within our network:"
             items={items}
             imageSrc="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
             imageClassName="object-contain p-12"

@@ -62,7 +62,7 @@ export default function Footer() {
                 { name: "Payments Engine", href: "#" },
                 { name: "Radar (Fraud protection)", href: "#" },
                 { name: "Revenue Recognition", href: "#" },
-                { name: "Luxor Pay Sigma Analytics", href: "#" },
+                { name: "Sterling Sigma Analytics", href: "#" },
                 { name: "Subscriptions", href: "#" },
                 { name: "Tax Automation", href: "#" },
                 { name: "POS Terminal", href: "#" },
@@ -135,8 +135,8 @@ export default function Footer() {
             links: [
                 { name: "Jobs / Careers", href: "#" },
                 { name: "Newsroom", href: "#" },
-                { name: "Luxor Pay Press Publications", href: "#" },
-                { name: "Contact Sales", href: "mailto:services@byluxor.com" }
+                { name: "Sterling Press Publications", href: "#" },
+                { name: "Contact Sales", href: "mailto:services@bysterling.com" }
             ]
         },
         {
@@ -152,10 +152,10 @@ export default function Footer() {
             title: "Ecosystem",
             links: [
                 { name: "POS", href: "#" },
-                { name: "Luxor Pay", href: "/" },
+                { name: "Sterling", href: "/" },
                 { name: "Royalty Wallet", href: "#" },
                 { name: "Intelligent Glasses", href: "#" },
-                { name: "LUXOR UTILITY ASSET | $LXR", href: "#" },
+                { name: "STERLING UTILITY ASSET | $STR", href: "#" },
                 { name: "USDX STABLECOIN ASSET | $USDX", href: "#" },
                 { name: "ROOSEVELT | ARTIFICIAL INTELLIGENCE", href: "https://www.byroosevelt.com/", target: "_blank" },
                 { name: "EXCELSIOR REAL WORLD ASSET | $XLS", href: "#" }
@@ -204,7 +204,7 @@ export default function Footer() {
                     <div className="flex flex-col gap-5 w-full max-w-[440px]">
                         <div className="space-y-1">
                             <h3 className="text-white text-lg font-sans font-medium tracking-tight">Newsletter</h3>
-                            <p className="text-white/40 text-xs leading-relaxed">Subscribe to receive the latest Luxor Pay ecosystem updates.</p>
+                            <p className="text-white/40 text-xs leading-relaxed">Subscribe to receive the latest Sterling ecosystem updates.</p>
                         </div>
                         <div className="flex gap-2 w-full">
                             <input
@@ -227,7 +227,7 @@ export default function Footer() {
                     {/* Left Side: Slogan */}
                     <div className="lg:w-1/4">
                         <h2 className="text-2xl md:text-3xl font-sans font-medium tracking-tight leading-tight sticky top-24 text-white">
-                            Making <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Luxor Pay</span> <br />
+                            Making <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Sterling</span> <br />
                             helpful for <br />
                             everyone
                         </h2>
@@ -375,10 +375,10 @@ export default function Footer() {
                     <div className="flex items-center gap-3 group cursor-default">
                         <img
                             src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
-                            alt="Luxor Logo"
+                            alt="Sterling Logo"
                             className="w-8 h-8 object-contain brightness-125 filter group-hover:rotate-12 transition-transform duration-500"
                         />
-                        <span className="text-lg font-sans font-medium tracking-tighter">Luxor Economy</span>
+                        <span className="text-lg font-sans font-medium tracking-tighter">Sterling Economy</span>
                     </div>
 
                     {/* Secondary Navigation */}
@@ -388,7 +388,7 @@ export default function Footer() {
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
                         <span className="md:ml-4 flex items-center gap-1">
-                            © 2026 Luxor Pay made with love <Heart className="w-3 h-3 text-red-500 fill-current" />
+                            © 2026 Sterling made with love <Heart className="w-3 h-3 text-red-500 fill-current" />
                         </span>
                     </div>
 

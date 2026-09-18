@@ -583,7 +583,7 @@ export function ContactsView({
       {/* Header Row */}
       <HeaderRow>
         <Title>Contacts</Title>
-        <Subtitle>Manage your frequent transaction contacts on the Luxor network.</Subtitle>
+        <Subtitle>Manage your frequent transaction contacts on the Sterling network.</Subtitle>
       </HeaderRow>
 
       {/* Toolbar */}

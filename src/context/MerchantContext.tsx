@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import type { MerchantProfile } from '@luxor/contracts';
+import type { MerchantProfile } from '@sterling/contracts';
 import { MOCK_MERCHANT_PROFILE } from '@/mocks/data';
 
 interface MerchantContextType {
@@ -26,7 +26,7 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
 
   // Sync with sessionStorage as requested
   useEffect(() => {
-    const stored = sessionStorage.getItem('luxor_merchant_profile');
+    const stored = sessionStorage.getItem('sterling_merchant_profile');
     if (stored) {
       try {
         setProfileState(JSON.parse(stored));
@@ -37,12 +37,12 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const setProfile = useCallback((newProfile: MerchantProfile | null | ((prev: MerchantProfile | null) => MerchantProfile | null)) => {
-    setProfileState((prev) => {
+    setProfileState((prev: MerchantProfile | null) => {
       const resolved = typeof newProfile === 'function' ? newProfile(prev) : newProfile;
       if (resolved) {
-        sessionStorage.setItem('luxor_merchant_profile', JSON.stringify(resolved));
+        sessionStorage.setItem('sterling_merchant_profile', JSON.stringify(resolved));
       } else {
-        sessionStorage.removeItem('luxor_merchant_profile');
+        sessionStorage.removeItem('sterling_merchant_profile');
       }
       return resolved;
     });

@@ -1,5 +1,5 @@
 {
-  "name": "@luxor/frontend",
+  "name": "@sterling/frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -15,7 +15,7 @@
     "@capacitor/core": "^8.4.1",
     "@capacitor/geolocation": "^8.2.0",
     "@capacitor/ios": "^8.4.1",
-    "@luxor/contracts": "file:./packages/contracts",
+    "@sterling/contracts": "file:./packages/contracts",
     "@solana-mobile/wallet-adapter-mobile": "^2.2.9",
     "@solana/wallet-adapter-base": "^0.9.27",
     "@solana/wallet-adapter-react": "^0.15.39",

@@ -294,7 +294,7 @@ export const TermsView = () => {
           <Eyebrow>Master Service Agreement & Legal Terms</Eyebrow>
           <Title>Terms of Service & Protocol Rules</Title>
           <Subtitle>
-            Legal master agreement governing the use of Luxor Pay non-custodial payment infrastructure, developer SDKs, POS software, and integrated fiat gateways.
+            Legal master agreement governing the use of Sterling non-custodial payment infrastructure, developer SDKs, POS software, and integrated fiat gateways.
           </Subtitle>
           <LastUpdated>Effective Date: August 24, 2026 | Version 3.1</LastUpdated>
         </HeaderSection>
@@ -308,11 +308,11 @@ export const TermsView = () => {
             <SectionTitle>1. Acceptance of Terms & Non-Custodial Architecture</SectionTitle>
           </CardHeader>
           <Paragraph>
-            These Terms of Service ("Terms") constitute a legally binding agreement between you ("User", "Merchant", or "Developer") and Luxor Pay ("Luxor", "we", "our"). By accessing our platform, utilizing our software APIs, creating Web3 payment links, or connecting a decentralized wallet, you explicitly agree to be bound by these Terms.
+            These Terms of Service ("Terms") constitute a legally binding agreement between you ("User", "Merchant", or "Developer") and Sterling ("we", "our"). By accessing our platform, utilizing our software APIs, creating Web3 payment links, or connecting a decentralized wallet, you explicitly agree to be bound by these Terms.
           </Paragraph>
           <CalloutBox>
             <p>
-              <strong>NON-CUSTODIAL INFRASTRUCTURE NOTICE:</strong> Luxor Pay is a software technology provider. We are NOT a bank, custodial depositary, money transmitter, custodian, or financial exchange. Luxor Pay does not custody, store, hold, or possess control over user private keys, secret seed phrases, or digital assets. All blockchain transfers occur peer-to-peer directly between self-hosted Web3 wallets on the Solana blockchain.
+              <strong>NON-CUSTODIAL INFRASTRUCTURE NOTICE:</strong> Sterling is a software technology provider. We are NOT a bank, custodial depositary, money transmitter, custodian, or financial exchange. Sterling does not custody, store, hold, or possess control over user private keys, secret seed phrases, or digital assets. All blockchain transfers occur peer-to-peer directly between self-hosted Web3 wallets on the Solana blockchain.
             </p>
           </CalloutBox>
         </GlassCard>
@@ -326,14 +326,14 @@ export const TermsView = () => {
             <SectionTitle>2. Third-Party Fiat On/Off-Ramp Services (MoonPay)</SectionTitle>
           </CardHeader>
           <Paragraph>
-            Luxor Pay integrates software interfaces and widgets provided by licensed third-party financial service providers, including <HighlightText>MoonPay Ltd</HighlightText> ("On-Ramp Partners"), to enable users and merchants to purchase digital assets or cash out using credit cards, debit cards, Apple Pay, Google Pay, or bank transfers.
+            Sterling integrates software interfaces and widgets provided by licensed third-party financial service providers, including <HighlightText>MoonPay Ltd</HighlightText> ("On-Ramp Partners"), to enable users and merchants to purchase digital assets or cash out using credit cards, debit cards, Apple Pay, Google Pay, or bank transfers.
           </Paragraph>
           <List>
             <ListItem>
               <strong>Independent Service Provider:</strong> Fiat-to-crypto and crypto-to-fiat transactions initiated through integrated widgets are executed solely by MoonPay. Your relationship regarding fiat payments, identity verification (KYC/AML), bank payouts, and card processing is governed directly by <a href="https://www.moonpay.com/legal/terms_of_use" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>MoonPay Terms of Use</a> and Privacy Policy.
             </ListItem>
             <ListItem>
-              <strong>No Custody or Intermediary Liability:</strong> Luxor Pay does not process, hold, or convert fiat currency. We disclaim all liability arising from delays, declined transactions, chargebacks, identity checks, or regulatory holds executed by MoonPay or payment card networks.
+              <strong>No Custody or Intermediary Liability:</strong> Sterling does not process, hold, or convert fiat currency. We disclaim all liability arising from delays, declined transactions, chargebacks, identity checks, or regulatory holds executed by MoonPay or payment card networks.
             </ListItem>
           </List>
         </GlassCard>
@@ -347,17 +347,17 @@ export const TermsView = () => {
             <SectionTitle>3. Merchant Services & On-Chain Finality</SectionTitle>
           </CardHeader>
           <Paragraph>
-            Luxor Pay empowers merchants to generate dynamic Web3 payment links, point-of-sale (POS) QR codes, and integrated checkout buttons for digital commerce:
+            Sterling empowers merchants to generate dynamic Web3 payment links, point-of-sale (POS) QR codes, and integrated checkout buttons for digital commerce:
           </Paragraph>
           <List>
             <ListItem>
-              <strong>On-Chain Transaction Finality:</strong> All cryptocurrency transfers executed via the Solana blockchain (including SOL, USDC, LXR, and EURC) are permanent, irreversible, and unalterable. Once broadcasted and confirmed on-chain, transactions cannot be cancelled, reversed, or refunded by Luxor Pay.
+              <strong>On-Chain Transaction Finality:</strong> All cryptocurrency transfers executed via the Solana blockchain (including SOL, USDC, STR, and EURC) are permanent, irreversible, and unalterable. Once broadcasted and confirmed on-chain, transactions cannot be cancelled, reversed, or refunded by Sterling.
             </ListItem>
             <ListItem>
               <strong>No Chargeback Mechanism On-Chain:</strong> Unlike traditional credit card networks, native Web3 transactions do not feature chargeback mechanisms. Merchants are responsible for managing their own dispute resolution, customer refunds, and return policies directly with buyers.
             </ListItem>
             <ListItem>
-              <strong>Network Transaction Fees (Gas):</strong> Users initiating blockchain transactions are required to pay native network execution fees ("gas fees" paid in SOL) directly to decentralized Solana network validators. Luxor Pay does not collect or set network gas fees.
+              <strong>Network Transaction Fees (Gas):</strong> Users initiating blockchain transactions are required to pay native network execution fees ("gas fees" paid in SOL) directly to decentralized Solana network validators. Sterling does not collect or set network gas fees.
             </ListItem>
           </List>
         </GlassCard>
@@ -375,15 +375,15 @@ export const TermsView = () => {
           </Paragraph>
           <WarningBox>
             <p>
-              <strong>Risk Warning:</strong> Digital asset prices exhibit extreme market volatility. Token valuations (including SOL and SPL tokens) may fluctuate rapidly. Luxor Pay does not provide financial, investment, legal, or tax advice. You are solely responsible for evaluating the legal and tax implications of receiving digital assets in your jurisdiction.
+              <strong>Risk Warning:</strong> Digital asset prices exhibit extreme market volatility. Token valuations (including SOL and SPL tokens) may fluctuate rapidly. Sterling does not provide financial, investment, legal, or tax advice. You are solely responsible for evaluating the legal and tax implications of receiving digital assets in your jurisdiction.
             </p>
           </WarningBox>
           <List>
             <ListItem>
-              <strong>Wallet Security Responsibility:</strong> You are 100% responsible for maintaining the physical and digital security of your Web3 wallet (e.g. Phantom, Solflare). Luxor Pay cannot assist in recovering lost private keys or funds sent to incorrect recipient addresses.
+              <strong>Wallet Security Responsibility:</strong> You are 100% responsible for maintaining the physical and digital security of your Web3 wallet (e.g. Phantom, Solflare). Sterling cannot assist in recovering lost private keys or funds sent to incorrect recipient addresses.
             </ListItem>
             <ListItem>
-              <strong>Decentralized Network Outages:</strong> Luxor Pay is not responsible for transaction failures caused by Solana network congestion, validator downtime, RPC node latency, or third-party wallet software bugs.
+              <strong>Decentralized Network Outages:</strong> Sterling is not responsible for transaction failures caused by Solana network congestion, validator downtime, RPC node latency, or third-party wallet software bugs.
             </ListItem>
           </List>
         </GlassCard>
@@ -397,7 +397,7 @@ export const TermsView = () => {
             <SectionTitle>5. Prohibited Activities & AML / OFAC Compliance</SectionTitle>
           </CardHeader>
           <Paragraph>
-            You agree not to utilize Luxor Pay infrastructure for any unlawful or prohibited activities. We enforce strict compliance monitoring in accordance with global Anti-Money Laundering (AML) standards:
+            You agree not to utilize Sterling infrastructure for any unlawful or prohibited activities. We enforce strict compliance monitoring in accordance with global Anti-Money Laundering (AML) standards:
           </Paragraph>
           <List>
             <ListItem>
@@ -418,13 +418,13 @@ export const TermsView = () => {
             <IconWrapper>
               <FileCheck size={22} />
             </IconWrapper>
-            <SectionTitle>6. Utility Token ($LXR) Disclaimer & Governance</SectionTitle>
+            <SectionTitle>6. Utility Token ($STR) Disclaimer & Governance</SectionTitle>
           </CardHeader>
           <Paragraph>
-            The Luxor utility token (<HighlightText>$LXR</HighlightText>) is engineered strictly as a utility and governance asset designed to power operational features within the Luxor Pay ecosystem (such as tier-based fee discounts, governance voting, and protocol features).
+            The Sterling utility token (<HighlightText>$STR</HighlightText>) is engineered strictly as a utility and governance asset designed to power operational features within the Sterling ecosystem (such as tier-based fee discounts, governance voting, and protocol features).
           </Paragraph>
           <Paragraph>
-            $LXR is <strong>not</strong> an investment contract, security, debenture, unit in a collective investment scheme, or regulated financial derivative in any jurisdiction. Holding $LXR does not grant equity ownership, dividend rights, or guaranteed financial returns.
+            $STR is <strong>not</strong> an investment contract, security, debenture, unit in a collective investment scheme, or regulated financial derivative in any jurisdiction. Holding $STR does not grant equity ownership, dividend rights, or guaranteed financial returns.
           </Paragraph>
         </GlassCard>
 
@@ -437,14 +437,14 @@ export const TermsView = () => {
             <SectionTitle>7. Limitation of Liability & Binding Arbitration</SectionTitle>
           </CardHeader>
           <Paragraph>
-            TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, LUXOR PAY, ITS DIRECTORS, EMPLOYEES, AND AFFILIATES SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, USE, GOODWILL, OR DIGITAL ASSETS ARISING OUT OF YOUR USE OF THE INFRASTRUCTURE.
+            TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, STERLING, ITS DIRECTORS, EMPLOYEES, AND AFFILIATES SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, CONSEQUENTIAL, SPECIAL, OR PUNITIVE DAMAGES, INCLUDING LOSS OF PROFITS, DATA, USE, GOODWILL, OR DIGITAL ASSETS ARISING OUT OF YOUR USE OF THE INFRASTRUCTURE.
           </Paragraph>
           <Paragraph>
             These Terms shall be governed by and construed in accordance with international commercial law principles. Any dispute arising out of or relating to these Terms or the protocol shall be settled by binding confidential arbitration under international arbitration rules.
           </Paragraph>
           <Paragraph>
             <em>
-              For legal service of process or formal protocol communications, contact our legal desk: <CodeTag>legal@luxorpay.app</CodeTag>
+              For legal service of process or formal protocol communications, contact our legal desk: <CodeTag>legal@sterlingpay.app</CodeTag>
             </em>
           </Paragraph>
         </GlassCard>

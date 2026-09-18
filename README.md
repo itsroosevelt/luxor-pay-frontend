@@ -1,4 +1,4 @@
-# Luxor Pay — Frontend
+# Sterling Pay — Frontend
 
 Next.js App Router: dashboard merchant, checkout, wallet adapter.
 

@@ -1,7 +1,7 @@
 import {
-  buildLuxorPayCheckoutPath,
-  buildLuxorPayCheckoutPathFromSolanaPay,
-} from '@/lib/luxor-pay-checkout-url';
+  buildSterlingPayCheckoutPath,
+  buildSterlingPayCheckoutPathFromSolanaPay,
+} from '@/lib/sterling-pay-checkout-url';
 import { parseSolanaPayUrl } from '@/lib/solana-pay-url';
 
 export type ScannedPaymentRoute =
@@ -26,7 +26,7 @@ export function extractWalletAddressFromScan(raw: string): string | null {
   return BASE58_ADDRESS.test(address) ? address : null;
 }
 
-/** Map a scanned QR string to a Luxor Pay checkout route (or wallet-only detection). */
+/** Map a scanned QR string to a Sterling Pay checkout route (or wallet-only detection). */
 export function routeScannedPaymentContent(
   raw: string,
   getTokenSymbol?: (mint: string, network?: 'mainnet-beta' | 'devnet') => string | null
@@ -69,7 +69,7 @@ export function routeScannedPaymentContent(
     if (parsed && BASE58_ADDRESS.test(parsed.recipient)) {
       return {
         type: 'qr_direct',
-        url: buildLuxorPayCheckoutPathFromSolanaPay(parsed, getTokenSymbol),
+        url: buildSterlingPayCheckoutPathFromSolanaPay(parsed, getTokenSymbol),
       };
     }
   }
@@ -82,7 +82,7 @@ export function routeScannedPaymentContent(
   if (wallet) {
     return {
       type: 'qr_direct',
-      url: buildLuxorPayCheckoutPath({ recipient: wallet }),
+      url: buildSterlingPayCheckoutPath({ recipient: wallet }),
     };
   }
 

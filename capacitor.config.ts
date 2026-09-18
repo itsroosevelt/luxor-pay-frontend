@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.luxorpay.app',
-  appName: 'Luxor Pay',
+  appId: 'com.sterlingpay.app',
+  appName: 'Sterling Pay',
   webDir: 'out',
 };
 

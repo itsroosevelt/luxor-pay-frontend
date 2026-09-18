@@ -11,7 +11,7 @@ import type {
   MerchantProfile,
   PaymentLink,
   PosDevice,
-} from '@luxor/contracts';
+} from '@sterling/contracts';
 import type { Contact } from '@/lib/contacts-api';
 import type { PaymentRequest } from '@/lib/payment-requests-api';
 import type { Transfer } from '@/lib/transfers-api';
@@ -35,6 +35,7 @@ export const MINTS = {
   SOL: 'So11111111111111111111111111111111111111112',
   USDC: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
   USDT: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB',
+  STR: '3kxGSxkvuFGu3NJjzuAAXMHjVvpWarXwHQsguxVbiBHE',
   LXR: '3kxGSxkvuFGu3NJjzuAAXMHjVvpWarXwHQsguxVbiBHE',
 } as const;
 
@@ -54,7 +55,7 @@ export const MOCK_TOKENS: TokenMetadata[] = [
     decimals: 6, logoUrl: null, active: true, createdAt: iso(-90 * DAY), updatedAt: iso(-DAY),
   },
   {
-    id: 'tok-lxr', environment: 'mock', mint: MINTS.LXR, symbol: 'LXR', name: 'Luxor Token',
+    id: 'tok-str', environment: 'mock', mint: MINTS.STR, symbol: 'STR', name: 'Sterling Token',
     decimals: 9, logoUrl: null, active: true, createdAt: iso(-90 * DAY), updatedAt: iso(-DAY),
   },
 ];
@@ -64,10 +65,11 @@ export const MOCK_PRICES_USD: Record<string, number> = {
   [MINTS.SOL]: 168.42,
   [MINTS.USDC]: 1,
   [MINTS.USDT]: 1,
-  [MINTS.LXR]: 0.0731,
+  [MINTS.STR]: 0.0731,
   SOL: 168.42,
   USDC: 1,
   USDT: 1,
+  STR: 0.0731,
   LXR: 0.0731,
 };
 
@@ -102,8 +104,8 @@ export const MOCK_WALLET_BALANCE: WalletBalanceData = {
       decimals: 6, tokenAccount: 'GwZ9mockUSDTataMockAcct2222222222222222222',
     },
     {
-      mint: MINTS.LXR, symbol: 'LXR', uiAmount: '185704.5', rawAmount: '185704500000000',
-      decimals: 9, tokenAccount: 'GwZ9mockLXRataMockAcct33333333333333333333',
+      mint: MINTS.STR, symbol: 'STR', uiAmount: '185704.5', rawAmount: '185704500000000',
+      decimals: 9, tokenAccount: 'GwZ9mockSTRataMockAcct33333333333333333333',
     },
   ],
 };
@@ -265,7 +267,7 @@ export const MOCK_CONTACTS: Contact[] = [
   {
     id: 'ctc_03', merchantId: MOCK_MERCHANT_PROFILE.id!, nickname: 'Carlos Rodriguez',
     walletAddress: 'D8t4Em1mockPayerWalletCCC3333333333333333333', telephone: '+1 555 0177',
-    email: 'carlos.rodriguez@latampay.com', mint: MINTS.LXR, symbol: 'LXR', notes: 'Regional Merchant Operations Client',
+    email: 'carlos.rodriguez@latampay.com', mint: MINTS.STR, symbol: 'STR', notes: 'Regional Merchant Operations Client',
     isFavorite: false, createdAt: iso(-22 * DAY), updatedAt: iso(-6 * DAY),
   },
   {
@@ -397,7 +399,7 @@ export const MOCK_VAULTS = [
     weight: 15,
     solBalance: '80.6000',
     tokens: [
-      { mint: MINTS.LXR, symbol: 'LXR', uiAmount: '185700.00' },
+      { mint: MINTS.STR, symbol: 'STR', uiAmount: '185700.00' },
     ],
     createdAt: iso(-40 * DAY),
   },
@@ -609,7 +611,7 @@ export function buildMockSwapQuote(params: {
       {
         swapInfo: {
           ammKey: 'MockAmm1111111111111111111111111111111111111',
-          label: 'Luxor Mock LP',
+          label: 'Sterling Mock LP',
           inputMint: params.inputMint,
           outputMint: params.outputMint,
           inAmount: params.amount,

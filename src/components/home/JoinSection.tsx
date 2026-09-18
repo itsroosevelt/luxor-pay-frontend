@@ -19,7 +19,7 @@ export function JoinSection() {
                 >
                     <h2 className="text-3xl md:text-5xl font-normal text-white tracking-tight leading-tight">
                         The future isn't watched, it's built. <br />
-                        <span className="text-zinc-500">Join Luxor, because Luxor is you.</span>
+                        <span className="text-zinc-500">Join Sterling, because Sterling is you.</span>
                     </h2>
                     
                     <div className="pt-10">

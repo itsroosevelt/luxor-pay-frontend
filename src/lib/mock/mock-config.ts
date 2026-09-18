@@ -17,7 +17,7 @@
 export const IS_MOCK_MODE = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
 
 /** sessionStorage key used to simulate a "signed out" state inside mock mode. */
-export const MOCK_SIGNED_OUT_KEY = 'luxor_mock_signed_out';
+export const MOCK_SIGNED_OUT_KEY = 'sterling_mock_signed_out';
 
 /** Artificial latency (ms) applied to mocked responses so loading states render. */
 export const MOCK_LATENCY_MS = 220;

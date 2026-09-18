@@ -43,12 +43,12 @@ export function ShowcaseSection() {
         },
         {
             title: "Hemispheric Stability",
-            desc: "Security through prosperity. A prosperous hemisphere is a secure hemisphere. Luxor facilitates the flow of digital utility and tools across borders, eradicating the lack of opportunity that breeds instability. We are replacing borders with bridges, ensuring the 'American Dream' of technological progress is a shared reality for everyone in our hemisphere.",
+            desc: "Security through prosperity. A prosperous hemisphere is a secure hemisphere. Sterling facilitates the flow of digital utility and tools across borders, eradicating the lack of opportunity that breeds instability. We are replacing borders with bridges, ensuring the 'American Dream' of technological progress is a shared reality for everyone in our hemisphere.",
             videoSrc: "https://firebasestorage.googleapis.com/v0/b/udreamms-platform-1.firebasestorage.app/o/ente.mp4?alt=media&token=9e649051-bf4e-44e4-af61-c0b6bac55c2c"
         },
         {
             title: "Exponential Value Creation",
-            desc: "Leveraging AI and Robotics. We are transitioning from an economy of scarcity to one of abundance. Luxor ensures the Americas won't just witness the AI revolution, but lead it. From Silicon Slopes to every city on the continent, we provide the liquidity engine for the skilled workforce and creative minds behind tomorrow's algorithms.",
+            desc: "Leveraging AI and Robotics. We are transitioning from an economy of scarcity to one of abundance. Sterling ensures the Americas won't just witness the AI revolution, but lead it. From Silicon Slopes to every city on the continent, we provide the liquidity engine for the skilled workforce and creative minds behind tomorrow's algorithms.",
             videoSrc: "https://firebasestorage.googleapis.com/v0/b/udreamms-platform-1.firebasestorage.app/o/into.mp4?alt=media&token=b7b792eb-2f97-47d9-8e0e-6b9ed36232ad"
         }
     ];
@@ -78,7 +78,7 @@ export function ShowcaseSection() {
                             transition={{ delay: 0.1 }}
                             className="text-zinc-500 text-base md:text-base leading-relaxed max-w-md lg:text-right font-light"
                         >
-                            The world is at an inflection point. Technology is no longer an option; it's the language of survival. While other regions fragment, the American Hemisphere rises as a beacon of unexplored synergy. For years, the gap between capital and talent has limited our collective potential. Luxor is here to bridge that gap, creating a unified digital infrastructure from Salt Lake City to the farthest corners of the Americas.
+                            The world is at an inflection point. Technology is no longer an option; it's the language of survival. While other regions fragment, the American Hemisphere rises as a beacon of unexplored synergy. For years, the gap between capital and talent has limited our collective potential. Sterling is here to bridge that gap, creating a unified digital infrastructure from Salt Lake City to the farthest corners of the Americas.
                         </motion.p>
                     </div>
                 </div>

@@ -54,7 +54,7 @@ html, body {
 }
 
 /* ============================================================
-   Luxor Pay — Signature Web3 Multisig App Theme
+   Sterling Pay — Signature Web3 Multisig App Theme
    Scoped to the authenticated dashboard via `.lx-app`.
    ============================================================ */
 .lx-app {
@@ -76,7 +76,7 @@ html, body {
   --lx-text-muted: #94A3B8;
   --lx-text-dim: #64748B;
 
-  /* Primary action — Official Luxor Electric Blue Gradient */
+  /* Primary action — Official Sterling Electric Blue Gradient */
   --lx-primary: linear-gradient(135deg, #60A5FA, #2563EB);
   --lx-primary-hover: linear-gradient(135deg, #3B82F6, #1D4ED8);
   --lx-primary-text: #FFFFFF;

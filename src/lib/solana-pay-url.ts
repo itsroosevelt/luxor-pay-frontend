@@ -88,7 +88,7 @@ export function encodeSolanaPayUrl({
 }
 
 /** Open-amount QR: payer enters amount in their wallet. */
-export function buildOpenAmountQrUrl(recipient: string, label = 'Luxor Pay'): string {
+export function buildOpenAmountQrUrl(recipient: string, label = 'Sterling Pay'): string {
   return encodeSolanaPayUrl({ recipient, label });
 }
 
@@ -112,7 +112,7 @@ export function buildPaymentQrUrl(params: {
     amount: amountStr,
     splToken: params.splToken,
     reference: params.reference,
-    label: params.label ?? 'Luxor Pay',
+    label: params.label ?? 'Sterling Pay',
     message: params.message,
     memo: params.memo,
   });

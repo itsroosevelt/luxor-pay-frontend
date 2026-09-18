@@ -26,6 +26,9 @@
       "@/*": [
         "./src/*"
       ],
+      "@sterling/contracts": [
+        "./packages/contracts/src/index.ts"
+      ],
       "@luxor/contracts": [
         "./packages/contracts/src/index.ts"
       ]

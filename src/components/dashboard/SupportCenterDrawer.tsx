@@ -279,7 +279,7 @@ export function SupportCenterDrawer({ isOpen, onClose }: SupportCenterDrawerProp
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <CardSubtitle>Learn more about Luxor Pay</CardSubtitle>
+                    <CardSubtitle>Learn more about Sterling</CardSubtitle>
                     <CardMainRow>
                       <CardTitleGroup>
                         <IconWrapper>

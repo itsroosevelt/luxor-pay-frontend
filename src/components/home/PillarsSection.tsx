@@ -15,7 +15,7 @@ export function PillarsSection() {
         },
         {
             title: "Exponential Value Creation",
-            desc: "Abundance as the New Standard. We empower a new generation of builders, entrepreneurs, and visionaries. In the Luxor economy, creating massive value is the rule, not the exception. We provide the tools for those who dare to build tomorrow's infrastructure."
+            desc: "Abundance as the New Standard. We empower a new generation of builders, entrepreneurs, and visionaries. In the Sterling economy, creating massive value is the rule, not the exception. We provide the tools for those who dare to build tomorrow's infrastructure."
         }
     ];
 

@@ -15,10 +15,10 @@ export function CTASection() {
             >
 
                 <h2 className="text-3xl lg:text-4xl font-medium font-sans text-white mb-8 md:mb-12 tracking-tight relative z-20">
-                    Join the Luxor Movement!
+                    Join the Sterling Movement!
                 </h2>
                 <p className="text-zinc-300 text-base md:text-lg leading-relaxed mb-12 md:mb-16 max-w-2xl mx-auto relative z-20">
-                    Are you someone who stays to watch the future happen, or someone who writes it? Luxor is the bridge. We are the catalyst for Latin talent and American innovation capital to converge. We invite you to be part of this new era.
+                    Are you someone who stays to watch the future happen, or someone who writes it? Sterling is the bridge. We are the catalyst for Latin talent and American innovation capital to converge. We invite you to be part of this new era.
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -43,7 +43,7 @@ export function CTASection() {
                     <div className="w-64 h-64 md:w-80 md:h-80 relative rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(59,130,246,0.15)] group bg-black">
                         <img
                             src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
-                            alt="Luxor Token"
+                            alt="Sterling Token"
                             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500 bg-black"
                         />
                     </div>

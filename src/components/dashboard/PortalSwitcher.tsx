@@ -88,7 +88,7 @@ export function PortalSwitcher({
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Cambiar de portal"
-        title="Portales Luxor Pay"
+        title="Portales Sterling"
         className="flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-white/10 hover:text-white"
       >
         <LayoutGrid size={18} />
@@ -114,7 +114,7 @@ export function PortalSwitcher({
             }}
           >
             <p className="px-2.5 pb-1.5 pt-1 text-[11px] font-semibold uppercase tracking-wider" style={{ color: 'var(--lx-text-dim)' }}>
-              Portales Luxor Pay
+              Portales Sterling
             </p>
 
             {ALL_PORTALS.map((portal) => {

@@ -4,15 +4,15 @@ import { Star } from 'lucide-react';
 import { BlueParticles } from '@/components/shared/BlueParticles';
 
 const REVIEWS = [
-    { name: 'Sarah Jenkins', initial: 'S', color: 'bg-emerald-500', text: "An absolute game-changer. Luxor's infrastructure has seamlessly connected our operations across North and South America.", time: '2 days ago' },
+    { name: 'Sarah Jenkins', initial: 'S', color: 'bg-emerald-500', text: "An absolute game-changer. Sterling's infrastructure has seamlessly connected our operations across North and South America.", time: '2 days ago' },
     { name: 'David Chen', initial: 'D', color: 'bg-blue-600', text: "The transaction speed and the clarity of the platform are unmatched. It feels like the future of regional finance.", time: '4 days ago' },
     { name: 'Elena Morales', initial: 'E', color: 'bg-purple-600', text: "Finally, a unified block that prioritizes the American Hemisphere. The dashboard is intuitive and highly reliable.", time: '1 week ago' },
     { name: 'Michael O\'Connor', initial: 'M', color: 'bg-rose-600', text: "We've reduced our cross-border friction to almost zero. The underlying tech is solid, and the UX is perfectly polished.", time: '2 weeks ago' },
-    { name: 'Ana Silva', initial: 'A', color: 'bg-amber-500', text: "Luxor provides exactly what it promises: radical transparency and efficiency. I'm recommending it to all my partners.", time: '3 weeks ago' },
+    { name: 'Ana Silva', initial: 'A', color: 'bg-amber-500', text: "Sterling provides exactly what it promises: radical transparency and efficiency. I'm recommending it to all my partners.", time: '3 weeks ago' },
     { name: 'James Wilson', initial: 'J', color: 'bg-indigo-500', text: "Brilliant concept executed flawlessly. The token utility actually makes sense for sustainable long-term economic growth.", time: '1 month ago' },
     { name: 'Carolina Ruiz', initial: 'C', color: 'bg-pink-600', text: "I was skeptical at first, but the network stability and the low latency of the services won me over completely.", time: '1 month ago' },
     { name: 'Thomas Wright', initial: 'T', color: 'bg-cyan-600', text: "State-of-the-art engineering combined with digital benefits. An essential tool for any modern internet company.", time: '2 months ago' },
-    { name: 'Valeria Castro', initial: 'V', color: 'bg-teal-500', text: "The architectural foundations of Luxor give us immense confidence. Scaling our digital services internationally is now effortless.", time: '2 months ago' },
+    { name: 'Valeria Castro', initial: 'V', color: 'bg-teal-500', text: "The architectural foundations of Sterling give us immense confidence. Scaling our digital services internationally is now effortless.", time: '2 months ago' },
     { name: 'Robert King', initial: 'R', color: 'bg-orange-600', text: "A truly borderless experience. The ecosystem is growing fast and getting significantly better with every update.", time: '3 months ago' },
 ];
 

@@ -21,7 +21,7 @@ import { MOCK_SIGNED_OUT_KEY } from '@/lib/mock/mock-config';
 export const DEMO_IDENTITY = {
   uid: 'mock-demo-user-0001',
   name: 'Demo User',
-  email: 'demo@luxorpay.app',
+  email: 'demo@sterlingpay.app',
   wallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
   status: 'authenticated' as const,
 };
@@ -41,7 +41,7 @@ export interface MockUser {
   reload: () => Promise<void>;
 }
 
-export const MOCK_ID_TOKEN = 'mock-id-token.luxor-pay.demo';
+export const MOCK_ID_TOKEN = 'mock-id-token.sterling-pay.demo';
 
 export const mockUser: MockUser = {
   uid: DEMO_IDENTITY.uid,

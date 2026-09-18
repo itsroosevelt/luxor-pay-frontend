@@ -1,6 +1,6 @@
 import type { NextConfig } from 'next';
 const nextConfig: NextConfig = { 
-  transpilePackages: ['@luxor/contracts'],
+  transpilePackages: ['@sterling/contracts'],
   compiler: {
     styledComponents: true,
   },

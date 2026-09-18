@@ -485,7 +485,7 @@ export function resolveMock(
     const pdf =
       '%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n' +
       '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]/Contents 4 0 R/Resources<</Font<</F1 5 0 R>>>>>>endobj\n' +
-      '4 0 obj<</Length 68>>stream\nBT /F1 14 Tf 20 70 Td (Luxor Pay - Mock Statement) Tj ET\nendstream endobj\n' +
+      '4 0 obj<</Length 70>>stream\nBT /F1 14 Tf 20 70 Td (Sterling Pay - Mock Statement) Tj ET\nendstream endobj\n' +
       '5 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\n' +
       'trailer<</Root 1 0 R>>\n%%EOF';
     return { status: 200, rawBody: pdf, contentType: 'application/pdf' };
