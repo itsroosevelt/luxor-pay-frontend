@@ -1133,7 +1133,7 @@ export function QrOperationsModal({
               )}
 
               <Title>Pay with QR</Title>
-              <Subtitle>Align the Luxor Pay or Solana Pay QR code within the frame to pay.</Subtitle>
+              <Subtitle>Align the Sterling or Solana Pay QR code within the frame to pay.</Subtitle>
 
               <QrCameraScanner
                 enabled={isOpen && mode === 'scan'}

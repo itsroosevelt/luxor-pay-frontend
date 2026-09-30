@@ -152,12 +152,15 @@ const QuickArrowCircle = styled.div`
   }
 `;
 
+import { useMerchant } from '@/context/MerchantContext';
+
 export default function DashboardOverviewPage() {
   const router = useRouter();
+  const { profile: contextProfile, setProfile: setContextProfile } = useMerchant();
   const [stats, setStats] = useState({ links: 0, pos: 0, hasWallet: false });
   const [isStatsLoading, setIsStatsLoading] = useState(true);
-  const [merchantWallet, setMerchantWallet] = useState<string | null>(null);
-  const [businessName, setBusinessName] = useState<string | null>(null);
+  const [merchantWallet, setMerchantWallet] = useState<string | null>(contextProfile?.merchantWallet || null);
+  const [businessName, setBusinessName] = useState<string | null>(contextProfile?.businessName || null);
 
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
@@ -169,6 +172,13 @@ export default function DashboardOverviewPage() {
   const [transferSuccessData, setTransferSuccessData] = useState<Transfer | null>(null);
 
   const { data: balanceData, isLoading: isBalanceLoading, refetch: refetchBalance } = useGetBalance(merchantWallet);
+
+  useEffect(() => {
+    if (contextProfile?.merchantWallet && contextProfile.merchantWallet !== merchantWallet) {
+      setMerchantWallet(contextProfile.merchantWallet);
+      setBusinessName(contextProfile.businessName || null);
+    }
+  }, [contextProfile?.merchantWallet, contextProfile?.businessName]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
@@ -186,6 +196,9 @@ export default function DashboardOverviewPage() {
           pos: pos.length,
           hasWallet: Boolean(wallet),
         });
+        if (profile) {
+          setContextProfile(profile);
+        }
         setMerchantWallet(wallet);
         setBusinessName(profile?.businessName?.trim() || null);
 
@@ -338,7 +351,7 @@ export default function DashboardOverviewPage() {
               href="/dashboard/settings?tab=developers"
               icon={Code2}
               title="Get API keys"
-              description="Integrate Luxor Pay like Stripe — REST on the same domain."
+              description="Integrate Sterling like Stripe — REST on the same domain."
             />
           </div>
         </section>

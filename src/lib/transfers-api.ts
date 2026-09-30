@@ -48,9 +48,11 @@ export async function getTransfers(
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(
-      json.message?.[0] || json.message || json.error || 'Failed to fetch transfers'
-    );
+    const errorMsg =
+      (Array.isArray(json?.message) ? json.message[0] : json?.message) ||
+      json?.error ||
+      'Failed to fetch transfers';
+    throw new Error(errorMsg);
   }
 
   return json as TransfersResponse;

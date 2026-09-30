@@ -36,74 +36,11 @@ interface ClipItem {
   imageUrl: string;
 }
 
-const LIVE_STREAMS: Stream[] = [
-  {
-    id: 'stream_1',
-    title: '$LXR ECOSYSTEM UTILITY & LIQUIDITY EXPANSION AMA',
-    streamer: 'LuxorDev',
-    viewers: 1420,
-    tokenSymbol: 'LXR',
-    tokenName: 'Luxor Token',
-    marketCap: '$73.1M',
-    bgGradient: 'from-white/10 to-black/90',
-  },
-  {
-    id: 'stream_2',
-    title: 'SOLANA ECOSYSTEM POS & LIQUIDITY POOL METRICS',
-    streamer: 'SolanaLXR',
-    viewers: 2890,
-    tokenSymbol: 'SOL',
-    tokenName: 'Solana',
-    marketCap: '$78.4B',
-    bgGradient: 'from-white/10 to-black/90',
-  },
-  {
-    id: 'stream_3',
-    title: 'MERCHANT USDC SETTLEMENT & PAYMENTS DEMO',
-    streamer: 'PayOps',
-    viewers: 940,
-    tokenSymbol: 'USDC',
-    tokenName: 'USD Coin',
-    marketCap: '$34.2B',
-    bgGradient: 'from-white/10 to-black/90',
-  },
-];
-
-const MOST_VIEWERS: StreamCardItem[] = [
-  { id: 'mv1', title: 'BaldDegen', symbol: 'BDG', streamer: 'balddegen', viewers: '102 viewers', marketCap: '$2.81K', imageUrl: 'https://picsum.photos/seed/bdg/300/180' },
-  { id: 'mv2', title: 'Cope Cat', symbol: 'COPECAT', streamer: 'copecat', viewers: '70 viewers', marketCap: '$2.78K', imageUrl: 'https://picsum.photos/seed/copecat/300/180' },
-  { id: 'mv3', title: 'Pump Mental Health', symbol: 'HOTLINE', streamer: 'hotline', viewers: '4 viewers', marketCap: '$10.9K', imageUrl: 'https://picsum.photos/seed/hotline/300/180' },
-  { id: 'mv4', title: 'GTA VI Token', symbol: 'GTA6', streamer: 'gta6', viewers: '2 viewers', marketCap: '$2.81K', imageUrl: 'https://picsum.photos/seed/gta6/300/180' },
-  { id: 'mv5', title: 'VOXIE Stream', symbol: 'VOXIE', streamer: 'voxie', viewers: '2 viewers', marketCap: '$62.0K', imageUrl: 'https://picsum.photos/seed/voxie/300/180' },
-  { id: 'mv6', title: 'Stonk Wars', symbol: 'STONK', streamer: 'stonkWars', viewers: '1 viewer', marketCap: '$4.96K', imageUrl: 'https://picsum.photos/seed/stonkwars/300/180' },
-];
-
-const HIGHEST_MC: StreamCardItem[] = [
-  { id: 'hm1', title: 'BULLENCIAGA', symbol: 'BULLEN', streamer: 'bullen', viewers: '45 viewers', marketCap: '$211K', imageUrl: 'https://picsum.photos/seed/bullen/300/180' },
-  { id: 'hm2', title: 'VOXIE Pro', symbol: 'VOXIE', streamer: 'voxie', viewers: '18 viewers', marketCap: '$62.0K', imageUrl: 'https://picsum.photos/seed/voxie2/300/180' },
-  { id: 'hm3', title: 'elchef Live', symbol: 'elchef', streamer: 'elchef', viewers: '12 viewers', marketCap: '$51.7K', imageUrl: 'https://picsum.photos/seed/elchef/300/180' },
-  { id: 'hm4', title: 'PrivateDAO', symbol: 'PDAO', streamer: 'pdao', viewers: '8 viewers', marketCap: '$37.5K', imageUrl: 'https://picsum.photos/seed/pdao/300/180' },
-  { id: 'hm5', title: 'Stuck to 5M', symbol: 'STUCK', streamer: 'stuck', viewers: '1 viewer', marketCap: '$32.8K', imageUrl: 'https://picsum.photos/seed/stuck/300/180' },
-  { id: 'hm6', title: 'Hotline Solana', symbol: 'HOTLINE', streamer: 'hotline', viewers: '4 viewers', marketCap: '$10.9K', imageUrl: 'https://picsum.photos/seed/hotline2/300/180' },
-];
-
-const TRENDING_CLIPS: ClipItem[] = [
-  { id: 'tc1', title: 'Snowball bot moving...', symbol: 'snowball', streamer: 'snowball', views: '243K views', marketCap: '$140K', imageUrl: 'https://picsum.photos/seed/snowball/300/180' },
-  { id: 'tc2', title: 'Sheeeeeit AMA', symbol: 'Joker', streamer: 'joker', views: '223K views', marketCap: '$44.7K', imageUrl: 'https://picsum.photos/seed/joker/300/180' },
-  { id: 'tc3', title: 'XerisCoin Pump', symbol: 'XERIS', streamer: 'xeris', views: '153K views', marketCap: '$3.14M', imageUrl: 'https://picsum.photos/seed/xeris/300/180' },
-  { id: 'tc4', title: 'aman Sol Stream', symbol: 'SOL', streamer: 'aman', views: '122K views', marketCap: '$78.6K', imageUrl: 'https://picsum.photos/seed/aman/300/180' },
-  { id: 'tc5', title: 'aceabase Clash', symbol: '$ACE', streamer: 'aceabase', views: '107K views', marketCap: '$2.36K', imageUrl: 'https://picsum.photos/seed/ace/300/180' },
-  { id: 'tc6', title: 'grand Grandma Token', symbol: 'Grandma', streamer: 'grand', views: '104K views', marketCap: '$20.1K', imageUrl: 'https://picsum.photos/seed/grand/300/180' },
-];
-
-const POPULAR_PAST_STREAMS: ClipItem[] = [
-  { id: 'ps1', title: 'Solana Dev Workshop', symbol: 'SOL', streamer: 'soldev', views: '89K views', marketCap: '$1.2M', imageUrl: 'https://picsum.photos/seed/past1/300/180' },
-  { id: 'ps2', title: 'Meme Launch Party', symbol: 'MEME', streamer: 'memeking', views: '72K views', marketCap: '$540K', imageUrl: 'https://picsum.photos/seed/past2/300/180' },
-  { id: 'ps3', title: 'Liquidity Pool Lock', symbol: 'LP', streamer: 'lplock', views: '64K views', marketCap: '$320K', imageUrl: 'https://picsum.photos/seed/past3/300/180' },
-  { id: 'ps4', title: 'Tokenomics Q&A', symbol: 'LXR', streamer: 'luxor', views: '58K views', marketCap: '$73M', imageUrl: 'https://picsum.photos/seed/past4/300/180' },
-  { id: 'ps5', title: 'Trading Competition', symbol: 'TRADE', streamer: 'trader', views: '49K views', marketCap: '$180K', imageUrl: 'https://picsum.photos/seed/past5/300/180' },
-  { id: 'ps6', title: 'Multisig Governance', symbol: 'GOV', streamer: 'gov', views: '41K views', marketCap: '$950K', imageUrl: 'https://picsum.photos/seed/past6/300/180' },
-];
+const LIVE_STREAMS: Stream[] = [];
+const MOST_VIEWERS: StreamCardItem[] = [];
+const HIGHEST_MC: StreamCardItem[] = [];
+const TRENDING_CLIPS: ClipItem[] = [];
+const POPULAR_PAST_STREAMS: ClipItem[] = [];
 
 const PageContainer = styled.div`
   min-height: 100vh;

@@ -53,7 +53,7 @@ const Sheet = styled(motion.div)`
     right: -30%;
     width: 60%;
     height: 60%;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.1), transparent 70%);
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.2), transparent 70%);
     pointer-events: none;
     z-index: 0;
   }

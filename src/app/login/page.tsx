@@ -189,7 +189,7 @@ function LoginContent() {
                   transition={{ duration: 0.8 }}
                   className="text-3xl md:text-5xl font-light tracking-tight text-white"
                 >
-                  Welcome to <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB] font-medium">Luxor Pay</span>
+                  Welcome to <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#60A5FA] to-[#2563EB] font-medium">Sterling</span>
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0 }}
@@ -352,7 +352,7 @@ function LoginContent() {
         transition={{ delay: 1, duration: 1 }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 text-[9px] tracking-[0.5em] uppercase text-white/40 whitespace-nowrap z-[20]"
       >
-        Luxor Pay · Solana
+        Sterling · Solana
       </motion.p>
     </div>
   );

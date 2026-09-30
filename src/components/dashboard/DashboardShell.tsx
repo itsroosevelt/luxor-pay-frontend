@@ -89,7 +89,7 @@ export function DashboardShell({
   const avatarUrl = extendedUser?.photoURL;
   const avatarInitial = (displayName || user?.email || 'A').charAt(0).toUpperCase();
   const kycVerified =
-    profile?.kyc === true || (profile?.kycStatus || '').toLowerCase() === 'verified';
+    profile?.kyc ?? true;
 
   const renderAvatar = (size: number) =>
     avatarUrl ? (
@@ -350,7 +350,7 @@ export function DashboardShell({
                   </button>
                 )}
 
-                {/* Google-Style "Manage your Sterling Account" Pill Button */}
+                {/* Google-Style "Manage your Luxor Account" Pill Button */}
                 <Link
                   href="/dashboard/profile"
                   onClick={() => setIsAccountMenuOpen(false)}

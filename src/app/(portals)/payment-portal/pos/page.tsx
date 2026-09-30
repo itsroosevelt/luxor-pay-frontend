@@ -32,48 +32,7 @@ export interface PosDevice {
   lastActive: string;
 }
 
-const INITIAL_DEVICES: PosDevice[] = [
-  {
-    id: 'pos_1',
-    name: 'Main Till - Downtown Flagship',
-    location: 'Downtown Store',
-    serialNumber: 'POS-SOL-9910',
-    currency: 'USDC',
-    status: 'online',
-    dailyVolume: 6420.0,
-    lastActive: 'Just now',
-  },
-  {
-    id: 'pos_2',
-    name: 'Mobile Register #02',
-    location: 'Events & Pop-ups',
-    serialNumber: 'POS-SOL-4412',
-    currency: 'USDC',
-    status: 'online',
-    dailyVolume: 3250.5,
-    lastActive: '2m ago',
-  },
-  {
-    id: 'pos_3',
-    name: 'Drive-Thru POS Terminal',
-    location: 'Northside Location',
-    serialNumber: 'POS-SOL-1105',
-    currency: 'SOL',
-    status: 'online',
-    dailyVolume: 4180.0,
-    lastActive: '5m ago',
-  },
-  {
-    id: 'pos_4',
-    name: 'Self-Checkout Kiosk #04',
-    location: 'Downtown Store',
-    serialNumber: 'POS-SOL-7740',
-    currency: 'USDC',
-    status: 'offline',
-    dailyVolume: 0.0,
-    lastActive: '2h ago',
-  },
-];
+const INITIAL_DEVICES: PosDevice[] = [];
 
 // ─── Styled Components (Monochrome Portal Theme) ──────────────────────────────
 
@@ -635,50 +594,58 @@ export default function PosTerminalsPage() {
               </Tr>
             </thead>
             <tbody>
-              {devices.map((device) => (
-                <Tr key={device.id}>
-                  <Td>
-                    <DeviceCell>
-                      <DeviceNameText>{device.name}</DeviceNameText>
-                      <SerialText>{device.serialNumber}</SerialText>
-                    </DeviceCell>
+              {devices.length === 0 ? (
+                <Tr>
+                  <Td colSpan={6} style={{ textAlign: 'center', padding: '48px 16px', color: 'rgba(255, 255, 255, 0.45)' }}>
+                    No POS terminals configured. Click &quot;Pair POS Terminal&quot; above to connect your first device.
                   </Td>
-                  <LocationTd>
-                    {device.location}
-                  </LocationTd>
-                  <VolumeTd>
-                    ${device.dailyVolume.toLocaleString('en-US', { minimumFractionDigits: 2 })} {device.currency}
-                  </VolumeTd>
-                  <ActiveTd>
-                    {device.lastActive}
-                  </ActiveTd>
-                  <Td>
-                    <StatusBadge $online={device.status === 'online'}>
-                      {device.status === 'online' ? <Wifi size={11} /> : <WifiOff size={11} />}
-                      {device.status === 'online' ? 'Online' : 'Offline'}
-                    </StatusBadge>
-                  </Td>
-                  <ActionTdRight>
-                    <ActionRowGroup>
-                      <ButtonBase
-                        $variant="secondary"
-                        onClick={() => handleOpenVirtualPos(device)}
-                      >
-                        <CreditCard size={13} /> Charge
-                      </ButtonBase>
-
-                      <ButtonBase
-                        $variant="ghost"
-                        onClick={() => {
-                          toast.success(`Pairing QR generated for ${device.name}`);
-                        }}
-                      >
-                        <QrCode size={13} /> Pair QR
-                      </ButtonBase>
-                    </ActionRowGroup>
-                  </ActionTdRight>
                 </Tr>
-              ))}
+              ) : (
+                devices.map((device) => (
+                  <Tr key={device.id}>
+                    <Td>
+                      <DeviceCell>
+                        <DeviceNameText>{device.name}</DeviceNameText>
+                        <SerialText>{device.serialNumber}</SerialText>
+                      </DeviceCell>
+                    </Td>
+                    <LocationTd>
+                      {device.location}
+                    </LocationTd>
+                    <VolumeTd>
+                      ${device.dailyVolume.toLocaleString('en-US', { minimumFractionDigits: 2 })} {device.currency}
+                    </VolumeTd>
+                    <ActiveTd>
+                      {device.lastActive}
+                    </ActiveTd>
+                    <Td>
+                      <StatusBadge $online={device.status === 'online'}>
+                        {device.status === 'online' ? <Wifi size={11} /> : <WifiOff size={11} />}
+                        {device.status === 'online' ? 'Online' : 'Offline'}
+                      </StatusBadge>
+                    </Td>
+                    <ActionTdRight>
+                      <ActionRowGroup>
+                        <ButtonBase
+                          $variant="secondary"
+                          onClick={() => handleOpenVirtualPos(device)}
+                        >
+                          <CreditCard size={13} /> Charge
+                        </ButtonBase>
+
+                        <ButtonBase
+                          $variant="ghost"
+                          onClick={() => {
+                            toast.success(`Pairing QR generated for ${device.name}`);
+                          }}
+                        >
+                          <QrCode size={13} /> Pair QR
+                        </ButtonBase>
+                      </ActionRowGroup>
+                    </ActionTdRight>
+                  </Tr>
+                ))
+              )}
             </tbody>
           </Table>
         </TableWrapper>

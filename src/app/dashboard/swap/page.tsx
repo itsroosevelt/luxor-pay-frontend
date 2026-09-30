@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import { SwapContainer } from '@/components/dashboard/swap/SwapContainer';
 
 export const metadata: Metadata = {
-  title: 'Swap Tokens | Luxor Pay',
-  description: 'Swap your Solana tokens seamlessly with Luxor Pay custodial swap.',
+  title: 'Swap Tokens | Sterling',
+  description: 'Swap your Solana tokens seamlessly with Sterling custodial swap.',
 };
 
 export default function SwapPage() {
@@ -13,7 +13,7 @@ export default function SwapPage() {
         <div>
           <h1 className="lx-page-title">Swap</h1>
           <p className="lx-page-subtitle">
-            Exchange your Solana tokens seamlessly with Luxor Pay custodial swap.
+            Exchange your Solana tokens seamlessly with Sterling custodial swap.
           </p>
         </div>
       </header>

@@ -12,13 +12,15 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, X, Loader2, ArrowUpRight, Repeat, Settings2, ShieldCheck,
+  Plus, X, Loader2, ArrowUpRight, Repeat, Settings2, ShieldCheck, Shuffle,
   Check, ThumbsUp, ThumbsDown, Play, Ban, ExternalLink, Clock, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProposals } from '@/hooks/useProposals';
 import { useMembers } from '@/hooks/useMembers';
 import { useTreasury } from '@/hooks/useTreasury';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import {
   PROPOSAL_STATUS_META,
@@ -31,7 +33,18 @@ const TYPE_META: Record<ProposalType, { label: string; icon: typeof Repeat }> = 
   transfer: { label: 'Transfer', icon: ArrowUpRight },
   swap: { label: 'Swap', icon: Repeat },
   config: { label: 'Settings', icon: Settings2 },
+  redistribute: { label: 'Redistribución', icon: Shuffle },
 };
+
+const PAYOUT_LABEL: Record<string, string> = {
+  pending: 'Pendiente de ejecución',
+  signing: 'Enviando…',
+  sent: 'Pagado desde la Principal',
+  failed: 'Falló — revisar',
+};
+
+/** Native SOL (the backend also accepts the wSOL mint as native). */
+const NATIVE_SOL = '11111111111111111111111111111111';
 
 const FALLBACK_TOKENS = [
   { mint: 'So11111111111111111111111111111111111111112', symbol: 'SOL' },
@@ -39,6 +52,9 @@ const FALLBACK_TOKENS = [
   { mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', symbol: 'USDT' },
   { mint: '3kxGSxkvuFGu3NJjzuAAXMHjVvpWarXwHQsguxVbiBHE', symbol: 'LXR' },
 ];
+
+const EXPLORER_NETWORK = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet';
+const EXPLORER_CLUSTER = EXPLORER_NETWORK === 'mainnet-beta' ? '' : `?cluster=${EXPLORER_NETWORK}`;
 
 const short = (a: string) => (a && a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a || '—');
 const timeAgo = (iso: string) => {
@@ -51,21 +67,24 @@ const timeAgo = (iso: string) => {
 
 function StatusChip({ status }: { status: Proposal['status'] }) {
   const meta = PROPOSAL_STATUS_META[status];
-  const tone = meta.tone;
-  const style: React.CSSProperties =
-    tone === 'positive'
-      ? { background: 'var(--lx-success-soft)', color: 'var(--lx-success)', borderColor: 'var(--lx-success-border)' }
-      : tone === 'negative'
-      ? { background: 'var(--lx-danger-soft)', color: 'var(--lx-danger)', borderColor: 'var(--lx-danger)' }
-      : tone === 'active'
-      ? { background: 'var(--lx-fill-hover)', color: 'var(--lx-text)', borderColor: 'var(--lx-border-hover)' }
-      : { background: 'var(--lx-fill)', color: 'var(--lx-text-dim)', borderColor: 'var(--lx-border)' };
+  const tone = meta?.tone ?? 'neutral';
+  const isPositive = tone === 'positive' || status === 'executed' || status === 'approved';
+  const isNegative = tone === 'negative' || status === 'rejected' || status === 'cancelled';
+  const isActive = tone === 'active' || status === 'active' || status === 'draft';
+
+  const style: React.CSSProperties = isPositive
+    ? { background: 'rgba(16, 185, 129, 0.15)', color: '#34D399', borderColor: 'rgba(16, 185, 129, 0.3)' }
+    : isNegative
+    ? { background: 'rgba(239, 68, 68, 0.15)', color: '#F87171', borderColor: 'rgba(239, 68, 68, 0.3)' }
+    : isActive
+    ? { background: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', borderColor: 'rgba(245, 158, 11, 0.3)' }
+    : { background: 'rgba(255, 255, 255, 0.06)', color: 'rgba(255, 255, 255, 0.6)', borderColor: 'rgba(255, 255, 255, 0.15)' };
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold" style={style}>
-      {tone === 'active' && <Clock size={11} />}
-      {tone === 'positive' && <Check size={11} />}
-      {tone === 'negative' && <Ban size={11} />}
-      {meta.label}
+      {isActive && <Clock size={11} />}
+      {isPositive && <Check size={11} />}
+      {isNegative && <Ban size={11} />}
+      {meta?.label || status}
     </span>
   );
 }
@@ -74,10 +93,10 @@ function VoteBar({ have, need }: { have: number; need: number }) {
   const pct = Math.min(100, Math.round((have / Math.max(1, need)) * 100));
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: 'var(--lx-surface-2)' }}>
-        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: have >= need ? 'var(--lx-success)' : 'var(--lx-text-muted)' }} />
+      <div className="h-1.5 flex-1 overflow-hidden rounded-full" style={{ background: 'rgba(255, 255, 255, 0.08)' }}>
+        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: have >= need ? '#FFFFFF' : 'rgba(255, 255, 255, 0.2)' }} />
       </div>
-      <span className="tabular-nums text-[11px] font-medium" style={{ color: 'var(--lx-text-muted)' }}>{have}/{need}</span>
+      <span className="tabular-nums text-[11px] font-medium" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>{have}/{need}</span>
     </div>
   );
 }
@@ -89,35 +108,70 @@ const fieldStyle: React.CSSProperties = {
 };
 
 export function ProposalsPanel({
-  defaultVaultId, openCreateOnMount,
-}: { defaultVaultId?: string; openCreateOnMount?: boolean }) {
+  defaultVaultId, openCreateOnMount, defaultType,
+}: { defaultVaultId?: string; openCreateOnMount?: boolean; defaultType?: ProposalType }) {
   const { data: proposals, isLoading, isError, errorMessage, createProposal, approve, reject, execute, cancel, activate } = useProposals();
   const { data: members } = useMembers();
   const { vaults, config } = useTreasury();
   const { tokens } = useTokenRegistry();
 
   const tokenList = tokens.length ? tokens.map((t) => ({ mint: t.mint, symbol: t.symbol })) : FALLBACK_TOKENS;
-  const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? null, [members]);
-  const signers = useMemo(() => members.filter((m) => m.roles.signer), [members]);
+  // The connected wallet is the acting member (it is the one that signs on-chain).
+  const { publicKey, connected } = useWallet();
+  const { setVisible: openWalletModal } = useWalletModal();
+
+  // Creating, voting and executing all require a connected wallet that signs.
+  const requireWallet = (): boolean => {
+    if (connected) return true;
+    toast.error('Conecta tu wallet (Phantom o Solflare) para realizar esta acción.');
+    openWalletModal(true);
+    return false;
+  };
+  const connectedWallet = publicKey?.toBase58();
+  // With a wallet connected, "me" is strictly that wallet's member (it is what signs);
+  // a non-member wallet gets no action buttons instead of ones the backend will reject.
+  const me = useMemo(
+    () =>
+      connectedWallet
+        ? members.find((m) => m.walletAddress === connectedWallet) ?? null
+        : members.find((m) => m.isCurrentUser) ?? null,
+    [members, connectedWallet],
+  );
+  // Once on-chain, only members that are actually in the Squads multisig can vote.
+  const signers = useMemo(
+    () => members.filter((m) => m.roles.signer && (!config?.onChain || m.onChain !== false)),
+    [members, config?.onChain],
+  );
   const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? 'Member';
 
-  const canPropose = !!me && (me.roles.proposer || me.roles.admin);
+  const canPropose = true; // Any connected user or merchant can create proposals
 
   // `detail` is derived from the id so it always reflects the freshest list data.
   const [detailId, setDetailId] = useState<string | null>(null);
   const detail = useMemo(() => proposals.find((p) => p.id === detailId) ?? null, [proposals, detailId]);
+  // Opened from Send/Trade only after the caller checked the wallet; re-checked on submit.
   const [createOpen, setCreateOpen] = useState(!!openCreateOnMount);
   const [busy, setBusy] = useState<string | null>(null);
 
   const [form, setForm] = useState<{ type: ProposalType; vaultId: string; title: string; destination: string; destinationLabel: string; amount: string; mint: string; memo: string }>({
-    type: 'transfer', vaultId: defaultVaultId ?? '', title: '', destination: '', destinationLabel: '', amount: '', mint: '', memo: '',
+    type: defaultType ?? 'transfer', vaultId: defaultVaultId ?? '', title: '', destination: '', destinationLabel: '', amount: '', mint: '', memo: '',
   });
 
   // Effective values fall back to the first loaded vault / a stablecoin until the user picks.
   const effVaultId = form.vaultId || defaultVaultId || vaults[0]?.id || '';
-  const effMint = form.mint || tokenList[1]?.mint || tokenList[0]?.mint || '';
+  // What can be sent/swapped is what the source vault actually holds (SOL = native).
+  const sourceVault = vaults.find((v) => v.id === effVaultId);
+  const heldTokens = sourceVault
+    ? [
+        ...(Number(sourceVault.solBalance) > 0 ? [{ mint: NATIVE_SOL, symbol: 'SOL' }] : []),
+        ...sourceVault.tokens.filter((t) => Number(t.uiAmount) > 0).map((t) => ({ mint: t.mint, symbol: t.symbol })),
+      ]
+    : [];
+  const sendList = heldTokens.length ? heldTokens : tokenList;
+  const effMint = sendList.some((t) => t.mint === form.mint) ? form.mint : sendList[0]?.mint || '';
 
   const run = async (label: string, fn: () => Promise<unknown>, ok: string) => {
+    if (!requireWallet()) return;
     setBusy(label);
     try { await fn(); toast.success(ok); }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Action failed'); }
@@ -126,10 +180,12 @@ export function ProposalsPanel({
 
   const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canPropose) { toast.error('Proposer role required'); return; }
+    if (!requireWallet()) return;
     if (!form.title.trim()) { toast.error('Please enter a proposal title'); return; }
     if (form.type !== 'config' && !effVaultId) { toast.error('Select a source vault'); return; }
     if (form.type === 'transfer' && !form.destination.trim()) { toast.error('Recipient address is required'); return; }
+    if (form.type === 'swap' && !form.destination) { toast.error('Choose the token to receive'); return; }
+    if (form.type === 'swap' && form.destination === effMint) { toast.error('Pick two different tokens'); return; }
     if (form.type !== 'config' && !form.amount.trim()) { toast.error('Amount is required'); return; }
 
     const payload: CreateProposalPayload = {
@@ -160,8 +216,9 @@ export function ProposalsPanel({
           <ShieldCheck size={14} />
           Current Threshold: <strong style={{ color: 'var(--lx-text)' }}>{config ? `${config.threshold} of ${signers.length}` : '—'}</strong> signers
         </div>
-        <button type="button" className="lx-btn lx-btn-primary" disabled={!canPropose}
-          onClick={() => { if (!canPropose) { toast.error('Proposer role required'); return; } setCreateOpen(true); }}>
+        <button type="button" className="lx-btn lx-btn-primary" disabled={!connected}
+          title={!connected ? 'Conecta tu wallet para crear propuestas' : undefined}
+          onClick={() => { if (!requireWallet()) return; setCreateOpen(true); }}>
           <Plus size={15} /> New Proposal
         </button>
       </div>
@@ -215,6 +272,9 @@ export function ProposalsPanel({
                   <div className="flex items-center justify-between gap-4">
                     <span className="tabular-nums text-[13px] font-medium" style={{ color: 'var(--lx-text)' }}>
                       {p.amount ? `${p.amount} ${p.symbol}` : TYPE_META[p.type].label}
+                      {p.type === 'swap' && p.destinationLabel && (
+                        <span style={{ color: 'var(--lx-text-dim)' }}> → {p.destinationLabel}</span>
+                      )}
                       {p.type === 'transfer' && p.destination && (
                         <span style={{ color: 'var(--lx-text-dim)' }}> → {p.destinationLabel || short(p.destination)}</span>
                       )}
@@ -246,6 +306,19 @@ export function ProposalsPanel({
                 {detail.type === 'transfer' && (
                   <Row label="Destination" value={detail.destinationLabel ? `${detail.destinationLabel} · ${short(detail.destination)}` : short(detail.destination)} mono />
                 )}
+                {detail.type === 'swap' && (
+                  <Row label="Receive (minimum)" value={detail.destinationLabel || short(detail.destination)} />
+                )}
+                {detail.type === 'redistribute' && (
+                  <Row label="Destination" value={detail.destinationLabel || detail.destination} full />
+                )}
+                {detail.custodial && (
+                  <Row
+                    label="Payout"
+                    value={`${PAYOUT_LABEL[detail.payoutStatus ?? 'pending'] ?? detail.payoutStatus}${detail.payoutError ? ` · ${detail.payoutError}` : ''}`}
+                    full
+                  />
+                )}
                 <Row label="Created by" value={nameOf(detail.createdBy)} />
                 <Row label="Threshold" value={`${detail.threshold} of ${signers.length}`} />
                 {detail.memo && <Row label="Note" value={detail.memo} full />}
@@ -263,7 +336,7 @@ export function ProposalsPanel({
                     return (
                       <div key={s.id} className="flex items-center justify-between text-[13px]">
                         <span style={{ color: 'var(--lx-text-muted)' }}>{s.name}{s.isCurrentUser ? ' · you' : ''}</span>
-                        <span className="inline-flex items-center gap-1 text-[12px] font-medium" style={{ color: approved ? 'var(--lx-success)' : rejected ? 'var(--lx-danger)' : 'var(--lx-text-dim)' }}>
+                        <span className="inline-flex items-center gap-1 text-[12px] font-medium" style={{ color: approved ? '#FFFFFF' : rejected ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.4)' }}>
                           {approved ? <><ThumbsUp size={12} /> Approved</> : rejected ? <><ThumbsDown size={12} /> Rejected</> : 'Pending'}
                         </span>
                       </div>
@@ -274,7 +347,7 @@ export function ProposalsPanel({
 
               {/* actions */}
               <ProposalActions
-                p={detail} me={me} busy={busy}
+                p={detail} me={me} busy={busy} connected={connected}
                 onApprove={() => run('approve', () => approve(detail.id), 'Approval vote registered')}
                 onReject={() => run('reject', () => reject(detail.id), 'Rejection vote registered')}
                 onExecute={() => run('execute', () => execute(detail.id), 'Proposal executed on-chain')}
@@ -289,72 +362,317 @@ export function ProposalsPanel({
       {/* create modal */}
       <AnimatePresence>
         {createOpen && (
-          <Modal onClose={() => busy !== 'create' && setCreateOpen(false)} title="New Proposal" icon={<Plus size={18} style={{ color: 'var(--lx-text-muted)' }} />} maxWidth={520}>
-            <form onSubmit={submitCreate} className="space-y-4">
-              <div className="flex gap-2">
-                {(['transfer', 'swap'] as ProposalType[]).map((t) => {
-                  const I = TYPE_META[t].icon;
-                  const active = form.type === t;
-                  return (
-                    <button key={t} type="button" onClick={() => setForm((f) => ({ ...f, type: t }))}
-                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-[13px] font-medium"
-                      style={{ background: active ? 'var(--lx-fill-hover)' : 'var(--lx-surface-2)', color: active ? 'var(--lx-text)' : 'var(--lx-text-muted)', border: `1px solid ${active ? 'var(--lx-border-hover)' : 'var(--lx-border)'}` }}>
-                      <I size={14} /> {TYPE_META[t].label}
-                    </button>
-                  );
-                })}
+          <Modal onClose={() => busy !== 'create' && setCreateOpen(false)} title="New Proposal" icon={<Plus size={18} style={{ color: 'rgba(255,255,255,0.7)' }} />} maxWidth={520}>
+            <form onSubmit={submitCreate} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                  TITLE *
+                </label>
+                <input
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    borderRadius: 14,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#FFFFFF',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. Vendor payout"
+                  required
+                />
               </div>
 
-              <label className="block">
-                <span className="lx-eyebrow">Title</span>
-                <input style={fieldStyle} className="mt-1.5" value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="e.g. Vendor payout" required />
-              </label>
-
-              <label className="block">
-                <span className="lx-eyebrow">Source Vault</span>
-                <select style={fieldStyle} className="mt-1.5" value={effVaultId} onChange={(e) => setForm((f) => ({ ...f, vaultId: e.target.value }))}>
-                  {vaults.map((v) => <option key={v.id} value={v.id}>{v.label}</option>)}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                  SOURCE VAULT *
+                </label>
+                <select
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    borderRadius: 14,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#FFFFFF',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                  value={effVaultId}
+                  onChange={(e) => setForm((f) => ({ ...f, vaultId: e.target.value }))}
+                >
+                  {vaults.map((v) => (
+                    <option key={v.id} value={v.id} style={{ background: '#0A0A0A', color: '#FFFFFF' }}>
+                      {v.label}
+                    </option>
+                  ))}
                 </select>
-              </label>
-
-              {form.type === 'transfer' && (
-                <div className="grid grid-cols-2 gap-3">
-                  <label className="col-span-2 block">
-                    <span className="lx-eyebrow">Recipient Address</span>
-                    <input style={{ ...fieldStyle, fontFamily: 'monospace', fontSize: 13 }} className="mt-1.5" value={form.destination} onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))} placeholder="Pubkey base58" required />
-                  </label>
-                  <label className="col-span-2 block">
-                    <span className="lx-eyebrow">Recipient Label (Optional)</span>
-                    <input style={fieldStyle} className="mt-1.5" value={form.destinationLabel} onChange={(e) => setForm((f) => ({ ...f, destinationLabel: e.target.value }))} placeholder="e.g. Green Highlands" />
-                  </label>
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="lx-eyebrow">Amount</span>
-                  <input style={fieldStyle} className="mt-1.5" inputMode="decimal" value={form.amount} onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))} placeholder="0.00" required />
-                </label>
-                <label className="block">
-                  <span className="lx-eyebrow">Token</span>
-                  <select style={fieldStyle} className="mt-1.5" value={effMint} onChange={(e) => setForm((f) => ({ ...f, mint: e.target.value }))}>
-                    {tokenList.map((t) => <option key={t.mint} value={t.mint}>{t.symbol}</option>)}
-                  </select>
-                </label>
               </div>
 
-              <label className="block">
-                <span className="lx-eyebrow">Note (Optional)</span>
-                <input style={fieldStyle} className="mt-1.5" value={form.memo} onChange={(e) => setForm((f) => ({ ...f, memo: e.target.value }))} placeholder="Internal reference" />
-              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                  DESTINATION *
+                </label>
+                <select
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    borderRadius: 14,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#FFFFFF',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                  value={vaults.find((v) => v.id !== effVaultId && v.address && v.address === form.destination)?.id ?? ''}
+                  onChange={(e) => {
+                    const target = vaults.find((v) => v.id === e.target.value);
+                    if (target) {
+                      setForm((f) => ({
+                        ...f,
+                        destination: target.address ?? '',
+                        destinationLabel: target.label ?? '',
+                      }));
+                    } else {
+                      setForm((f) => ({
+                        ...f,
+                        destination: '',
+                        destinationLabel: '',
+                      }));
+                    }
+                  }}
+                >
+                  <option value="" style={{ background: '#0A0A0A', color: '#FFFFFF' }}>
+                    External address (Phantom / Solflare)
+                  </option>
+                  {vaults
+                    .filter((v) => v.id !== effVaultId && v.address)
+                    .map((v) => (
+                      <option key={v.id} value={v.id} style={{ background: '#0A0A0A', color: '#FFFFFF' }}>
+                        {v.label}
+                      </option>
+                    ))}
+                </select>
+              </div>
 
-              <p className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>
-                The proposal opens for voting immediately. It requires {config?.threshold ?? 2} approvals to be executed.
+              {/* Dynamic Animated Extension: Recipient Details */}
+              <AnimatePresence mode="wait">
+                {!vaults.some((v) => v.id !== effVaultId && v.address && v.address === form.destination && form.destination !== '') ? (
+                  <motion.div
+                    key="external-fields"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 16, overflow: 'hidden' }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                        RECIPIENT ADDRESS (BILLETERA PHANTOM / SOLFLARE) *
+                      </label>
+                      <input
+                        style={{
+                          width: '100%',
+                          padding: '14px 16px',
+                          borderRadius: 14,
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          color: '#FFFFFF',
+                          fontFamily: 'monospace',
+                          fontSize: 13,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                        value={form.destination}
+                        onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
+                        placeholder="Pega la dirección base58 de tu billetera"
+                        required
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                        RECIPIENT LABEL (OPTIONAL)
+                      </label>
+                      <input
+                        style={{
+                          width: '100%',
+                          padding: '14px 16px',
+                          borderRadius: 14,
+                          background: 'rgba(255, 255, 255, 0.05)',
+                          border: '1px solid rgba(255, 255, 255, 0.12)',
+                          color: '#FFFFFF',
+                          fontFamily: 'Montserrat, sans-serif',
+                          fontSize: 14,
+                          outline: 'none',
+                          boxSizing: 'border-box',
+                        }}
+                        value={form.destinationLabel}
+                        onChange={(e) => setForm((f) => ({ ...f, destinationLabel: e.target.value }))}
+                        placeholder="e.g. Mi Phantom Personal"
+                      />
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="internal-preview"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid rgba(255, 255, 255, 0.08)',
+                      borderRadius: 14,
+                      padding: 16,
+                      fontSize: 13,
+                      color: 'rgba(255, 255, 255, 0.8)',
+                    }}
+                  >
+                    Destino interno: <strong style={{ color: '#FFFFFF' }}>{form.destinationLabel || 'Bóveda Interna'}</strong>
+                    <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255, 255, 255, 0.45)', marginTop: 4, wordBreak: 'break-all' }}>
+                      {form.destination}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Amount & Token Inputs */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                    AMOUNT *
+                  </label>
+                  <input
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: 14,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      fontFamily: 'Montserrat, sans-serif',
+                      fontSize: 14,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                    inputMode="decimal"
+                    value={form.amount}
+                    onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                    TOKEN *
+                  </label>
+                  <select
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: 14,
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      color: '#FFFFFF',
+                      fontFamily: 'Montserrat, sans-serif',
+                      fontSize: 14,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                    value={effMint}
+                    onChange={(e) => setForm((f) => ({ ...f, mint: e.target.value }))}
+                  >
+                    {sendList.map((t) => (
+                      <option key={t.mint} value={t.mint} style={{ background: '#0A0A0A', color: '#FFFFFF' }}>
+                        {t.symbol}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
+                  NOTE (OPTIONAL)
+                </label>
+                <input
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    borderRadius: 14,
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    color: '#FFFFFF',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontSize: 14,
+                    outline: 'none',
+                    boxSizing: 'border-box',
+                  }}
+                  value={form.memo}
+                  onChange={(e) => setForm((f) => ({ ...f, memo: e.target.value }))}
+                  placeholder="Internal reference"
+                />
+              </div>
+
+              <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: 'rgba(255, 255, 255, 0.5)', margin: 0 }}>
+                The proposal opens for voting immediately. It requires {config?.threshold ?? 1} approvals to be executed.
               </p>
 
-              <div className="flex justify-end gap-2 pt-1">
-                <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setCreateOpen(false)} disabled={busy === 'create'}>Cancel</button>
-                <button type="submit" className="lx-btn lx-btn-primary" disabled={busy === 'create'}>
+              <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(false)}
+                  disabled={busy === 'create'}
+                  style={{
+                    flex: 1,
+                    height: 44,
+                    padding: '11px 24px',
+                    borderRadius: 9999,
+                    background: 'transparent',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#E2E8F0',
+                    cursor: 'pointer',
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    fontFamily: 'Outfit, sans-serif',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={busy === 'create' || !connected}
+                  title={!connected ? 'Conecta tu wallet para enviar la propuesta' : undefined}
+                  style={{
+                    flex: 1,
+                    height: 44,
+                    padding: '11px 24px',
+                    borderRadius: 9999,
+                    background: '#FFFFFF',
+                    border: 'none',
+                    color: '#000000',
+                    cursor: 'pointer',
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    fontFamily: 'Outfit, sans-serif',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                  }}
+                >
                   {busy === 'create' ? <><Loader2 size={15} className="animate-spin" /> Creating…</> : 'Create Proposal'}
                 </button>
               </div>
@@ -378,9 +696,9 @@ function Row({ label, value, mono, full }: { label: string; value: string; mono?
 }
 
 function ProposalActions({
-  p, me, busy, onApprove, onReject, onExecute, onActivate, onCancel,
+  p, me, busy, connected, onApprove, onReject, onExecute, onActivate, onCancel,
 }: {
-  p: Proposal; me: ReturnType<typeof useMembers>['data'][number] | null; busy: string | null;
+  p: Proposal; me: ReturnType<typeof useMembers>['data'][number] | null; busy: string | null; connected?: boolean;
   onApprove: () => void; onReject: () => void; onExecute: () => void; onActivate: () => void; onCancel: () => void;
 }) {
   if (!me) return null;
@@ -390,7 +708,7 @@ function ProposalActions({
 
   if (p.status === 'executed') {
     return p.executedSig ? (
-      <a href={`https://explorer.solana.com/tx/${p.executedSig}?cluster=devnet`} target="_blank" rel="noopener noreferrer"
+      <a href={`https://explorer.solana.com/tx/${p.executedSig}${EXPLORER_CLUSTER}`} target="_blank" rel="noopener noreferrer"
         className="lx-btn lx-btn-secondary w-full justify-center">
         Ver en Solana Explorer <ExternalLink size={13} />
       </a>
@@ -403,17 +721,17 @@ function ProposalActions({
   return (
     <div className="flex flex-wrap gap-2">
       {p.status === 'draft' && isOwnerOrAdmin && (
-        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!!busy} onClick={onActivate}>
+        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para abrir a votación' : undefined} onClick={onActivate}>
           {busy === 'activate' ? spin : <><Play size={14} /> Abrir a votación</>}
         </button>
       )}
 
       {p.status === 'active' && me.roles.signer && !iVoted && (
         <>
-          <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!!busy} onClick={onApprove}>
+          <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para votar' : undefined} onClick={onApprove}>
             {busy === 'approve' ? spin : <><ThumbsUp size={14} /> Aprobar</>}
           </button>
-          <button type="button" className="lx-btn lx-btn-secondary flex-1 justify-center" style={{ color: 'var(--lx-danger)' }} disabled={!!busy} onClick={onReject}>
+          <button type="button" className="lx-btn lx-btn-secondary flex-1 justify-center" style={{ color: 'var(--lx-danger)' }} disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para votar' : undefined} onClick={onReject}>
             {busy === 'reject' ? spin : <><ThumbsDown size={14} /> Rechazar</>}
           </button>
         </>
@@ -427,13 +745,13 @@ function ProposalActions({
       )}
 
       {p.status === 'approved' && (me.roles.signer || me.roles.proposer || me.roles.admin) && (
-        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!!busy} onClick={onExecute}>
+        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para ejecutar' : undefined} onClick={onExecute}>
           {busy === 'execute' ? spin : <><Play size={14} /> Ejecutar on-chain</>}
         </button>
       )}
 
       {(p.status === 'draft' || p.status === 'active') && isOwnerOrAdmin && (
-        <button type="button" className="lx-btn lx-btn-secondary justify-center" disabled={!!busy} onClick={onCancel}>
+        <button type="button" className="lx-btn lx-btn-secondary justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para cancelar' : undefined} onClick={onCancel}>
           {busy === 'cancel' ? spin : <><Ban size={14} /> Cancelar</>}
         </button>
       )}
@@ -442,23 +760,33 @@ function ProposalActions({
 }
 
 function Modal({
-  title, icon, onClose, children, maxWidth = 480,
+  title, icon, onClose, children, maxWidth = 520,
 }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode; maxWidth?: number }) {
   return (
     <motion.div
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
-      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 16 }}
-        transition={{ type: 'spring', bounce: 0.3, duration: 0.45 }}
-        className="lx-card-lg w-full" style={{ maxWidth, maxHeight: '88vh', overflowY: 'auto', boxShadow: 'var(--lx-shadow-lg)' }}
+        initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        transition={{ type: 'spring', bounce: 0.35, duration: 0.6 }}
+        style={{
+          width: '100%',
+          maxWidth,
+          maxHeight: '88vh',
+          overflowY: 'auto',
+          background: 'rgba(10, 10, 10, 0.95)',
+          border: '1px solid rgba(255, 255, 255, 0.12)',
+          borderRadius: 40,
+          padding: '36px 40px',
+          boxShadow: '0 32px 64px -16px rgba(0, 0, 0, 0.9)',
+        }}
       >
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-[17px] font-semibold" style={{ color: 'var(--lx-text)' }}>{icon} {title}</h2>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
-            <X size={15} />
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <h2 className="flex items-center gap-2 font-['Outfit'] text-[24px] font-medium tracking-tight text-white">{icon} {title}</h2>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors">
+            <X size={16} />
           </button>
         </div>
         {children}

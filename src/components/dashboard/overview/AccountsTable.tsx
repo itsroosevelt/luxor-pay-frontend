@@ -5,6 +5,8 @@ import styled from "styled-components";
 import { ArrowUpRight, ArrowLeftRight, Copy, Check, Wallet } from "lucide-react";
 import { WalletBalanceData } from "@/lib/solana-api";
 import { useTokenPrice } from "@/hooks/useTokenPrice";
+import { useTreasury } from "@/hooks/useTreasury";
+import { TokenIcon as VectorTokenIcon } from "@/components/common/TokenIcon";
 
 const Container = styled.div`
   background: rgba(255, 255, 255, 0.03);
@@ -256,6 +258,7 @@ export function AccountsTable({
   solBalance,
   balanceData,
 }: AccountsTableProps) {
+  const { vaults } = useTreasury();
   const [activeTab, setActiveTab] = useState<'Accounts' | 'Coins'>('Accounts');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [tokenPrices, setTokenPrices] = useState<Record<string, number>>({});
@@ -347,18 +350,43 @@ export function AccountsTable({
     })),
   ];
 
-  // Build REAL Accounts array
-  const accountsList = merchantWallet
-    ? [
+  // Build REAL Accounts array (synced with Treasury vaults)
+  const accountsList = React.useMemo(() => {
+    if (vaults && vaults.length > 0) {
+      const totalBalanceNumber = vaults.reduce((acc, v) => acc + (v.usdValue || 0), 0);
+      const effectiveTotalUsd = totalBalanceNumber > 0 ? totalBalanceNumber : totalPortfolioUsd;
+
+      return vaults.map((v, i) => {
+        const isPrincipal = i === 0 || v.index === 0 || v.isDefault;
+        const name = isPrincipal ? 'Roosevelt' : v.label;
+        const addr = v.address || merchantWallet || '';
+        const usdVal = v.usdValue != null && v.usdValue > 0 ? v.usdValue : (isPrincipal ? totalPortfolioUsd : 0);
+        const weight = effectiveTotalUsd > 0 ? Math.round((usdVal / effectiveTotalUsd) * 100) : (isPrincipal ? 100 : 0);
+
+        return {
+          id: v.id,
+          name,
+          address: addr,
+          balance: `$${usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          weight,
+        };
+      });
+    }
+
+    if (merchantWallet) {
+      return [
         {
           id: 'main-merchant-wallet',
-          name: 'Merchant Main Account',
+          name: 'Roosevelt',
           address: merchantWallet,
           balance: `$${totalPortfolioUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           weight: totalPortfolioUsd > 0 ? 100 : 0,
         },
-      ]
-    : [];
+      ];
+    }
+
+    return [];
+  }, [vaults, merchantWallet, totalPortfolioUsd]);
 
   const handleCopy = (id: string, text: string) => {
     if (!text) return;
@@ -460,7 +488,7 @@ export function AccountsTable({
             {coinsList.map((coin) => (
               <TableRow key={coin.id} $gridCols="2fr 1.5fr 1fr 1fr">
                 <ItemCell>
-                  <TokenIcon $bg={coin.bg}>{coin.symbol.slice(0, 2)}</TokenIcon>
+                  <VectorTokenIcon symbol={coin.symbol} size={28} />
                   <span>{coin.symbol}</span>
                 </ItemCell>
 

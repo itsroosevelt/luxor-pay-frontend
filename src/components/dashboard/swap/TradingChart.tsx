@@ -5,6 +5,8 @@ import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Maximize2, Layers } from 'lucide-react';
 
+import { TokenIcon } from '@/components/common/TokenIcon';
+
 const ChartCard = styled.div`
   background: transparent;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -35,19 +37,13 @@ const IconGroup = styled.div`
   display: flex;
   align-items: center;
 
-  .token-icon {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-    color: #FFF;
+  svg:first-child {
+    z-index: 2;
   }
-  .sol { background: linear-gradient(135deg, #14F195, #9945FF); z-index: 2; }
-  .usdc { background: linear-gradient(135deg, #2775CA, #1E508F); margin-left: -6px; z-index: 1; }
+  svg:last-child {
+    margin-left: -6px;
+    z-index: 1;
+  }
 `;
 
 const StatsRow = styled.div`
@@ -187,8 +183,8 @@ export function TradingChart() {
         <HeaderRow>
           <PairBadge>
             <IconGroup>
-              <span className="token-icon sol">S</span>
-              <span className="token-icon usdc">$</span>
+              <TokenIcon symbol="SOL" size={22} />
+              <TokenIcon symbol="USDC" size={22} />
             </IconGroup>
             SOL-USDC
           </PairBadge>

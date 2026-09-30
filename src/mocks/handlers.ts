@@ -48,6 +48,7 @@ type Json = Record<string, unknown>;
 
 const ok = (body: unknown): MockResult => ({ status: 200, body });
 const created = (body: unknown): MockResult => ({ status: 201, body });
+const notFound = (msg: string): MockResult => ({ status: 404, body: { message: msg } });
 
 /* In-memory mutable copies so create/update/delete feel real for a session. */
 const links = [...MOCK_PAYMENT_LINKS];
@@ -129,7 +130,7 @@ export function resolveMock(
   }
   if (p.startsWith('/payment-links/') && method === 'GET') {
     const id = p.split('/')[2];
-    const link = links.find((l) => l.id === id) ?? links[0];
+    const link = links.find((l) => l.id === id) ?? null;
     return ok({ data: link });
   }
   if (p.startsWith('/payment-links/') && (method === 'PUT' || method === 'PATCH')) {
@@ -145,7 +146,7 @@ export function resolveMock(
       };
       return ok({ data: links[index] });
     }
-    return ok({ data: links[0] });
+    return ok({ data: null });
   }
   if (p.startsWith('/payment-links/') && method === 'DELETE') {
     const id = p.split('/')[2];
@@ -307,6 +308,21 @@ export function resolveMock(
     };
     vaults = [...vaults, vault];
     return created({ data: vault });
+  }
+  if (p.startsWith('/vaults/') && method === 'PATCH') {
+    const id = p.split('/vaults/')[1];
+    const target = vaults.find((v) => v.id === id);
+    if (target) {
+      if (body?.label) target.label = String(body.label);
+      if (typeof body?.targetWeight === 'number') target.targetWeight = body.targetWeight;
+      return ok({ data: target });
+    }
+    return notFound('Vault no encontrada');
+  }
+  if (p.startsWith('/vaults/') && method === 'DELETE') {
+    const id = p.split('/vaults/')[1];
+    vaults = vaults.filter((v) => v.id !== id);
+    return ok({ success: true });
   }
 
   /* ───────────────── Proposals (create → vote → execute) ───────────────── */

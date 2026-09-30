@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import styled from "styled-components";
+import { TokenIcon as VectorTokenIcon } from "@/components/common/TokenIcon";
 
 const IconContainer = styled.div<{ $size: number }>`
   width: ${({ $size }) => $size}px;
@@ -55,26 +56,6 @@ export function TokenIcon({ symbol, size = 22, logoUrl }: TokenIconProps) {
     );
   }
 
-  // Fallback gradient badge if remote URL fails or doesn't exist
-  return (
-    <IconContainer $size={size} className="notranslate" translate="no">
-      <div
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          borderRadius: "9999px",
-          background: "linear-gradient(135deg, #60A5FA, #2563EB)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#FFFFFF",
-          fontFamily: "Outfit, sans-serif",
-          fontSize: `${Math.round(size * 0.42)}px`,
-          fontWeight: 700,
-        }}
-      >
-        {sym.slice(0, 2)}
-      </div>
-    </IconContainer>
-  );
+  // Render high-definition vector SVG token icon
+  return <VectorTokenIcon symbol={sym} size={size} />;
 }

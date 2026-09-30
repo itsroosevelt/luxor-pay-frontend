@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { TransferModal } from '@/components/dashboard/overview/TransferModal';
+import { TokenIcon } from '@/components/common/TokenIcon';
 
 interface TokenItem {
   id: string;
@@ -231,9 +232,7 @@ export default function TokenManagerPage() {
                       {/* Token Identity */}
                       <td className="py-4 pr-6">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white font-bold font-['Outfit'] shrink-0 text-xs">
-                            {token.symbol.slice(0, 3)}
-                          </div>
+                          <TokenIcon symbol={token.symbol} size={36} />
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-['Outfit'] font-semibold text-sm text-white">

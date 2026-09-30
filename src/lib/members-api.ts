@@ -31,6 +31,8 @@ export interface Member {
   roles: MemberRoles;
   /** True for the signed-in user's own membership. */
   isCurrentUser?: boolean;
+  /** null while the multisig is off-chain; otherwise whether the wallet is a Squads member. */
+  onChain?: boolean | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -63,12 +65,17 @@ export async function getMembers(token: string): Promise<MembersResponse> {
   return response.json();
 }
 
-export async function createMember(token: string, payload: CreateMemberPayload): Promise<{ data: Member }> {
+export async function createMember(
+  token: string,
+  payload: CreateMemberPayload,
+  walletHeaders?: Record<string, string>,
+): Promise<{ data: Member }> {
   const response = await fetch(apiUrl('/members'), {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      ...(walletHeaders ?? {}),
     },
     body: JSON.stringify(payload),
   });
@@ -84,21 +91,24 @@ export async function createMember(token: string, payload: CreateMemberPayload):
 export async function updateMemberRoles(
   token: string,
   id: string,
-  roles: Partial<MemberRoles>
+  roles: Partial<MemberRoles>,
+  walletHeaders?: Record<string, string>,
 ): Promise<{ data: Member }> {
-  return updateMemberDetails(token, id, { roles });
+  return updateMemberDetails(token, id, { roles }, walletHeaders);
 }
 
 export async function updateMemberDetails(
   token: string,
   id: string,
-  payload: { name?: string; roles?: Partial<MemberRoles> }
+  payload: { name?: string; roles?: Partial<MemberRoles> },
+  walletHeaders?: Record<string, string>,
 ): Promise<{ data: Member }> {
   const response = await fetch(apiUrl(`/members/${id}`), {
     method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json',
+      ...(walletHeaders ?? {}),
     },
     body: JSON.stringify(payload),
   });
@@ -111,11 +121,16 @@ export async function updateMemberDetails(
   return response.json();
 }
 
-export async function deleteMember(token: string, id: string): Promise<{ success: boolean }> {
+export async function deleteMember(
+  token: string,
+  id: string,
+  walletHeaders?: Record<string, string>,
+): Promise<{ success: boolean }> {
   const response = await fetch(apiUrl(`/members/${id}`), {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${token}`,
+      ...(walletHeaders ?? {}),
     },
   });
 

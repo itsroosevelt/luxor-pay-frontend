@@ -13,7 +13,7 @@
 
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Suspense, useMemo, useState, useEffect } from 'react';
+import { Suspense, useMemo, useState, useEffect, useCallback } from 'react';
 import {
   LayoutDashboard,
   Zap,
@@ -98,8 +98,9 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Treasury',
         icon: Landmark,
         children: [
-          { href: '/dashboard/treasury', label: 'Operating Vaults' },
-          { href: '/dashboard/members', label: 'Multisig Signers' },
+          { href: '/dashboard/treasury', label: 'Bóveda Roosevelt' },
+          { href: '/dashboard/treasury', label: 'Operating Vault' },
+          { href: '/dashboard/treasury', label: 'Payroll Vault' },
         ],
       },
       { kind: 'link', href: '/dashboard/transactions', label: 'Transactions', icon: Zap },
@@ -308,8 +309,16 @@ function NavGroup({
   isCollapsed?: boolean;
   onNavigate?: () => void;
 }) {
+  const pathname = usePathname();
   const { isLeafActive } = useActiveMatcher();
-  const containsActive = node.children.some((c) => isLeafActive(c));
+  const isGroupActive = useMemo(() => {
+    if (node.id === 'treasury') return pathname?.startsWith('/dashboard/treasury');
+    if (node.id === 'developers') return pathname?.startsWith('/dashboard/developers');
+    if (node.id === 'settings') return pathname?.startsWith('/dashboard/settings');
+    return node.children.some((c) => isLeafActive(c));
+  }, [node, pathname, isLeafActive]);
+
+  const containsActive = isGroupActive;
   const [override, setOverride] = useState<boolean | null>(null);
   const open = override ?? containsActive;
 
@@ -334,35 +343,55 @@ function NavGroup({
     );
   }
 
+  const primaryHref = node.id === 'treasury' ? '/dashboard/treasury' : (node.children[0]?.href ?? '/dashboard/treasury');
+
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => setOverride(!open)}
-        aria-expanded={open}
+      <div
         className={clsx(
-          'flex w-full items-center gap-2.5 rounded-full px-3 py-1.5 text-[13.5px] font-medium transition-colors',
+          'flex w-full items-center justify-between rounded-full px-3 py-1.5 text-[13.5px] font-medium transition-colors',
           containsActive && !open
             ? 'text-white'
             : 'text-gray-400 hover:text-white hover:bg-white/[0.04]',
         )}
       >
-        <Icon size={16} className="shrink-0" />
-        <span className="truncate flex-1 text-left">{node.label}</span>
-        <ChevronDown
-          size={13}
-          className={clsx('shrink-0 text-gray-500 transition-transform duration-200', open && 'rotate-180')}
-        />
-      </button>
+        <Link
+          href={primaryHref}
+          onClick={() => {
+            if (onNavigate) onNavigate();
+            setOverride(true);
+          }}
+          className="flex items-center gap-2.5 flex-1 min-w-0"
+        >
+          <Icon size={16} className="shrink-0" />
+          <span className="truncate flex-1 text-left">{node.label}</span>
+        </Link>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOverride(!open);
+          }}
+          aria-expanded={open}
+          aria-label={`Toggle ${node.label} section`}
+          className="p-1 text-gray-500 hover:text-white transition-colors"
+        >
+          <ChevronDown
+            size={13}
+            className={clsx('shrink-0 transition-transform duration-200', open && 'rotate-180')}
+          />
+        </button>
+      </div>
 
       {open && (
         <div className="mt-1 ml-3.5 flex flex-col gap-1 border-l border-white/10 pl-2.5">
-          {node.children.map((child) => {
+          {node.children.map((child, idx) => {
             const active = isLeafActive(child);
+            const childKey = `${child.href}-${child.label}-${idx}`;
             if (child.external) {
               return (
                 <a
-                  key={child.href}
+                  key={childKey}
                   href={child.href}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -377,16 +406,21 @@ function NavGroup({
             }
             return (
               <Link
-                key={child.href}
+                key={childKey}
                 href={child.href}
                 onClick={onNavigate}
                 aria-current={active ? 'page' : undefined}
                 className={clsx(
-                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+                  'rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors flex items-center justify-between gap-1',
                   active ? 'bg-[#20232B] text-white font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/[0.04]',
                 )}
               >
-                {child.label}
+                <span className="truncate">{child.label}</span>
+                {(child as { balance?: string }).balance && (
+                  <span className="text-[11px] font-mono text-gray-400 shrink-0 font-normal opacity-80">
+                    {(child as { balance?: string }).balance}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -426,7 +460,7 @@ function SidebarInner({
   // Dynamic portal page history tracking
   useEffect(() => {
     try {
-      const saved = localStorage.getItem('sterling_recent_portal_pages');
+      const saved = localStorage.getItem('luxor_recent_portal_pages');
       let currentItems: { href: string; label: string }[] = saved ? JSON.parse(saved) : [];
 
       if (!Array.isArray(currentItems)) currentItems = [];
@@ -451,7 +485,7 @@ function SidebarInner({
         // filter out existing entry to put it at the top
         const filtered = currentItems.filter((i) => i.href !== pathname);
         const updated = [{ href: pathname, label: matchedLabel }, ...filtered].slice(0, 5);
-        localStorage.setItem('sterling_recent_portal_pages', JSON.stringify(updated));
+        localStorage.setItem('luxor_recent_portal_pages', JSON.stringify(updated));
 
         // update state with icons
         const dynamicNodes: NavNode[] = updated.map((item) => ({
@@ -475,28 +509,72 @@ function SidebarInner({
     }
   }, [pathname]);
 
-  const activeSections = useMemo(() => {
-    if (customSections && customSections.length > 0) {
-      return customSections.map((sec) => {
-        if (sec.title === 'Shortcuts' || sec.title === 'Accesos directos' || sec.title?.toUpperCase() === 'SHORTCUTS') {
-          return {
-            ...sec,
-            items: portalShortcuts.map((item) => ({ ...item, icon: Clock })),
-          };
+  const [treasuryChildren, setTreasuryChildren] = useState<{ href: string; label: string; balance?: string }[]>([
+    { href: '/dashboard/treasury', label: 'Roosevelt' },
+  ]);
+
+  const syncTreasuryVaults = useCallback(() => {
+    try {
+      const saved = localStorage.getItem('luxor_treasury_vaults');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const items = parsed.map((v: { id?: string; label?: string; usdValue?: number }, idx: number) => {
+            const isPrincipal = idx === 0;
+            const rawLabel = (v.label && !v.label.toLowerCase().includes('principal')) ? v.label : 'Roosevelt';
+            const label = isPrincipal ? (v.label && !v.label.toLowerCase().includes('principal') ? v.label : 'Roosevelt') : rawLabel;
+            const accSlug = v.id || label.toLowerCase().replace(/\s+/g, '-') || idx.toString();
+            const balanceStr = v.usdValue != null ? `$${v.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : undefined;
+            return {
+              href: `/dashboard/treasury?account=${encodeURIComponent(accSlug)}`,
+              label,
+              balance: balanceStr,
+            };
+          });
+          setTreasuryChildren(items);
+          return;
         }
-        return sec;
-      });
-    }
-    return NAV_SECTIONS.map((sec) => {
-      if (sec.title === 'Shortcuts' || sec.title === 'Accesos directos' || sec.title?.toUpperCase() === 'SHORTCUTS') {
-        return {
-          ...sec,
-          items: portalShortcuts.map((item) => ({ ...item, icon: Clock })),
-        };
       }
-      return sec;
-    });
-  }, [customSections, portalShortcuts]);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    syncTreasuryVaults();
+    window.addEventListener('luxor_vaults_updated', syncTreasuryVaults);
+    window.addEventListener('storage', syncTreasuryVaults);
+    return () => {
+      window.removeEventListener('luxor_vaults_updated', syncTreasuryVaults);
+      window.removeEventListener('storage', syncTreasuryVaults);
+    };
+  }, [syncTreasuryVaults]);
+
+  const activeSections = useMemo(() => {
+    const processSection = (sec: NavSection) => {
+      let items = sec.items;
+      if (sec.title === 'Shortcuts' || sec.title === 'Accesos directos' || sec.title?.toUpperCase() === 'SHORTCUTS') {
+        items = portalShortcuts.map((item) => ({ ...item, icon: Clock }));
+      }
+      if (sec.title === 'Treasury & DeFi') {
+        items = items.map((item) => {
+          if (item.kind === 'group' && item.id === 'treasury') {
+            return {
+              ...item,
+              children: treasuryChildren,
+            };
+          }
+          return item;
+        });
+      }
+      return { ...sec, items };
+    };
+
+    if (customSections && customSections.length > 0) {
+      return customSections.map(processSection);
+    }
+    return NAV_SECTIONS.map(processSection);
+  }, [customSections, portalShortcuts, treasuryChildren]);
 
   return (
     <div className="flex h-full flex-col">
@@ -511,7 +589,7 @@ function SidebarInner({
             aria-label="Expand menu"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={LOGO_SRC} alt="Sterling Pay" className="h-7 w-7 object-contain group-hover:scale-110 transition-transform" />
+            <img src={LOGO_SRC} alt="Sterling" className="h-7 w-7 object-contain group-hover:scale-110 transition-transform" />
           </button>
         ) : (
           <>
@@ -640,7 +718,7 @@ export function Sidebar(props: SidebarContentProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem('sterling_sidebar_collapsed');
+    const saved = localStorage.getItem('luxor_sidebar_collapsed');
     if (saved !== null) {
       setIsCollapsed(saved === 'true');
     }
@@ -649,7 +727,7 @@ export function Sidebar(props: SidebarContentProps) {
   const handleToggleCollapse = () => {
     setIsCollapsed((prev) => {
       const next = !prev;
-      localStorage.setItem('sterling_sidebar_collapsed', String(next));
+      localStorage.setItem('luxor_sidebar_collapsed', String(next));
       return next;
     });
   };

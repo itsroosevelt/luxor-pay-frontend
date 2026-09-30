@@ -363,7 +363,7 @@ export const PrivacyView = () => {
             <SectionTitle>3. Global Regulatory Frameworks (GDPR, CCPA & CLOUD Act)</SectionTitle>
           </CardHeader>
           <Paragraph>
-            Luxor Pay maintains strict legal compliance across major international privacy jurisdictions:
+            Sterling maintains strict legal compliance across major international privacy jurisdictions:
           </Paragraph>
 
           <SectionSubtitle>European Union & UK GDPR (Articles 6 & 13)</SectionSubtitle>

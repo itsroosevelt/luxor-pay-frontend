@@ -275,6 +275,8 @@ const ContactCard = styled(motion.div)`
   padding: 16px 0;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
   gap: 14px;
   transition: opacity 0.2s;
   min-width: 0;
@@ -474,7 +476,7 @@ const Value = styled.span`
 `;
 
 const SendLinkButton = styled.button`
-  margin-top: 4px;
+  margin-top: auto;
   width: 100%;
   font-family: 'Outfit', sans-serif;
   font-size: 12.5px;
@@ -735,19 +737,24 @@ export function ContactsView({
 
                 {/* Data Grid */}
                 <DataGrid>
-                  {contact.email && (
-                    <DataRow>
-                      <Label>EMAIL</Label>
-                      <Value title={contact.email}>{contact.email}</Value>
-                    </DataRow>
-                  )}
+                  <DataRow>
+                    <Label>EMAIL</Label>
+                    <Value
+                      title={contact.email || '—'}
+                      style={{ color: contact.email ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)' }}
+                    >
+                      {contact.email || '—'}
+                    </Value>
+                  </DataRow>
 
-                  {contact.telephone && (
-                    <DataRow>
-                      <Label>PHONE</Label>
-                      <Value>{contact.telephone}</Value>
-                    </DataRow>
-                  )}
+                  <DataRow>
+                    <Label>PHONE</Label>
+                    <Value
+                      style={{ color: contact.telephone ? 'rgba(255, 255, 255, 0.8)' : 'rgba(255, 255, 255, 0.25)' }}
+                    >
+                      {contact.telephone || '—'}
+                    </Value>
+                  </DataRow>
 
                   <DataRow>
                     <Label>PREFERRED ASSET</Label>

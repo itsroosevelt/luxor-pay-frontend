@@ -262,7 +262,7 @@ function GeolocationBlockingModal({
           <Heading>Allow Location Access</Heading>
 
           <Body>
-            Luxor Pay requires your location to comply with regulatory
+            Sterling requires your location to comply with regulatory
             requirements and to secure every on-chain transaction with
             geolocation data.
           </Body>

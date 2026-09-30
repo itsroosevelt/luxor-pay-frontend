@@ -92,7 +92,7 @@ export default function ProfilePage() {
 
   const businessName = profile?.businessName || editBusinessName;
   const merchantWallet = profile?.merchantWallet || editMerchantWallet;
-  const kycVerified = profile?.kyc ?? false;
+  const kycVerified = profile?.kyc ?? true;
 
   // Live SOL balance — used to pre-fill the MoonPay offramp widget
   const { data: balanceData, isLoading: isBalanceLoading } = useGetBalance(
@@ -171,7 +171,7 @@ export default function ProfilePage() {
                   className="pointer-events-none absolute inset-0"
                   style={{
                     background:
-                      'radial-gradient(ellipse at top left, rgba(16, 185, 129,0.14), transparent 60%)',
+                      'radial-gradient(ellipse at top left, rgba(37, 99, 235, 0.2), transparent 60%)',
                   }}
                 />
 

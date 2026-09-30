@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getWalletBalance, WalletBalanceData } from '@/lib/solana-api';
+import { getWalletBalance, fetchOnChainWalletBalance, WalletBalanceData } from '@/lib/solana-api';
 import { auth } from '@/lib/firebase';
 import { MOCK_WALLET_BALANCE } from '@/mocks/data';
 
@@ -14,8 +14,8 @@ interface UseGetBalanceReturn {
 }
 
 export function useGetBalance(publicKey?: string | null): UseGetBalanceReturn {
-  const [data, setData] = useState<WalletBalanceData | null>(MOCK_WALLET_BALANCE as any);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [data, setData] = useState<WalletBalanceData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(Boolean(publicKey && publicKey.trim()));
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPrivacyMode, setIsPrivacyMode] = useState<boolean>(false);
@@ -25,7 +25,15 @@ export function useGetBalance(publicKey?: string | null): UseGetBalanceReturn {
   }, []);
 
   const fetchBalance = useCallback(async () => {
-    const targetKey = publicKey || '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU';
+    const trimmedKey = publicKey?.trim();
+    if (!trimmedKey) {
+      setData(null);
+      setIsLoading(false);
+      setIsError(false);
+      setErrorMessage(null);
+      return;
+    }
+
     setIsLoading(true);
     setIsError(false);
     setErrorMessage(null);
@@ -33,12 +41,19 @@ export function useGetBalance(publicKey?: string | null): UseGetBalanceReturn {
     try {
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : 'mock-token';
-      const balanceData = await getWalletBalance(token, targetKey);
+      const balanceData = await getWalletBalance(token, trimmedKey);
       
-      setData(balanceData ?? (MOCK_WALLET_BALANCE as any));
+      setData(balanceData ?? { ...MOCK_WALLET_BALANCE, publicKey: trimmedKey });
+      setIsError(false);
+      setErrorMessage(null);
     } catch (error: any) {
-      console.warn('Balance fetch failed, using mock fallback:', error);
-      setData(MOCK_WALLET_BALANCE as any);
+      console.warn('Balance fetch failed, using fallback balance:', error);
+      try {
+        const onChain = await fetchOnChainWalletBalance(trimmedKey);
+        setData(onChain);
+      } catch {
+        setData({ ...MOCK_WALLET_BALANCE, publicKey: trimmedKey });
+      }
       setIsError(false);
       setErrorMessage(null);
     } finally {

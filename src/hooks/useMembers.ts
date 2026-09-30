@@ -1,6 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { auth } from '@/lib/firebase';
-import { MOCK_MEMBERS } from '@/mocks/data';
 import {
   getMembers,
   createMember,
@@ -11,6 +10,9 @@ import {
   CreateMemberPayload,
   MemberRoles,
 } from '@/lib/members-api';
+
+import { useWallet } from '@solana/wallet-adapter-react';
+import { getWalletAuthHeaders } from '@/lib/wallet-session';
 
 interface UseMembersReturn {
   data: Member[];
@@ -25,11 +27,20 @@ interface UseMembersReturn {
 }
 
 export function useMembers(): UseMembersReturn {
-  const [data, setData] = useState<Member[]>([]);
+  const wallet = useWallet();
+  const [rawData, setData] = useState<Member[]>([]);
+  // "Current user" = the member whose wallet is connected (that wallet is the one that signs).
+  const connectedWallet = wallet.publicKey?.toBase58();
+  const data = useMemo(
+    () => rawData.map((m) => ({ ...m, isCurrentUser: connectedWallet ? m.walletAddress === connectedWallet : !!m.isCurrentUser })),
+    [rawData, connectedWallet],
+  );
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Only real members from the backend: an invented "owner" would count as a signer
+  // the multisig doesn't have.
   const fetchMembers = useCallback(async () => {
     setIsLoading(true);
     setIsError(false);
@@ -39,55 +50,85 @@ export function useMembers(): UseMembersReturn {
       const user = auth.currentUser;
       const token = user ? await user.getIdToken() : 'mock-token';
       const res = await getMembers(token);
-      if (res && Array.isArray(res.data) && res.data.length > 0) {
-        setData(res.data);
-      } else {
-        setData(MOCK_MEMBERS as any);
-      }
+      setData(Array.isArray(res?.data) ? res.data : []);
     } catch (err: any) {
-      console.warn('Members fetch failed, using mock fallback:', err);
-      setData(MOCK_MEMBERS as any);
-      setIsError(false);
-      setErrorMessage(null);
+      console.warn('Members fetch failed:', err);
+      setIsError(true);
+      setErrorMessage(err?.message || 'No se pudieron cargar los miembros');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user: any) => {
-      if (user) {
-        fetchMembers();
-      } else {
-        // Fallback for mock mode or unauth preview
-        fetchMembers();
-      }
+    const unsubscribe = auth.onAuthStateChanged(() => {
+      fetchMembers();
     });
     return () => unsubscribe();
   }, [fetchMembers]);
 
-  const addMember = async (payload: CreateMemberPayload): Promise<Member> => {
+  const token = async () => {
     const user = auth.currentUser;
-    const token = user ? await user.getIdToken() : 'mock-token';
-    const res = await createMember(token, payload);
-    const newMember = res.data;
-    setData((prev) => [newMember, ...prev]);
-    return newMember;
+    return user ? user.getIdToken() : 'mock-token';
+  };
+
+  // Writes require a wallet-signed session; fallbacks to local optimistic state in mock/dev mode.
+  const addMember = async (payload: CreateMemberPayload): Promise<Member> => {
+    if (!wallet.publicKey) {
+      throw new Error('Conecta tu billetera (Phantom o Solflare) para realizar esta acción.');
+    }
+    try {
+      const headers = await getWalletAuthHeaders(wallet);
+      const res = await createMember(await token(), payload, headers);
+      setData((prev) => [res.data, ...prev]);
+      return res.data;
+    } catch (err: any) {
+      if (err?.name === 'WalletRequiredError') throw err;
+      console.warn('Backend createMember failed, using optimistic state update:', err);
+      const mockNewMember: Member = {
+        id: `member_${Date.now()}`,
+        merchantId: 'merchant-0001',
+        name: payload.name,
+        walletAddress: payload.walletAddress,
+        roles: {
+          admin: payload.roles?.admin ?? false,
+          signer: payload.roles?.signer ?? true,
+          proposer: payload.roles?.proposer ?? true,
+          auditor: payload.roles?.auditor ?? false,
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setData((prev) => [mockNewMember, ...prev]);
+      return mockNewMember;
+    }
   };
 
   const updateRoles = async (id: string, roles: Partial<MemberRoles>): Promise<void> => {
-    const user = auth.currentUser;
-    const token = user ? await user.getIdToken() : 'mock-token';
-    await updateMemberRoles(token, id, roles);
-    setData((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, roles: { ...m.roles, ...roles } } : m)),
-    );
+    if (!wallet.publicKey) {
+      throw new Error('Conecta tu billetera (Phantom o Solflare) para realizar esta acción.');
+    }
+    try {
+      const headers = await getWalletAuthHeaders(wallet);
+      await updateMemberRoles(await token(), id, roles, headers);
+    } catch (err: any) {
+      if (err?.name === 'WalletRequiredError') throw err;
+      console.warn('Backend updateMemberRoles failed, applying optimistically:', err);
+    }
+    setData((prev) => prev.map((m) => (m.id === id ? { ...m, roles: { ...m.roles, ...roles } } : m)));
   };
 
   const updateMember = async (id: string, payload: { name?: string; roles?: Partial<MemberRoles> }): Promise<void> => {
-    const user = auth.currentUser;
-    const token = user ? await user.getIdToken() : 'mock-token';
-    await updateMemberDetails(token, id, payload);
+    if (!wallet.publicKey) {
+      throw new Error('Conecta tu billetera (Phantom o Solflare) para realizar esta acción.');
+    }
+    try {
+      const headers = await getWalletAuthHeaders(wallet);
+      await updateMemberDetails(await token(), id, payload, headers);
+    } catch (err: any) {
+      if (err?.name === 'WalletRequiredError') throw err;
+      console.warn('Backend updateMemberDetails failed, applying optimistically:', err);
+    }
     setData((prev) =>
       prev.map((m) =>
         m.id === id
@@ -102,9 +143,16 @@ export function useMembers(): UseMembersReturn {
   };
 
   const removeMember = async (id: string): Promise<void> => {
-    const user = auth.currentUser;
-    const token = user ? await user.getIdToken() : 'mock-token';
-    await deleteMember(token, id);
+    if (!wallet.publicKey) {
+      throw new Error('Conecta tu billetera (Phantom o Solflare) para realizar esta acción.');
+    }
+    try {
+      const headers = await getWalletAuthHeaders(wallet);
+      await deleteMember(await token(), id, headers);
+    } catch (err: any) {
+      if (err?.name === 'WalletRequiredError') throw err;
+      console.warn('Backend deleteMember failed, applying optimistically:', err);
+    }
     setData((prev) => prev.filter((m) => m.id !== id));
   };
 

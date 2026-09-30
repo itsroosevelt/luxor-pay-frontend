@@ -41,9 +41,9 @@ export function PortalTopBar({
     >
       <div className="flex min-w-0 items-center gap-2">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={LOGO_SRC} alt="Luxor Pay" className="h-6 w-6 flex-shrink-0 object-contain" />
+        <img src={LOGO_SRC} alt="Sterling" className="h-6 w-6 flex-shrink-0 object-contain" />
         <span className="hidden text-[14px] font-semibold tracking-tight sm:inline text-white">
-          Luxor <span style={{ color: 'var(--lx-text-muted)' }} className="font-medium">Pay</span>
+          Sterling
         </span>
         <span className="hidden sm:inline-block h-4 w-px flex-shrink-0" style={{ background: 'var(--lx-border-strong)' }} />
         <span className="truncate text-[13px] font-medium text-gray-300">{portalName}</span>

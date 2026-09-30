@@ -681,7 +681,7 @@ export default function PayQrClient() {
     ? label.trim()
     : recipientBusinessName
       ? `Payment to ${recipientBusinessName}`
-      : 'Direct payment with Luxor Pay';
+      : 'Direct payment with Sterling';
 
   const solanaNetworkLabel = process.env.NEXT_PUBLIC_SOLANA_NETWORK ?? 'devnet';
 
@@ -842,7 +842,7 @@ export default function PayQrClient() {
                 <InfoRow>
                   <InfoLabel>Method</InfoLabel>
                   <InfoValue>
-                    Luxor Pay Custodial
+                    Sterling Custodial
                   </InfoValue>
                 </InfoRow>
 

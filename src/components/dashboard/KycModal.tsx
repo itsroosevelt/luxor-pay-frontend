@@ -54,7 +54,7 @@ const GlassCard = styled(motion.div)`
     left: -40%;
     width: 180%;
     height: 180%;
-    background: radial-gradient(circle at 50% 30%, rgba(16, 185, 129, 0.25) 0%, transparent 65%);
+    background: radial-gradient(circle at 50% 30%, rgba(37, 99, 235, 0.3) 0%, transparent 65%);
     pointer-events: none;
     z-index: 0;
   }

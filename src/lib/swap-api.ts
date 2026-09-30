@@ -49,9 +49,11 @@ export async function getSwapQuote(
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(
-      json.message?.[0] || json.message || json.error || 'Failed to fetch swap quote'
-    );
+    const errorMsg =
+      (Array.isArray(json?.message) ? json.message[0] : json?.message) ||
+      json?.error ||
+      'Failed to fetch swap quote';
+    throw new Error(errorMsg);
   }
 
   return json as QuoteResponse;
@@ -75,9 +77,11 @@ export async function executeSwap(
   const json = await res.json();
 
   if (!res.ok) {
-    throw new Error(
-      json.message?.[0] || json.message || json.error || 'Failed to execute swap'
-    );
+    const errorMsg =
+      (Array.isArray(json?.message) ? json.message[0] : json?.message) ||
+      json?.error ||
+      'Failed to execute swap';
+    throw new Error(errorMsg);
   }
 
   return json as ExecuteSwapResponse;

@@ -54,56 +54,9 @@ interface ScreenerCoin {
   state: 'AGENT ACTIVE' | 'AGENT PAUSED' | 'AGENT ENDED';
 }
 
-const MAYHEM_TRADERS: MayhemTrader[] = [
-  { rank: 1, handle: '@JTmovez', winRate: '33.1%', profit24h: '+$2.5k', profit7d: '7d +$2.8k' },
-  { rank: 2, handle: '@Illshrimp24945', winRate: '35.2%', profit24h: '+$2.1k', profit7d: '7d +$2.6k' },
-  { rank: 3, handle: '@ChadMeteorPolka', winRate: '63.4%', profit24h: '+$2k', profit7d: '7d +$13.4k' },
-  { rank: 4, handle: '@dualnarwhal3031', winRate: '100.0%', profit24h: '+$2k', profit7d: '7d +$9.1k' },
-  { rank: 5, handle: '@VastBoomChief', winRate: '57.4%', profit24h: '+$1.4k', profit7d: '7d +$10.5k' },
-];
-
-const WINNING_COINS: WinningCoin[] = [
-  {
-    rank: 1,
-    name: 'Luxor Yield',
-    symbol: '$LXR-Y',
-    address: '3kxG...lxr',
-    state: 'AGENT ACTIVE',
-    volume: '$246.2k',
-    traders: 78,
-    netInflow: '+$12.8K',
-    marketCap: '$748.9k',
-  },
-  {
-    rank: 2,
-    name: 'Solana Agent Pay',
-    symbol: '$SOL-AI',
-    address: 'EPjF...sol',
-    state: 'AGENT PAUSED',
-    volume: '$17.4k',
-    traders: 24,
-    netInflow: '+$5.7K',
-    marketCap: '$110.4k',
-  },
-  {
-    rank: 3,
-    name: 'Luxor Vault Token',
-    symbol: '$LXR-V',
-    address: 'Es9v...lxr',
-    state: 'AGENT ENDED',
-    volume: '$160.1k',
-    traders: 39,
-    netInflow: '+$4.8K',
-    marketCap: '$260.8k',
-  },
-];
-
-const SCREENER_COINS: ScreenerCoin[] = [
-  { rank: 1, name: 'Luxor Token', symbol: '$LXR', marketCap: '$73.1M', volume: '$51.4k', state: 'AGENT ACTIVE' },
-  { rank: 2, name: 'Solana', symbol: '$SOL', marketCap: '$78.4B', volume: '$1.2M', state: 'AGENT ACTIVE' },
-  { rank: 3, name: 'Luxor Yield', symbol: '$LXR-Y', marketCap: '$748k', volume: '$246.2k', state: 'AGENT ENDED' },
-  { rank: 4, name: 'USD Coin', symbol: '$USDC', marketCap: '$34.2B', volume: '$17.4M', state: 'AGENT PAUSED' },
-];
+const MAYHEM_TRADERS: MayhemTrader[] = [];
+const WINNING_COINS: WinningCoin[] = [];
+const SCREENER_COINS: ScreenerCoin[] = [];
 
 const PageContainer = styled.div`
   min-height: 100vh;

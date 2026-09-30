@@ -341,7 +341,7 @@ export function ProfileSettingsAccordions() {
             </label>
             <input
               type="text"
-              defaultValue="Luxor Pay Web3 Inc."
+              defaultValue="Sterling Web3 Inc."
               className="w-full bg-black/60 border border-white/10 focus:border-white/30 rounded-xl px-3.5 py-2 text-xs text-white outline-none font-mono"
             />
           </div>

@@ -50,7 +50,7 @@ const Pill = styled.div`
     position: absolute;
     inset: -1px;
     border-radius: 9999px;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(16, 185, 129, 0.1));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(37, 99, 235, 0.2));
     pointer-events: none;
   }
 `;

@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Eye, EyeOff, AlertCircle, RefreshCw, Coins, ArrowUp, ArrowDown, ArrowLeftRight, ShieldAlert } from "lucide-react";
 import { WalletBalanceData } from "@/lib/solana-api";
 import { GlassCard, ButtonBase, EyebrowBadge } from "@/components/shared/DesignSystem";
+import { TokenIcon } from "@/components/common/TokenIcon";
 
 const ContentWrapper = styled.div`
   position: relative;
@@ -230,6 +231,7 @@ interface WalletBalanceViewProps {
   onDepositClick?: () => void;
   onTradeClick?: () => void;
   merchantWallet?: string | null;
+  totalUsdBalance?: number;
 }
 
 export function WalletBalanceView({
@@ -245,6 +247,7 @@ export function WalletBalanceView({
   onSendClick,
   onDepositClick,
   onTradeClick,
+  totalUsdBalance,
 }: WalletBalanceViewProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -256,6 +259,10 @@ export function WalletBalanceView({
     if (!mounted) return amount;
     return isPrivacyMode ? "••••••••" : amount;
   };
+
+  const formattedUsdTotal = totalUsdBalance != null && totalUsdBalance > 0
+    ? `$${totalUsdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+    : null;
 
   return (
     <>
@@ -315,9 +322,18 @@ export function WalletBalanceView({
                 <span>{errorMessage || "Unable to load balance."}</span>
               </ErrorContainer>
             ) : (
-              <PrimaryBalance>
-                {formatBalance(data?.solBalance || "0.00")} SOL
-              </PrimaryBalance>
+              <div>
+                <PrimaryBalance>
+                  {formattedUsdTotal
+                    ? formatBalance(formattedUsdTotal)
+                    : `${formatBalance(data?.solBalance || "0.00")} SOL`}
+                </PrimaryBalance>
+                {formattedUsdTotal && (
+                  <div style={{ fontSize: 13, color: 'rgba(255, 255, 255, 0.5)', marginTop: 4, fontFamily: 'Montserrat, sans-serif' }}>
+                    {isPrivacyMode ? '••••••' : `${data?.solBalance || '0.00'} SOL · Main Wallet`}
+                  </div>
+                )}
+              </div>
             )}
           </BalanceSection>
 
@@ -357,9 +373,7 @@ export function WalletBalanceView({
                 return (
                   <TokenRow key={token.mint + index}>
                     <TokenInfo>
-                      <TokenIconCircle>
-                        {symbol.slice(0, 2).toUpperCase()}
-                      </TokenIconCircle>
+                      <TokenIcon symbol={symbol} size={26} />
                       <TokenSymbol>{symbol}</TokenSymbol>
                     </TokenInfo>
                     <TokenAmount>{formatBalance(formatted)}</TokenAmount>

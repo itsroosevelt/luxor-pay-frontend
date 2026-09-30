@@ -1125,7 +1125,7 @@ export default function PreviewPaymentLinkPage() {
                     <BrowserTabsContainer>
                       <BrowserTab>
                         <ShoppingBag size={10} color="#E2E8F0" />
-                        <span>Luxor Pay - Checkout</span>
+                        <span>Sterling - Checkout</span>
                       </BrowserTab>
                       <BrowserTabPlus>
                         <Plus size={12} />
@@ -1236,7 +1236,7 @@ export default function PreviewPaymentLinkPage() {
                     </SimulatedCheckoutCard>
                   </SimulatedMainContent>
                   <SimulatedFooter $mode="desktop">
-                    <p>Luxor Pay © {new Date().getFullYear()}. All rights reserved.</p>
+                    <p>Sterling © {new Date().getFullYear()}. All rights reserved.</p>
                   </SimulatedFooter>
                 </SimulatedPageWrapper>
               </BrowserFrame>
@@ -1344,7 +1344,7 @@ export default function PreviewPaymentLinkPage() {
                     </SimulatedCheckoutCard>
                   </SimulatedMainContent>
                   <SimulatedFooter $mode="mobile">
-                    <p>Luxor Pay © {new Date().getFullYear()}.</p>
+                    <p>Sterling © {new Date().getFullYear()}.</p>
                   </SimulatedFooter>
                 </SimulatedPageWrapper>
                 <MobileHomeIndicator />

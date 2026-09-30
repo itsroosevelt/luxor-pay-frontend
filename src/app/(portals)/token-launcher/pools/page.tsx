@@ -18,56 +18,7 @@ interface PoolItem {
   feeTier: string;
 }
 
-const POOLS: PoolItem[] = [
-  {
-    id: 'pool-1',
-    symbol: 'LXR',
-    pair: 'LXR / SOL',
-    dex: 'Raydium AMM V4',
-    tvl: '$145,280.00',
-    volume24h: '$38,420.00',
-    myLiquidity: '$12,450.00',
-    feesEarned: '$342.18',
-    status: 'Active',
-    feeTier: '0.25%',
-  },
-  {
-    id: 'pool-2',
-    symbol: 'LXR',
-    pair: 'LXR / USDC',
-    dex: 'Meteora DLMM',
-    tvl: '$82,100.00',
-    volume24h: '$15,800.00',
-    myLiquidity: '$8,500.00',
-    feesEarned: '$215.40',
-    status: 'Active',
-    feeTier: '0.15%',
-  },
-  {
-    id: 'pool-3',
-    symbol: 'USDC',
-    pair: 'USDC / SOL',
-    dex: 'Raydium CLMM',
-    tvl: '$1,240,500.00',
-    volume24h: '$420,150.00',
-    myLiquidity: '$25,000.00',
-    feesEarned: '$512.80',
-    status: 'Active',
-    feeTier: '0.05%',
-  },
-  {
-    id: 'pool-4',
-    symbol: 'USDT',
-    pair: 'USDT / SOL',
-    dex: 'Orca Whirlpools',
-    tvl: '$425,900.00',
-    volume24h: '$85,400.00',
-    myLiquidity: '$5,400.00',
-    feesEarned: '$94.20',
-    status: 'Locked',
-    feeTier: '0.30%',
-  },
-];
+const POOLS: PoolItem[] = [];
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -135,40 +86,48 @@ export default function PoolsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-xs">
-                {POOLS.map((p) => (
-                  <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-4">
-                      <div className="flex items-center gap-3 font-['Outfit'] font-medium text-sm text-white">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold bg-white/10 border border-white/20 text-white">
-                          {p.symbol}
-                        </span>
-                        <span>{p.pair}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 text-gray-300">{p.dex}</td>
-                    <td className="py-4 text-gray-400">{p.feeTier}</td>
-                    <td className="py-4 font-bold text-white">{p.tvl}</td>
-                    <td className="py-4 text-gray-300">{p.volume24h}</td>
-                    <td className="py-4 font-bold text-white">{p.myLiquidity}</td>
-                    <td className="py-4 text-gray-300">{p.feesEarned}</td>
-                    <td className="py-4">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-white/10 border border-white/20 text-white">
-                        {p.status === 'Locked' && <Lock size={10} />}
-                        {p.status}
-                      </span>
-                    </td>
-                    <td className="py-4 text-right">
-                      <a
-                        href="https://raydium.io"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-white transition-colors"
-                      >
-                        View on DEX <ExternalLink size={12} />
-                      </a>
+                {POOLS.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="py-12 text-center text-gray-400 font-['Montserrat']">
+                      No active liquidity positions. Click &quot;Add Liquidity&quot; above to deposit into a pool.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  POOLS.map((p) => (
+                    <tr key={p.id} className="hover:bg-white/[0.02] transition-colors">
+                      <td className="py-4">
+                        <div className="flex items-center gap-3 font-['Outfit'] font-medium text-sm text-white">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold bg-white/10 border border-white/20 text-white">
+                            {p.symbol}
+                          </span>
+                          <span>{p.pair}</span>
+                        </div>
+                      </td>
+                      <td className="py-4 text-gray-300">{p.dex}</td>
+                      <td className="py-4 text-gray-400">{p.feeTier}</td>
+                      <td className="py-4 font-bold text-white">{p.tvl}</td>
+                      <td className="py-4 text-gray-300">{p.volume24h}</td>
+                      <td className="py-4 font-bold text-white">{p.myLiquidity}</td>
+                      <td className="py-4 text-gray-300">{p.feesEarned}</td>
+                      <td className="py-4">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-white/10 border border-white/20 text-white">
+                          {p.status === 'Locked' && <Lock size={10} />}
+                          {p.status}
+                        </span>
+                      </td>
+                      <td className="py-4 text-right">
+                        <a
+                          href="https://raydium.io"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-white transition-colors"
+                        >
+                          View on DEX <ExternalLink size={12} />
+                        </a>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

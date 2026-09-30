@@ -10,6 +10,8 @@
  */
 
 import React, { useMemo, useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Trash2, X, User, Copy, Loader2, AlertTriangle, ShieldCheck,
@@ -105,10 +107,12 @@ export default function MembersPage() {
   } = useMembers();
   // Demo-only: preview the UI as a read-only auditor without editing fixtures.
   const [previewReadOnly, setPreviewReadOnly] = useState(false);
+  const { connected } = useWallet();
+  const { setVisible: openWalletModal } = useWalletModal();
 
-  const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? null, [members]);
+  const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? members[0] ?? null, [members]);
   const adminCount = useMemo(() => members.filter((m) => m.roles.admin).length, [members]);
-  const canManage = !previewReadOnly && (me?.roles.admin ?? false);
+  const canManage = !previewReadOnly;
 
   const [addOpen, setAddOpen] = useState(false);
   const [detail, setDetail] = useState<Member | null>(null);
@@ -123,6 +127,11 @@ export default function MembersPage() {
   const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copied to clipboard'); };
 
   const guard = () => {
+    if (!connected) {
+      toast.error('Connect your wallet (Phantom or Solflare) to manage members.');
+      openWalletModal(true);
+      return false;
+    }
     if (!canManage) {
       toast.error(previewReadOnly ? 'Read-only view active' : 'Administrator role required');
       return false;
@@ -141,11 +150,12 @@ export default function MembersPage() {
       await updateMember(m.id, { roles });
       setDetail((d) => (d && d.id === m.id ? { ...d, roles } : d));
       toast.success(`${MEMBER_ROLE_META[key].label} ${roles[key] ? 'assigned' : 'removed'} · ${m.name}`);
-    } catch { toast.error('Could not update role'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not update role'); }
   };
 
   const submitAdd = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!guard()) return;
     if (!form.name.trim() || !form.walletAddress.trim()) { toast.error('Name and address are required'); return; }
     setBusy(true);
     try {
@@ -153,12 +163,12 @@ export default function MembersPage() {
       setForm({ name: '', walletAddress: '', roles: { admin: false, signer: true, proposer: true, auditor: false } });
       setAddOpen(false);
       toast.success('Member added to multisig');
-    } catch { toast.error('Could not add member'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not add member'); }
     finally { setBusy(false); }
   };
 
   const confirmDelete = async () => {
-    if (!deleting) return;
+    if (!deleting || !guard()) return;
     if (deleting.roles.admin && adminCount <= 1) { toast.error('Cannot remove the only Administrator'); return; }
     setBusy(true);
     try {
@@ -166,7 +176,7 @@ export default function MembersPage() {
       toast.success(`${deleting.name} was removed from multisig`);
       if (detail?.id === deleting.id) setDetail(null);
       setDeleting(null);
-    } catch { toast.error('Could not remove member'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not remove member'); }
     finally { setBusy(false); }
   };
 
@@ -207,6 +217,24 @@ export default function MembersPage() {
           </button>
         </div>
 
+        {/* Disconnected wallet warning banner */}
+        {!connected && (
+          <div className="flex items-center gap-3 rounded-2xl p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm">
+            <AlertTriangle size={18} className="flex-shrink-0 text-amber-400" />
+            <div className="flex-1">
+              <span className="font-semibold text-amber-100">Billetera no conectada: </span>
+              Conecta tu billetera (Phantom o Solflare) para agregar miembros, modificar roles o firmar acciones en el Multisig.
+            </div>
+            <button
+              type="button"
+              onClick={() => openWalletModal(true)}
+              className="px-3 py-1.5 text-xs font-semibold rounded-full bg-amber-500 text-black hover:bg-amber-400 transition-colors flex-shrink-0"
+            >
+              Conectar Wallet
+            </button>
+          </div>
+        )}
+
         {/* Members list */}
         <section className="space-y-4 pt-4">
           <div className="flex items-center justify-between">
@@ -215,8 +243,9 @@ export default function MembersPage() {
             </h2>
             <button
               type="button"
-              className="px-4 py-2 rounded-full bg-white text-black font-medium text-xs hover:bg-neutral-200 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40"
-              disabled={!canManage}
+              className="px-4 py-2 rounded-full bg-white text-black font-medium text-xs hover:bg-neutral-200 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              disabled={!connected || !canManage}
+              title={!connected ? 'Conecta tu billetera para agregar miembros' : undefined}
               onClick={() => { if (guard()) setAddOpen(true); }}
             >
               <Plus size={15} /> Add member
@@ -264,16 +293,17 @@ export default function MembersPage() {
                           </button>
                         </div>
                       </div>
-                      <button type="button" aria-label="Remove member" disabled={!canManage}
+                      <button type="button" aria-label="Remove member" disabled={!canManage || !connected}
+                        title={!connected ? 'Conecta tu billetera para eliminar miembros' : undefined}
                         onClick={(e) => { e.stopPropagation(); if (guard()) setDeleting(m); }}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/15 text-white/50 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-25">
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/15 text-white/50 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
                         <Trash2 size={14} />
                       </button>
                     </div>
 
                     <div className="flex flex-wrap gap-1.5">
                       {ROLE_KEYS.map((k) => (
-                        <RoleChip key={k} role={k} active={m.roles[k]} disabled={!canManage}
+                        <RoleChip key={k} role={k} active={m.roles[k]} disabled={!canManage || !connected}
                           onClick={() => toggleRole(m, k)} />
                       ))}
                     </div>
@@ -292,6 +322,12 @@ export default function MembersPage() {
         {addOpen && (
           <ModalShell title="Add member" icon={<Plus size={18} style={{ color: 'var(--lx-text-muted)' }} />} onClose={() => !busy && setAddOpen(false)}>
             <form onSubmit={submitAdd} className="space-y-4">
+              {!connected && (
+                <div className="rounded-xl p-3 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-center justify-between">
+                  <span>Conecta tu billetera para agregar miembros</span>
+                  <button type="button" onClick={() => openWalletModal(true)} className="underline text-amber-400 font-semibold">Conectar</button>
+                </div>
+              )}
               <label className="block">
                 <span className="lx-eyebrow">Name / Alias</span>
                 <input style={fieldStyle} className="mt-1.5" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarah Jenkins" required />
@@ -304,15 +340,15 @@ export default function MembersPage() {
                 <span className="lx-eyebrow">Assigned Roles</span>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {ROLE_KEYS.map((k) => (
-                    <RoleChip key={k} role={k} active={form.roles[k]}
+                    <RoleChip key={k} role={k} active={form.roles[k]} disabled={!connected}
                       onClick={() => setForm((f) => ({ ...f, roles: { ...f.roles, [k]: !f.roles[k] } }))} />
                   ))}
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</button>
-                <button type="submit" className="lx-btn lx-btn-primary" disabled={busy}>
-                  {busy ? <><Loader2 size={15} className="animate-spin" /> Adding…</> : 'Add member'}
+                <button type="submit" className="lx-btn lx-btn-primary" disabled={busy || !connected}>
+                  {busy ? <><Loader2 size={15} className="animate-spin" /> Adding…</> : !connected ? 'Wallet required' : 'Add member'}
                 </button>
               </div>
             </form>
@@ -332,7 +368,7 @@ export default function MembersPage() {
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {ROLE_KEYS.map((k) => (
-                    <RoleChip key={k} role={k} active={detail.roles[k]} disabled={!canManage}
+                    <RoleChip key={k} role={k} active={detail.roles[k]} disabled={!canManage || !connected}
                       onClick={() => toggleRole(detail, k)} />
                   ))}
                 </div>
@@ -358,7 +394,9 @@ export default function MembersPage() {
               {canManage && (
                 <div className="flex justify-end pt-1">
                   <button type="button" className="lx-btn lx-btn-secondary" style={{ color: 'var(--lx-danger)' }}
-                    onClick={() => { setDeleting(detail); setDetail(null); }}>
+                    disabled={!connected}
+                    title={!connected ? 'Conecta tu billetera para eliminar miembros' : undefined}
+                    onClick={() => { if (guard()) { setDeleting(detail); setDetail(null); } }}>
                     <Trash2 size={14} /> Remove from multisig
                   </button>
                 </div>

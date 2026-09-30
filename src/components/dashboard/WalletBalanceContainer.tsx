@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useMemo } from "react";
 import styled from "styled-components";
 import { WalletBalanceView } from "./WalletBalanceView";
 import { FundWalletButton } from "./FundWalletButton";
 
 import { DashboardExtraPanelsContainer } from "./overview/DashboardExtraPanelsContainer";
 import { useGetBalance } from "@/hooks/useGetBalance";
+import { useTreasury } from "@/hooks/useTreasury";
 import { useMerchant } from "@/context/MerchantContext";
 
 const OuterWrapper = styled.div`
@@ -44,6 +45,7 @@ export function WalletBalanceContainer({
   showExtraPanels = true,
 }: WalletBalanceContainerProps) {
   const { profile, setIsKycModalOpen } = useMerchant();
+  const activeWallet = merchantWallet || profile?.merchantWallet || null;
   const {
     data,
     isLoading,
@@ -52,9 +54,20 @@ export function WalletBalanceContainer({
     refetch,
     isPrivacyMode,
     togglePrivacyMode,
-  } = useGetBalance(merchantWallet);
+  } = useGetBalance(activeWallet);
 
-  if (!merchantWallet) {
+  const { vaults } = useTreasury();
+
+  const totalUsdBalance = useMemo(() => {
+    if (vaults && vaults.length > 0) {
+      return vaults.reduce((acc, v) => acc + (v.usdValue ?? 0), 0);
+    }
+    const solVal = Number(data?.solBalance || 0) * 168.42;
+    const tokenVal = (data?.tokens || []).reduce((acc, t) => acc + (t.usdValue ?? Number(t.uiAmount || 0)), 0);
+    return solVal + tokenVal;
+  }, [vaults, data]);
+
+  if (!activeWallet) {
     return null;
   }
 
@@ -77,10 +90,11 @@ export function WalletBalanceContainer({
             onSendClick={onSendClick}
             onDepositClick={onDepositClick || (() => setIsKycModalOpen(true))}
             onTradeClick={onTradeClick}
-            merchantWallet={merchantWallet}
+            merchantWallet={activeWallet}
+            totalUsdBalance={totalUsdBalance}
           />
-          {isKycVerified && merchantWallet && (
-            <FundWalletButton merchantWallet={merchantWallet} />
+          {isKycVerified && activeWallet && (
+            <FundWalletButton merchantWallet={activeWallet} />
           )}
         </LeftColumn>
       </GridContainer>

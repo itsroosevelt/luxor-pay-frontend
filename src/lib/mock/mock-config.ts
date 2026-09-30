@@ -14,7 +14,7 @@
  * The comparison is against the string "true" because `NEXT_PUBLIC_*` values are
  * always inlined as strings at build time.
  */
-export const IS_MOCK_MODE = process.env.NEXT_PUBLIC_USE_MOCK_DATA !== 'false';
+export const IS_MOCK_MODE = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 
 /** sessionStorage key used to simulate a "signed out" state inside mock mode. */
 export const MOCK_SIGNED_OUT_KEY = 'sterling_mock_signed_out';

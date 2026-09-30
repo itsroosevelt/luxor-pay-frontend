@@ -69,124 +69,78 @@ interface TopEarner {
 const HIGHEST_BOUNTIES: HighestBounty[] = [
   {
     rank: 1,
-    title: 'Onboard normies to the Pumpfun App!',
-    rewardUsd: '$10,412',
-    submissions: 44,
-    timeLeft: '2d 3h left',
+    title: 'Create Viral TikTok Meme Video for $LXR Launch',
+    rewardUsd: '$5,000 USDC',
+    submissions: 42,
+    timeLeft: '3 days left',
     isTopFeatured: true,
   },
   {
     rank: 2,
-    title: 'Bring 1 Paid User, Win 10 S...',
-    rewardUsd: '$1,041',
-    submissions: 12,
-    timeLeft: '24d 20h left',
+    title: 'Design 3D Animated Mascot for Solana DEX',
+    rewardUsd: '$2,500 USDC',
+    submissions: 18,
+    timeLeft: '5 days left',
   },
   {
     rank: 3,
-    title: 'Create Black Holes videos,...',
-    rewardUsd: '$1,022',
-    submissions: 8,
-    timeLeft: '20h 6m left',
+    title: 'Write Technical Thread on Bonding Curve Architecture',
+    rewardUsd: '$1,200 USDC',
+    submissions: 29,
+    timeLeft: '12 hours left',
   },
 ];
 
 const RECENT_PAYOUTS: RecentPayout[] = [
-  { user: 'fastwhale92893', amount: '+$31.90', avatarBg: 'bg-indigo-600' },
-  { user: 'off', amount: '+$19.80', avatarBg: 'bg-emerald-600' },
-  { user: 'heftywhale007', amount: '+$39.14', avatarBg: 'bg-rose-600' },
-  { user: 'kingmikhalel', amount: '+$52.80', avatarBg: 'bg-amber-600' },
-  { user: 'basedsharklove', amount: '+$10.61', avatarBg: 'bg-blue-600' },
+  { user: 'solana_ninja', amount: '+$850 USDC', avatarBg: 'bg-emerald-600' },
+  { user: 'crypto_artisan', amount: '+$1,500 USDC', avatarBg: 'bg-purple-600' },
+  { user: 'meme_lord_99', amount: '+$300 USDC', avatarBg: 'bg-amber-600' },
+  { user: 'web3_builder', amount: '+$2,100 USDC', avatarBg: 'bg-indigo-600' },
 ];
 
 const HIGHEST_EARNERS: TopEarner[] = [
-  { user: 'comfyneet', payoutsCount: 1, amount: '$18,449', avatarBg: 'bg-purple-600' },
-  { user: 'xseenyy', payoutsCount: 1, amount: '$2,614', avatarBg: 'bg-[#222]' },
+  { user: 'alex_sol', payoutsCount: 14, amount: '$18,400 USDC', avatarBg: 'bg-blue-600' },
+  { user: 'design_wizard', payoutsCount: 9, amount: '$12,250 USDC', avatarBg: 'bg-pink-600' },
+  { user: 'dev_guru', payoutsCount: 7, amount: '$9,800 USDC', avatarBg: 'bg-teal-600' },
 ];
 
 const FEED_ITEMS: BountyFeedItem[] = [
   {
-    id: 'f1',
-    type: 'bounty',
-    status: 'OPEN',
-    title: 'Buy and callout CRASHCAT',
-    description: 'I think this should run so here an experiment for real trench runners.',
-    creator: 'bigfish14',
-    rewardUsd: '$104.46',
-    rewardCrypto: '1 SOL',
-    timeLeft: '6d 22h left',
-    submissionsCount: 4,
-    likesCount: 3,
-  },
-  {
-    id: 'f2',
-    type: 'submission',
-    status: 'SUBMISSION',
-    hasVideoPreview: true,
-    imageBanner: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=600&auto=format&fit=crop&q=80',
-    creator: 'Apemenme',
-    description: 'I onboarded a normie at our local community street. >Downloaded Pumpfun App >Search for creator capital...',
-    timeLeft: 'Published 1h ago',
-    likesCount: 0,
-  },
-  {
-    id: 'f3',
-    type: 'bounty',
-    status: 'OPEN',
-    tokenBadge: { symbol: '$DUCK', marketCap: '$5.68K' },
-    title: 'Largest Holder of $DUCK from Submissions Wins',
-    creator: 'HaveAGoodDay',
-    rewardUsd: '$20.89',
-    rewardCrypto: '0.2 SOL',
-    timeLeft: '5d 19h left',
-    submissionsCount: 5,
-    likesCount: 4,
-    imageBanner: 'https://images.unsplash.com/photo-1563089145-599997674d42?w=600&auto=format&fit=crop&q=80',
-  },
-  {
-    id: 'f4',
+    id: 'update-box-1',
     type: 'update_box',
   },
   {
-    id: 'f5',
+    id: 'bounty-1',
     type: 'bounty',
     status: 'OPEN',
-    tokenBadge: { symbol: '$STICK', marketCap: '$3.06K' },
-    title: 'Call Out $STICK on Pump',
-    creator: 'Stick_Astley',
-    rewardUsd: '$9.92',
-    rewardCrypto: '0.095 SOL',
-    timeLeft: '2d 04h left',
-    submissionsCount: 4,
-    likesCount: 2,
-    imageBanner: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop&q=80',
+    tokenBadge: { symbol: '$LXR', marketCap: '$14.2M' },
+    title: 'Create Viral TikTok & Reel Series for Luxor Pay Ecosystem',
+    description: 'Produce high-energy short form video content highlighting instant Solana POS settlements and zero fees.',
+    rewardUsd: '$5,000 USDC',
+    timeLeft: '3 days left',
+    imageBanner: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60',
   },
   {
-    id: 'f6',
+    id: 'bounty-2',
     type: 'bounty',
     status: 'OPEN',
-    tokenBadge: { symbol: '$TOKO', marketCap: '$2.92K' },
-    title: 'BUY FOR $2 TOKOCOIN',
-    creator: 'N0v3x',
-    rewardUsd: '$5.22',
-    rewardCrypto: '0.05 SOL',
-    timeLeft: '1d 21h left',
-    submissionsCount: 4,
-    likesCount: 0,
-    imageBanner: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=600&auto=format&fit=crop&q=80',
+    tokenBadge: { symbol: '$SOLPUMP', marketCap: '$4.8M' },
+    title: 'Custom Sticker Pack & Animated GIFs for Telegram Community',
+    description: 'Design 15 high-res animated stickers featuring our mascot for hype reactions and trading alerts.',
+    rewardUsd: '$1,500 USDC',
+    timeLeft: '2 days left',
+    imageBanner: 'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?w=800&auto=format&fit=crop&q=60',
   },
   {
-    id: 'f7',
-    type: 'submission',
-    status: 'CLOSED',
-    title: 'Photograph the Cool S in your local city / town',
-    creator: 'splitfish91453',
-    rewardUsd: '$302.93',
-    rewardCrypto: '2.9 SOL',
-    timeLeft: 'Expired',
-    submissionsCount: 46,
-    likesCount: 38,
-    imageBanner: 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?w=600&auto=format&fit=crop&q=80',
+    id: 'bounty-3',
+    type: 'bounty',
+    status: 'OPEN',
+    tokenBadge: { symbol: '$BONKAI', marketCap: '$890K' },
+    title: 'Write Deep-Dive Thread & Educational Article on DEX Liquidity',
+    description: 'Explain concentrated liquidity pools vs bonding curves for non-technical retail traders.',
+    rewardUsd: '$800 USDC',
+    timeLeft: '6 hours left',
+    imageBanner: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&auto=format&fit=crop&q=60',
   },
 ];
 
@@ -389,16 +343,16 @@ export default function GoBountiesPage() {
                   key={hb.rank}
                   className={`p-3 rounded-xl transition-all ${
                     hb.isTopFeatured
-                      ? 'bg-blue-600/10 hover:bg-blue-600/15'
+                      ? 'bg-white/5 hover:bg-white/10'
                       : 'hover:bg-white/[0.03]'
                   }`}
                 >
                   {hb.isTopFeatured && (
                     <div className="flex items-center gap-1.5 mb-1.5">
-                      <span className="w-4 h-4 rounded-full bg-blue-500 text-white font-extrabold text-[10px] flex items-center justify-center">
+                      <span className="w-4 h-4 rounded-full bg-white text-black font-extrabold text-[10px] flex items-center justify-center">
                         1
                       </span>
-                      <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-blue-400">
+                      <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-gray-300">
                         TOP OPEN BOUNTY
                       </span>
                     </div>

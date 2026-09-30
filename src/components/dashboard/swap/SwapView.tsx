@@ -7,6 +7,7 @@ import { WalletBalanceData } from "@/lib/solana-api";
 import { QuoteResponse } from "@/lib/swap-api";
 import { ArrowUpDown, AlertTriangle, ChevronDown, Info } from "lucide-react";
 import { TradingChart } from "./TradingChart";
+import { TokenIcon } from "@/components/common/TokenIcon";
 
 const ViewContainer = styled.div`
   display: flex;
@@ -436,7 +437,7 @@ export function SwapView({
             <AccountSelectorGroup>
               <FieldLabel>Choose Account</FieldLabel>
               <SelectBox>
-                <span>GENESYS <span className="text-white/40 text-xs ml-1">$45,250.00</span></span>
+                <span>Roosevelt <span className="text-white/40 text-xs ml-1">$45,250.00</span></span>
                 <ChevronDown size={16} className="text-white/50" />
               </SelectBox>
             </AccountSelectorGroup>
@@ -457,6 +458,7 @@ export function SwapView({
                   onChange={(e) => onAmountChange(sanitizeNumericInput(e.target.value))}
                 />
                 <TokenSelectPill>
+                  <TokenIcon symbol={isSolToToken ? 'SOL' : outputTokenSymbol} size={20} />
                   <span className="font-semibold text-sm text-white">{isSolToToken ? 'SOL' : outputTokenSymbol}</span>
                   <ChevronDown size={14} className="text-white/60" />
                   <select
@@ -502,7 +504,10 @@ export function SwapView({
                     onChange={(e) => setLimitPrice(sanitizeNumericInput(e.target.value))}
                     style={{ fontSize: '20px' }}
                   />
-                  <CurrencyBadge>USDC</CurrencyBadge>
+                  <CurrencyBadge>
+                    <TokenIcon symbol="USDC" size={18} />
+                    USDC
+                  </CurrencyBadge>
                 </LimitPriceInputRow>
               </LimitPriceBox>
             )}
@@ -640,6 +645,7 @@ export function SwapView({
                   readOnly
                 />
                 <TokenSelectPill>
+                  <TokenIcon symbol={!isSolToToken ? 'SOL' : outputTokenSymbol} size={20} />
                   <span className="font-semibold text-sm text-white">{!isSolToToken ? 'SOL' : outputTokenSymbol}</span>
                   <ChevronDown size={14} className="text-white/60" />
                   <select

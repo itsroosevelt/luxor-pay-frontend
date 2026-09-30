@@ -1,9 +1,10 @@
-"use client";
-
 import React, { useState } from "react";
 import styled from "styled-components";
 import { motion } from "framer-motion";
-import { Wallet, Check, Copy, QrCode, ArrowUp } from "lucide-react";
+import { Wallet, Check, Copy, QrCode, ArrowUp, LogOut } from "lucide-react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { useMerchant } from "@/context/MerchantContext";
 
 const Container = styled(motion.div)`
   display: flex;
@@ -99,8 +100,22 @@ const WalletBadge = styled(BadgeBase)`
   }
 
   &:focus-visible {
-    outline: 2px solid #FFFFFF;
+    outline: 2px solid #60A5FA;
     outline-offset: 2px;
+  }
+`;
+
+const ConnectButton = styled(ActionButton)`
+  background: rgba(255, 255, 255, 0.05);
+  color: #EDEDED;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+
+  &:hover:not(:disabled) {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: #60A5FA;
+    color: #FFFFFF;
+    box-shadow: 0 0 16px rgba(96, 165, 250, 0.25);
   }
 `;
 
@@ -119,16 +134,41 @@ interface TopWalletBarProps {
 
 export function TopWalletBar({ merchantWallet, onQrClick, onSendClick }: TopWalletBarProps) {
   const [copied, setCopied] = useState(false);
+  const { profile } = useMerchant();
+  const { publicKey, connected, disconnect } = useWallet();
+  const { setVisible } = useWalletModal();
 
-  const truncatedAddress = merchantWallet
-    ? `${merchantWallet.slice(0, 4)}...${merchantWallet.slice(-4)}`
+  const activeWallet = React.useMemo(() => {
+    if (connected && publicKey) return publicKey.toBase58();
+    if (merchantWallet) return merchantWallet;
+    if (profile?.merchantWallet) return profile.merchantWallet;
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = sessionStorage.getItem('sterling_merchant_profile');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (parsed?.merchantWallet) return parsed.merchantWallet;
+        }
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    return null;
+  }, [connected, publicKey, merchantWallet, profile?.merchantWallet]);
+
+  const truncatedAddress = activeWallet
+    ? `${activeWallet.slice(0, 4)}...${activeWallet.slice(-4)}`
     : null;
 
   const handleCopy = () => {
-    if (!merchantWallet) return;
-    navigator.clipboard.writeText(merchantWallet);
+    if (!activeWallet) return;
+    navigator.clipboard.writeText(activeWallet);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleConnectClick = () => {
+    setVisible(true);
   };
 
   return (
@@ -151,12 +191,12 @@ export function TopWalletBar({ merchantWallet, onQrClick, onSendClick }: TopWall
         </ActionButton>
       )}
 
-      {truncatedAddress ? (
+      {connected && activeWallet ? (
         <WalletBadge
           onClick={handleCopy}
           role="button"
           tabIndex={0}
-          title={merchantWallet || undefined}
+          title={`Connected: ${activeWallet} (Click to copy)`}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') handleCopy();
           }}
@@ -164,12 +204,26 @@ export function TopWalletBar({ merchantWallet, onQrClick, onSendClick }: TopWall
           <Wallet size={14} />
           <AddressText>{truncatedAddress}</AddressText>
           {copied ? <Check size={12} className="text-green-400" /> : <Copy size={12} className="opacity-40" />}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              disconnect();
+            }}
+            title="Disconnect Wallet"
+            className="ml-1 opacity-50 hover:opacity-100 transition-opacity"
+          >
+            <LogOut size={12} />
+          </button>
         </WalletBadge>
       ) : (
-        <WalletBadge style={{ opacity: 0.6 }}>
+        <ConnectButton
+          onClick={handleConnectClick}
+          title="Connect Solana Wallet (Phantom, Solflare, etc.)"
+        >
           <Wallet size={14} />
-          <span>No wallet set</span>
-        </WalletBadge>
+          <span>Connect</span>
+        </ConnectButton>
       )}
     </Container>
   );

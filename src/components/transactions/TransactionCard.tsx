@@ -148,9 +148,35 @@ const StatusPill = styled.div<{ $status: string }>`
   display: inline-flex;
   align-items: center;
   text-transform: uppercase;
-  background: rgba(255, 255, 255, 0.05);
-  color: #EDEDED;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  ${({ $status }) => {
+    const s = ($status || '').toLowerCase();
+    if (s === 'confirmed' || s === 'executed' || s === 'success' || s === 'completed' || s === 'approved') {
+      return `
+        background: rgba(16, 185, 129, 0.15);
+        color: #34D399;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      `;
+    }
+    if (s === 'rejected' || s === 'failed' || s === 'error' || s === 'cancelled' || s === 'reverted') {
+      return `
+        background: rgba(239, 68, 68, 0.15);
+        color: #F87171;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      `;
+    }
+    if (s === 'pending' || s === 'processing' || s === 'active' || s === 'draft' || s === 'submitting') {
+      return `
+        background: rgba(245, 158, 11, 0.15);
+        color: #FBBF24;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      `;
+    }
+    return `
+      background: rgba(255, 255, 255, 0.05);
+      color: #EDEDED;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    `;
+  }}
 `;
 
 const ExpandIconButton = styled.button`

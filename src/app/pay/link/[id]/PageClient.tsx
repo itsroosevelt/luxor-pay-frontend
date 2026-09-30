@@ -474,7 +474,7 @@ export default function PayLinkPage() {
                       <Wallet size={13} style={{ color: '#34D399' }} /> Destination Account
                     </div>
                     <div className="account-info">
-                      <span className="account-name">{link.businessName || 'Demo Coffee Co.'}</span>
+                      <span className="account-name">{link.businessName || 'Merchant Account'}</span>
                       <span className="account-wallet">
                         {link.merchantWallet ? `${link.merchantWallet.slice(0, 6)}...${link.merchantWallet.slice(-6)}` : '7xKXt...osgAsU'}
                       </span>
@@ -546,7 +546,7 @@ export default function PayLinkPage() {
       </MainContent>
 
       <Footer>
-        <p>Luxor Pay © {currentTime.getFullYear()}. All rights reserved.</p>
+        <p>Sterling © {currentTime.getFullYear()}. All rights reserved.</p>
         <p style={{ marginTop: '8px' }}>
           {currentTime.toLocaleDateString()} {currentTime.toLocaleTimeString()}
         </p>

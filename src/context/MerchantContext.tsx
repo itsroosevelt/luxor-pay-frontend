@@ -12,16 +12,14 @@ interface MerchantContextType {
 }
 
 const MerchantContext = createContext<MerchantContextType>({
-  profile: MOCK_MERCHANT_PROFILE,
+  profile: null,
   setProfile: () => {},
   isKycModalOpen: false,
   setIsKycModalOpen: () => {},
 });
 
-export const DEFAULT_MOCK_MERCHANT_PROFILE = MOCK_MERCHANT_PROFILE;
-
 export function MerchantProvider({ children }: { children: ReactNode }) {
-  const [profile, setProfileState] = useState<MerchantProfile | null>(MOCK_MERCHANT_PROFILE);
+  const [profile, setProfileState] = useState<MerchantProfile | null>(null);
   const [isKycModalOpen, setIsKycModalOpen] = useState(false);
 
   // Sync with sessionStorage as requested
