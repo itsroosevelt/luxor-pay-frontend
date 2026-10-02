@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { PrivacyView } from "@/components/privacy/PrivacyView";
+import { PrivacyView } from "@/features/legal/components/PrivacyView";
 
 export const metadata: Metadata = {
   title: "Privacy Architecture | Sterling",

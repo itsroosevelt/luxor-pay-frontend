@@ -11,10 +11,10 @@ import type {
   PaymentLink,
   PosDevice,
 } from '@sterling/contracts';
-import type { Contact } from '@/lib/contacts-api';
-import type { PaymentRequest } from '@/lib/payment-requests-api';
-import type { Transfer } from '@/lib/transfers-api';
-import type { WalletBalanceData } from '@/lib/solana-api';
+import type { Contact } from '@/features/contacts/api/contacts-api';
+import type { PaymentRequest } from '@/features/payment-requests/api/payment-requests-api';
+import type { Transfer } from '@/features/transfers/api/transfers-api';
+import type { WalletBalanceData } from '@/features/wallet/api/solana-api';
 import type { TokenMetadata } from '@/context/TokenRegistryContext';
 import { DEMO_IDENTITY } from '@/lib/mock/mock-auth';
 

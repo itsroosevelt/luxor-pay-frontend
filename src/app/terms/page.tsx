@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { TermsView } from "@/components/terms/TermsView";
+import { TermsView } from "@/features/legal/components/TermsView";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Sterling",

@@ -18,15 +18,15 @@ import {
   Minus, Check, ExternalLink, Eye, KeyRound, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMembers } from '@/hooks/useMembers';
-import { useMerchant } from '@/context/MerchantContext';
-import { useTreasury } from '@/hooks/useTreasury';
+import { useMembers } from '@/features/treasury/hooks/useMembers';
+import { useMerchant } from '@/features/merchant/context/MerchantContext';
+import { useTreasury } from '@/features/treasury/hooks/useTreasury';
 import {
   MEMBER_ROLE_META,
   type Member,
   type MemberRoles,
   type MemberRoleKey,
-} from '@/lib/members-api';
+} from '@/features/treasury/api/members-api';
 
 const ROLE_KEYS: MemberRoleKey[] = ['admin', 'signer', 'proposer', 'auditor'];
 const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a);

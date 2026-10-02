@@ -7,24 +7,35 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getMerchantProfile } from '@/lib/merchants-api';
-import { listPaymentLinks, listPosDevices } from '@/lib/payments-api';
-import { listPaymentRequests } from '@/lib/payment-requests-api';
+import { getMerchantProfile } from '@/features/merchant/api/merchants-api';
+import { listPaymentLinks, listPosDevices } from '@/features/payments/api/payments-api';
+import { listPaymentRequests } from '@/features/payment-requests/api/payment-requests-api';
 import { getLuxorEnv } from '@/lib/luxor-env';
-import { Link as LinkIcon, Terminal, Code2, ArrowRight, RefreshCw, Bell, QrCode, ArrowUp } from 'lucide-react';
-import { WalletBalanceContainer } from '@/components/dashboard/WalletBalanceContainer';
-import { OverviewChart } from '@/components/dashboard/overview/OverviewChart';
-import { AccountsTable } from '@/components/dashboard/overview/AccountsTable';
-import { DashboardExtraPanelsContainer } from '@/components/dashboard/overview/DashboardExtraPanelsContainer';
-import { TopWalletBar } from '@/components/dashboard/TopWalletBar';
-import { useGetBalance } from '@/hooks/useGetBalance';
-import { TransferModal } from '@/components/dashboard/overview/TransferModal';
-import { TransferSuccessModal } from '@/components/dashboard/overview/TransferSuccessModal';
-import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
-import { Transfer } from '@/lib/transfers-api';
-import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsModal';
-import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
-import { EyebrowBadge, HeroTitle, GlassCard } from '@/components/shared/DesignSystem';
+import {
+  Link as LinkIcon,
+  Terminal,
+  Code2,
+  ArrowRight,
+  RefreshCw,
+  Bell,
+  QrCode,
+  ArrowUp,
+} from 'lucide-react';
+import { WalletBalanceContainer } from '@/features/wallet/components/WalletBalanceContainer';
+import { OverviewChart } from '@/features/dashboard/components/overview/OverviewChart';
+import { AccountsTable } from '@/features/dashboard/components/overview/AccountsTable';
+import {
+  DashboardExtraPanelsContainer,
+} from '@/features/dashboard/components/overview/DashboardExtraPanelsContainer';
+import { TopWalletBar } from '@/features/dashboard/components/TopWalletBar';
+import { useGetBalance } from '@/features/wallet/hooks/useGetBalance';
+import { TransferModal } from '@/features/transfers/components/TransferModal';
+import { TransferSuccessModal } from '@/features/transfers/components/TransferSuccessModal';
+import { PaymentRequestModal } from '@/features/payment-requests/components/PaymentRequestModal';
+import { Transfer } from '@/features/transfers/api/transfers-api';
+import { QrOperationsModal } from '@/features/dashboard/components/overview/QrOperationsModal';
+import { ReceiveModal } from '@/features/dashboard/components/overview/ReceiveModal';
+import { EyebrowBadge, HeroTitle, GlassCard } from '@/components/ui/DesignSystem';
 
 const HeaderContainer = styled.header`
   padding: 24px 24px 12px 24px;
@@ -152,7 +163,7 @@ const QuickArrowCircle = styled.div`
   }
 `;
 
-import { useMerchant } from '@/context/MerchantContext';
+import { useMerchant } from '@/features/merchant/context/MerchantContext';
 
 export default function DashboardOverviewPage() {
   const router = useRouter();
@@ -184,11 +195,10 @@ export default function DashboardOverviewPage() {
     const unsubscribe = onAuthStateChanged(auth, async (user: User | null) => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
         const [links, pos, profile] = await Promise.all([
-          listPaymentLinks(token),
-          listPosDevices(token),
-          getMerchantProfile(token),
+          listPaymentLinks(),
+          listPosDevices(),
+          getMerchantProfile(),
         ]);
         const wallet = profile?.merchantWallet || null;
         setStats({
@@ -204,7 +214,7 @@ export default function DashboardOverviewPage() {
 
         if (wallet) {
           const env = getLuxorEnv();
-          const inboxRes = await listPaymentRequests(token, 'payer', wallet);
+          const inboxRes = await listPaymentRequests('payer', wallet);
           const pending = inboxRes.data.filter(r => r.status === 'PENDING');
           setPendingInboxCount(pending.length);
         }

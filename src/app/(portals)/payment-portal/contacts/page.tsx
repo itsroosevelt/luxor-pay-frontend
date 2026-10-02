@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { ContactsContainer } from '@/components/dashboard/contacts/ContactsContainer';
+import { ContactsContainer } from '@/features/contacts/components/ContactsContainer';
 
 export const metadata: Metadata = {
   title: 'Contacts & Customers | Luxor POS Portal',

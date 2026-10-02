@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { sendTransfer, getPaymentLink } from '@/lib/payments-api';
+import { sendTransfer, getPaymentLink } from '@/features/payments/api/payments-api';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { PaymentLink } from '@luxor/contracts';
 import styled from 'styled-components';
@@ -11,7 +11,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { CheckCircle, Wallet, ShieldCheck, ArrowUpRight, ArrowDown } from 'lucide-react';
 import { Decimal } from 'decimal.js';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { useTokenPrice } from '@/features/wallet/hooks/useTokenPrice';
 
 const PageWrapper = styled.div`
   min-height: 100vh;
@@ -352,7 +352,6 @@ export default function PayLinkPage() {
     setCreating(true);
     setError(null);
     try {
-      const token = await user.getIdToken();
       let mint: string | undefined = undefined;
       if (link.currency !== 'SOL') {
         const foundMint = getMintForSymbol(link.currency);
@@ -367,7 +366,7 @@ export default function PayLinkPage() {
         throw new Error('Geolocation permission is required to complete this payment.');
       }
 
-      await sendTransfer(token, {
+      await sendTransfer({
         toWallet: link.merchantWallet,
         amount: link.amount.toString(),
         mint,

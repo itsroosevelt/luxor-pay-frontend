@@ -13,8 +13,8 @@ import {
   LayoutDashboard,
   QrCode,
 } from 'lucide-react';
-import { PortalShellLayout } from '@/components/portals/PortalShellLayout';
-import type { PortalNavSection } from '@/components/portals/PortalNav';
+import { PortalShellLayout } from '@/features/portals/components/PortalShellLayout';
+import type { PortalNavSection } from '@/features/portals/components/PortalNav';
 
 const LAUNCHER_SECTIONS: PortalNavSection[] = [
   {

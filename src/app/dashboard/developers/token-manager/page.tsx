@@ -19,8 +19,8 @@ import {
   Code2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { TransferModal } from '@/components/dashboard/overview/TransferModal';
-import { TokenIcon } from '@/components/common/TokenIcon';
+import { TransferModal } from '@/features/transfers/components/TransferModal';
+import { TokenIcon } from '@/components/ui/VectorTokenIcon';
 
 interface TokenItem {
   id: string;

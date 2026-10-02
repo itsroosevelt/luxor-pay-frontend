@@ -1,9 +1,9 @@
-import { DashboardShell } from '@/components/dashboard/DashboardShell';
+import { DashboardShell } from '@/features/dashboard/components/DashboardShell';
 import { Toaster } from 'sonner';
 import { GeolocationProvider } from '@/context/GeolocationContext';
-import { MerchantProvider } from '@/context/MerchantContext';
-import { KycSocketProvider } from '@/context/KycSocketContext';
-import { OnrampSocketProvider } from '@/context/OnrampSocketContext';
+import { MerchantProvider } from '@/features/merchant/context/MerchantContext';
+import { KycSocketProvider } from '@/features/onramp/context/KycSocketContext';
+import { OnrampSocketProvider } from '@/features/onramp/context/OnrampSocketContext';
 
 export default function DashboardLayout({
   children,

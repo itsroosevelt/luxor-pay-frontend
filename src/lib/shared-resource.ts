@@ -35,7 +35,7 @@ export interface SharedResource<T> {
 
 export function createSharedResource<T>(
   initial: T,
-  loader: (token: string) => Promise<T>,
+  loader: () => Promise<T>,
   options: Options = {},
 ): SharedResource<T> {
   let state: ResourceState<T> = { data: initial, isLoading: true, isError: false, errorMessage: null };
@@ -75,8 +75,7 @@ export function createSharedResource<T>(
     currentTicket = ticket;
     const request = (async () => {
       try {
-        const token = auth.currentUser ? await auth.currentUser.getIdToken() : 'mock-token';
-        const data = await loader(token);
+        const data = await loader();
         if (ticket !== currentTicket || (auth.currentUser?.uid ?? null) !== loadedFor) return; // superseded
         hasData = true;
         emit({ data, isLoading: false, isError: false, errorMessage: null });

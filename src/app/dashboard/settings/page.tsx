@@ -4,14 +4,14 @@ import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { getMerchantProfile, updateMerchantProfile } from '@/lib/merchants-api';
-import { createPosDevice, listPosDevices } from '@/lib/payments-api';
+import { getMerchantProfile, updateMerchantProfile } from '@/features/merchant/api/merchants-api';
+import { createPosDevice, listPosDevices } from '@/features/payments/api/payments-api';
 import { authHeaders } from '@/lib/auth-client';
 import { apiUrl, getApiBaseUrl } from '@/lib/api-client';
 import type { PosDevice } from '@luxor/contracts';
-import { useMerchant } from '@/context/MerchantContext';
-import { useTreasury } from '@/hooks/useTreasury';
-import { useMembers } from '@/hooks/useMembers';
+import { useMerchant } from '@/features/merchant/context/MerchantContext';
+import { useTreasury } from '@/features/treasury/hooks/useTreasury';
+import { useMembers } from '@/features/treasury/hooks/useMembers';
 import { Settings, Terminal, Code2, Plus, Key, Trash2, Copy, ShieldCheck, Minus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -85,8 +85,7 @@ function SettingsContent() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
-        const token = await user.getIdToken();
-        const profile = await getMerchantProfile(token);
+        const profile = await getMerchantProfile();
         if (profile) {
           setProfile(profile);
           setBusinessName(profile.businessName ?? '');
@@ -100,8 +99,7 @@ function SettingsContent() {
 
       // Load POS devices
       try {
-        const token = await user.getIdToken();
-        setDevices(await listPosDevices(token));
+        setDevices(await listPosDevices());
       } catch {
         // Handle silently
       } finally {
@@ -140,8 +138,7 @@ function SettingsContent() {
 
     setSavingProfile(true);
     try {
-      const token = await user.getIdToken();
-      const updated = await updateMerchantProfile(token, {
+      const updated = await updateMerchantProfile({
         businessName: businessName.trim() || undefined,
         merchantWallet: merchantWallet.trim() || undefined,
       });
@@ -165,8 +162,7 @@ function SettingsContent() {
 
     setCreatingPos(true);
     try {
-      const token = await user.getIdToken();
-      const device = await createPosDevice(token, {
+      const device = await createPosDevice({
         name: posName.trim(),
         posId: posId.trim(),
       });

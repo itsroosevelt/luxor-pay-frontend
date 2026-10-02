@@ -14,7 +14,7 @@ import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { clearMockSignedOut } from '@/lib/mock/mock-auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'sonner';
-import { SolanaParticles } from '@/components/login/SolanaParticles';
+import { SolanaParticles } from '@/features/auth/components/SolanaParticles';
 
 function resolveLoginError(error: unknown): string {
   const err = error as { code?: string; message?: string };

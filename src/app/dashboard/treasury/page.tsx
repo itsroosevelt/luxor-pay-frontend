@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { TreasuryContainer } from '@/components/dashboard/treasury/TreasuryContainer';
+import { TreasuryContainer } from '@/features/treasury/components/TreasuryContainer';
 
 export const metadata: Metadata = {
   title: 'Treasury | Sterling',

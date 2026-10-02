@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { SwapContainer } from '@/components/dashboard/swap/SwapContainer';
+import { SwapContainer } from '@/features/swap/components/SwapContainer';
 
 export const metadata: Metadata = {
   title: 'Swap Tokens | Sterling',

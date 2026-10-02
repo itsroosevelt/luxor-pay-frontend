@@ -28,12 +28,12 @@ import {
   MINTS,
   buildMockSwapQuote,
 } from './data';
-import type { PaymentRequest } from '@/lib/payment-requests-api';
-import type { Transfer } from '@/lib/transfers-api';
-import type { Contact } from '@/lib/contacts-api';
-import type { Member } from '@/lib/members-api';
-import type { MultisigConfig, Vault } from '@/lib/treasury-api';
-import type { Proposal } from '@/lib/proposals-api';
+import type { PaymentRequest } from '@/features/payment-requests/api/payment-requests-api';
+import type { Transfer } from '@/features/transfers/api/transfers-api';
+import type { Contact } from '@/features/contacts/api/contacts-api';
+import type { Member } from '@/features/treasury/api/members-api';
+import type { MultisigConfig, Vault } from '@/features/treasury/api/treasury-api';
+import type { Proposal } from '@/features/treasury/api/proposals-api';
 
 export interface MockResult {
   status: number;

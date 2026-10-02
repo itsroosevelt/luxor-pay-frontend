@@ -7,7 +7,7 @@
  * external price providers are stubbed too. Everything else (Next assets, HMR,
  * fonts, RPC, wallet adapters…) passes straight through to the real `fetch`.
  *
- * This keeps all `src/lib/*-api.ts` service modules and their consuming
+ * This keeps all the `features/<domain>/api` service modules and their consuming
  * components completely untouched: the repository/service layer still calls
  * `fetch(apiUrl(...))`, it just never leaves the browser in mock mode.
  *

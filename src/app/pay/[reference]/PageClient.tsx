@@ -2,13 +2,13 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { usePaymentStatus } from '@/features/checkout/hooks/usePaymentStatus';
-import { QRCodePayment } from '@/features/checkout/components/QRCodePayment';
-import { PaymentButton } from '@/features/checkout/components/PaymentButton';
-import { TransactionStatus } from '@/features/checkout/components/TransactionStatus';
+import { usePaymentStatus } from '@/features/payments/hooks/usePaymentStatus';
+import { QRCodePayment } from '@/features/payments/components/QRCodePayment';
+import { PaymentButton } from '@/features/payments/components/PaymentButton';
+import { TransactionStatus } from '@/features/payments/components/TransactionStatus';
 import { ShieldCheck } from 'lucide-react';
 import { Decimal } from 'decimal.js';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
+import { useTokenPrice } from '@/features/wallet/hooks/useTokenPrice';
 
 export default function PayByReferencePage() {
   const params = useParams();

@@ -1,385 +1,50 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { sendTransfer } from '@/lib/payments-api';
-import { getContacts } from '@/lib/contacts-api';
-import { isGenericCheckoutLabel } from '@/lib/luxor-pay-checkout-url';
-import { getMerchantProfile, getMerchantProfileByWallet } from '@/lib/merchants-api';
-import { getWalletBalance } from '@/lib/solana-api';
-import { getTransferErrorMessage, parsePaymentAmount } from '@/lib/transfer-errors';
+import { sendTransfer } from '@/features/payments/api/payments-api';
+import { getContacts } from '@/features/contacts/api/contacts-api';
+import { isGenericCheckoutLabel } from '@/features/payments/lib/luxor-pay-checkout-url';
+import { getMerchantProfile, getMerchantProfileByWallet } from '@/features/merchant/api/merchants-api';
+import { getWalletBalance } from '@/features/wallet/api/solana-api';
+import { getTransferErrorMessage, parsePaymentAmount } from '@/features/transfers/lib/transfer-errors';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
-import {
-  PaymentSuccessModal,
-  PaymentSuccessData,
-} from '@/components/payments/PaymentSuccessModal';
+import { PaymentSuccessModal, PaymentSuccessData } from '@/features/payments/components/PaymentSuccessModal';
 import { Decimal } from 'decimal.js';
-import { useTokenPrice } from '@/hooks/useTokenPrice';
-import { 
-  ArrowRight, 
-  ShieldCheck, 
-  AlertCircle 
-} from 'lucide-react';
-
-const PageWrapper = styled.div`
-  min-height: 100vh;
-  background: #0A0A0A;
-  display: flex;
-  flex-direction: column;
-  color: #EDEDED;
-`;
-
-const HeaderNav = styled.nav`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 24px 40px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-
-  @media (max-width: 768px) {
-    padding: 16px 24px;
-  }
-`;
-
-const BrandLogo = styled.div`
-  font-family: 'Outfit', sans-serif;
-  font-size: 24px;
-  font-weight: 500;
-  letter-spacing: -1px;
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  span {
-    background: linear-gradient(to right, #60A5FA, #2563EB);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700;
-  }
-`;
-
-const HeaderButton = styled.button`
-  background: transparent;
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 9999px;
-  padding: 10px 20px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  &:focus-visible {
-    outline: 2px solid #60A5FA;
-    outline-offset: 2px;
-  }
-`;
-
-const MainContent = styled.main`
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 24px;
-`;
-
-const CheckoutCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(40px);
-  border-radius: 40px;
-  padding: 40px;
-  width: 100%;
-  max-width: 480px;
-  box-sizing: border-box;
-  overflow: hidden;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
-
-  @media (max-width: 480px) {
-    padding: 24px;
-    border-radius: 32px;
-  }
-`;
-
-const HeaderTitle = styled.h1`
-  font-family: 'Outfit', sans-serif;
-  font-size: 28px;
-  font-weight: 500;
-  letter-spacing: -1px;
-  color: #FFFFFF;
-  margin: 0 0 8px 0;
-  text-align: center;
-`;
-
-const HeaderSubtitle = styled.p`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0 0 32px 0;
-  text-align: center;
-  line-height: 1.5;
-`;
-
-const CardSection = styled.div`
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 24px;
-  padding: 24px;
-  margin-bottom: 24px;
-  min-width: 0;
-  box-sizing: border-box;
-`;
-
-const Label = styled.span`
-  display: block;
-  font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  color: #60A5FA;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-`;
-
-const InfoRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-width: 0;
-  margin-bottom: 16px;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-`;
-
-const InfoLabel = styled.span`
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  color: rgba(255, 255, 255, 0.6);
-`;
-
-const InfoValue = styled.span`
-  font-family: monospace;
-  font-size: 14px;
-  font-weight: 500;
-  color: #FFFFFF;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  max-width: 200px;
-`;
-
-const RecipientNameValue = styled.span`
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #FFFFFF;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-  flex: 1;
-`;
-
-const AmountContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  margin-bottom: 32px;
-`;
-
-const CurrencyBadge = styled.span`
-  font-family: 'Outfit', sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-  color: #60A5FA;
-  background: rgba(96, 165, 250, 0.1);
-  padding: 4px 12px;
-  border-radius: 9999px;
-  margin-top: 8px;
-`;
-
-const ActionButton = styled.button<{ $variant?: 'primary' | 'secondary' }>`
-  width: 100%;
-  padding: 16px;
-  border-radius: 9999px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 16px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 2px solid #60A5FA;
-    outline-offset: 2px;
-  }
-
-  ${({ $variant = 'primary' }) =>
-    $variant === 'primary' &&
-    `
-    background: #FFFFFF;
-    color: #000000;
-    &:hover:not(:disabled) {
-      background: #2563EB;
-      color: #FFFFFF;
-    }
-  `}
-
-  ${({ $variant }) =>
-    $variant === 'secondary' &&
-    `
-    background: transparent;
-    color: #60A5FA;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    &:hover:not(:disabled) {
-      background: rgba(255, 255, 255, 0.05);
-    }
-  `}
-`;
-
-const ErrorBox = styled.div`
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 16px;
-  padding: 16px;
-  color: #F87171;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  font-weight: 300;
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  margin-bottom: 24px;
-`;
-
-const InputWrapper = styled.div`
-  display: flex;
-  gap: 12px;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-`;
-
-const NumberInput = styled.input`
-  flex: 1;
-  min-width: 0;
-  box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 14px 16px;
-  color: #FFFFFF;
-  font-family: 'Outfit', sans-serif;
-  font-size: 20px;
-  font-weight: 500;
-  text-align: center;
-  transition: all 0.2s;
-
-  @media (min-width: 480px) {
-    font-size: 24px;
-    padding: 14px 20px;
-  }
-
-  &:focus {
-    outline: none;
-    border-color: #60A5FA;
-    box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.2);
-  }
-
-  &::placeholder {
-    color: rgba(255, 255, 255, 0.2);
-  }
-`;
-
-const DropdownSelect = styled.select`
-  flex-shrink: 0;
-  width: 110px;
-  max-width: 38%;
-  box-sizing: border-box;
-  background: rgba(0, 0, 0, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 14px 12px;
-  color: #FFFFFF;
-  font-family: 'Outfit', sans-serif;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:focus {
-    outline: none;
-    border-color: #60A5FA;
-  }
-
-  option {
-    background: #0A0A0A;
-    color: #FFFFFF;
-  }
-`;
-
-const NetworkBadge = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 12px;
-  font-weight: 500;
-  color: #60A5FA;
-  background: rgba(96, 165, 250, 0.08);
-  border: 1px solid rgba(96, 165, 250, 0.15);
-  padding: 6px 12px;
-  border-radius: 9999px;
-  width: fit-content;
-  margin: 0 auto 24px auto;
-`;
-
-const Spinner = styled.div`
-  width: 20px;
-  height: 20px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top-color: #FFFFFF;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-`;
+import { useTokenPrice } from '@/features/wallet/hooks/useTokenPrice';
+import { ArrowRight, ShieldCheck, AlertCircle } from 'lucide-react';
+import {
+  PageWrapper,
+  HeaderNav,
+  BrandLogo,
+  HeaderButton,
+  MainContent,
+  CheckoutCard,
+  HeaderTitle,
+  HeaderSubtitle,
+  CardSection,
+  Label,
+  InfoRow,
+  InfoLabel,
+  InfoValue,
+  RecipientNameValue,
+  AmountContainer,
+  CurrencyBadge,
+  ActionButton,
+  ErrorBox,
+  InputWrapper,
+  NumberInput,
+  DropdownSelect,
+  NetworkBadge,
+  Spinner,
+} from '@/features/payments/components/pay-qr.styles';
 
 function walletsMatch(a: string, b: string): boolean {
   return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
-
 
 export default function PayQrClient() {
   const router = useRouter();
@@ -512,8 +177,7 @@ export default function PayQrClient() {
 
     (async () => {
       try {
-        const token = await user.getIdToken();
-        const { data: contacts } = await getContacts(token);
+        const { data: contacts } = await getContacts();
         const match = contacts.find((c) => walletsMatch(c.walletAddress, recipientAddress));
         if (!cancelled) {
           setContactNickname(match?.nickname?.trim() || null);
@@ -541,8 +205,7 @@ export default function PayQrClient() {
     (async () => {
       if (user) {
         try {
-          const token = await user.getIdToken();
-          const profile = await getMerchantProfile(token);
+          const profile = await getMerchantProfile();
           const ownWallet = profile?.merchantWallet?.trim();
           const ownName = profile?.businessName?.trim();
           if (
@@ -597,7 +260,6 @@ export default function PayQrClient() {
 
     try {
 
-      const token = await user.getIdToken();
       let mint: string | undefined = undefined;
       if (currency !== 'SOL') {
         const foundMint = getMintForSymbol(currency);
@@ -609,10 +271,10 @@ export default function PayQrClient() {
         }
       }
 
-      const profile = await getMerchantProfile(token);
+      const profile = await getMerchantProfile();
       const payerWallet = profile?.merchantWallet?.trim();
       if (payerWallet) {
-        const balance = await getWalletBalance(token, payerWallet);
+        const balance = await getWalletBalance(payerWallet);
         if (currency === 'SOL') {
           const available = parseFloat(balance.solBalance);
           if (paymentAmount > available) {
@@ -639,7 +301,7 @@ export default function PayQrClient() {
         throw new Error('Geolocation permission is required to complete this payment.');
       }
 
-      const res = await sendTransfer(token, {
+      const res = await sendTransfer({
         toWallet: recipientAddress,
         amount,
         mint,

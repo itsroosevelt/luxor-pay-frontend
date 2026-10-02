@@ -2,13 +2,26 @@
 
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
-import { Copy, Check, ShieldCheck, ShieldAlert, Wallet, Mail, Building2, Pencil, Save, X, Loader2, ArrowDownToLine } from 'lucide-react';
+import {
+  Copy,
+  Check,
+  ShieldCheck,
+  ShieldAlert,
+  Wallet,
+  Mail,
+  Building2,
+  Pencil,
+  Save,
+  X,
+  Loader2,
+  ArrowDownToLine,
+} from 'lucide-react';
 import { auth } from '@/lib/firebase';
-import { getMerchantProfile, updateMerchantProfile } from '@/lib/merchants-api';
-import { useMerchant } from '@/context/MerchantContext';
-import { AccountStatementViewer } from '@/components/profile/AccountStatementViewer';
-import { OfframpModal } from '@/components/dashboard/OfframpModal';
-import { useGetBalance } from '@/hooks/useGetBalance';
+import { getMerchantProfile, updateMerchantProfile } from '@/features/merchant/api/merchants-api';
+import { useMerchant } from '@/features/merchant/context/MerchantContext';
+import { AccountStatementViewer } from '@/features/transactions/components/AccountStatementViewer';
+import { OfframpModal } from '@/features/onramp/components/OfframpModal';
+import { useGetBalance } from '@/features/wallet/hooks/useGetBalance';
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
@@ -31,8 +44,7 @@ export default function ProfilePage() {
       }
       setUser(currentUser);
       try {
-        const token = await currentUser.getIdToken();
-        const p = await getMerchantProfile(token);
+        const p = await getMerchantProfile();
         if (p) {
           setProfile(p);
           setEditBusinessName(p.businessName || '');
@@ -72,8 +84,7 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      const token = await user.getIdToken();
-      const updated = await updateMerchantProfile(token, {
+      const updated = await updateMerchantProfile({
         businessName: editBusinessName.trim() || undefined,
         merchantWallet: editMerchantWallet.trim() || undefined,
       });

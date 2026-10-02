@@ -4,18 +4,18 @@ import { ChevronDown, Globe, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { HeroBackground } from '@/components/HeroBackground';
-import { InnovationSection } from '@/components/home/InnovationSection';
-import { PhilosophySection } from '@/components/home/PhilosophySection';
-import { ArchitectureSection } from '@/components/home/ArchitectureSection';
-import BracketsSectionClient from '@/components/home/BracketsSectionClient';
-import { JoinSection } from '@/components/home/JoinSection';
-import { ShowcaseSection } from '@/components/home/ShowcaseSection';
-import { PillarsSection } from '@/components/home/PillarsSection';
-import { GiantsSection } from '@/components/home/GiantsSection';
-import { CTASection } from '@/components/home/CTASection';
-import { ReviewsSection } from '@/components/home/ReviewsSection';
-import Footer from '@/components/home/Footer';
+import { HeroBackground } from '@/features/home/components/HeroBackground';
+import { InnovationSection } from '@/features/home/components/InnovationSection';
+import { PhilosophySection } from '@/features/home/components/PhilosophySection';
+import { ArchitectureSection } from '@/features/home/components/ArchitectureSection';
+import BracketsSectionClient from '@/features/home/components/BracketsSectionClient';
+import { JoinSection } from '@/features/home/components/JoinSection';
+import { ShowcaseSection } from '@/features/home/components/ShowcaseSection';
+import { PillarsSection } from '@/features/home/components/PillarsSection';
+import { GiantsSection } from '@/features/home/components/GiantsSection';
+import { CTASection } from '@/features/home/components/CTASection';
+import { ReviewsSection } from '@/features/home/components/ReviewsSection';
+import Footer from '@/features/home/components/Footer';
 
 const PRODUCTS = [
   { name: 'Web Gateway (eCommerce)', desc: 'Integrate API, Shopify or WooCommerce checkout.' },
