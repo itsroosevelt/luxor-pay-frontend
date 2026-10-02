@@ -31,11 +31,11 @@ const Overlay = styled(motion.div)`
 `;
 
 const GlassCard = styled(motion.div)`
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #0A0A0A;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(40px);
   border-radius: 40px;
-  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.9);
   padding: 2.5rem;
   width: 100%;
   max-width: 500px;
@@ -45,18 +45,6 @@ const GlassCard = styled(motion.div)`
 
   @media (min-width: 768px) {
     padding: 3rem;
-  }
-
-  &::before {
-    content: '';
-    position: absolute;
-    top: -60%;
-    left: -40%;
-    width: 180%;
-    height: 180%;
-    background: radial-gradient(circle at 50% 30%, rgba(37, 99, 235, 0.3) 0%, transparent 65%);
-    pointer-events: none;
-    z-index: 0;
   }
 `;
 
@@ -99,9 +87,9 @@ const IconContainer = styled.div`
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #60a5fa;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
   margin: 0 auto 1.25rem;
 `;
 
@@ -111,7 +99,7 @@ const Eyebrow = styled.span`
   font-weight: 700;
   letter-spacing: 0.4em;
   text-transform: uppercase;
-  color: #60a5fa;
+  color: rgba(255, 255, 255, 0.6);
   display: block;
   margin-bottom: 0.75rem;
 `;
@@ -239,9 +227,9 @@ const ButtonBase = styled.button<{ $variant: 'primary' | 'secondary' }>`
     margin-bottom: 0.75rem;
 
     &:hover:not(:disabled) {
-      background: #2563EB;
-      color: #FFFFFF;
-      box-shadow: 0 0 20px rgba(37, 99, 235, 0.45);
+      background: #EDEDED;
+      color: #000000;
+      box-shadow: none;
     }
   `}
 

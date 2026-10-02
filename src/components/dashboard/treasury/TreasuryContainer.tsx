@@ -36,10 +36,10 @@ import {
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMerchant } from '@/context/MerchantContext';
-import { useGetBalance } from '@/hooks/useGetBalance';
 import { useTreasury } from '@/hooks/useTreasury';
 import { useMembers } from '@/hooks/useMembers';
 import { useProposals } from '@/hooks/useProposals';
+import { useVaultActivity } from '@/hooks/useVaultActivity';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { ProposalsPanel } from '@/components/dashboard/proposals/ProposalsPanel';
@@ -51,6 +51,14 @@ import { QrOperationsModal } from '@/components/dashboard/overview/QrOperationsM
 import { ReceiveModal } from '@/components/dashboard/overview/ReceiveModal';
 import { PaymentRequestModal } from '@/components/dashboard/overview/PaymentRequestModal';
 import type { Vault } from '@/lib/treasury-api';
+
+const formatVaultLabel = (label: string | undefined, isPrincipal?: boolean): string => {
+  let clean = (label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim();
+  if (isPrincipal || !clean || clean.toLowerCase() === 'principal' || clean.toLowerCase() === 'bóveda principal' || clean.toLowerCase() === 'boveda principal') {
+    return 'Roosevelt';
+  }
+  return clean;
+};
 
 // ── Styled Components (Clean, Fluid & Mobile-First — Rule 10) ─────────────────────────────
 
@@ -718,6 +726,23 @@ const TimelineActivityCard = styled.div`
   display: flex;
   flex-direction: column;
   gap: 14px;
+  max-height: 580px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(96, 165, 250, 0.4);
+  }
 `;
 
 const TimelineItem = styled.div`
@@ -754,14 +779,11 @@ function TreasuryContainerInner() {
 
   const { connected } = useWallet();
   const { setVisible: openWalletModal } = useWalletModal();
-  // The Principal is always the merchant's custodial wallet — never the connected Phantom wallet.
-  const targetWallet = merchantWallet;
 
-  const { data: mainBalanceData, isLoading: isMainBalanceLoading } = useGetBalance(targetWallet);
   const {
     vaults, config, createVault, updateVault, removeVault, deployMultisig,
     isError: treasuryError, errorMessage: treasuryErrorMessage, collector, sweepCollector,
-    isLoading: isTreasuryLoading,
+    isLoading: isTreasuryLoading, refetch: refetchTreasury,
   } = useTreasury();
   const { data: transfersData } = useGetTransfers(10);
   const realTransfers = transfersData?.data ?? [];
@@ -782,61 +804,46 @@ function TreasuryContainerInner() {
   };
 
   const isOnChain = !!config?.onChain;
-  // Real values only: masking them hid that a threshold above the signer count can't deploy.
-  const signerCount = members.filter((m) => m.roles.signer).length;
+  const rawSignerCount = members.filter((m) => m.roles.signer).length;
+  // Accounts without registered team members count at least 1 signer (the primary owner).
+  const signerCount = rawSignerCount > 0 ? rawSignerCount : 1;
   const memberTotal = isOnChain && config?.memberCount ? config.memberCount : signerCount;
-  const thresholdExceedsSigners = !!config && !isOnChain && config.threshold > memberTotal;
+  const effectiveThreshold = isOnChain ? (config?.threshold ?? 1) : Math.min(config?.threshold ?? 1, memberTotal);
+  const thresholdExceedsSigners = !!config && !isOnChain && config.threshold > memberTotal && memberTotal > 1;
 
-  const defaultGeminiVault = useMemo<Vault>(() => {
-    // Shown only while the backend returns no vaults: no invented prices, only priced tokens.
-    const totalUsd = (mainBalanceData?.tokens ?? []).reduce((acc, t) => acc + (t.usdValue ?? 0), 0);
-
-    return {
-      id: 'vault_gemini_main',
-      index: 0,
-      label: 'Bóveda Principal',
-      address: targetWallet,
-      description: 'Bóveda principal por defecto del ecosistema',
-      isDefault: true,
-      usdValue: totalUsd,
-      weight: 100,
-      solBalance: mainBalanceData?.solBalance ?? '0.0000',
-      tokens: (mainBalanceData?.tokens ?? []).map((t) => ({
-        mint: t.mint,
-        symbol: t.symbol || t.mint.slice(0, 4) + '…',
-        uiAmount: t.uiAmount,
-        usdValue: t.usdValue ?? null,
-        name: t.name ?? null,
-        decimals: t.decimals,
-      })),
-      createdAt: new Date().toISOString(),
-    };
-  }, [mainBalanceData, targetWallet]);
-
-  const [accountList, setAccountList] = useState<Vault[]>(() => {
-    if (vaults && vaults.length > 0) return vaults;
-    return [defaultGeminiVault];
-  });
+  // Only real vaults from the backend — never an invented placeholder account.
+  const [accountList, setAccountList] = useState<Vault[]>(() =>
+    (vaults ?? []).map((v, idx) => ({
+      ...v,
+      label: formatVaultLabel(v.label, idx === 0 || v.index === 0 || v.isDefault),
+    }))
+  );
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
 
   useEffect(() => {
-    if (vaults && vaults.length > 0) {
-      setAccountList(vaults);
-    } else {
-      setAccountList([defaultGeminiVault]);
+    if (vaults) {
+      setAccountList(
+        vaults.map((v, idx) => ({
+          ...v,
+          label: formatVaultLabel(v.label, idx === 0 || v.index === 0 || v.isDefault),
+        }))
+      );
     }
-  }, [vaults, defaultGeminiVault]);
+  }, [vaults]);
 
   // Sync active accounts to localStorage for Sidebar with formatted balance
   useEffect(() => {
     if (accountList && accountList.length > 0) {
       try {
-        const serialized = accountList.map((a) => ({
-          id: a.id,
-          label: a.label,
-          address: a.address,
-          usdValue: a.usdValue,
-        }));
+        const serialized = accountList.map((a, idx) => {
+          const cleanLabel = formatVaultLabel(a.label, idx === 0 || a.index === 0 || a.isDefault);
+          return {
+            id: a.id,
+            label: cleanLabel,
+            address: a.address,
+            usdValue: a.usdValue,
+          };
+        });
         localStorage.setItem('luxor_treasury_vaults', JSON.stringify(serialized));
         window.dispatchEvent(new Event('luxor_vaults_updated'));
       } catch {
@@ -849,15 +856,23 @@ function TreasuryContainerInner() {
   const activeAccount = useMemo(() => {
     if (!accountQueryParam) return null;
     const queryLower = accountQueryParam.toLowerCase();
-    return (
-      accountList.find(
-        (a) =>
-          a.id === accountQueryParam ||
-          a.id.toLowerCase() === queryLower ||
-          a.label.toLowerCase().replace(/\s+/g, '-') === queryLower,
-      ) ?? null
+    const found = accountList.find(
+      (a) =>
+        a.id === accountQueryParam ||
+        a.id.toLowerCase() === queryLower ||
+        a.label.toLowerCase().replace(/\s+/g, '-') === queryLower ||
+        (queryLower.includes('roosevelt') && (a.index === 0 || a.isDefault)),
     );
+    if (!found) return null;
+    const isPrincipal = found.index === 0 || found.isDefault || accountList.indexOf(found) === 0;
+    return {
+      ...found,
+      label: formatVaultLabel(found.label, isPrincipal),
+    };
   }, [accountQueryParam, accountList]);
+
+  // Real on-chain history of the open account (direct deposits included).
+  const { items: activityItems } = useVaultActivity(activeAccount?.id);
 
   const handleSelectAccount = (acc: Vault | null) => {
     if (!acc) {
@@ -1098,31 +1113,34 @@ function TreasuryContainerInner() {
     symbol: string;
     counterparty: string;
     usdValue?: string;
+    timestamp?: number;
   };
   const flowsOf = (v: Vault): AccountFlow[] => {
     const directFlows: AccountFlow[] =
       v.index === 0
         ? realTransfers.map((tx) => {
-            const symbol = tx.symbol || 'SOL';
-            const amtNum = Number(tx.amount) || 0;
-            let solPrice = v.solUsdPrice || 119;
-            let usd = symbol === 'USDC' || symbol === 'USDT' ? amtNum : symbol === 'EURC' ? amtNum * 1.13 : amtNum * solPrice;
-            const isIncoming = merchantWallet ? (tx.toWallet || '').toLowerCase() === merchantWallet.toLowerCase() : false;
-            const direction: 'in' | 'out' = isIncoming ? 'in' : 'out';
-            const counterparty = isIncoming ? tx.fromWallet : tx.toWallet;
-            return {
-              id: `tx-${tx.id}`,
-              direction,
-              title: isIncoming
-                ? `From: ${helperShort(tx.fromWallet || '')}`
-                : (tx.toNickname ? `To: ${tx.toNickname}` : `To: ${helperShort(tx.toWallet || '')}`),
-              subtitle: tx.confirmedAt || tx.createdAt ? new Date(tx.confirmedAt || tx.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : (tx.status?.toUpperCase() || 'CONFIRMED'),
-              amount: `${tx.amount}`,
-              symbol,
-              counterparty: counterparty || '',
-              usdValue: usd > 0 ? `~$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : undefined,
-            };
-          })
+          const symbol = tx.symbol || 'SOL';
+          const amtNum = Number(tx.amount) || 0;
+          let solPrice = v.solUsdPrice || 119;
+          let usd = symbol === 'USDC' || symbol === 'USDT' ? amtNum : symbol === 'EURC' ? amtNum * 1.13 : amtNum * solPrice;
+          const isIncoming = merchantWallet ? (tx.toWallet || '').toLowerCase() === merchantWallet.toLowerCase() : false;
+          const direction: 'in' | 'out' = isIncoming ? 'in' : 'out';
+          const counterparty = isIncoming ? tx.fromWallet : tx.toWallet;
+          const txTime = tx.confirmedAt ? new Date(tx.confirmedAt).getTime() : (tx.createdAt ? new Date(tx.createdAt).getTime() : Date.now());
+          return {
+            id: `tx-${tx.id}`,
+            direction,
+            title: isIncoming
+              ? `From: ${helperShort(tx.fromWallet || '')}`
+              : (tx.toNickname ? `To: ${tx.toNickname}` : `To: ${helperShort(tx.toWallet || '')}`),
+            subtitle: tx.confirmedAt || tx.createdAt ? new Date(tx.confirmedAt || tx.createdAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : (tx.status?.toUpperCase() || 'CONFIRMED'),
+            amount: `${tx.amount}`,
+            symbol,
+            counterparty: counterparty || '',
+            usdValue: usd > 0 ? `~$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : undefined,
+            timestamp: txTime,
+          };
+        })
         : [];
 
     const proposalFlows: AccountFlow[] = proposalsData
@@ -1134,6 +1152,9 @@ function TreasuryContainerInner() {
         let solPrice = v.solUsdPrice || 119;
         let usd = symbol === 'USDC' || symbol === 'USDT' ? amtNum : symbol === 'EURC' ? amtNum * 1.13 : amtNum * solPrice;
         const formattedUsd = usd > 0 ? `$${usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : undefined;
+        const pTime = p.executedAt ? new Date(p.executedAt).getTime() : (p.createdAt ? new Date(p.createdAt).getTime() : (p.index ? p.index * 1000 : 0));
+
+        const cleanVaultLabel = (p.vaultLabel || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim() || 'Roosevelt';
 
         if (isSource) {
           return [
@@ -1146,6 +1167,7 @@ function TreasuryContainerInner() {
               symbol,
               counterparty: p.destination,
               usdValue: formattedUsd,
+              timestamp: pTime,
             },
           ];
         }
@@ -1155,12 +1177,13 @@ function TreasuryContainerInner() {
             {
               id: `prop-in-${p.id}`,
               direction: 'in' as const,
-              title: `From: ${p.vaultLabel || 'Bóveda Principal'}`,
+              title: `From: ${cleanVaultLabel}`,
               subtitle: `Propuesta #${p.index} · EJECUTADA`,
               amount: `${p.amount}`,
               symbol,
-              counterparty: p.vaultLabel,
+              counterparty: cleanVaultLabel,
               usdValue: formattedUsd,
+              timestamp: pTime,
             },
           ];
         }
@@ -1170,17 +1193,63 @@ function TreasuryContainerInner() {
           return {
             id: `prop-leg-${p.id}-${i}`,
             direction: (t.vaultId === v.id ? 'out' : 'in') as 'out' | 'in',
-            title: t.vaultId === v.id ? `To: ${helperShort(t.destination)}` : `From: ${p.vaultLabel}`,
+            title: t.vaultId === v.id ? `To: ${helperShort(t.destination)}` : `From: ${cleanVaultLabel}`,
             subtitle: `Propuesta #${p.index} · EJECUTADA`,
             amount: `${t.amount}`,
             symbol: t.symbol || symbol,
-            counterparty: t.vaultId === v.id ? t.destination : p.vaultLabel,
+            counterparty: t.vaultId === v.id ? t.destination : cleanVaultLabel,
             usdValue: tUsd > 0 ? `$${tUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD` : undefined,
+            timestamp: pTime,
           };
         });
       });
 
-    return [...proposalFlows, ...directFlows];
+    // Once the chain history is loaded it is the source of truth: it includes direct
+    // deposits and forwarded payments, with real USD prices. Proposal rows remain only
+    // for executions older than the history window.
+    if (activityItems && v.id === activeAccount?.id) {
+      const sigs = new Set(activityItems.map((a) => a.signature));
+      const proposalBySig = new Map<string, (typeof proposalsData)[number]>();
+      proposalsData.forEach((p) => {
+        [p.executedSig, ...(p.payoutSigs ?? [])].forEach((sig) => { if (sig) proposalBySig.set(sig, p); });
+      });
+      const labelOf = (addr: string | null) => {
+        if (!addr) return 'Desconocido';
+        const found = accountList.find((a) => a.address === addr);
+        if (found) {
+          const clean = (found.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim();
+          return clean || 'Roosevelt';
+        }
+        return helperShort(addr);
+      };
+      const chainFlows: AccountFlow[] = activityItems.map((a, i) => {
+        const p = proposalBySig.get(a.signature);
+        const when = a.time ? new Date(a.time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Confirmada';
+        const chainTime = a.time ? new Date(a.time).getTime() : (p?.executedAt ? new Date(p.executedAt).getTime() : 0);
+        return {
+          id: `chain-${a.signature}-${a.mint}-${i}`,
+          direction: a.direction,
+          title: `${a.direction === 'in' ? 'From' : 'To'}: ${labelOf(a.counterparty)}`,
+          subtitle: p ? `Propuesta #${p.index} · ${when}` : when,
+          amount: a.amount,
+          symbol: a.symbol,
+          counterparty: a.counterparty ?? '',
+          usdValue: a.usdValue !== null && a.usdValue > 0
+            ? `$${a.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD`
+            : undefined,
+          timestamp: chainTime,
+        };
+      });
+      const olderProposalFlows = proposalFlows.filter((f) => {
+        const p = proposalsData.find((x) => f.id.includes(x.id));
+        return !p || ![p.executedSig, ...(p.payoutSigs ?? [])].some((sig) => sig && sigs.has(sig));
+      });
+      const combined = [...chainFlows, ...olderProposalFlows];
+      return combined.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
+    }
+
+    const combined = [...proposalFlows, ...directFlows];
+    return combined.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0));
   };
 
   const formattedTotalBalance = isPrivacyMode
@@ -1197,7 +1266,7 @@ function TreasuryContainerInner() {
     setIsSavingAccount(true);
     try {
       const createdAcc = await createVault({ label: newAccountLabel.trim(), targetWeight: Math.max(0, Math.min(100, Math.round(Number(newAccountWeight) || 0))) });
-      setAccountList((prev) => [...prev, createdAcc]);
+      setAccountList((prev) => [...prev.filter((acc) => acc.id !== createdAcc.id), createdAcc]);
       setNewAccountLabel('');
       setNewAccountWeight('0');
       setAddAccountModalOpen(false);
@@ -1261,7 +1330,7 @@ function TreasuryContainerInner() {
     return sum > 0 ? sum : (activeAccount.usdValue ?? 0);
   }, [activeAccount]);
 
-  if ((isTreasuryLoading || isMainBalanceLoading) && vaults.length === 0) {
+  if (isTreasuryLoading && vaults.length === 0) {
     return (
       <PageContainer
         initial={{ opacity: 0 }}
@@ -1283,6 +1352,28 @@ function TreasuryContainerInner() {
     );
   }
 
+  // First load failed and there is nothing real to show: explain and offer a retry.
+  if (treasuryError && vaults.length === 0) {
+    return (
+      <PageContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 32 }}>
+        <div
+          style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 14, padding: 24, borderRadius: 20,
+            background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.3)',
+          }}
+        >
+          <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, color: '#FFFFFF' }}>No se pudo cargar la tesorería</div>
+          <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+            {treasuryErrorMessage ?? 'Error desconocido'}
+          </div>
+          <ActionPillButton type="button" $variant="secondary" onClick={() => { void refetchTreasury(); }}>
+            Reintentar
+          </ActionPillButton>
+        </div>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer
       initial={{ opacity: 0, y: 30 }}
@@ -1297,7 +1388,7 @@ function TreasuryContainerInner() {
               Treasury
             </BreadcrumbBtn>
             <BreadcrumbSep>/</BreadcrumbSep>
-            <span>{activeAccount.label}</span>
+            <span>{formatVaultLabel(activeAccount.label, activeAccount.index === 0 || activeAccount.isDefault)}</span>
           </>
         ) : (
           <span>Treasury</span>
@@ -1353,7 +1444,7 @@ function TreasuryContainerInner() {
                     <ShieldCheck size={18} />
                   </StatIconBadge>
                   <StatValueGroup>
-                    <StatValue>{config ? `${config.threshold} / ${memberTotal}` : '—'}</StatValue>
+                    <StatValue>{config ? `${effectiveThreshold} / ${memberTotal}` : '—'}</StatValue>
                     <StatLabel>Threshold</StatLabel>
                   </StatValueGroup>
                 </StatItem>
@@ -1676,7 +1767,7 @@ function TreasuryContainerInner() {
                   <ShieldCheck size={18} />
                 </StatIconBadge>
                 <StatValueGroup>
-                  <StatValue>{config ? `${config.threshold} / ${memberTotal}` : '—'}</StatValue>
+                  <StatValue>{config ? `${effectiveThreshold} / ${memberTotal}` : '—'}</StatValue>
                   <StatLabel>
                     Threshold{isOnChain ? '' : ' · off-chain'}
                     {thresholdExceedsSigners && (
@@ -1758,7 +1849,7 @@ function TreasuryContainerInner() {
                   ? collector.blockedReason
                   : 'Se están pasando automáticamente a la Bóveda Principal del multisig.'}
               </div>
-              {collector.canSweep && (
+              {(collector.canSweep || collector.needsFeePayer) && (
                 <ActionPillButton type="button" $variant="secondary" onClick={handleSweep} disabled={isSweeping}>
                   {isSweeping ? <Loader2 size={15} className="animate-spin" /> : <ArrowDown size={15} />} Mover ahora
                 </ActionPillButton>
@@ -1794,7 +1885,7 @@ function TreasuryContainerInner() {
                   </TableTr>
                 ) : (
                   <AnimatePresence>
-                    {accountList.map((acc) => {
+                    {accountList.map((acc, idx) => {
                       const displayBalance = isPrivacyMode
                         ? '$ •••••'
                         : `$${acc.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -1817,7 +1908,7 @@ function TreasuryContainerInner() {
                                 style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(96, 165, 250, 0.4)' }}
                                 title="Ver detalle de la cuenta"
                               >
-                                {acc.label}
+                                {formatVaultLabel(acc.label, idx === 0 || acc.index === 0 || acc.isDefault)}
                               </span>
                               <EditIconButton
                                 type="button"
@@ -1860,6 +1951,14 @@ function TreasuryContainerInner() {
                           <TableTd>
                             <BalanceValueRow>
                               <span>{displayBalance}</span>
+                              {acc.stale && (
+                                <span
+                                  title="Solana no respondió: es el último saldo conocido. Se actualizará solo."
+                                  style={{ fontSize: 10, fontFamily: 'Montserrat, sans-serif', color: '#F59E0B' }}
+                                >
+                                  sin actualizar
+                                </span>
+                              )}
                               {topAssetsOf(acc).length > 0 && (
                                 <TokenBadgeContainer>
                                   {topAssetsOf(acc).map((a) => (
@@ -1937,7 +2036,7 @@ function TreasuryContainerInner() {
               </div>
             ) : (
               <AnimatePresence>
-                {accountList.map((acc) => {
+                {accountList.map((acc, idx) => {
                   const displayBalance = isPrivacyMode
                     ? '$ •••••'
                     : `$${acc.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -1957,7 +2056,7 @@ function TreasuryContainerInner() {
                             onClick={() => handleSelectAccount(acc)}
                             style={{ cursor: 'pointer', fontWeight: 600, textDecoration: 'underline' }}
                           >
-                            {acc.label}
+                            {formatVaultLabel(acc.label, idx === 0 || acc.index === 0 || acc.isDefault)}
                           </span>
                           <EditIconButton type="button" onClick={() => openEditModal(acc)} disabled={!connected} title={!connected ? 'Conecta tu wallet para realizar esta acción' : 'Editar nombre'}>
                             <Pencil size={12} />
@@ -2003,6 +2102,14 @@ function TreasuryContainerInner() {
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                         <BalanceValueRow>
                           <span>{displayBalance}</span>
+                          {acc.stale && (
+                            <span
+                              title="Solana no respondió: es el último saldo conocido. Se actualizará solo."
+                              style={{ fontSize: 10, fontFamily: 'Montserrat, sans-serif', color: '#F59E0B' }}
+                            >
+                              sin actualizar
+                            </span>
+                          )}
                           {topAssetsOf(acc).length > 0 && (
                             <TokenBadgeContainer>
                               {topAssetsOf(acc).map((a) => (
@@ -2234,7 +2341,7 @@ function TreasuryContainerInner() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Ej. Bóveda Operativa"
+                    placeholder="Ej. Operativa"
                     value={newAccountLabel}
                     onChange={(e) => setNewAccountLabel(e.target.value)}
                     required

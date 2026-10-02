@@ -110,7 +110,7 @@ const fieldStyle: React.CSSProperties = {
 export function ProposalsPanel({
   defaultVaultId, openCreateOnMount, defaultType,
 }: { defaultVaultId?: string; openCreateOnMount?: boolean; defaultType?: ProposalType }) {
-  const { data: proposals, isLoading, isError, errorMessage, createProposal, approve, reject, execute, cancel, activate } = useProposals();
+  const { data: proposals, isLoading, isError, errorMessage, refetch, createProposal, approve, reject, execute, cancel, activate } = useProposals();
   const { data: members } = useMembers();
   const { vaults, config } = useTreasury();
   const { tokens } = useTokenRegistry();
@@ -142,6 +142,8 @@ export function ProposalsPanel({
     () => members.filter((m) => m.roles.signer && (!config?.onChain || m.onChain !== false)),
     [members, config?.onChain],
   );
+  const effectiveSignerCount = signers.length > 0 ? signers.length : 1;
+  const effectiveThreshold = config?.onChain ? (config?.threshold ?? 1) : Math.min(config?.threshold ?? 1, effectiveSignerCount);
   const nameOf = (id: string) => members.find((m) => m.id === id)?.name ?? 'Member';
 
   const canPropose = true; // Any connected user or merchant can create proposals
@@ -214,7 +216,7 @@ export function ProposalsPanel({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--lx-text-muted)' }}>
           <ShieldCheck size={14} />
-          Current Threshold: <strong style={{ color: 'var(--lx-text)' }}>{config ? `${config.threshold} of ${signers.length}` : '—'}</strong> signers
+          Current Threshold: <strong style={{ color: 'var(--lx-text)' }}>{config ? `${effectiveThreshold} of ${effectiveSignerCount}` : '—'}</strong> signers
         </div>
         <button type="button" className="lx-btn lx-btn-primary" disabled={!connected}
           title={!connected ? 'Conecta tu wallet para crear propuestas' : undefined}
@@ -223,14 +225,22 @@ export function ProposalsPanel({
         </button>
       </div>
 
-      {isLoading && (
+      {isLoading && proposals.length === 0 && (
         <div className="flex items-center justify-center gap-2 py-16 text-sm" style={{ color: 'var(--lx-text-muted)' }}>
           <Loader2 size={18} className="animate-spin" /> Loading proposals…
         </div>
       )}
       {isError && (
-        <div className="flex items-center gap-3 rounded-xl p-4 text-sm" style={{ background: 'var(--lx-danger-soft)', border: '1px solid var(--lx-danger)', color: 'var(--lx-danger)' }}>
-          <AlertTriangle size={16} /> {errorMessage || 'Error loading proposals'}
+        // The last known list stays visible below; this only says it couldn't be refreshed.
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-3 text-sm" style={{ background: 'var(--lx-danger-soft)', border: '1px solid var(--lx-danger)', color: 'var(--lx-danger)' }}>
+          <span className="flex items-center gap-2">
+            <AlertTriangle size={16} />
+            {proposals.length > 0 ? 'No se pudieron actualizar las propuestas. ' : ''}
+            {errorMessage || 'Error loading proposals'}
+          </span>
+          <button type="button" className="lx-btn lx-btn-secondary !py-1.5 text-[12px]" onClick={() => { void refetch(); }} disabled={isLoading}>
+            {isLoading ? <Loader2 size={13} className="animate-spin" /> : null} Reintentar
+          </button>
         </div>
       )}
       {!isLoading && !isError && proposals.length === 0 && (
@@ -239,7 +249,7 @@ export function ProposalsPanel({
         </div>
       )}
 
-      {!isLoading && !isError && proposals.length > 0 && (
+      {proposals.length > 0 && (
         <div className="space-y-2.5">
           <AnimatePresence>
             {proposals.map((p) => {

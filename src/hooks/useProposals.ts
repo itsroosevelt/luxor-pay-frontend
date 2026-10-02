@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { auth } from '@/lib/firebase';
 import {
@@ -17,6 +17,7 @@ import {
 } from '@/lib/proposals-api';
 import { notifyTreasuryChanged, signAndSendPending, walletAddress } from '@/lib/squads-tx';
 import { getWalletAuthHeaders } from '@/lib/wallet-session';
+import { createSharedResource } from '@/lib/shared-resource';
 
 async function tokenOrMock(): Promise<string> {
   const user = auth.currentUser;
@@ -39,37 +40,28 @@ interface UseProposalsReturn {
   redistribute: (mint?: string) => Promise<Proposal>;
 }
 
+/**
+ * One shared list for every widget (Treasury + Proposals panel). Refreshed in the
+ * background so votes / executions made by other members show up without reloading.
+ */
+const proposalsResource = createSharedResource<Proposal[]>(
+  [],
+  async (token) => (await getProposals(token)).data ?? [],
+  { refreshMs: 30_000, refreshOnFocus: true },
+);
+
 export function useProposals(): UseProposalsReturn {
   const wallet = useWallet();
   const { connection } = useConnection();
-  const [data, setData] = useState<Proposal[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { data, isLoading, isError, errorMessage } = proposalsResource.useState();
+  const setData = (update: (prev: Proposal[]) => Proposal[]) => proposalsResource.setData(update);
+  const refetch = useCallback(() => proposalsResource.load(), []);
 
-  const refetch = useCallback(async () => {
-    setIsLoading(true);
-    setIsError(false);
-    setErrorMessage(null);
-    try {
-      const token = await tokenOrMock();
-      const res = await getProposals(token);
-      setData(res.data ?? []);
-    } catch (err) {
-      console.warn('Proposals fetch failed:', err);
-      setIsError(true);
-      setErrorMessage(err instanceof Error ? err.message : 'No se pudieron cargar las propuestas');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged(() => {
-      refetch();
-    });
-    return () => unsub();
-  }, [refetch]);
+  /**
+   * Adds a just-created proposal at the top — or replaces it if a background refresh
+   * (e.g. on returning from the wallet popup) already brought it from the server.
+   */
+  const upsert = (next: Proposal) => setData((prev) => [next, ...prev.filter((p) => p.id !== next.id)]);
 
   const replace = (next: Proposal) =>
     setData((prev) => prev.map((p) => (p.id === next.id ? next : p)));
@@ -97,7 +89,7 @@ export function useProposals(): UseProposalsReturn {
     const res = await createProposalReq(token, { ...payload, wallet: walletAddress(wallet) }, headers);
     try {
       const created = await settle(token, res);
-      setData((prev) => [created, ...prev]);
+      upsert(created);
       return created;
     } catch (err) {
       // Signing was declined or failed: drop the unconfirmed record server-side.
@@ -114,7 +106,7 @@ export function useProposals(): UseProposalsReturn {
     const res = await createRedistribution(token, walletAddress(wallet), headers, mint);
     try {
       const created = await settle(token, res);
-      setData((prev) => [created, ...prev]);
+      upsert(created);
       return created;
     } catch (err) {
       if (res.pendingTransaction) {

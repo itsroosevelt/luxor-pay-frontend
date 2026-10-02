@@ -2,6 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 
+import { apiUrl } from '@/lib/api-client';
+
 export interface TokenMetadata {
   id: string;
   environment: string;
@@ -38,59 +40,62 @@ export function TokenRegistryProvider({ children }: { children: ReactNode }) {
     try {
       const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase();
       
-      const response = await fetch(`/api/backend/tokens?environment=${network}`);
+      const response = await fetch(apiUrl(`/tokens?environment=${network}`));
       if (!response.ok) {
-        throw new Error(`Failed to fetch tokens: ${response.statusText}`);
+        throw new Error(`Backend returned ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      setTokens(data);
-    } catch (error) {
-      console.error('Error fetching token catalog:', error);
-      setIsError(true);
-      
-      // Fallback for devnet if API fails to avoid completely breaking the app during dev
-      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase();
-      if (network === 'devnet') {
-        setTokens([
-          {
-            id: 'dev-usdc',
-            environment: 'devnet',
-            mint: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
-            symbol: 'USDC',
-            name: 'USDC',
-            decimals: 6,
-            logoUrl: null,
-            active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: 'dev-lxr',
-            environment: 'devnet',
-            mint: '3kxGSxkvuFGu3NJjzuAAXMHjVvpWarXwHQsguxVbiBHE',
-            symbol: 'LXR',
-            name: 'LXR',
-            decimals: 9,
-            logoUrl: null,
-            active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: 'dev-eurc',
-            environment: 'devnet',
-            mint: 'HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr',
-            symbol: 'EURC',
-            name: 'EURC',
-            decimals: 6,
-            logoUrl: null,
-            active: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-        ]);
+      if (Array.isArray(data) && data.length > 0) {
+        setTokens(data);
+      } else {
+        throw new Error('Token registry returned an empty list');
       }
+    } catch (error) {
+      console.warn('Backend token registry unavailable, using local default token definitions:', error);
+      
+      const network = (process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'devnet').toLowerCase();
+      const defaultTokens: TokenMetadata[] = [
+        {
+          id: 'dev-usdc',
+          environment: network,
+          mint: network === 'devnet' ? '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU' : 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+          symbol: 'USDC',
+          name: 'USD Coin',
+          decimals: 6,
+          logoUrl: null,
+          active: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'dev-str',
+          environment: network,
+          mint: '3kxGSxkvuFGu3NJjzuAAXMHjVvpWarXwHQsguxVbiBHE',
+          symbol: 'STR',
+          name: 'Sterling Token',
+          decimals: 9,
+          logoUrl: null,
+          active: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'dev-eurc',
+          environment: network,
+          mint: 'HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr',
+          symbol: 'EURC',
+          name: 'EURC',
+          decimals: 6,
+          logoUrl: null,
+          active: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      
+      setTokens(defaultTokens);
+      setIsError(false);
     } finally {
       setIsLoading(false);
     }
@@ -110,13 +115,20 @@ export function TokenRegistryProvider({ children }: { children: ReactNode }) {
     }
 
     const token = tokens.find(t => t.symbol.toUpperCase() === upper);
-    return token ? token.mint : null;
+    if (token) return token.mint;
+
+    if (upper === 'STR' || upper === 'STERLING') {
+      const alt = tokens.find(t => t.symbol.toUpperCase() === 'STR' || t.symbol.toUpperCase() === 'LXR');
+      if (alt) return alt.mint;
+    }
+    return null;
   }, [tokens]);
 
   const getTokenSymbol = useCallback((mint: string | undefined | null) => {
     if (!mint) return null;
     const token = tokens.find(t => t.mint === mint);
-    return token ? token.symbol : null;
+    if (!token) return null;
+    return token.symbol === 'LXR' ? 'STR' : token.symbol;
   }, [tokens]);
 
   const getTokenDecimals = useCallback((symbol: string) => {
@@ -124,7 +136,7 @@ export function TokenRegistryProvider({ children }: { children: ReactNode }) {
     if (upper === 'SOL') return 9; // Hardcoded fallback for native SOL
     if (upper === 'WSOL') return 9;
     
-    const token = tokens.find(t => t.symbol.toUpperCase() === upper);
+    const token = tokens.find(t => t.symbol.toUpperCase() === upper || (upper === 'STR' && t.symbol.toUpperCase() === 'LXR'));
     return token ? token.decimals : 6; // Default to 6 if not found
   }, [tokens]);
 

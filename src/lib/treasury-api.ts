@@ -3,7 +3,7 @@
  * account. In Mock Mode these calls are served by `src/mocks/handlers.ts`.
  */
 
-import { apiUrl } from './api-client';
+import { apiUrl, describeApiError, describeNetworkError } from './api-client';
 import type { Proposal } from './proposals-api';
 import type { PendingTransaction } from './squads-tx';
 
@@ -65,6 +65,8 @@ export interface Vault {
   usdValue: number;
   weight?: number;
   solBalance: string;
+  /** true when Solana didn't answer and these are the last known balances. */
+  stale?: boolean;
   /** SOL price used for this snapshot (USD). */
   solUsdPrice?: number | null;
   tokens: VaultToken[];
@@ -84,6 +86,8 @@ export interface CollectorInfo {
   canSweep: boolean;
   /** Why the automatic forward can't run yet (e.g. no SOL for network fees). */
   blockedReason?: string | null;
+  /** No SOL for fees in the collection wallet: "Mover ahora" lets the member's wallet pay them. */
+  needsFeePayer?: boolean;
 }
 
 export function getCollector(token: string): Promise<{ data: CollectorInfo }> {
@@ -94,7 +98,7 @@ export function getCollector(token: string): Promise<{ data: CollectorInfo }> {
 export function sweepCollector(
   token: string,
   walletHeaders?: Record<string, string>,
-): Promise<{ data: { signatures: string[]; destination: string } }> {
+): Promise<{ data: { signatures: string[]; destination: string; pendingTransaction?: PendingTransaction } }> {
   return authed(token, '/vaults/collector/sweep', { method: 'POST', headers: walletHeaders });
 }
 
@@ -112,13 +116,17 @@ async function authed<T>(token: string, path: string, init?: RequestInit): Promi
   if (init?.body) {
     headers['Content-Type'] = 'application/json';
   }
-  const response = await fetch(apiUrl(path), {
-    ...init,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      ...init,
+      headers,
+    });
+  } catch (err) {
+    throw new Error(describeNetworkError(err));
+  }
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.message || `Request failed: ${path}`);
+    throw new Error(await describeApiError(response, path));
   }
   return response.json() as Promise<T>;
 }
@@ -180,4 +188,20 @@ export function getVaults(token: string): Promise<{ data: Vault[] }> {
 
 export function createVault(token: string, payload: CreateVaultPayload, walletHeaders?: Record<string, string>): Promise<{ data: Vault }> {
   return authed(token, '/vaults', { method: 'POST', body: JSON.stringify(payload), headers: walletHeaders });
+}
+
+/** One balance change of a vault, read from Solana (deposits, executed proposals, forwarded payments). */
+export interface VaultActivityItem {
+  signature: string;
+  time: string | null;
+  direction: 'in' | 'out';
+  amount: string;
+  symbol: string;
+  mint: string;
+  counterparty: string | null;
+  usdValue: number | null;
+}
+
+export function getVaultActivity(token: string, vaultId: string): Promise<{ data: VaultActivityItem[] }> {
+  return authed(token, `/vaults/${vaultId}/activity`);
 }

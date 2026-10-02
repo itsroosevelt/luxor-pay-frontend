@@ -49,14 +49,14 @@ const LOGO_SRC =
 type NavLeaf = { href: string; label: string; tab?: string; external?: boolean };
 type NavNode =
   | {
-      kind: 'link';
-      href: string;
-      label: string;
-      icon: typeof LayoutDashboard;
-      exact?: boolean;
-      tab?: string;
-      external?: boolean;
-    }
+    kind: 'link';
+    href: string;
+    label: string;
+    icon: typeof LayoutDashboard;
+    exact?: boolean;
+    tab?: string;
+    external?: boolean;
+  }
   | { kind: 'group'; id: string; label: string; icon: typeof LayoutDashboard; children: NavLeaf[] };
 
 export type NavSection = {
@@ -98,7 +98,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: 'Treasury',
         icon: Landmark,
         children: [
-          { href: '/dashboard/treasury', label: 'Bóveda Roosevelt' },
+          { href: '/dashboard/treasury', label: 'Roosevelt' },
           { href: '/dashboard/treasury', label: 'Operating Vault' },
           { href: '/dashboard/treasury', label: 'Payroll Vault' },
         ],
@@ -521,8 +521,12 @@ function SidebarInner({
         if (Array.isArray(parsed) && parsed.length > 0) {
           const items = parsed.map((v: { id?: string; label?: string; usdValue?: number }, idx: number) => {
             const isPrincipal = idx === 0;
-            const rawLabel = (v.label && !v.label.toLowerCase().includes('principal')) ? v.label : 'Roosevelt';
-            const label = isPrincipal ? (v.label && !v.label.toLowerCase().includes('principal') ? v.label : 'Roosevelt') : rawLabel;
+            let rawLabel = (v.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim();
+            if (isPrincipal && (!rawLabel || rawLabel.toLowerCase() === 'principal' || rawLabel.toLowerCase() === 'bóveda principal')) {
+              rawLabel = 'Roosevelt';
+            }
+            if (!rawLabel) rawLabel = 'Roosevelt';
+            const label = isPrincipal ? (rawLabel.toLowerCase().includes('principal') ? 'Roosevelt' : rawLabel) : rawLabel;
             const accSlug = v.id || label.toLowerCase().replace(/\s+/g, '-') || idx.toString();
             const balanceStr = v.usdValue != null ? `$${v.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : undefined;
             return {
@@ -625,43 +629,43 @@ function SidebarInner({
 
           return (
             <div key={section.title || idx} className="space-y-1">
-            {!isCollapsed && section.title && (
-              <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                {section.title}
-              </div>
-            )}
-            {isCollapsed && idx > 0 && (
-              <div className="my-2 border-t border-white/[0.06] w-8 mx-auto" />
-            )}
-            <div className="space-y-1">
-              {section.items.map((node) => {
-                if (node.kind === 'group') {
+              {!isCollapsed && section.title && (
+                <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                  {section.title}
+                </div>
+              )}
+              {isCollapsed && idx > 0 && (
+                <div className="my-2 border-t border-white/[0.06] w-8 mx-auto" />
+              )}
+              <div className="space-y-1">
+                {section.items.map((node) => {
+                  if (node.kind === 'group') {
+                    return (
+                      <NavGroup
+                        key={node.id}
+                        node={node}
+                        isCollapsed={isCollapsed}
+                        onNavigate={onNavigate}
+                      />
+                    );
+                  }
                   return (
-                    <NavGroup
-                      key={node.id}
-                      node={node}
+                    <NavLinkRow
+                      key={`${node.href}-${node.label}`}
+                      href={node.href}
+                      label={node.label}
+                      icon={node.icon}
+                      active={isLeafActive(node)}
+                      external={node.external}
                       isCollapsed={isCollapsed}
                       onNavigate={onNavigate}
                     />
                   );
-                }
-                return (
-                  <NavLinkRow
-                    key={`${node.href}-${node.label}`}
-                    href={node.href}
-                    label={node.label}
-                    icon={node.icon}
-                    active={isLeafActive(node)}
-                    external={node.external}
-                    isCollapsed={isCollapsed}
-                    onNavigate={onNavigate}
-                  />
-                );
-              })}
+                })}
+              </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
       </nav>
 
       {/* 4 · Footer */}

@@ -17,7 +17,8 @@ export type SquadsAction =
   | 'reject'
   | 'cancel'
   | 'activate'
-  | 'execute';
+  | 'execute'
+  | 'sweep';
 
 export interface PendingTransaction {
   action: SquadsAction;
@@ -51,15 +52,36 @@ export async function signAndSendPending(
 
   // signTransaction (not sendTransaction) keeps signatures the backend already added.
   const signed = await wallet.signTransaction(tx);
-  const signature = await connection.sendRawTransaction(signed.serialize(), { maxRetries: 3 });
-  const result = await connection.confirmTransaction(
-    { signature, blockhash: pending.blockhash, lastValidBlockHeight: pending.lastValidBlockHeight },
-    'confirmed',
-  );
+  let signature: string;
+  try {
+    signature = await connection.sendRawTransaction(signed.serialize(), { maxRetries: 3 });
+  } catch (err) {
+    throw new Error(`No se pudo enviar la transacción a Solana (${friendlyRpcError(err)}). No se ha movido nada; inténtalo de nuevo.`);
+  }
+
+  let result;
+  try {
+    result = await connection.confirmTransaction(
+      { signature, blockhash: pending.blockhash, lastValidBlockHeight: pending.lastValidBlockHeight },
+      'confirmed',
+    );
+  } catch (err) {
+    // Sent, but the confirmation couldn't be observed (busy RPC / slow network). The
+    // backend verifies this signature itself (retrying ~60 s) before syncing, so hand it on.
+    console.warn('Confirmation not observed yet, backend will verify:', err);
+    return signature;
+  }
   if (result.value.err) {
     throw new Error(`La transacción falló on-chain: ${JSON.stringify(result.value.err)}`);
   }
   return signature;
+}
+
+function friendlyRpcError(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/429|Too Many Requests|rate limit/i.test(msg)) return 'la red está saturada';
+  if (/fetch|network|Failed to fetch/i.test(msg)) return 'sin conexión con la red';
+  return msg;
 }
 
 function base64ToBytes(b64: string): Uint8Array {

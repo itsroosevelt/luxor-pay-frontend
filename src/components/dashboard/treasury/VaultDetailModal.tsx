@@ -278,7 +278,7 @@ export function VaultDetailModal({
       >
         <Header>
           <div style={{ minWidth: 0 }}>
-            <Title>{vault.label}</Title>
+            <Title>{(vault.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim() || 'Roosevelt'}</Title>
             {vault.address && (
               <Address>
                 <span>{vault.address}</span>
@@ -299,7 +299,7 @@ export function VaultDetailModal({
         <Value>{usd(vault.usdValue, isPrivacyMode)}</Value>
         <Sub>
           {vault.index === 0
-            ? `Bóveda Principal · recepción custodial · ${actualWeight}% del total`
+            ? `Roosevelt · recepción custodial · ${actualWeight}% del total`
             : `${actualWeight}% del total · objetivo ${vault.targetWeight ?? 0}%`}
         </Sub>
 

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMembers } from '@/hooks/useMembers';
+import { useMerchant } from '@/context/MerchantContext';
 import { useTreasury } from '@/hooks/useTreasury';
 import {
   MEMBER_ROLE_META,
@@ -108,6 +109,7 @@ export default function MembersPage() {
   // Demo-only: preview the UI as a read-only auditor without editing fixtures.
   const [previewReadOnly, setPreviewReadOnly] = useState(false);
   const { connected } = useWallet();
+  const { profile } = useMerchant();
   const { setVisible: openWalletModal } = useWalletModal();
 
   const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? members[0] ?? null, [members]);
@@ -157,6 +159,11 @@ export default function MembersPage() {
     e.preventDefault();
     if (!guard()) return;
     if (!form.name.trim() || !form.walletAddress.trim()) { toast.error('Name and address are required'); return; }
+    if (profile?.merchantWallet && form.walletAddress.trim() === profile.merchantWallet) {
+      // The collection wallet's key is held by Sterling's server: it can't sign as a member.
+      toast.error('Esa es la cuenta de cobros de Sterling, no tu wallet. Copia la dirección desde Phantom o Solflare.');
+      return;
+    }
     setBusy(true);
     try {
       await addMember({ name: form.name.trim(), walletAddress: form.walletAddress.trim(), roles: form.roles });

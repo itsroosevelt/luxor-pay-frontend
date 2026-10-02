@@ -4,7 +4,7 @@
  * `src/mocks/handlers.ts`.
  */
 
-import { apiUrl } from './api-client';
+import { apiUrl, describeApiError, describeNetworkError } from './api-client';
 import type { PendingTransaction } from './squads-tx';
 
 export type ProposalType = 'transfer' | 'swap' | 'config' | 'redistribute';
@@ -114,17 +114,21 @@ export const PROPOSAL_STATUS_META: Record<
 };
 
 async function authed<T>(token: string, path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(apiUrl(path), {
-    ...init,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(apiUrl(path), {
+      ...init,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+      },
+    });
+  } catch (err) {
+    throw new Error(describeNetworkError(err));
+  }
   if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.message || `Request failed: ${path}`);
+    throw new Error(await describeApiError(response, path));
   }
   return response.json() as Promise<T>;
 }

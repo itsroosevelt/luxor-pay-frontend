@@ -358,7 +358,8 @@ export function AccountsTable({
 
       return vaults.map((v, i) => {
         const isPrincipal = i === 0 || v.index === 0 || v.isDefault;
-        const name = isPrincipal ? 'Roosevelt' : v.label;
+        const cleanLabel = (v.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim();
+        const name = isPrincipal ? 'Roosevelt' : (cleanLabel || 'Roosevelt');
         const addr = v.address || merchantWallet || '';
         const usdVal = v.usdValue != null && v.usdValue > 0 ? v.usdValue : (isPrincipal ? totalPortfolioUsd : 0);
         const weight = effectiveTotalUsd > 0 ? Math.round((usdVal / effectiveTotalUsd) * 100) : (isPrincipal ? 100 : 0);

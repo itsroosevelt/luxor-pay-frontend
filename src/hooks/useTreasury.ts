@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { auth } from '@/lib/firebase';
 import {
@@ -20,6 +20,7 @@ import {
 import { syncProposal } from '@/lib/proposals-api';
 import { TREASURY_CHANGED_EVENT, signAndSendPending, walletAddress } from '@/lib/squads-tx';
 import { getWalletAuthHeaders } from '@/lib/wallet-session';
+import { createSharedResource } from '@/lib/shared-resource';
 
 const BALANCE_REFRESH_MS = 30_000;
 
@@ -51,59 +52,44 @@ interface UseTreasuryReturn {
   sweepCollector: () => Promise<string[]>;
 }
 
+interface TreasuryData {
+  config: MultisigConfig | null;
+  vaults: Vault[];
+  collector: CollectorInfo | null;
+}
+
+/** One shared copy for every widget on the page (Treasury, Proposals, Settings…). */
+const treasuryResource = createSharedResource<TreasuryData>(
+  { config: null, vaults: [], collector: null },
+  async (token) => {
+    const [cfg, vs] = await Promise.all([getMultisig(token), getVaults(token)]);
+    // Non-fatal and not awaited: the treasury renders even if the collection wallet can't be read.
+    getCollector(token)
+      .then((c) => treasuryResource.setData((prev) => ({ ...prev, collector: c.data })))
+      .catch(() => undefined);
+    return { config: cfg.data ?? null, vaults: vs.data ?? [], collector: null };
+  },
+  // Balances change on-chain at any time (deposits, executions): keep them live.
+  { refreshMs: BALANCE_REFRESH_MS },
+);
+
 export function useTreasury(): UseTreasuryReturn {
   const wallet = useWallet();
   const { connection } = useConnection();
-  const [config, setConfig] = useState<MultisigConfig | null>(null);
-  const [vaults, setVaults] = useState<Vault[]>([]);
-  const [collector, setCollector] = useState<CollectorInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { data, isLoading, isError, errorMessage } = treasuryResource.useState();
+  const { config, vaults, collector } = data;
 
-  const refetch = useCallback(async (silent = false) => {
-    if (!silent) setIsLoading(true);
-    setIsError(false);
-    setErrorMessage(null);
-    try {
-      const token = await tokenOrMock();
-      const [cfg, vs] = await Promise.all([getMultisig(token), getVaults(token)]);
-      setConfig(cfg.data ?? null);
-      setVaults(vs.data ?? []);
-      // Non-fatal: the treasury still renders if the collection wallet can't be read.
-      getCollector(token).then((c) => setCollector(c.data)).catch(() => setCollector(null));
-    } catch (err) {
-      console.warn('Treasury fetch failed:', err);
-      // Keep the last real data on screen; never substitute demo data (it has fake addresses).
-      if (silent) return;
-      setIsError(true);
-      setErrorMessage(err instanceof Error ? err.message : 'No se pudo cargar la tesorería');
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    const unsub = auth.onAuthStateChanged(() => {
-      refetch();
-    });
-    return () => unsub();
-  }, [refetch]);
-
-  // Balances change on-chain at any time (deposits, executions): keep them live.
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      if (document.visibilityState === 'visible') refetch(true);
-    }, BALANCE_REFRESH_MS);
-    return () => window.clearInterval(id);
-  }, [refetch]);
+  const refetch = useCallback((silent = false) => treasuryResource.load({ silent }), []);
+  const setVaults = (update: (prev: Vault[]) => Vault[]) =>
+    treasuryResource.setData((prev) => ({ ...prev, vaults: update(prev.vaults) }));
+  const setConfig = (next: MultisigConfig) => treasuryResource.setData((prev) => ({ ...prev, config: next }));
 
   // Balances change after an on-chain execution elsewhere in the dashboard.
   useEffect(() => {
-    const onChange = () => { refetch(true); };
+    const onChange = () => { void treasuryResource.load({ silent: true }); };
     window.addEventListener(TREASURY_CHANGED_EVENT, onChange);
     return () => window.removeEventListener(TREASURY_CHANGED_EVENT, onChange);
-  }, [refetch]);
+  }, []);
 
   /** Wallet-signed session headers; throws if no wallet is connected. */
   const signed = () => getWalletAuthHeaders(wallet);
@@ -111,7 +97,8 @@ export function useTreasury(): UseTreasuryReturn {
   const createVault = async (payload: CreateVaultPayload): Promise<Vault> => {
     const token = await tokenOrMock();
     const res = await createVaultReq(token, payload, await signed());
-    setVaults((prev) => [...prev, res.data]);
+    // Replace instead of append if a background refresh already brought it.
+    setVaults((prev) => [...prev.filter((v) => v.id !== res.data.id), res.data]);
     return res.data;
   };
 
@@ -135,8 +122,13 @@ export function useTreasury(): UseTreasuryReturn {
   const sweepCollector = async (): Promise<string[]> => {
     const token = await tokenOrMock();
     const res = await sweepCollectorReq(token, await signed());
+    let signatures = res.data.signatures;
+    if (res.data.pendingTransaction) {
+      // The collection wallet has no SOL: the connected wallet signs as fee payer only.
+      signatures = [await signAndSendPending(res.data.pendingTransaction, wallet, connection)];
+    }
     await refetch(true);
-    return res.data.signatures;
+    return signatures;
   };
 
   const setThreshold = async (threshold: number): Promise<void> => {
