@@ -15,7 +15,7 @@ import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { syncProposal } from '@/features/treasury/api/proposals-api';
 import type { MemberProposalResult } from '@/features/treasury/api/members-api';
-import { TREASURY_CHANGED_EVENT, notifyTreasuryChanged, signAndSendPending } from '@/features/treasury/lib/squads-tx';
+import { TREASURY_CHANGED_EVENT, notifyTreasuryChanged, signAndSendPending, finalAction } from '@/features/treasury/lib/squads-tx';
 
 /**
  * Outcome of a member write. On an on-chain multisig the change is a Squads config
@@ -97,7 +97,7 @@ export function useMembers(): UseMembersReturn {
   const settle = async (res: MemberProposalResult): Promise<MemberWriteOutcome> => {
     if (!res.pendingTransaction || !res.proposal) return {};
     const signature = await signAndSendPending(res.pendingTransaction, wallet, connection);
-    await syncProposal(res.proposal.id, { signature, action: res.pendingTransaction.action });
+    await syncProposal(res.proposal.id, { signature, action: finalAction(res.pendingTransaction) });
     notifyTreasuryChanged(); // the proposals panel shows the new proposal
     return { proposalIndex: res.proposal.index };
   };

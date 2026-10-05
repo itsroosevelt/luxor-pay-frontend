@@ -172,10 +172,10 @@ export function ProposalsPanel({
   const sendList = heldTokens.length ? heldTokens : tokenList;
   const effMint = sendList.some((t) => t.mint === form.mint) ? form.mint : sendList[0]?.mint || '';
 
-  const run = async (label: string, fn: () => Promise<unknown>, ok: string) => {
+  const run = async <T,>(label: string, fn: () => Promise<T>, ok: string | ((result: T) => string)) => {
     if (!requireWallet()) return;
     setBusy(label);
-    try { await fn(); toast.success(ok); }
+    try { const result = await fn(); toast.success(typeof ok === 'function' ? ok(result) : ok); }
     catch (e) { toast.error(e instanceof Error ? e.message : 'Action failed'); }
     finally { setBusy(null); }
   };
@@ -202,10 +202,11 @@ export function ProposalsPanel({
     };
     setBusy('create');
     try {
-      await createProposal(payload);
+      const created = await createProposal(payload);
       setCreateOpen(false);
       setForm((f) => ({ ...f, title: '', destination: '', destinationLabel: '', amount: '', memo: '' }));
-      toast.success('Proposal created · open for voting');
+      // When the creator's vote already meets the threshold it executes in the same signature.
+      toast.success(created?.status === 'executed' ? 'Propuesta ejecutada on-chain' : 'Proposal created · open for voting');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not create proposal'); }
     finally { setBusy(null); }
   };
@@ -358,7 +359,7 @@ export function ProposalsPanel({
               {/* actions */}
               <ProposalActions
                 p={detail} me={me} busy={busy} connected={connected}
-                onApprove={() => run('approve', () => approve(detail.id), 'Approval vote registered')}
+                onApprove={() => run('approve', () => approve(detail.id), (p) => (p?.status === 'executed' ? 'Aprobada y ejecutada on-chain' : 'Approval vote registered'))}
                 onReject={() => run('reject', () => reject(detail.id), 'Rejection vote registered')}
                 onExecute={() => run('execute', () => execute(detail.id), 'Proposal executed on-chain')}
                 onActivate={() => run('activate', () => activate(detail.id), 'Proposal opened for voting')}

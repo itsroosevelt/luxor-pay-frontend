@@ -14,7 +14,7 @@ import {
   type CreateProposalPayload,
   type ProposalMutationResponse,
 } from '@/features/treasury/api/proposals-api';
-import { notifyTreasuryChanged, signAndSendPending, walletAddress } from '@/features/treasury/lib/squads-tx';
+import { notifyTreasuryChanged, signAndSendPending, walletAddress, finalAction } from '@/features/treasury/lib/squads-tx';
 import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { createSharedResource } from '@/lib/shared-resource';
 
@@ -69,8 +69,8 @@ export function useProposals(): UseProposalsReturn {
   const settle = async (res: ProposalMutationResponse): Promise<Proposal> => {
     if (!res.pendingTransaction) return res.data;
     const signature = await signAndSendPending(res.pendingTransaction, wallet, connection);
-    const synced = await syncProposal(res.data.id, { signature, action: res.pendingTransaction.action });
-    if (res.pendingTransaction.action === 'execute') notifyTreasuryChanged();
+    const synced = await syncProposal(res.data.id, { signature, action: finalAction(res.pendingTransaction) });
+    if (finalAction(res.pendingTransaction) === 'execute') notifyTreasuryChanged();
     if (synced.data.payoutStatus === 'failed') {
       replace(synced.data);
       throw new Error(`Propuesta ejecutada, pero el pago desde la Bóveda Principal falló: ${synced.data.payoutError ?? 'error desconocido'}`);

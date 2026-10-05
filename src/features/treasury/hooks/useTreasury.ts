@@ -17,7 +17,7 @@ import {
   type CreateVaultPayload,
 } from '@/features/treasury/api/treasury-api';
 import { syncProposal } from '@/features/treasury/api/proposals-api';
-import { TREASURY_CHANGED_EVENT, signAndSendPending, walletAddress } from '@/features/treasury/lib/squads-tx';
+import { TREASURY_CHANGED_EVENT, signAndSendPending, walletAddress, finalAction } from '@/features/treasury/lib/squads-tx';
 import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { createSharedResource } from '@/lib/shared-resource';
 
@@ -127,7 +127,7 @@ export function useTreasury(): UseTreasuryReturn {
     if (res.pendingTransaction && res.proposal) {
       // On-chain: the change is a config proposal; the threshold updates once it executes.
       const signature = await signAndSendPending(res.pendingTransaction, wallet, connection);
-      await syncProposal(res.proposal.id, { signature, action: res.pendingTransaction.action });
+      await syncProposal(res.proposal.id, { signature, action: finalAction(res.pendingTransaction) });
     }
     setConfig(res.data);
   };
