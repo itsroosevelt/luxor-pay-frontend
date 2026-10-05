@@ -25,6 +25,7 @@ import { useRouter } from 'next/navigation';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { getLuxorEnv } from '@/lib/luxor-env';
 import { AnimatePresence } from 'framer-motion';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { MOCK_PAYMENT_LINKS } from '@/mocks/data';
 import { useLinkBuilderForm } from '@/features/payments/hooks/useLinkBuilderForm';
 import { CreateLinkModal } from '@/features/payments/components/CreateLinkModal';
@@ -143,10 +144,12 @@ export default function PortalPaymentLinksPage() {
         if (data && Array.isArray(data) && data.length > 0) {
           setLinks(data);
         } else {
-          setLinks(MOCK_PAYMENT_LINKS);
+          setLinks(IS_MOCK_MODE ? MOCK_PAYMENT_LINKS : []);
         }
       } catch {
-        setLinks(MOCK_PAYMENT_LINKS);
+        // Demo fixtures only in Mock Mode; in production report the failure.
+        setLinks(IS_MOCK_MODE ? MOCK_PAYMENT_LINKS : []);
+        if (!IS_MOCK_MODE) toast.error('No se pudieron cargar los payment links. Reintenta en unos segundos.');
       } finally {
         setLoading(false);
       }

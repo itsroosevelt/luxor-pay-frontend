@@ -10,6 +10,7 @@ import {
   updatePaymentLink,
   deletePaymentLink,
 } from '@/features/payments/api/payments-api';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { MOCK_PAYMENT_LINKS } from '@/mocks/data';
 import Link from 'next/link';
 import {
@@ -126,7 +127,7 @@ export default function ProductCatalogDarkPage() {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        setProducts(mapLinksToProducts(MOCK_PAYMENT_LINKS));
+        setProducts(mapLinksToProducts(IS_MOCK_MODE ? MOCK_PAYMENT_LINKS : []));
         setLoading(false);
         return;
       }
@@ -135,10 +136,12 @@ export default function ProductCatalogDarkPage() {
         if (data && Array.isArray(data) && data.length > 0) {
           setProducts(mapLinksToProducts(data));
         } else {
-          setProducts(mapLinksToProducts(MOCK_PAYMENT_LINKS));
+          setProducts(mapLinksToProducts(IS_MOCK_MODE ? MOCK_PAYMENT_LINKS : []));
         }
       } catch (err) {
-        setProducts(mapLinksToProducts(MOCK_PAYMENT_LINKS));
+        // Demo fixtures only in Mock Mode; in production report the failure.
+        setProducts(mapLinksToProducts(IS_MOCK_MODE ? MOCK_PAYMENT_LINKS : []));
+        if (!IS_MOCK_MODE) toast.error('No se pudo cargar el catálogo. Reintenta en unos segundos.');
       } finally {
         setLoading(false);
       }

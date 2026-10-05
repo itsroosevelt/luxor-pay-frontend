@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { auth } from '@/lib/firebase';
 import { getPaymentLink } from '@/features/payments/api/payments-api';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { MOCK_PAYMENT_LINKS } from '@/mocks/data';
 import {
   ArrowLeft,
@@ -101,6 +102,13 @@ export default function EnglishProductDetailPage() {
         console.warn('Backend fetch failed, using fallback item', err);
       }
 
+      // Outside Mock Mode never show an invented product (with a payable link) — show "not found".
+      if (!IS_MOCK_MODE) {
+        setProduct(null);
+        setLoading(false);
+        return;
+      }
+
       const found = MOCK_PAYMENT_LINKS.find((l) => l.id === id) || {
         id: id || 'prod_UxZeYh41dBsX3B',
         name: 'All-Inclusive Plan',
@@ -142,6 +150,19 @@ export default function EnglishProductDetailPage() {
       <PageContainer>
         <LoadingWrapper>
           <Loader2 size={24} className="animate-spin" /> Loading product details...
+        </LoadingWrapper>
+      </PageContainer>
+    );
+  }
+
+  if (!product) {
+    return (
+      <PageContainer>
+        <LoadingWrapper>
+          Producto no encontrado o no se pudo cargar.{' '}
+          <BackLink href="/payment-portal/catalog">
+            <ArrowLeft size={14} /> Catalog
+          </BackLink>
         </LoadingWrapper>
       </PageContainer>
     );

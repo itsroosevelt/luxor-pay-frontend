@@ -4,6 +4,7 @@ import {
   fetchOnChainWalletBalance,
   WalletBalanceData,
 } from '@/features/wallet/api/solana-api';
+import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { MOCK_WALLET_BALANCE } from '@/mocks/data';
 
 interface UseGetBalanceReturn {
@@ -44,7 +45,7 @@ export function useGetBalance(publicKey?: string | null): UseGetBalanceReturn {
     try {
       const balanceData = await getWalletBalance(trimmedKey);
       
-      setData(balanceData ?? { ...MOCK_WALLET_BALANCE, publicKey: trimmedKey });
+      setData(balanceData ?? (IS_MOCK_MODE ? { ...MOCK_WALLET_BALANCE, publicKey: trimmedKey } : null));
       setIsError(false);
       setErrorMessage(null);
     } catch (error: any) {
@@ -52,11 +53,14 @@ export function useGetBalance(publicKey?: string | null): UseGetBalanceReturn {
       try {
         const onChain = await fetchOnChainWalletBalance(trimmedKey);
         setData(onChain);
+        setIsError(false);
+        setErrorMessage(null);
       } catch {
-        setData({ ...MOCK_WALLET_BALANCE, publicKey: trimmedKey });
+        // Never show an invented balance outside Mock Mode: report the failure instead.
+        setData(IS_MOCK_MODE ? { ...MOCK_WALLET_BALANCE, publicKey: trimmedKey } : null);
+        setIsError(!IS_MOCK_MODE);
+        setErrorMessage(IS_MOCK_MODE ? null : 'No se pudo obtener el saldo. Reintenta en unos segundos.');
       }
-      setIsError(false);
-      setErrorMessage(null);
     } finally {
       setIsLoading(false);
     }
