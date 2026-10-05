@@ -47,6 +47,25 @@ export function getMissingFirebaseEnvKeys(): string[] {
 const hasRealFirebaseEnv = getMissingFirebaseEnvKeys().length === 0;
 export const isFirebaseConfigured = hasRealFirebaseEnv || IS_MOCK_MODE;
 
+/** Minimal Auth-compatible object with no session (used when Firebase is not configured). */
+const signedOutAuth = {
+  name: 'unconfigured-auth',
+  currentUser: null,
+  onAuthStateChanged(nextOrObserver: ((user: null) => void) | { next?: (user: null) => void }) {
+    Promise.resolve().then(() => {
+      if (typeof nextOrObserver === 'function') nextOrObserver(null);
+      else nextOrObserver?.next?.(null);
+    });
+    return () => {};
+  },
+  onIdTokenChanged(nextOrObserver: ((user: null) => void) | { next?: (user: null) => void }) {
+    return signedOutAuth.onAuthStateChanged(nextOrObserver);
+  },
+  async signOut() {},
+  async setPersistence() {},
+  async updateCurrentUser() {},
+};
+
 // Initialize Firebase App
 let app: any;
 let db: any;
@@ -62,9 +81,11 @@ if (IS_MOCK_MODE) {
   db = getFirestore(app);
   auth = getAuth(app);
 } else {
+  // Firebase env missing outside Mock Mode: stay signed out. Falling back to the demo
+  // session here would let a misconfigured deploy open the dashboard as a fake user.
   app = null;
   db = null;
-  auth = mockAuth;
+  auth = signedOutAuth;
 }
 
 export { app, db, auth };
