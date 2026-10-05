@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveBackendTarget } from '@/lib/backend-proxy';
 
 function getBackendBaseUrl(): string {
   return (process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3008').replace(
@@ -9,8 +10,11 @@ function getBackendBaseUrl(): string {
 
 async function proxy(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const { path } = await context.params;
-  const backendPath = `/${path.join('/')}`;
-  const target = new URL(backendPath, `${getBackendBaseUrl()}/`);
+  // Only ever forward to the backend: reject paths that could switch host (SSRF).
+  const target = resolveBackendTarget(getBackendBaseUrl(), path);
+  if (!target) {
+    return NextResponse.json({ message: 'Invalid API path' }, { status: 400 });
+  }
 
   request.nextUrl.searchParams.forEach((value, key) => {
     target.searchParams.set(key, value);

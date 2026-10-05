@@ -8,6 +8,7 @@
     "build:mobile": "mv src/app/api src/app/_api && BUILD_TARGET=capacitor next build; mv src/app/_api src/app/api",
     "start": "next start -H 0.0.0.0 -p 3000",
     "lint": "eslint",
+    "test": "vitest run",
     "sync:contracts": "node scripts/sync-contracts.mjs",
     "check:contracts": "node scripts/sync-contracts.mjs --check"
   },
@@ -50,6 +51,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }
