@@ -1,5 +1,6 @@
 import { bearerAuth } from '@/lib/auth-client';
 import { apiUrl } from '@/lib/api-client';
+import type { PendingTransaction } from '@/features/treasury/lib/squads-tx';
 
 /**
  * SRS role matrix (Squads v4 reference):
@@ -34,8 +35,26 @@ export interface Member {
   isCurrentUser?: boolean;
   /** null while the multisig is off-chain; otherwise whether the wallet is a Squads member. */
   onChain?: boolean | null;
+  /** Membership change waiting for its Squads config proposal to execute. */
+  pendingChange?: PendingMemberChange | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PendingMemberChange {
+  op: 'add' | 'remove' | 'update';
+  proposalId: string;
+  proposalIndex: number;
+  status: string;
+}
+
+/**
+ * On an on-chain multisig, member writes answer with the Squads config proposal
+ * (AddMember / RemoveMember) that the connected wallet must sign.
+ */
+export interface MemberProposalResult {
+  proposal?: { id: string; index: number };
+  pendingTransaction?: PendingTransaction;
 }
 
 export interface CreateMemberPayload {
@@ -69,7 +88,7 @@ export async function getMembers(): Promise<MembersResponse> {
 export async function createMember(
   payload: CreateMemberPayload,
   walletHeaders?: Record<string, string>,
-): Promise<{ data: Member }> {
+): Promise<{ data: Member } & MemberProposalResult> {
   const response = await fetch(apiUrl('/members'), {
     method: 'POST',
     headers: {
@@ -92,7 +111,7 @@ export async function updateMemberRoles(
   id: string,
   roles: Partial<MemberRoles>,
   walletHeaders?: Record<string, string>,
-): Promise<{ data: Member }> {
+): Promise<{ data: Member } & MemberProposalResult> {
   return updateMemberDetails(id, { roles }, walletHeaders);
 }
 
@@ -100,7 +119,7 @@ export async function updateMemberDetails(
   id: string,
   payload: { name?: string; roles?: Partial<MemberRoles> },
   walletHeaders?: Record<string, string>,
-): Promise<{ data: Member }> {
+): Promise<{ data: Member } & MemberProposalResult> {
   const response = await fetch(apiUrl(`/members/${id}`), {
     method: 'PATCH',
     headers: {
@@ -122,7 +141,7 @@ export async function updateMemberDetails(
 export async function deleteMember(
   id: string,
   walletHeaders?: Record<string, string>,
-): Promise<{ success: boolean }> {
+): Promise<{ success: boolean; pending?: boolean } & MemberProposalResult> {
   const response = await fetch(apiUrl(`/members/${id}`), {
     method: 'DELETE',
     headers: {

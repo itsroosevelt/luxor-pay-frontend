@@ -99,6 +99,30 @@ const fieldStyle: React.CSSProperties = {
   color: 'var(--lx-text)', fontSize: 14, outline: 'none', boxSizing: 'border-box',
 };
 
+/** Squads status of a member: pending proposal, on-chain, or not in the multisig. Hidden while off-chain. */
+function MemberChainBadge({ member }: { member: Member }) {
+  const pending = member.pendingChange;
+  if (pending) {
+    const label = pending.op === 'add' ? 'Alta pendiente' : pending.op === 'remove' ? 'Baja pendiente' : 'Cambio pendiente';
+    return (
+      <span title="Propuesta de configuración de Squads esperando firmas / ejecución"
+        className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-amber-300">
+        {label} #{pending.proposalIndex}
+      </span>
+    );
+  }
+  if (member.onChain === true) {
+    return <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-emerald-500/15 text-emerald-300">On-chain</span>;
+  }
+  if (member.onChain === false) {
+    return (
+      <span title="No es miembro del multisig de Squads (solo Luxor)"
+        className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-white/10 text-white/50">Fuera de Squads</span>
+    );
+  }
+  return null;
+}
+
 /* ─────────────────────────────── page ─────────────────────────────── */
 
 export default function MembersPage() {
@@ -149,7 +173,12 @@ export default function MembersPage() {
     }
     const roles = { ...m.roles, [key]: !m.roles[key] };
     try {
-      await updateMember(m.id, { roles });
+      const { proposalIndex } = await updateMember(m.id, { roles });
+      if (proposalIndex) {
+        // On-chain multisig: Squads permissions change only when the proposal executes.
+        toast.success(`Propuesta #${proposalIndex} creada · los permisos de ${m.name} cambiarán cuando el multisig la apruebe y ejecute`);
+        return;
+      }
       setDetail((d) => (d && d.id === m.id ? { ...d, roles } : d));
       toast.success(`${MEMBER_ROLE_META[key].label} ${roles[key] ? 'assigned' : 'removed'} · ${m.name}`);
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not update role'); }
@@ -166,10 +195,14 @@ export default function MembersPage() {
     }
     setBusy(true);
     try {
-      await addMember({ name: form.name.trim(), walletAddress: form.walletAddress.trim(), roles: form.roles });
+      const { proposalIndex } = await addMember({ name: form.name.trim(), walletAddress: form.walletAddress.trim(), roles: form.roles });
       setForm({ name: '', walletAddress: '', roles: { admin: false, signer: true, proposer: true, auditor: false } });
       setAddOpen(false);
-      toast.success('Member added to multisig');
+      toast.success(
+        proposalIndex
+          ? `Propuesta #${proposalIndex} creada · ${form.name.trim()} entrará al multisig cuando se apruebe y ejecute`
+          : 'Member added to multisig',
+      );
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not add member'); }
     finally { setBusy(false); }
   };
@@ -179,8 +212,12 @@ export default function MembersPage() {
     if (deleting.roles.admin && adminCount <= 1) { toast.error('Cannot remove the only Administrator'); return; }
     setBusy(true);
     try {
-      await removeMember(deleting.id);
-      toast.success(`${deleting.name} was removed from multisig`);
+      const { proposalIndex } = await removeMember(deleting.id);
+      toast.success(
+        proposalIndex
+          ? `Propuesta #${proposalIndex} creada · ${deleting.name} saldrá del multisig cuando se apruebe y ejecute`
+          : `${deleting.name} was removed from multisig`,
+      );
       if (detail?.id === deleting.id) setDetail(null);
       setDeleting(null);
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not remove member'); }
@@ -293,6 +330,7 @@ export default function MembersPage() {
                             {m.isCurrentUser && (
                               <span className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-white/15 text-white">You</span>
                             )}
+                            <MemberChainBadge member={m} />
                           </div>
                           <button type="button" onClick={(e) => { e.stopPropagation(); copy(m.walletAddress); }}
                             className="mt-0.5 inline-flex items-center gap-1 font-mono text-[11px] text-white/40 hover:text-white transition-colors">
