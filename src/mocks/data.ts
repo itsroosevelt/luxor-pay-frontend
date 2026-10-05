@@ -76,7 +76,6 @@ export const MOCK_MERCHANT_PROFILE: MerchantProfile = {
   email: 'siomeyromero@gmail.com',
   businessName: 'mey',
   merchantWallet: 'B8NUjS864N2N9iK8iZ1w2J3K4L5M6N7P8Q9R0S1T2U3V',
-  solanaToken: MINTS.USDC,
   kyc: true,
   kycStatus: 'VERIFIED',
   createdAt: iso(),

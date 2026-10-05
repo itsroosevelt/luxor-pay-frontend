@@ -15,7 +15,7 @@ import {
   type ProposalMutationResponse,
 } from '@/features/treasury/api/proposals-api';
 import { notifyTreasuryChanged, signAndSendPending, walletAddress } from '@/features/treasury/lib/squads-tx';
-import { getWalletAuthHeaders } from '@/features/treasury/lib/wallet-session';
+import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { createSharedResource } from '@/lib/shared-resource';
 
 

@@ -1,3 +1,4 @@
+// GENERATED from luxor-payment-service/src/shared/types — run `npm run sync:contracts`, do not edit.
 export function generateId(prefix: string): string {
   const bytes = new Uint8Array(9);
   crypto.getRandomValues(bytes);

@@ -1,4 +1,5 @@
 import { bearerAuth } from '@/lib/auth-client';
+import { getWalletAuthHeaders, type WalletSigner } from '@/lib/wallet-session';
 import { apiUrl } from '@/lib/api-client';
 
 export interface QuoteRequest {
@@ -58,14 +59,19 @@ export async function getSwapQuote(request: QuoteRequest
   return json as QuoteResponse;
 }
 
-export async function executeSwap(request: ExecuteSwapRequest
+/** `wallet`: connected member wallet — custodial swaps must carry its signed session. */
+export async function executeSwap(
+  request: ExecuteSwapRequest,
+  wallet: WalletSigner,
 ): Promise<ExecuteSwapResponse> {
   const url = apiUrl('/swap/execute');
-  
+  const walletHeaders = await getWalletAuthHeaders(wallet);
+
   const res = await fetch(url, {
     method: 'POST',
     headers: {
       ...(await bearerAuth()),
+      ...walletHeaders,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(request),

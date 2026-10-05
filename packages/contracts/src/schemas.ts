@@ -1,3 +1,4 @@
+// GENERATED from luxor-payment-service/src/shared/types — run `npm run sync:contracts`, do not edit.
 import { z } from 'zod';
 
 export const currencySchema = z.string().min(1);

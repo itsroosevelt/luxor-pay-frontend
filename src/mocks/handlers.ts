@@ -554,6 +554,9 @@ export function resolveMock(
   if (p === '/onramp/create-session' && method === 'POST') {
     return ok({ data: { sessionId: rid('onr'), clientSecret: 'mock_secret', url: 'https://example.com/mock-onramp' } });
   }
+  if (p === '/moonpay/sell-url' && method === 'POST') {
+    return ok({ url: 'https://example.com/mock-offramp' });
+  }
 
   return undefined;
 }

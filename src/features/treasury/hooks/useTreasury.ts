@@ -18,7 +18,7 @@ import {
 } from '@/features/treasury/api/treasury-api';
 import { syncProposal } from '@/features/treasury/api/proposals-api';
 import { TREASURY_CHANGED_EVENT, signAndSendPending, walletAddress } from '@/features/treasury/lib/squads-tx';
-import { getWalletAuthHeaders } from '@/features/treasury/lib/wallet-session';
+import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { createSharedResource } from '@/lib/shared-resource';
 
 const BALANCE_REFRESH_MS = 30_000;

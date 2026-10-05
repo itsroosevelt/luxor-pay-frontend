@@ -6,7 +6,6 @@ export interface CreateMerchantDto {
   email: string;
   businessName?: string;
   merchantWallet?: string;
-  solanaToken?: string;
 }
 
 export interface PublicMerchantProfile {
@@ -99,7 +98,6 @@ export async function ensureMerchantProfile(email: string): Promise<MerchantProf
         email,
         businessName: '',
         merchantWallet: '',
-        solanaToken: '',
       });
     }
 
@@ -113,7 +111,6 @@ export interface UpdateMerchantDto {
   email?: string;
   businessName?: string;
   merchantWallet?: string;
-  solanaToken?: string;
 }
 
 export async function updateMerchantProfile(data: UpdateMerchantDto): Promise<MerchantProfile> {

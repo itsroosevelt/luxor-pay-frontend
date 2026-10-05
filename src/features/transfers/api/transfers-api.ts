@@ -1,4 +1,5 @@
 import { bearerAuth } from '@/lib/auth-client';
+import { getWalletAuthHeaders, type WalletSigner } from '@/lib/wallet-session';
 import { apiUrl } from '@/lib/api-client';
 
 export interface Transfer {
@@ -131,11 +132,14 @@ export interface SendTransferPayload {
   longitude?: number;
 }
 
-export async function sendTransfer(payload: SendTransferPayload): Promise<{ data: Transfer }> {
+/** `wallet`: connected member wallet — custodial outflows must carry its signed session. */
+export async function sendTransfer(payload: SendTransferPayload, wallet: WalletSigner): Promise<{ data: Transfer }> {
+  const walletHeaders = await getWalletAuthHeaders(wallet);
   const response = await fetch(apiUrl('/transfers/send'), {
     method: 'POST',
     headers: {
       ...(await bearerAuth()),
+      ...walletHeaders,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),

@@ -1,11 +1,15 @@
+// GENERATED from luxor-payment-service/src/shared/types — run `npm run sync:contracts`, do not edit.
+/** Token symbol from the token registry (e.g. 'SOL', 'USDC', 'STR'). */
 export type Currency = string;
+
+/** Currencies a Solana Pay payment order can be created in. */
+export type SolanaPayCurrency = 'SOL' | 'USDC';
 
 export interface MerchantProfile {
   id?: string;
   email: string;
   businessName?: string;
   merchantWallet?: string;
-  solanaToken?: string;
   kyc?: boolean;
   kycStatus?: string;
   createdAt: string;

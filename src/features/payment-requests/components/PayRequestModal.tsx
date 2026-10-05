@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { auth } from '@/lib/firebase';
 import { PaymentRequest } from '@/features/payment-requests/api/payment-requests-api';
 import { sendTransfer } from '@/features/transfers/api/transfers-api';
@@ -41,6 +42,7 @@ export function PaymentModal({
   const [step, setStep] = useState<PayStep>('idle');
   const [errorMsg, setErrorMsg] = useState('');
   const { latitude, longitude } = useGeolocation();
+  const wallet = useWallet();
 
   const { getTokenSymbol } = useTokenRegistry();
   const formattedAmount = formatAmount(request.amount, request.assetMint, network, getTokenSymbol);
@@ -63,7 +65,7 @@ export function PaymentModal({
         transactionTypeId: 'Request',
         paymentRequestId: request.id,
         ...(latitude !== null && longitude !== null ? { latitude, longitude } : {}),
-      });
+      }, wallet);
 
       setStep('success');
       toast.success(`Payment of ${formattedAmount} sent successfully!`);

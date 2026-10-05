@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -47,6 +48,7 @@ function walletsMatch(a: string, b: string): boolean {
 }
 
 export default function PayQrClient() {
+  const wallet = useWallet();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -307,7 +309,7 @@ export default function PayQrClient() {
         mint,
         reference: transferRef,
         ...geoCoords,
-      });
+      }, wallet);
 
       const transfer = res.data;
       setSuccessData({

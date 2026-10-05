@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { auth } from '@/lib/firebase';
 import {
   getSwapQuote,
@@ -17,6 +18,7 @@ export interface SwapState {
 }
 
 export function useSwap() {
+  const wallet = useWallet();
   const [state, setState] = useState<SwapState>({
     quoteData: null,
     isQuoting: false,
@@ -52,7 +54,7 @@ export function useSwap() {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error('User not authenticated');
       
-      const response = await executeSwap({ quoteResponse });
+      const response = await executeSwap({ quoteResponse }, wallet);
       
       setState((prev) => ({ ...prev, isExecuting: false }));
       return response;
@@ -65,7 +67,7 @@ export function useSwap() {
       }));
       return null;
     }
-  }, []);
+  }, [wallet]);
 
   const reset = useCallback(() => {
     setState({

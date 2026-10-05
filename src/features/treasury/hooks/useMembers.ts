@@ -12,7 +12,7 @@ import {
 } from '@/features/treasury/api/members-api';
 
 import { useWallet } from '@solana/wallet-adapter-react';
-import { getWalletAuthHeaders } from '@/features/treasury/lib/wallet-session';
+import { getWalletAuthHeaders } from '@/lib/wallet-session';
 
 interface UseMembersReturn {
   data: Member[];

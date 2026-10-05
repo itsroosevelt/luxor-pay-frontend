@@ -4,8 +4,10 @@ import React, { useEffect, useState, useCallback } from "react";
 import styled, { keyframes } from "styled-components";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2, AlertCircle, RefreshCw } from "lucide-react";
-import { useMerchant } from "@/features/merchant/context/MerchantContext";
-import { auth } from "@/lib/firebase";
+import { apiUrl } from "@/lib/api-client";
+import { bearerAuth } from "@/lib/auth-client";
+import { getWalletAuthHeaders } from "@/lib/wallet-session";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 // ─── Keyframes ────────────────────────────────────────────────────────────────
 const spin = keyframes`
@@ -217,10 +219,6 @@ const StyledIframe = styled.iframe`
   transition: opacity 0.3s ease;
 `;
 
-// ─── MoonPay public key (safe to expose in browser) ───────────────────────────
-const MOONPAY_PUBLIC_KEY =
-  process.env.NEXT_PUBLIC_MOONPAY_PUBLIC_KEY ?? "pk_test_W2O6PlGwF1pUtNQ4aeJlBMnwHOykacoN";
-
 // ─── View states ──────────────────────────────────────────────────────────────
 type ViewState = "signing" | "ready" | "iframe_loading" | "error";
 
@@ -234,77 +232,46 @@ interface OfframpModalProps {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function OfframpModal({ isOpen, onClose, solBalance }: OfframpModalProps) {
-  const { profile } = useMerchant();
+  const wallet = useWallet();
   const [view, setView] = useState<ViewState>("signing");
   const [signedUrl, setSignedUrl] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   /**
-   * Build the MoonPay sell-widget URL and sign it server-side via
-   * /api/moonpay/sign-url to avoid exposing the secret key in the browser.
+   * Ask the backend for a signed MoonPay sell-widget URL. The backend fills in the
+   * merchant identity from the session and adds the off-ramp intent its webhook requires.
    */
   const buildSignedUrl = useCallback(async () => {
     setView("signing");
     setSignedUrl(null);
     setErrorMsg(null);
 
-    const walletAddress = profile?.merchantWallet ?? "";
-
-    // Read the Firebase current user for low-friction pre-auth params
-    const currentUser = auth.currentUser;
-
-    // Build the query string params
-    const params = new URLSearchParams();
-    params.set("apiKey", MOONPAY_PUBLIC_KEY);
-    params.set("baseCurrencyCode", "sol");
-
-    // ── Low-friction: pre-fill the user's email so MoonPay sends an OTP
-    //    instead of forcing a full account-creation flow.
-    if (currentUser?.email) {
-      params.set("email", currentUser.email);
-    }
-
-    // ── Link this MoonPay session to your internal user ID so returning
-    //    customers are recognised without re-authenticating.
-    if (currentUser?.uid) {
-      params.set("externalCustomerId", currentUser.uid);
-    }
-
-    // Pre-fill the sell amount with the current SOL balance when available
-    if (solBalance && parseFloat(solBalance) > 0) {
-      params.set("baseCurrencyAmount", solBalance);
-    }
-    if (walletAddress) {
-      params.set("refundWalletAddress", walletAddress);
-    }
-
-    const queryString = params.toString();
-
     try {
-      // Ask the Next.js API route to sign the query string server-side
-      const res = await fetch("/api/moonpay/sign-url", {
+      // Off-ramp moves custodial funds: a registered member wallet must sign the session.
+      const walletHeaders = await getWalletAuthHeaders(wallet);
+      const res = await fetch(apiUrl("/moonpay/sell-url"), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ queryString }),
+        headers: { ...(await bearerAuth()), ...walletHeaders, "Content-Type": "application/json" },
+        // Pre-fill the sell amount with the current SOL balance when available
+        body: JSON.stringify(
+          solBalance && parseFloat(solBalance) > 0 ? { baseCurrencyAmount: solBalance } : {},
+        ),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data?.error ?? `Signing failed (${res.status})`);
+        throw new Error(data?.message ?? `Signing failed (${res.status})`);
       }
 
-      const { signature } = await res.json();
-
-      // Append the signature to the query string as required by MoonPay
-      const finalUrl = `https://sell.moonpay.com?${queryString}&signature=${encodeURIComponent(signature)}`;
-      setSignedUrl(finalUrl);
+      const { url } = await res.json();
+      setSignedUrl(url);
       setView("iframe_loading");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setErrorMsg(message);
       setView("error");
     }
-  }, [profile?.merchantWallet, solBalance]);
+  }, [solBalance, wallet]);
 
   // Trigger signing every time the modal opens
   useEffect(() => {

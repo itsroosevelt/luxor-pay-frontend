@@ -7,7 +7,9 @@
     "build": "next build",
     "build:mobile": "mv src/app/api src/app/_api && BUILD_TARGET=capacitor next build; mv src/app/_api src/app/api",
     "start": "next start -H 0.0.0.0 -p 3000",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync:contracts": "node scripts/sync-contracts.mjs",
+    "check:contracts": "node scripts/sync-contracts.mjs --check"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.1",

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { sendTransfer, SendTransferPayload, Transfer } from '@/features/transfers/api/transfers-api';
 import { auth } from '@/lib/firebase';
 import { useGeolocation } from '@/context/GeolocationContext';
@@ -15,6 +16,7 @@ export function useSendTransfer(): UseSendTransferReturn {
   const [isError, setIsError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { latitude, longitude } = useGeolocation();
+  const wallet = useWallet();
 
   const mutate = async (payload: SendTransferPayload) => {
     setIsLoading(true);
@@ -35,7 +37,7 @@ export function useSendTransfer(): UseSendTransferReturn {
           : {}),
       };
 
-      const response = await sendTransfer(enrichedPayload);
+      const response = await sendTransfer(enrichedPayload, wallet);
       
       setIsLoading(false);
       return { success: true, data: response.data };

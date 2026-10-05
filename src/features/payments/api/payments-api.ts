@@ -1,4 +1,5 @@
 import { bearerAuth } from '@/lib/auth-client';
+import { getWalletAuthHeaders, type WalletSigner } from '@/lib/wallet-session';
 import { apiUrl } from '@/lib/api-client';
 import type { PaymentOrder } from '@luxor/contracts';
 
@@ -164,11 +165,14 @@ export async function sendTransfer(payload: {
     latitude?: number;
     /** WGS-84 longitude in decimal degrees (-180 to 180). */
     longitude?: number;
-  }
+  },
+  /** Connected member wallet: custodial outflows must carry its signed session. */
+  wallet: WalletSigner,
 ): Promise<any> {
+  const walletHeaders = await getWalletAuthHeaders(wallet);
   const res = await fetch(apiUrl('/transfers/send'), {
     method: 'POST',
-    headers: { ...(await bearerAuth()), 'Content-Type': 'application/json' },
+    headers: { ...(await bearerAuth()), ...walletHeaders, 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
   const json = await res.json();

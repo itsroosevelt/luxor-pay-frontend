@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useParams, useRouter } from 'next/navigation';
 import { sendTransfer, getPaymentLink } from '@/features/payments/api/payments-api';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
@@ -254,6 +255,7 @@ const PayButton = styled.button`
 `;
 
 export default function PayLinkPage() {
+  const wallet = useWallet();
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
 
@@ -372,7 +374,7 @@ export default function PayLinkPage() {
         mint,
         reference: `Payment for ${link.name}`,
         ...geoCoords,
-      });
+      }, wallet);
 
       setSuccess(true);
     } catch (e) {
