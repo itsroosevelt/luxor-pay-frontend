@@ -4,7 +4,8 @@ import React, { useMemo, useCallback, useEffect, useRef, useState } from 'react'
 import { ConnectionProvider, WalletProvider, useWallet } from '@solana/wallet-adapter-react';
 import { toast } from 'sonner';
 import { WalletAdapterNetwork, WalletError } from '@solana/wallet-adapter-base';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
+import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
 import { SolanaMobileWalletAdapter, createDefaultAddressSelector, createDefaultAuthorizationResultCache, createDefaultWalletNotFoundHandler } from '@solana-mobile/wallet-adapter-mobile';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl, type ConnectionConfig } from '@solana/web3.js';
