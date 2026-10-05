@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Montserrat, Outfit, Inter } from "next/font/google";
+import { Montserrat, Outfit } from "next/font/google";
 import dynamic from "next/dynamic";
 import { Fragment } from "react";
 import "./globals.css";
@@ -28,13 +28,6 @@ const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
   weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-  weight: ['400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -96,7 +89,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${montserrat.variable} ${outfit.variable} ${inter.variable} antialiased`}
+        className={`${montserrat.variable} ${outfit.variable} antialiased`}
       >
         <StyledComponentsRegistry>
           <MockModeProvider>
