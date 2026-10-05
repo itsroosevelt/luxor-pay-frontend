@@ -1,5 +1,6 @@
 import { apiUrl } from '@/lib/api-client';
 import { bearerAuth } from '@/lib/auth-client';
+import { getWalletAuthHeaders, type WalletSigner } from '@/lib/wallet-session';
 import type { MerchantProfile } from '@luxor/contracts';
 
 export interface CreateMerchantDto {
@@ -113,13 +114,18 @@ export interface UpdateMerchantDto {
   merchantWallet?: string;
 }
 
-export async function updateMerchantProfile(data: UpdateMerchantDto): Promise<MerchantProfile> {
+/**
+ * `wallet`: pass the connected member wallet when `merchantWallet` changes — the
+ * backend requires its signed session for that (and only for that).
+ */
+export async function updateMerchantProfile(data: UpdateMerchantDto, wallet?: WalletSigner): Promise<MerchantProfile> {
   const authorization = await bearerAuth();
+  const walletHeaders = wallet ? await getWalletAuthHeaders(wallet) : {};
   let res: Response;
   try {
     res = await fetch(apiUrl('/merchants/me'), {
       method: 'PATCH',
-      headers: { ...authorization, 'Content-Type': 'application/json' },
+      headers: { ...authorization, ...walletHeaders, 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
   } catch {

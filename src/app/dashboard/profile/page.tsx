@@ -19,6 +19,7 @@ import {
 import { auth } from '@/lib/firebase';
 import { getMerchantProfile, updateMerchantProfile } from '@/features/merchant/api/merchants-api';
 import { useMerchant } from '@/features/merchant/context/MerchantContext';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { AccountStatementViewer } from '@/features/transactions/components/AccountStatementViewer';
 import { OfframpModal } from '@/features/onramp/components/OfframpModal';
 import { useGetBalance } from '@/features/wallet/hooks/useGetBalance';
@@ -26,6 +27,7 @@ import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const { profile, setProfile, setIsKycModalOpen } = useMerchant();
+  const wallet = useWallet();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -84,18 +86,24 @@ export default function ProfilePage() {
 
     setSaving(true);
     try {
-      const updated = await updateMerchantProfile({
-        businessName: editBusinessName.trim() || undefined,
-        merchantWallet: editMerchantWallet.trim() || undefined,
-      });
+      const nextWallet = editMerchantWallet.trim();
+      // Changing the receiving wallet needs a member wallet signature (asked only in that case).
+      const walletChanged = !!nextWallet && nextWallet !== (profile?.merchantWallet ?? '');
+      const updated = await updateMerchantProfile(
+        {
+          businessName: editBusinessName.trim() || undefined,
+          merchantWallet: nextWallet || undefined,
+        },
+        walletChanged ? wallet : undefined,
+      );
 
       setProfile(updated);
       setEditBusinessName(updated.businessName || '');
       setEditMerchantWallet(updated.merchantWallet || '');
       setIsEditing(false);
       toast.success('Profile saved successfully');
-    } catch {
-      toast.error('Could not save profile');
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Could not save profile');
     } finally {
       setSaving(false);
     }

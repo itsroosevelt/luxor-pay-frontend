@@ -10,6 +10,7 @@ import { authHeaders } from '@/lib/auth-client';
 import { apiUrl, getApiBaseUrl } from '@/lib/api-client';
 import type { PosDevice } from '@luxor/contracts';
 import { useMerchant } from '@/features/merchant/context/MerchantContext';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { useTreasury } from '@/features/treasury/hooks/useTreasury';
 import { useMembers } from '@/features/treasury/hooks/useMembers';
 import { Settings, Terminal, Code2, Plus, Key, Trash2, Copy, ShieldCheck, Minus } from 'lucide-react';
@@ -30,7 +31,8 @@ function SettingsContent() {
     initialTab === 'pos' || initialTab === 'developers' ? initialTab : 'general'
   );
 
-  const { setProfile } = useMerchant();
+  const { profile: currentProfile, setProfile } = useMerchant();
+  const wallet = useWallet();
   const { config: treasuryConfig, isLoading: cfgLoading, setThreshold } = useTreasury();
   const { data: members = [] } = useMembers();
 
@@ -138,15 +140,21 @@ function SettingsContent() {
 
     setSavingProfile(true);
     try {
-      const updated = await updateMerchantProfile({
-        businessName: businessName.trim() || undefined,
-        merchantWallet: merchantWallet.trim() || undefined,
-      });
+      const nextWallet = merchantWallet.trim();
+      // Changing the receiving wallet needs a member wallet signature (asked only in that case).
+      const walletChanged = !!nextWallet && nextWallet !== (currentProfile?.merchantWallet ?? '');
+      const updated = await updateMerchantProfile(
+        {
+          businessName: businessName.trim() || undefined,
+          merchantWallet: nextWallet || undefined,
+        },
+        walletChanged ? wallet : undefined,
+      );
 
       setProfile(updated);
       toast.success('Profile saved');
-    } catch {
-      toast.error('Could not save profile');
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Could not save profile');
     } finally {
       setSavingProfile(false);
     }

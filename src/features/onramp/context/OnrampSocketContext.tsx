@@ -10,6 +10,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { getIdToken } from '@/lib/auth-client';
 import { getApiBaseUrl } from '@/lib/api-client';
 import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { auth } from '@/lib/firebase';
@@ -125,6 +126,10 @@ export function OnrampSocketProvider({ children }: { children: ReactNode }) {
     setSocketStatus('connecting');
 
     const socket = io(baseUrl, {
+      // The backend joins the room of the user behind this token (fresh on every reconnect).
+      auth: (cb: (data: { token: string }) => void) => {
+        void getIdToken().then((token) => cb({ token: token ?? '' }), () => cb({ token: '' }));
+      },
       transports: ['websocket', 'polling'],
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,

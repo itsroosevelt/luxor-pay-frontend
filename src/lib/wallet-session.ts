@@ -1,20 +1,24 @@
 /**
- * Wallet-signed sessions for treasury writes.
+ * Wallet-signed sessions.
  *
- * Every create / edit / delete / vote on the treasury must come from a connected
- * wallet: the backend (WalletAuthGuard) verifies an Ed25519 signature over this
- * session message and checks the wallet's member role. One signature covers up
- * to 55 minutes for that wallet + account; switching wallet asks for a new one.
+ * Treasury writes, custodial outflows (send, pay, swap, off-ramp) and changing the
+ * merchant wallet must come from a connected member wallet: the backend
+ * (authorizeWalletSession) verifies an Ed25519 signature over this session message
+ * and checks the wallet's member role. One signature covers up to 55 minutes for
+ * that wallet + account; switching wallet asks for a new one.
  */
 
 import type { PublicKey } from '@solana/web3.js';
 import { auth } from '@/lib/firebase';
 
 /** Must match WALLET_SESSION_TITLE in the backend guard. */
-const SESSION_TITLE = 'Luxor Pay · autorizar sesión de tesorería';
+const SESSION_TITLE = 'Luxor Pay · autorizar firmas de tu cuenta';
+/** What one signature allows, shown in the wallet prompt so the user knows what they approve. */
+const SESSION_SCOPE = 'Permite: tesorería, enviar, pagar, swaps, off-ramp y cambiar la wallet de cobros durante 55 min';
 const SESSION_MS = 55 * 60 * 1000;
 const RENEW_MARGIN_MS = 60 * 1000;
-const STORAGE_KEY = 'luxor_wallet_session';
+// v2: sessions signed with the previous message are re-requested so users see what they now authorize.
+const STORAGE_KEY = 'luxor_wallet_session_v2';
 
 export interface WalletSigner {
   publicKey: PublicKey | null;
@@ -70,6 +74,7 @@ async function signSession(
   const expiresAt = issuedAt + SESSION_MS;
   const text = [
     SESSION_TITLE,
+    SESSION_SCOPE,
     `Wallet: ${wallet}`,
     `Cuenta: ${merchantId}`,
     `Emitida: ${new Date(issuedAt).toISOString()}`,
