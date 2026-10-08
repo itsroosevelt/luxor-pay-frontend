@@ -141,7 +141,9 @@ export function useTreasury(): UseTreasuryReturn {
       outcome = { proposalIndex: res.proposal.index, executed: synced.data.status === 'executed' };
       notifyTreasuryChanged(); // the config and the proposals list re-read the chain
     }
-    setConfig(res.data);
+    if (res.data) setConfig(res.data);
+    await refetch(true);
+    notifyTreasuryChanged();
     return outcome;
   };
 

@@ -26,6 +26,8 @@ import {
   EyeOff,
   ExternalLink,
   X,
+  Loader2,
+  Pencil,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -60,17 +62,63 @@ function SettingsContent() {
   const signerCount = members.filter((m) => m.roles?.signer).length || 1;
   const threshold = treasuryConfig?.threshold ?? 1;
 
-  const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a);
+  const [isEditingThreshold, setIsEditingThreshold] = useState(false);
+  const [editableThreshold, setEditableThreshold] = useState<number>(threshold);
+  const [savingThreshold, setSavingThreshold] = useState(false);
 
-  const changeThreshold = async (next: number) => {
-    if (next < 1 || next > Math.max(1, signerCount)) return;
-    try {
-      await setThreshold(next);
-      toast.success(`Signature threshold updated: ${next} of ${signerCount}`);
-    } catch {
-      toast.error('Could not update threshold');
+  useEffect(() => {
+    if (!isEditingThreshold) {
+      setEditableThreshold(threshold);
+    }
+  }, [threshold, isEditingThreshold]);
+
+  const handleStartEdit = () => {
+    setEditableThreshold(threshold);
+    setIsEditingThreshold(true);
+  };
+
+  const handleCancelEdit = () => {
+    setEditableThreshold(threshold);
+    setIsEditingThreshold(false);
+  };
+
+  const handleDecrementThreshold = () => {
+    if (editableThreshold > 1) {
+      setEditableThreshold((prev) => prev - 1);
     }
   };
+
+  const handleIncrementThreshold = () => {
+    if (editableThreshold < signerCount) {
+      setEditableThreshold((prev) => prev + 1);
+    }
+  };
+
+  const handleSaveThreshold = async () => {
+    if (editableThreshold === threshold) {
+      setIsEditingThreshold(false);
+      return;
+    }
+    setSavingThreshold(true);
+    try {
+      const outcome = await setThreshold(editableThreshold);
+      if (outcome && outcome.proposalIndex !== undefined && !outcome.executed) {
+        toast.info(
+          `Propuesta #${outcome.proposalIndex} de cambio de umbral creada. Al requerirse ${threshold} firmas, la propuesta está pendiente de aprobación en Treasury para ejecutarse.`,
+          { duration: 7000 }
+        );
+      } else {
+        toast.success(`Umbral de firmas actualizado: ${editableThreshold} de ${signerCount}`);
+      }
+      setIsEditingThreshold(false);
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'No se pudo actualizar el umbral');
+    } finally {
+      setSavingThreshold(false);
+    }
+  };
+
+  const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a);
 
   // General profile state
   const [businessName, setBusinessName] = useState('');
@@ -537,32 +585,86 @@ function SettingsContent() {
               </div>
 
               {/* Threshold Adjuster */}
-              <div className="flex items-center justify-between py-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-3">
                 <div>
                   <h3 className="text-sm font-semibold text-white font-outfit">Signing Threshold</h3>
                   <p className="text-xs text-gray-400 font-montserrat">
-                    {threshold} of {signerCount} signers required to execute proposals.
+                    {!isEditingThreshold ? (
+                      `${threshold} of ${signerCount} signers required to execute proposals.`
+                    ) : (
+                      <span className="text-amber-400 font-medium">
+                        Selecciona el nuevo umbral ({editableThreshold} de {signerCount}) y pulsa Guardar para firmar.
+                      </span>
+                    )}
                   </p>
                 </div>
-                <div className="flex items-center gap-1 rounded-full p-1 border border-white/20">
-                  <button
-                    type="button"
-                    disabled={threshold <= 1}
-                    onClick={() => changeThreshold(threshold - 1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
-                  >
-                    <Minus size={12} />
-                  </button>
-                  <span className="w-6 text-center text-xs font-semibold text-white font-mono">{threshold}</span>
-                  <button
-                    type="button"
-                    disabled={threshold >= signerCount}
-                    onClick={() => changeThreshold(threshold + 1)}
-                    className="flex h-6 w-6 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
-                  >
-                    <Plus size={12} />
-                  </button>
-                </div>
+
+                {!isEditingThreshold ? (
+                  <div className="flex items-center gap-3">
+                    <span className="w-8 text-center text-xs font-semibold text-white font-mono bg-white/10 py-1 px-2.5 rounded-full border border-white/15">
+                      {threshold}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleStartEdit}
+                      className="px-4 py-1.5 border border-white/20 text-white font-medium text-xs rounded-full hover:bg-white/10 transition-colors font-outfit flex items-center gap-1.5"
+                    >
+                      <Pencil size={13} /> Editar
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 rounded-full p-1 border border-white/20 bg-white/5">
+                      <button
+                        type="button"
+                        disabled={editableThreshold <= 1 || savingThreshold}
+                        onClick={handleDecrementThreshold}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30 transition-colors"
+                        title="Disminuir umbral"
+                      >
+                        <Minus size={12} />
+                      </button>
+                      <span className="w-6 text-center text-xs font-semibold text-white font-mono">{editableThreshold}</span>
+                      <button
+                        type="button"
+                        disabled={editableThreshold >= signerCount || savingThreshold}
+                        onClick={handleIncrementThreshold}
+                        className="flex h-6 w-6 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30 transition-colors"
+                        title="Aumentar umbral"
+                      >
+                        <Plus size={12} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleCancelEdit}
+                        disabled={savingThreshold}
+                        className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                        title="Cancelar edición"
+                      >
+                        <X size={15} />
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSaveThreshold}
+                        disabled={savingThreshold}
+                        className="px-4 py-1.5 bg-white text-black font-semibold text-xs rounded-full hover:bg-neutral-200 transition-all font-outfit flex items-center gap-1.5"
+                      >
+                        {savingThreshold ? (
+                          <>
+                            <Loader2 size={13} className="animate-spin" />
+                            Firmando…
+                          </>
+                        ) : (
+                          'Guardar'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

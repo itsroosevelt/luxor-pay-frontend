@@ -22,6 +22,7 @@ import { useTreasury } from '@/features/treasury/hooks/useTreasury';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
+import { TokenIcon } from '@/components/ui/TokenIcon';
 import {
   PROPOSAL_STATUS_META,
   type Proposal,
@@ -65,6 +66,16 @@ const timeAgo = (iso: string) => {
   return `${Math.floor(s / 86400)}d ago`;
 };
 
+const formatTime = (iso: string) => {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  } catch {
+    return '';
+  }
+};
+
 function StatusChip({ status }: { status: Proposal['status'] }) {
   const meta = PROPOSAL_STATUS_META[status];
   const tone = meta?.tone ?? 'neutral';
@@ -72,18 +83,16 @@ function StatusChip({ status }: { status: Proposal['status'] }) {
   const isNegative = tone === 'negative' || status === 'rejected' || status === 'cancelled';
   const isActive = tone === 'active' || status === 'active' || status === 'draft';
 
-  const style: React.CSSProperties = isPositive
-    ? { background: 'rgba(16, 185, 129, 0.15)', color: '#34D399', borderColor: 'rgba(16, 185, 129, 0.3)' }
+  const color = isPositive
+    ? '#34D399'
     : isNegative
-    ? { background: 'rgba(239, 68, 68, 0.15)', color: '#F87171', borderColor: 'rgba(239, 68, 68, 0.3)' }
+    ? '#F87171'
     : isActive
-    ? { background: 'rgba(245, 158, 11, 0.15)', color: '#FBBF24', borderColor: 'rgba(245, 158, 11, 0.3)' }
-    : { background: 'rgba(255, 255, 255, 0.06)', color: 'rgba(255, 255, 255, 0.6)', borderColor: 'rgba(255, 255, 255, 0.15)' };
+    ? '#60A5FA'
+    : 'rgba(255, 255, 255, 0.5)';
+
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold" style={style}>
-      {isActive && <Clock size={11} />}
-      {isPositive && <Check size={11} />}
-      {isNegative && <Ban size={11} />}
+    <span className="text-[13px] font-semibold tracking-wide" style={{ color }}>
       {meta?.label || status}
     </span>
   );
@@ -231,7 +240,12 @@ export function ProposalsPanel({
       onCloseCreate?.();
       setForm((f) => ({ ...f, title: '', destination: '', destinationLabel: '', amount: '', memo: '' }));
       // When the creator's vote already meets the threshold it executes in the same signature.
-      toast.success(created?.status === 'executed' ? 'Propuesta ejecutada on-chain' : 'Proposal created · open for voting');
+      const execMsg = form.type === 'transfer'
+        ? 'Transferencia confirmada y ejecutada exitosamente en Solana'
+        : form.type === 'swap'
+        ? 'Swap ejecutado exitosamente en Solana'
+        : 'Transacción confirmada y ejecutada exitosamente en la red';
+      toast.success(created?.status === 'executed' ? execMsg : 'Propuesta creada exitosamente · Pendiente de firmas en el multisig');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not create proposal'); }
     finally { setBusy(null); }
   };
@@ -309,10 +323,11 @@ export function ProposalsPanel({
       )}
 
       {proposals.length > 0 && (
-        <div className="space-y-2.5">
+        <div className="flex flex-col border-t border-b border-white/10 divide-y divide-white/10 mt-2">
           <AnimatePresence>
             {proposals.map((p) => {
               const TypeIcon = TYPE_META[p.type].icon;
+              const formattedTime = formatTime(p.createdAt);
               return (
                 <motion.button
                   key={p.id}
@@ -320,35 +335,71 @@ export function ProposalsPanel({
                   initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.97 }}
                   transition={{ type: 'spring', bounce: 0.24, duration: 0.4 }}
                   onClick={() => setDetailId(p.id)}
-                  className="lx-card-interactive w-full text-left"
-                  style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}
+                  className="w-full text-left py-3.5 px-1 flex items-center justify-between gap-4 transition-colors hover:bg-white/[0.04]"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
-                        <TypeIcon size={16} />
-                      </span>
-                      <div className="min-w-0">
-                        <p className="truncate text-[14px] font-semibold" style={{ color: 'var(--lx-text)' }}>{p.title}</p>
-                        <p className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>
-                          #{p.index} · {p.vaultLabel} · {nameOf(p.createdBy)} · {timeAgo(p.createdAt)}
-                        </p>
-                      </div>
+                  {/* Left: Type Icon + Proposal Title & Subtitle (No icon square box!) */}
+                  <div className="flex items-center gap-3.5 min-w-[200px]">
+                    <TypeIcon
+                      size={18}
+                      style={{
+                        color: p.type === 'transfer' ? '#C084FC' : p.type === 'swap' ? '#FACC15' : '#60A5FA',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <p className="truncate text-[14.5px] font-semibold tracking-tight" style={{ color: '#FFFFFF', fontFamily: 'Outfit, sans-serif' }}>
+                        {p.title}
+                      </p>
+                      <p className="text-[12px] truncate" style={{ color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'Montserrat, sans-serif' }}>
+                        #{p.index} · {p.vaultLabel} · {timeAgo(p.createdAt)}
+                      </p>
                     </div>
-                    <StatusChip status={p.status} />
                   </div>
 
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="tabular-nums text-[13px] font-medium" style={{ color: 'var(--lx-text)' }}>
-                      {p.amount ? `${p.amount} ${p.symbol}` : TYPE_META[p.type].label}
-                      {p.type === 'swap' && p.destinationLabel && (
-                        <span style={{ color: 'var(--lx-text-dim)' }}> → {p.destinationLabel}</span>
-                      )}
-                      {p.type === 'transfer' && p.destination && (
-                        <span style={{ color: 'var(--lx-text-dim)' }}> → {p.destinationLabel || short(p.destination)}</span>
-                      )}
-                    </span>
-                    <div className="w-40">
+                  {/* Center: Token Icon + Amount + Destination (Clean inline text) */}
+                  <div className="flex items-center gap-3 text-[14px]">
+                    {p.type === 'config' ? (
+                      <span className="flex items-center gap-2 font-medium" style={{ color: '#FFFFFF' }}>
+                        <Settings2 size={16} style={{ color: '#60A5FA' }} />
+                        Umbral: <span className="font-bold" style={{ color: '#60A5FA' }}>{p.amount || p.threshold}</span>
+                      </span>
+                    ) : (
+                      <>
+                        {p.amount ? (
+                          <div className="flex items-center gap-2 font-semibold tabular-nums" style={{ color: '#FFFFFF' }}>
+                            <TokenIcon symbol={p.symbol || 'USDC'} mint={p.mint} size={22} />
+                            <span>{p.amount} <span className="font-normal text-[13px]" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>{p.symbol}</span></span>
+                          </div>
+                        ) : null}
+
+                        {p.type === 'swap' && p.destinationLabel && (
+                          <div className="flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                            <Repeat size={14} style={{ color: 'rgba(255, 255, 255, 0.4)' }} />
+                            <TokenIcon symbol={p.destinationLabel.split(' ')[1] || 'USDC'} size={22} />
+                            <span className="font-semibold" style={{ color: '#FFFFFF' }}>{p.destinationLabel}</span>
+                          </div>
+                        )}
+
+                        {p.type === 'transfer' && p.destination && (
+                          <span className="text-[13px] font-mono" style={{ color: 'rgba(255, 255, 255, 0.45)' }}>
+                            To: <span className="font-medium" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>{p.destinationLabel || short(p.destination)}</span>
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+
+                  {/* Right: Formatted Time + Status Text + Vote Ratio */}
+                  <div className="flex items-center justify-end gap-5 min-w-[200px]">
+                    {formattedTime && (
+                      <span className="text-[13px] font-medium whitespace-nowrap" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                        {formattedTime}
+                      </span>
+                    )}
+
+                    <StatusChip status={p.status} />
+
+                    <div className="w-16 hidden sm:block">
                       <VoteBar have={p.approvals.length} need={p.threshold} />
                     </div>
                   </div>
@@ -417,11 +468,11 @@ export function ProposalsPanel({
               {/* actions */}
               <ProposalActions
                 p={detail} me={me} busy={busy} connected={connected}
-                onApprove={() => run('approve', () => approve(detail.id), (p) => (p?.status === 'executed' ? 'Aprobada y ejecutada on-chain' : 'Approval vote registered'))}
-                onReject={() => run('reject', () => reject(detail.id), 'Rejection vote registered')}
-                onExecute={() => run('execute', () => execute(detail.id), 'Proposal executed on-chain')}
-                onActivate={() => run('activate', () => activate(detail.id), 'Proposal opened for voting')}
-                onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Proposal cancelled')}
+                onApprove={() => run('approve', () => approve(detail.id), (p) => (p?.status === 'executed' ? 'Voto registrado: Propuesta aprobada y ejecutada en la red Solana' : 'Voto de aprobación registrado exitosamente'))}
+                onReject={() => run('reject', () => reject(detail.id), 'Voto de rechazo registrado')}
+                onExecute={() => run('execute', () => execute(detail.id), 'Transacción ejecutada exitosamente en la red Solana')}
+                onActivate={() => run('activate', () => activate(detail.id), 'Propuesta abierta para votación del multisig')}
+                onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Propuesta cancelada exitosamente')}
               />
             </div>
           </Modal>

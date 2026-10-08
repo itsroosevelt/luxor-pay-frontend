@@ -298,19 +298,20 @@ export function resolveMock(
   ];
 
   if (p === '/multisig/treasuries' && method === 'GET') {
-    return ok({ data: allTreasuries });
+    const signerCount = members.filter((m) => m.roles?.signer).length || 1;
+    return ok({ data: [{ ...multisig, memberCount: signerCount }] });
   }
   if (p === '/multisig' && method === 'GET') {
-    const activeCfg = allTreasuries.find((t) => t.id === activeTreasuryId) ?? allTreasuries[0];
-    return ok({ data: { ...activeCfg, memberCount: activeCfg.memberCount ?? 1 } });
+    const signerCount = members.filter((m) => m.roles?.signer).length || 1;
+    return ok({ data: { ...multisig, memberCount: signerCount } });
   }
   if (p === '/multisig' && method === 'PATCH') {
     const next = Number(body?.threshold);
-    const signerCount = members.filter((m) => m.roles.signer).length;
-    if (Number.isFinite(next) && next >= 1 && next <= Math.max(1, signerCount)) {
+    const signerCount = members.filter((m) => m.roles?.signer).length || 1;
+    if (Number.isFinite(next) && next >= 1 && next <= signerCount) {
       multisig = { ...multisig, threshold: Math.round(next), updatedAt: nowIso() };
     }
-    return ok({ data: { ...multisig, memberCount: members.length } });
+    return ok({ data: { ...multisig, memberCount: signerCount } });
   }
 
   /* ───────────────── Vaults (sub-bóvedas / Vault PDAs) ───────────────── */
