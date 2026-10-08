@@ -22,7 +22,7 @@ import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { createSharedResource } from '@/lib/shared-resource';
 import { getActiveTreasuryId, setActiveTreasuryId } from '@/lib/active-treasury';
 
-const BALANCE_REFRESH_MS = 12_000;
+const BALANCE_REFRESH_MS = 30_000;
 
 
 interface UseTreasuryReturn {

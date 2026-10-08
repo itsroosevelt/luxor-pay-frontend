@@ -585,7 +585,7 @@ export function resolveMock(
 
   /* ───────────────── KYC / Onramp (Stripe) ───────────────── */
   if (p === '/stripe/kyc/init' && method === 'POST') {
-    return ok({ success: true, url: 'https://verify.stripe.com/test_mock_identity_verification', client_secret: 'mock_secret' });
+    return ok({ success: true, url: 'mock', client_secret: 'mock_secret' });
   }
   if (p === '/onramp/create-session' && method === 'POST') {
     return ok({ data: { sessionId: rid('onr'), clientSecret: 'mock_secret', url: 'https://example.com/mock-onramp' } });

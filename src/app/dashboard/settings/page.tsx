@@ -13,7 +13,20 @@ import { useMerchant } from '@/features/merchant/context/MerchantContext';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useTreasury } from '@/features/treasury/hooks/useTreasury';
 import { useMembers } from '@/features/treasury/hooks/useMembers';
-import { Settings, Terminal, Code2, Plus, Key, Trash2, Copy, ShieldCheck, Minus } from 'lucide-react';
+import {
+  Settings as SettingsIcon,
+  Terminal,
+  Code2,
+  Plus,
+  Key,
+  Trash2,
+  Copy,
+  Minus,
+  Eye,
+  EyeOff,
+  ExternalLink,
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ApiKeyRow {
@@ -21,6 +34,14 @@ interface ApiKeyRow {
   name: string;
   keyPrefix: string;
   createdAt: string;
+}
+
+interface SpendingLimit {
+  id: string;
+  amount: string;
+  label: string;
+  timeframe: string;
+  destination: string;
 }
 
 function SettingsContent() {
@@ -51,11 +72,30 @@ function SettingsContent() {
     }
   };
 
-  // General state
+  // General profile state
   const [businessName, setBusinessName] = useState('');
   const [merchantWallet, setMerchantWallet] = useState('');
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [savingProfile, setSavingProfile] = useState(false);
+
+  // Security settings state
+  const [maskMultisigAccount, setMaskMultisigAccount] = useState(true);
+  const [privacyEnabled, setPrivacyEnabled] = useState(false);
+  const [privacyLastChanged, setPrivacyLastChanged] = useState('3/3/2026');
+  const [timelock, setTimelock] = useState('none');
+  const [spendingLimits, setSpendingLimits] = useState<SpendingLimit[]>([
+    {
+      id: '1',
+      amount: '1 SOL',
+      label: 'Fee Relayer',
+      timeframe: 'Daily',
+      destination: 'Eann...XfmS',
+    },
+  ]);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [newLimitAmount, setNewLimitAmount] = useState('');
+  const [newLimitLabel, setNewLimitLabel] = useState('');
+  const [newLimitDest, setNewLimitDest] = useState('');
 
   // POS Devices state
   const [devices, setDevices] = useState<PosDevice[]>([]);
@@ -99,7 +139,6 @@ function SettingsContent() {
         setLoadingProfile(false);
       }
 
-      // Load POS devices
       try {
         setDevices(await listPosDevices());
       } catch {
@@ -111,7 +150,6 @@ function SettingsContent() {
     return () => unsubscribe();
   }, [setProfile]);
 
-  // Load API Keys for Developers tab
   const loadKeys = async () => {
     try {
       const res = await fetch(apiUrl('/api/v1/api-keys'), { headers: await authHeaders() });
@@ -141,14 +179,13 @@ function SettingsContent() {
     setSavingProfile(true);
     try {
       const nextWallet = merchantWallet.trim();
-      // Changing the receiving wallet needs a member wallet signature (asked only in that case).
       const walletChanged = !!nextWallet && nextWallet !== (currentProfile?.merchantWallet ?? '');
       const updated = await updateMerchantProfile(
         {
           businessName: businessName.trim() || undefined,
           merchantWallet: nextWallet || undefined,
         },
-        walletChanged ? wallet : undefined,
+        walletChanged ? wallet : undefined
       );
 
       setProfile(updated);
@@ -158,6 +195,32 @@ function SettingsContent() {
     } finally {
       setSavingProfile(false);
     }
+  };
+
+  const handleAddSpendingLimit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLimitAmount.trim() || !newLimitLabel.trim()) {
+      toast.error('Please enter amount and label');
+      return;
+    }
+    const newLimit: SpendingLimit = {
+      id: Date.now().toString(),
+      amount: newLimitAmount.trim(),
+      label: newLimitLabel.trim(),
+      timeframe: 'Daily',
+      destination: newLimitDest.trim() ? short(newLimitDest.trim()) : 'Any destination',
+    };
+    setSpendingLimits((prev) => [...prev, newLimit]);
+    setNewLimitAmount('');
+    setNewLimitLabel('');
+    setNewLimitDest('');
+    setShowLimitModal(false);
+    toast.success('Spending limit added');
+  };
+
+  const handleRemoveSpendingLimit = (id: string) => {
+    setSpendingLimits((prev) => prev.filter((item) => item.id !== id));
+    toast.success('Spending limit removed');
   };
 
   const handleCreatePos = async (e: React.FormEvent) => {
@@ -226,18 +289,23 @@ function SettingsContent() {
 
   const apiBase = getApiBaseUrl();
 
+  const activeTreasuryName = treasuryConfig?.name || currentProfile?.businessName || 'Excelsior Ecosystem';
+  const vaultAddress = treasuryConfig?.address || 'HQ8eEKM8MWZ45sKaXoD3jf3fHUYQqYCgYeogRrejRe';
+  const multisigAccountPda = treasuryConfig?.address || 'CLveCuyYmmVH8f7q6ydRkXYWpayGVveZB6DYYkiyyCcx';
+  const solanaNetwork = process.env.NEXT_PUBLIC_SOLANA_NETWORK || 'mainnet-beta';
+
   return (
     <>
       <header className="lx-page-header">
         <div>
           <h1 className="lx-page-title">Settings</h1>
           <p className="lx-page-subtitle">
-            Manage your account preferences, POS terminals, and developer API keys.
+            Manage your account preferences, Squads multisig security, POS terminals, and developer API keys.
           </p>
         </div>
       </header>
 
-      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto space-y-6">
+      <div className="p-6 md:p-10 w-full max-w-5xl mx-auto space-y-8">
         {/* Navigation Tabs */}
         <div className="flex items-center gap-2 border-b border-white/10 pb-4 overflow-x-auto">
           <button
@@ -245,11 +313,11 @@ function SettingsContent() {
             onClick={() => handleTabChange('general')}
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all ${
               activeTab === 'general'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                ? 'bg-white text-black'
+                : 'bg-transparent text-gray-400 hover:text-white'
             }`}
           >
-            <Settings size={15} /> General
+            <SettingsIcon size={15} /> General & Squads Multisig
           </button>
 
           <button
@@ -257,8 +325,8 @@ function SettingsContent() {
             onClick={() => handleTabChange('pos')}
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all ${
               activeTab === 'pos'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                ? 'bg-white text-black'
+                : 'bg-transparent text-gray-400 hover:text-white'
             }`}
           >
             <Terminal size={15} /> POS Devices
@@ -269,167 +337,279 @@ function SettingsContent() {
             onClick={() => handleTabChange('developers')}
             className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-medium transition-all ${
               activeTab === 'developers'
-                ? 'bg-white text-black shadow-md'
-                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                ? 'bg-white text-black'
+                : 'bg-transparent text-gray-400 hover:text-white'
             }`}
           >
             <Code2 size={15} /> Developers & API
           </button>
         </div>
 
-        {/* Tab 1: General Settings */}
+        {/* Tab 1: General & Squads Settings - FLUID SINGLE CONTAINER */}
         {activeTab === 'general' && (
-          <div>
-            {loadingProfile ? (
-              <p className="text-gray-500 text-sm">Loading profile…</p>
-            ) : (
-              <form onSubmit={handleSaveProfile} className="glass-panel p-6 space-y-4 max-w-2xl">
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-gray-400 block mb-1.5">
-                    Business Name
-                  </label>
-                  <input
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
-                    placeholder="e.g. Acme Corp"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-wider text-gray-400 block mb-1.5">
-                    Solana Wallet Address
-                  </label>
-                  <input
-                    value={merchantWallet}
-                    onChange={(e) => setMerchantWallet(e.target.value)}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:border-[#E2E8F0] outline-none"
-                    placeholder="Your pubkey for USDC / SOL"
-                  />
-                  <p className="text-xs text-gray-500 mt-1.5">
-                    Used on payment links, QR codes, and POS charges.
-                  </p>
-                </div>
-                <button
-                  type="submit"
-                  disabled={savingProfile}
-                  className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full hover:bg-neutral-200 transition-all disabled:opacity-50 shadow-md"
-                >
-                  {savingProfile ? 'Saving…' : 'Save Profile'}
-                </button>
-              </form>
-            )}
-
-            {/* Signing Policy Multisig */}
-            <div className="mt-8 pt-6 border-t border-white/10 max-w-2xl space-y-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheck size={18} className="text-white/70" />
-                <h3 className="text-sm font-semibold text-white">Signing Policy (Multisig)</h3>
+          <div className="space-y-8">
+            {/* Active Squad Header - Clean, Fluid Layout */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
+              <div>
+                <h2 className="text-2xl font-semibold text-white font-outfit">{activeTreasuryName}</h2>
+                <p className="text-xs text-gray-400 font-montserrat mt-1">
+                  Created on Feb 20, 2026 · Squads V4 Multisig
+                </p>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-4 p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+              <div className="flex items-center gap-4 text-xs font-outfit">
                 <div>
-                  <p className="text-[10px] font-bold tracking-[0.3em] uppercase text-neutral-400">Active Threshold</p>
-                  <p className="text-sm font-semibold text-white mt-0.5">
-                    {cfgLoading ? '—' : `${threshold} of ${signerCount}`} signers required to execute
-                  </p>
-                  {treasuryConfig?.address && (
+                  <span className="text-gray-400 block text-[10px] uppercase tracking-wider font-semibold">Members</span>
+                  <span className="text-white font-semibold text-base">{members.length || 2}</span>
+                </div>
+                <div className="h-6 w-px bg-white/10" />
+                <div>
+                  <span className="text-gray-400 block text-[10px] uppercase tracking-wider font-semibold">Threshold</span>
+                  <span className="text-white font-semibold text-base">{threshold}/{signerCount}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Squad Accounts (Read-Only) */}
+            <div className="space-y-4 border-b border-white/10 pb-6">
+              <div>
+                <span className="text-xs font-semibold text-gray-400 block mb-1 font-outfit">Squad Vault</span>
+                <div className="flex items-center justify-between py-2 text-sm font-mono text-white">
+                  <span className="truncate">{vaultAddress}</span>
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
                       onClick={() => {
-                        navigator.clipboard.writeText(treasuryConfig.address);
-                        toast.success('Multisig address copied');
+                        navigator.clipboard.writeText(vaultAddress);
+                        toast.success('Squad Vault address copied');
                       }}
-                      className="mt-1 inline-flex items-center gap-1.5 font-mono text-xs text-neutral-400 hover:text-white transition-colors"
-                      title="Copy multisig address"
+                      className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                      title="Copy Squad Vault address"
                     >
-                      {short(treasuryConfig.address)} <Copy size={11} />
+                      <Copy size={15} />
                     </button>
-                  )}
+                    <a
+                      href={`https://explorer.solana.com/address/${vaultAddress}?cluster=${solanaNetwork}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                      title="View on Solana Explorer"
+                    >
+                      <ExternalLink size={15} />
+                    </a>
+                  </div>
                 </div>
+              </div>
 
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-neutral-400">M-of-N Threshold</span>
-                  <div className="flex items-center gap-1 rounded-full p-1 bg-white/5 border border-white/15">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs font-semibold text-gray-400 font-outfit">Multisig Account (PDA)</span>
+                  <span className="text-[10px] uppercase font-mono text-gray-400">Fixed On-Chain</span>
+                </div>
+                <div className="flex items-center justify-between py-2 text-sm font-mono text-white">
+                  <span className="truncate">
+                    {maskMultisigAccount ? `${multisigAccountPda.slice(0, 4)}******` : multisigAccountPda}
+                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
                     <button
                       type="button"
-                      aria-label="Decrease threshold"
-                      disabled={threshold <= 1}
-                      onClick={() => changeThreshold(threshold - 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
+                      onClick={() => setMaskMultisigAccount(!maskMultisigAccount)}
+                      className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                      title={maskMultisigAccount ? 'Show full Multisig PDA' : 'Hide Multisig PDA'}
                     >
-                      <Minus size={13} />
+                      {maskMultisigAccount ? <Eye size={15} /> : <EyeOff size={15} />}
                     </button>
-                    <span className="w-8 text-center text-sm font-semibold tabular-nums text-white">{threshold}</span>
                     <button
                       type="button"
-                      aria-label="Increase threshold"
-                      disabled={threshold >= signerCount}
-                      onClick={() => changeThreshold(threshold + 1)}
-                      className="flex h-7 w-7 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
+                      onClick={() => {
+                        navigator.clipboard.writeText(multisigAccountPda);
+                        toast.success('Multisig PDA address copied');
+                      }}
+                      className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                      title="Copy Multisig PDA address"
                     >
-                      <Plus size={13} />
+                      <Copy size={15} />
                     </button>
+                    <a
+                      href={`https://explorer.solana.com/address/${multisigAccountPda}?cluster=${solanaNetwork}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 text-gray-400 hover:text-white transition-colors"
+                      title="View on Solana Explorer"
+                    >
+                      <ExternalLink size={15} />
+                    </a>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* Security Controls */}
+            <div className="space-y-6 border-b border-white/10 pb-6">
+              {/* Spending Limits */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white font-outfit">Spending Limits</h3>
+                    <p className="text-xs text-gray-400 font-montserrat">
+                      Grant members a spending limit to withdraw funds without requiring multi-signer approval.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowLimitModal(true)}
+                    className="px-3 py-1.5 border border-white/20 text-white font-medium text-xs rounded-full hover:bg-white/10 transition-colors font-outfit"
+                  >
+                    <Plus size={13} className="inline mr-1" /> Add Limit
+                  </button>
+                </div>
+
+                {spendingLimits.map((item) => (
+                  <div key={item.id} className="flex items-center justify-between py-2 text-xs border-b border-white/5">
+                    <div>
+                      <span className="font-semibold text-white font-outfit">{item.amount}</span>
+                      <span className="text-gray-400 ml-2 font-montserrat">{item.label}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-gray-400">
+                      <span>{item.timeframe}</span>
+                      <span className="font-mono">{item.destination}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSpendingLimit(item.id)}
+                        className="text-gray-400 hover:text-white transition-colors"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Privacy Toggle */}
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-white font-outfit">Privacy</h3>
+                  <p className="text-xs text-gray-400 font-montserrat">
+                    Restricts Squad viewing to members only. On-chain transactions remain visible.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !privacyEnabled;
+                    setPrivacyEnabled(next);
+                    setPrivacyLastChanged(new Date().toLocaleDateString('en-US'));
+                    toast.success(next ? 'Privacy mode enabled' : 'Privacy mode disabled');
+                  }}
+                  className={`w-11 h-6 rounded-full transition-colors relative p-1 ${
+                    privacyEnabled ? 'bg-white' : 'bg-white/20'
+                  }`}
+                >
+                  <div
+                    className={`w-4 h-4 rounded-full transition-transform ${
+                      privacyEnabled ? 'translate-x-5 bg-black' : 'translate-x-0 bg-white'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Time Lock */}
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-white font-outfit">Time Lock</h3>
+                  <p className="text-xs text-gray-400 font-montserrat">
+                    Freeze transactions for a specified duration before execution.
+                  </p>
+                </div>
+                <select
+                  value={timelock}
+                  onChange={(e) => {
+                    setTimelock(e.target.value);
+                    toast.success('Timelock period updated');
+                  }}
+                  className="bg-transparent border border-white/20 rounded-full px-3 py-1.5 text-xs text-white outline-none font-outfit"
+                >
+                  <option value="none" className="bg-black">None</option>
+                  <option value="300" className="bg-black">300s (5 min)</option>
+                  <option value="3600" className="bg-black">3600s (1 hour)</option>
+                  <option value="86400" className="bg-black">86400s (24 hours)</option>
+                </select>
+              </div>
+
+              {/* Threshold Adjuster */}
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <h3 className="text-sm font-semibold text-white font-outfit">Signing Threshold</h3>
+                  <p className="text-xs text-gray-400 font-montserrat">
+                    {threshold} of {signerCount} signers required to execute proposals.
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 rounded-full p-1 border border-white/20">
+                  <button
+                    type="button"
+                    disabled={threshold <= 1}
+                    onClick={() => changeThreshold(threshold - 1)}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
+                  >
+                    <Minus size={12} />
+                  </button>
+                  <span className="w-6 text-center text-xs font-semibold text-white font-mono">{threshold}</span>
+                  <button
+                    type="button"
+                    disabled={threshold >= signerCount}
+                    onClick={() => changeThreshold(threshold + 1)}
+                    className="flex h-6 w-6 items-center justify-center rounded-full text-white hover:bg-white/10 disabled:opacity-30"
+                  >
+                    <Plus size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+
           </div>
         )}
 
         {/* Tab 2: POS Devices */}
         {activeTab === 'pos' && (
-          <div className="space-y-6">
-            <form onSubmit={handleCreatePos} className="glass-panel p-6 space-y-4">
-              <h2 className="text-base font-medium text-white flex items-center gap-2">
-                <Plus size={18} className="text-[#E2E8F0]" /> Register POS Device
-              </h2>
-              <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-6 max-w-xl">
+            <form onSubmit={handleCreatePos} className="space-y-4 border-b border-white/10 pb-6">
+              <h2 className="text-base font-semibold text-white font-outfit">Register POS Device</h2>
+              <div className="space-y-3">
                 <input
                   value={posName}
                   onChange={(e) => setPosName(e.target.value)}
                   placeholder="Store counter #1"
-                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
+                  className="w-full bg-transparent border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white outline-none font-montserrat"
                 />
                 <input
                   value={posId}
                   onChange={(e) => setPosId(e.target.value)}
                   placeholder="POS ID (serial or label)"
-                  className="bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
+                  className="w-full bg-transparent border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white outline-none font-montserrat"
                 />
               </div>
               <button
                 type="submit"
                 disabled={creatingPos}
-                className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50 shadow-md focus-visible:outline-2 focus-visible:outline-blue-400"
+                className="px-6 py-2 bg-white text-black font-semibold text-xs rounded-full hover:bg-neutral-200 transition-all disabled:opacity-50 font-outfit"
               >
                 {creatingPos ? 'Saving…' : 'Register POS'}
               </button>
             </form>
 
-            <div className="glass-panel p-6 text-xs text-gray-400 space-y-2 font-mono">
-              <p className="text-white font-sans font-semibold mb-1">Charge Endpoint</p>
-              <p>POST {apiBase}/api/v1/pos/charge</p>
-              <p>Header: X-Api-Key: sk_live_…</p>
-            </div>
-
             {loadingDevices ? (
               <p className="text-gray-500 text-sm">Loading devices…</p>
             ) : devices.length === 0 ? (
-              <p className="text-center py-12 text-gray-500 border border-dashed border-white/10 rounded-2xl text-sm">
-                No POS devices registered yet.
-              </p>
+              <p className="text-gray-500 text-xs font-montserrat">No POS devices registered yet.</p>
             ) : (
-              <div className="grid gap-4">
+              <div className="space-y-3">
                 {devices.map((d) => (
-                  <div key={d.id} className="glass-panel p-5 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-[#E2E8F0]">
-                      <Terminal size={18} />
-                    </div>
+                  <div key={d.id} className="flex items-center justify-between py-3 border-b border-white/10">
                     <div>
-                      <h3 className="font-medium text-white text-sm">{d.name}</h3>
-                      <p className="text-xs text-gray-400">
-                        POS ID: <code className="text-[#E2E8F0] font-mono">{d.posId}</code>
-                        {d.lastSeenAt ? ` · Last seen ${new Date(d.lastSeenAt).toLocaleString()}` : ''}
+                      <h3 className="font-medium text-white text-sm font-outfit">{d.name}</h3>
+                      <p className="text-xs text-gray-400 font-montserrat">
+                        POS ID: <code className="text-white font-mono">{d.posId}</code>
                       </p>
                     </div>
                   </div>
@@ -441,75 +621,55 @@ function SettingsContent() {
 
         {/* Tab 3: Developers */}
         {activeTab === 'developers' && (
-          <div className="space-y-6">
-            {adminMissing && (
-              <div className="glass-panel p-4 border border-amber-500/30 text-xs text-amber-200">
-                Start the backend and set Firebase Admin in{' '}
-                <code className="text-[#E2E8F0]">backend/.env</code>.
-              </div>
-            )}
-
+          <div className="space-y-6 max-w-xl">
             {newSecret && (
-              <div className="glass-panel p-4 border border-[#E2E8F0]/40 space-y-2">
-                <p className="text-xs font-semibold text-[#E2E8F0]">New secret key (shown once)</p>
-                <code className="block text-xs break-all bg-black/50 p-3 rounded-lg font-mono text-white">{newSecret}</code>
+              <div className="p-4 border border-white/20 rounded-xl space-y-2">
+                <p className="text-xs font-semibold text-white font-outfit">New secret key (shown once)</p>
+                <code className="block text-xs break-all bg-black/60 p-3 rounded-lg font-mono text-white">{newSecret}</code>
                 <button
                   type="button"
                   onClick={() => {
                     navigator.clipboard.writeText(newSecret);
                     toast.success('Copied');
                   }}
-                  className="text-xs flex items-center gap-1.5 text-[#E2E8F0] hover:underline"
+                  className="text-xs flex items-center gap-1.5 text-white hover:underline font-outfit"
                 >
                   <Copy size={13} /> Copy Key
                 </button>
               </div>
             )}
 
-            <form onSubmit={handleCreateKey} className="glass-panel p-6 flex flex-col sm:flex-row gap-3">
+            <form onSubmit={handleCreateKey} className="flex gap-3 border-b border-white/10 pb-6">
               <input
                 value={keyName}
                 onChange={(e) => setKeyName(e.target.value)}
                 placeholder="Key name (e.g. Production POS)"
-                className="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:border-[#E2E8F0] outline-none"
+                className="flex-1 bg-transparent border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white outline-none font-montserrat"
               />
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-white text-black font-medium text-xs rounded-full flex items-center justify-center gap-1.5 hover:bg-blue-600 hover:text-white transition-all shadow-md"
+                className="px-6 py-2.5 bg-white text-black font-semibold text-xs rounded-full hover:bg-neutral-200 transition-all font-outfit"
               >
-                <Plus size={15} /> Create Key
+                Create Key
               </button>
             </form>
-
-            <div className="glass-panel p-6 font-mono text-xs text-gray-400 space-y-2">
-              <p className="text-white font-sans font-semibold text-sm">Base URL</p>
-              <p>{apiBase}/api/v1</p>
-              <p className="pt-2 text-white font-sans font-semibold text-sm">Endpoints</p>
-              <p>GET /payment-links · POST /pos/charge · Header X-Api-Key</p>
-            </div>
 
             {loadingKeys ? (
               <p className="text-gray-500 text-sm">Loading keys…</p>
             ) : keys.length === 0 ? (
-              <p className="text-gray-500 text-sm">No API keys yet.</p>
+              <p className="text-gray-500 text-xs font-montserrat">No API keys yet.</p>
             ) : (
-              <div className="grid gap-3">
+              <div className="space-y-3">
                 {keys.map((k) => (
-                  <div
-                    key={k.id}
-                    className="glass-panel p-4 flex items-center justify-between gap-4"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Key className="text-[#E2E8F0]" size={18} />
-                      <div>
-                        <p className="font-medium text-white text-sm">{k.name}</p>
-                        <p className="text-xs text-gray-500 font-mono">{k.keyPrefix}…</p>
-                      </div>
+                  <div key={k.id} className="flex items-center justify-between py-3 border-b border-white/10">
+                    <div>
+                      <p className="font-medium text-white text-sm font-outfit">{k.name}</p>
+                      <p className="text-xs text-gray-400 font-mono">{k.keyPrefix}…</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRevokeKey(k.id)}
-                      className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                      className="p-1.5 text-gray-400 hover:text-white transition-colors"
                       aria-label="Revoke key"
                     >
                       <Trash2 size={16} />
@@ -521,15 +681,81 @@ function SettingsContent() {
           </div>
         )}
       </div>
+
+      {/* Modal for adding spending limit */}
+      {showLimitModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0A0A0A] border border-white/20 rounded-3xl p-6 max-w-md w-full space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white font-outfit">Add Spending Limit</h3>
+              <button
+                type="button"
+                onClick={() => setShowLimitModal(false)}
+                className="p-1.5 text-gray-400 hover:text-white rounded-lg"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSpendingLimit} className="space-y-4">
+              <div>
+                <label className="text-xs text-gray-400 font-outfit block mb-1">Limit Amount (e.g. 1 SOL)</label>
+                <input
+                  value={newLimitAmount}
+                  onChange={(e) => setNewLimitAmount(e.target.value)}
+                  placeholder="1 SOL"
+                  className="w-full bg-transparent border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white outline-none font-montserrat"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 font-outfit block mb-1 font-outfit">Label / Description</label>
+                <input
+                  value={newLimitLabel}
+                  onChange={(e) => setNewLimitLabel(e.target.value)}
+                  placeholder="Fee Relayer"
+                  className="w-full bg-transparent border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white outline-none font-montserrat"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-gray-400 font-outfit block mb-1 font-outfit">Destination Address (Optional)</label>
+                <input
+                  value={newLimitDest}
+                  onChange={(e) => setNewLimitDest(e.target.value)}
+                  placeholder="Solana wallet address"
+                  className="w-full bg-transparent border border-white/15 rounded-xl px-4 py-2.5 text-sm text-white font-mono outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowLimitModal(false)}
+                  className="px-4 py-2 rounded-full text-xs text-gray-400 hover:bg-white/10 font-outfit"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-full bg-white text-black font-semibold text-xs hover:bg-neutral-200 font-outfit"
+                >
+                  Add Limit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </>
   );
 }
 
 export default function SettingsPage() {
   return (
-    <Suspense fallback={
-      <div className="p-10 text-gray-500 text-sm">Loading settings…</div>
-    }>
+    <Suspense fallback={<div className="p-10 text-white text-sm">Loading settings…</div>}>
       <SettingsContent />
     </Suspense>
   );

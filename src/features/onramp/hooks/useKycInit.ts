@@ -50,7 +50,7 @@ export function useKycInit(): UseKycInitReturn {
           return {
             success: true,
             client_secret: 'mock_stripe_client_secret',
-            url: 'https://verify.stripe.com/test_mock_identity_verification',
+            url: 'mock',
           };
         }
         throw new Error(json.message ?? `KYC init failed (${res.status})`);
@@ -60,7 +60,7 @@ export function useKycInit(): UseKycInitReturn {
       return {
         success: true,
         client_secret: raw.client_secret ?? raw.clientSecret ?? raw.sessionId ?? 'mock_secret',
-        url: raw.url ?? 'https://verify.stripe.com/test_mock_identity_verification',
+        url: raw.url ?? 'mock',
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error occurred';

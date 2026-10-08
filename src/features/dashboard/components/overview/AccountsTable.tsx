@@ -6,7 +6,7 @@ import { ArrowUpRight, ArrowLeftRight, Copy, Check, Wallet } from "lucide-react"
 import { WalletBalanceData } from "@/features/wallet/api/solana-api";
 import { useTokenPrice } from "@/features/wallet/hooks/useTokenPrice";
 import { useTreasury } from "@/features/treasury/hooks/useTreasury";
-import { TokenIcon as VectorTokenIcon } from "@/components/ui/VectorTokenIcon";
+import { TokenIcon as RemoteTokenIcon } from "@/components/ui/TokenIcon";
 
 const Container = styled.div`
   background: rgba(255, 255, 255, 0.03);
@@ -163,7 +163,7 @@ const TokenBadge = styled.span`
   color: var(--lx-text-muted, #8A8F9E);
 `;
 
-const TokenIcon = styled.div<{ $bg?: string }>`
+const StyledTokenBadgeWrapper = styled.div<{ $bg?: string }>`
   width: 28px;
   height: 28px;
   border-radius: 9999px;
@@ -489,7 +489,7 @@ export function AccountsTable({
             {coinsList.map((coin) => (
               <TableRow key={coin.id} $gridCols="2fr 1.5fr 1fr 1fr">
                 <ItemCell>
-                  <VectorTokenIcon symbol={coin.symbol} size={28} />
+                  <RemoteTokenIcon symbol={coin.symbol} size={28} />
                   <span>{coin.symbol}</span>
                 </ItemCell>
 

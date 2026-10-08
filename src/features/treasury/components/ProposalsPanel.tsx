@@ -13,7 +13,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, X, Loader2, ArrowUpRight, Repeat, Settings2, ShieldCheck, Shuffle,
-  Check, ThumbsUp, ThumbsDown, Play, Ban, ExternalLink, Clock, AlertTriangle,
+  Check, ThumbsUp, ThumbsDown, Play, Ban, ExternalLink, Clock, AlertTriangle, AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useProposals } from '@/features/treasury/hooks/useProposals';
@@ -172,6 +172,26 @@ export function ProposalsPanel({
   const sendList = heldTokens.length ? heldTokens : tokenList;
   const effMint = sendList.some((t) => t.mint === form.mint) ? form.mint : sendList[0]?.mint || '';
 
+  const selectedTokenObj = useMemo(
+    () => sendList.find((t) => t.mint === effMint) || sendList[0],
+    [sendList, effMint]
+  );
+  const selectedSymbol = selectedTokenObj?.symbol || 'USDC';
+
+  const availableBalance = useMemo(() => {
+    if (!sourceVault) return 0;
+    if (effMint === NATIVE_SOL || selectedSymbol === 'SOL') {
+      return Number(sourceVault.solBalance ?? 0);
+    }
+    const tokenObj = sourceVault.tokens?.find(
+      (t) => t.mint === effMint || t.symbol === selectedSymbol
+    );
+    return Number(tokenObj?.uiAmount ?? 0);
+  }, [sourceVault, effMint, selectedSymbol]);
+
+  const numAmount = parseFloat(form.amount.trim());
+  const isInsufficientFunds = !isNaN(numAmount) && numAmount > 0 && numAmount > availableBalance;
+
   const run = async <T,>(label: string, fn: () => Promise<T>, ok: string | ((result: T) => string)) => {
     if (!requireWallet()) return;
     setBusy(label);
@@ -189,6 +209,10 @@ export function ProposalsPanel({
     if (form.type === 'swap' && !form.destination) { toast.error('Choose the token to receive'); return; }
     if (form.type === 'swap' && form.destination === effMint) { toast.error('Pick two different tokens'); return; }
     if (form.type !== 'config' && !form.amount.trim()) { toast.error('Amount is required'); return; }
+    if (form.type !== 'config' && isInsufficientFunds) {
+      toast.error(`Fondos insuficientes: el saldo disponible en la bóveda es de ${availableBalance} ${selectedSymbol}`);
+      return;
+    }
 
     const payload: CreateProposalPayload = {
       type: form.type,
@@ -601,8 +625,8 @@ export function ProposalsPanel({
                       width: '100%',
                       padding: '14px 16px',
                       borderRadius: 14,
-                      background: 'rgba(255, 255, 255, 0.05)',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
+                      background: isInsufficientFunds ? 'rgba(248, 113, 113, 0.08)' : 'rgba(255, 255, 255, 0.05)',
+                      border: isInsufficientFunds ? '1px solid #F87171' : '1px solid rgba(255, 255, 255, 0.12)',
                       color: '#FFFFFF',
                       fontFamily: 'Montserrat, sans-serif',
                       fontSize: 14,
@@ -615,6 +639,12 @@ export function ProposalsPanel({
                     placeholder="0.00"
                     required
                   />
+                  {isInsufficientFunds && (
+                    <div style={{ color: '#F87171', fontSize: 12, fontFamily: 'Outfit, sans-serif', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5, marginTop: 4 }}>
+                      <AlertCircle size={14} style={{ color: '#F87171', flexShrink: 0 }} />
+                      Fondos insuficientes (Disponible: {availableBalance} {selectedSymbol})
+                    </div>
+                  )}
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
@@ -698,8 +728,8 @@ export function ProposalsPanel({
                 </button>
                 <button
                   type="submit"
-                  disabled={busy === 'create' || !connected}
-                  title={!connected ? 'Conecta tu wallet para enviar la propuesta' : undefined}
+                  disabled={busy === 'create' || !connected || isInsufficientFunds}
+                  title={!connected ? 'Conecta tu wallet para enviar la propuesta' : isInsufficientFunds ? `Fondos insuficientes (Disponible: ${availableBalance} ${selectedSymbol})` : undefined}
                   style={{
                     flex: 1,
                     height: 44,

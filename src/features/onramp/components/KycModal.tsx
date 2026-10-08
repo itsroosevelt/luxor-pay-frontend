@@ -15,6 +15,7 @@ import {
 import { useMerchant } from '@/features/merchant/context/MerchantContext';
 import { useKycInit } from '@/features/onramp/hooks/useKycInit';
 import { useKycSocket } from '@/features/onramp/context/KycSocketContext';
+import { toast } from 'sonner';
 
 /* ─── Styled Components ─────────────────────────────────────────────────── */
 
@@ -276,8 +277,13 @@ export function KycModal({ isOpen, onClose }: KycModalProps) {
     const result = await initKyc(profile.id);
     if (result?.url) {
       joinKycRoom(profile.id);
-      window.open(result.url, '_blank', 'noopener,noreferrer');
-      onClose();
+      if (result.url === 'mock' || result.url.includes('test_mock_identity_verification')) {
+        toast.info('Modo desarrollo: Simulación de verificación KYC (Stripe Identity). Configura tus llaves de Stripe para la integración real.');
+        onClose();
+      } else {
+        window.open(result.url, '_blank', 'noopener,noreferrer');
+        onClose();
+      }
     }
   };
 

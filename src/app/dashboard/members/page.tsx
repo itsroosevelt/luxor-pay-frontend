@@ -23,7 +23,6 @@ import { useTreasury } from '@/features/treasury/hooks/useTreasury';
 import { OffChainNotice } from '@/features/treasury/components/OffChainNotice';
 import { ModalShell, RoleChip, fieldStyle } from '@/features/treasury/components/member-ui';
 import { AddMemberModal } from '@/features/treasury/components/AddMemberModal';
-import { ApprovalRulesCard } from '@/features/treasury/components/ApprovalRulesCard';
 import {
   MEMBER_ROLE_META,
   type Member,
@@ -197,8 +196,6 @@ export default function MembersPage() {
             </button>
           </div>
         )}
-
-        <ApprovalRulesCard members={members} canEdit={canManage} guard={guard} />
 
         {/* Members list */}
         <section className="space-y-4 pt-4">

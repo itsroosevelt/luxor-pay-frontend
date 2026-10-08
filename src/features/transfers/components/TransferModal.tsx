@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Landmark, Send, ArrowRight, UserCheck, Wallet, Check, Building2, User, Globe } from 'lucide-react';
+import { Landmark, Send, ArrowRight, UserCheck, Wallet, Check, Building2, User, Globe, AlertCircle } from 'lucide-react';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { useGetContacts } from '@/features/contacts/hooks/useGetContacts';
 import { useSendTransfer } from '@/features/transfers/hooks/useSendTransfer';
@@ -328,6 +328,17 @@ export function TransferModal({
     return vaults.filter((v) => v.id !== selectedVault?.id);
   }, [vaults, selectedVault]);
 
+  // Balance calculation & validation
+  const availableBalance = useMemo(() => {
+    if (!selectedVault) return 0;
+    if (formData.token === 'SOL') return Number(selectedVault.solBalance ?? 0);
+    const tok = selectedVault.tokens?.find((t) => t.mint === formData.token || t.symbol === formData.token);
+    return Number(tok?.uiAmount ?? 0);
+  }, [selectedVault, formData.token]);
+
+  const numAmount = parseFloat(formData.amount);
+  const isInsufficientFunds = !isNaN(numAmount) && numAmount > 0 && numAmount > availableBalance;
+
   // Handle destination mode changes
   const handleModeChange = (mode: 'vault' | 'contact' | 'address') => {
     setDestinationMode(mode);
@@ -368,6 +379,10 @@ export function TransferModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isInsufficientFunds) {
+      toast.error(`Fondos insuficientes: el saldo disponible es de ${availableBalance} ${formData.token}`);
+      return;
+    }
     let toNickname: string | null = null;
     if (destinationMode === 'contact' && contactsData) {
       const contact = contactsData.data.find((c) => c.walletAddress === formData.walletAddress);
@@ -600,7 +615,14 @@ export function TransferModal({
                   onChange={handleChange}
                   placeholder="0.00"
                   required
+                  style={isInsufficientFunds ? { borderColor: '#F87171', background: 'rgba(248, 113, 113, 0.08)' } : undefined}
                 />
+                {isInsufficientFunds && (
+                  <p className="text-xs font-medium text-red-400 flex items-center gap-1.5 mt-1 font-['Outfit']">
+                    <AlertCircle size={14} className="text-red-400 shrink-0" />
+                    Fondos insuficientes (Disponible: {availableBalance} {formData.token})
+                  </p>
+                )}
               </FormGroup>
             </div>
 

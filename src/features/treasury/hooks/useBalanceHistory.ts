@@ -3,7 +3,7 @@ import { auth } from '@/lib/firebase';
 import { getBalanceHistory, type BalanceHistory, type BalanceHistoryRange } from '@/features/treasury/api/treasury-api';
 import { TREASURY_CHANGED_EVENT } from '@/features/treasury/lib/multisig-tx';
 
-const REFRESH_MS = 120_000;
+const REFRESH_MS = 300_000;
 
 /**
  * Total balance of the active treasury over time, rebuilt by the backend from the
