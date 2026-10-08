@@ -25,6 +25,7 @@ Cada carpeta agrupa todo lo de un dominio de negocio. Dentro, la misma forma:
 | `payments`          | Checkout Solana Pay, payment links, POS, URLs de cobro. |
 | `portals`           | Navegación entre portales y SSO. |
 | `qr`                | Escáner QR y enrutado de lo escaneado. |
+| `swap`              | Swap de tokens (Jupiter, mainnet). |
 | `stake`             | Estilos de la página de staking. |
 | `subscription`      | Plan / suscripción. |
 | `transactions`      | Historial, tarjetas de transacción, estados de cuenta PDF. |

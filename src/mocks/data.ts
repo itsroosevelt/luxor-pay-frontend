@@ -192,3 +192,48 @@ export const MOCK_OVERVIEW_STATS = {
   apiStatus: 'operational' as const,
 };
 
+/* ─────────────────────────── Swap quote ───────────────────────────── */
+
+export function buildMockSwapQuote(params: {
+  inputMint: string;
+  outputMint: string;
+  amount: string;
+  slippageBps?: number;
+}) {
+  const inMeta = MOCK_TOKENS.find((t) => t.mint === params.inputMint) ?? MOCK_TOKENS[0];
+  const outMeta = MOCK_TOKENS.find((t) => t.mint === params.outputMint) ?? MOCK_TOKENS[1];
+  const inUi = Number(params.amount) / 10 ** inMeta.decimals;
+  const usd = inUi * (MOCK_PRICES_USD[params.inputMint] ?? 0);
+  const outUi = usd / (MOCK_PRICES_USD[params.outputMint] || 1);
+  const outAmount = BigInt(Math.max(0, Math.round(outUi * 10 ** outMeta.decimals))).toString();
+  const slippageBps = params.slippageBps ?? 50;
+  const threshold = BigInt(
+    Math.round(Number(outAmount) * (1 - slippageBps / 10_000)),
+  ).toString();
+
+  return {
+    inputMint: params.inputMint,
+    inAmount: params.amount,
+    outputMint: params.outputMint,
+    outAmount,
+    otherAmountThreshold: threshold,
+    swapMode: 'ExactIn',
+    slippageBps,
+    priceImpactPct: '0.0007',
+    routePlan: [
+      {
+        swapInfo: {
+          ammKey: 'SterlingAmm111111111111111111111111111111111111',
+          label: 'Sterling LP',
+          inputMint: params.inputMint,
+          outputMint: params.outputMint,
+          inAmount: params.amount,
+          outAmount,
+          feeAmount: '0',
+          feeMint: params.inputMint,
+        },
+        percent: 100,
+      },
+    ],
+  };
+}

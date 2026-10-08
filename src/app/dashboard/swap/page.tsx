@@ -1,13 +1,26 @@
-"use client";
+import { Metadata } from 'next';
+import { SwapContainer } from '@/features/swap/components/SwapContainer';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+export const metadata: Metadata = {
+  title: 'Swap Tokens | Sterling',
+  description: 'Swap your Solana tokens seamlessly with Sterling custodial swap.',
+};
 
-/** Trading moved to the treasury (a Jupiter swap proposal the team approves); keep old links working. */
-export default function SwapRedirectPage() {
-  const router = useRouter();
-  useEffect(() => {
-    router.replace('/dashboard/treasury?trade=1');
-  }, [router]);
-  return null;
+export default function SwapPage() {
+  return (
+    <>
+      <header className="lx-page-header flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <div>
+          <h1 className="lx-page-title">Swap</h1>
+          <p className="lx-page-subtitle">
+            Exchange your Solana tokens seamlessly with Sterling custodial swap.
+          </p>
+        </div>
+      </header>
+
+      <div className="p-6 md:p-10 w-full max-w-7xl mx-auto">
+        <SwapContainer />
+      </div>
+    </>
+  );
 }

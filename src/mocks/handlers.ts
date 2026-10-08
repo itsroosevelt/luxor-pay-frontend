@@ -26,6 +26,7 @@ import {
   MOCK_PRICES_USD,
   MOCK_USER,
   MINTS,
+  buildMockSwapQuote,
 } from './data';
 import type { PaymentRequest } from '@/features/payment-requests/api/payment-requests-api';
 import type { Transfer } from '@/features/transfers/api/transfers-api';
@@ -545,6 +546,21 @@ export function resolveMock(
   /* ───────────────── Solana balance ───────────────── */
   if (p === '/solana/balance' && method === 'GET') {
     return ok({ data: { ...MOCK_WALLET_BALANCE, publicKey: search.get('publicKey') ?? MOCK_USER.wallet } });
+  }
+
+  /* ───────────────── Swap ───────────────── */
+  if (p === '/swap/quote' && method === 'GET') {
+    return ok(
+      buildMockSwapQuote({
+        inputMint: search.get('inputMint') ?? MINTS.SOL,
+        outputMint: search.get('outputMint') ?? MINTS.USDC,
+        amount: search.get('amount') ?? '0',
+        slippageBps: search.get('slippageBps') ? Number(search.get('slippageBps')) : undefined,
+      }),
+    );
+  }
+  if (p === '/swap/execute' && method === 'POST') {
+    return ok({ txid: mockSig() });
   }
 
   /* ───────────────── Token catalog ───────────────── */

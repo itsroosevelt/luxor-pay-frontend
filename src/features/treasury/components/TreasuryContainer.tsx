@@ -6,7 +6,7 @@
  * Account detail views and the main overview.
  */
 
-import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   ArrowDown,
@@ -269,16 +269,6 @@ function TreasuryContainerInner() {
     setProposalType('swap');
     showProposals(true);
   };
-
-  // Arriving from a "Trade" shortcut (?trade=1): open the swap proposal form once the treasury has loaded.
-  const tradeHandled = useRef(false);
-  useEffect(() => {
-    if (searchParams.get('trade') !== '1' || isTreasuryLoading || tradeHandled.current) return;
-    tradeHandled.current = true;
-    router.replace('/dashboard/treasury');
-    startTrade();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, isTreasuryLoading]);
 
   const handleRedistribute = async () => {
     if (!requireWallet()) return;
