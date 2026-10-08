@@ -2,7 +2,7 @@
 
 /**
  * VaultDetailModal — what a single treasury account holds (coins, stakes, NFTs),
- * read on-chain by the backend. Mirrors the Squads account view.
+ * read on-chain by the backend. Account view of a vault.
  */
 
 import React, { useState } from 'react';

@@ -33,7 +33,7 @@ persisted in `sessionStorage` so the landing/login flow can still be demoed).
 - `src/lib/mock/mock-config.ts` — the `IS_MOCK_MODE` flag (only always-imported file)
 - `src/lib/mock/mock-auth.ts` — simulated Firebase `auth`
 - `src/lib/mock/mock-fetch.ts` — `window.fetch` interceptor
-- `src/mocks/data.ts` — all fixtures (Overview, Swap, Payment Links/Requests, Transactions, Contacts, Settings, API keys, balances)
+- `src/mocks/data.ts` — all fixtures (Overview, Payment Links/Requests, Transactions, Contacts, Settings, API keys, balances)
 - `src/mocks/handlers.ts` — path → response router (with in-memory create/update/delete)
 - `src/context/MockModeProvider.tsx` — installs the interceptor + renders the badge; mounted from `src/app/layout.tsx` **only** when the flag is on (guarded `next/dynamic`)
 

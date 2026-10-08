@@ -27,7 +27,12 @@ export function MerchantProvider({ children }: { children: ReactNode }) {
     const stored = sessionStorage.getItem('sterling_merchant_profile');
     if (stored) {
       try {
-        setProfileState(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        if (parsed?.merchantWallet?.includes('B8NU')) {
+          sessionStorage.removeItem('sterling_merchant_profile');
+        } else {
+          setProfileState(parsed);
+        }
       } catch (e) {
         console.error('Failed to parse stored profile', e);
       }

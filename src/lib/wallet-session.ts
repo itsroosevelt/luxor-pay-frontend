@@ -35,6 +35,9 @@ interface StoredSession {
 
 let cached: StoredSession | null = null;
 
+/** Fired (on window) whenever a new signed session is stored, so views can re-read what the wallet unlocks. */
+export const WALLET_SESSION_EVENT = 'luxor_wallet_session';
+
 export class WalletRequiredError extends Error {
   constructor(message = 'Conecta tu wallet (Phantom o Solflare) para realizar esta acción.') {
     super(message);
@@ -65,6 +68,18 @@ export async function getWalletAuthHeaders(wallet: WalletSigner): Promise<Record
   };
 }
 
+/**
+ * The headers of the current signed session if there is a valid one, otherwise nothing. It never asks the
+ * wallet to sign, so it is safe on plain reads: the backend uses it to show (and open) the multisigs of other
+ * organizations that this wallet is a member of.
+ */
+export function peekWalletAuthHeaders(): Record<string, string> {
+  const merchantId = auth.currentUser?.uid;
+  const session = readSession();
+  if (!merchantId || !session || session.merchantId !== merchantId || session.expiresAt - RENEW_MARGIN_MS <= Date.now()) return {};
+  return { 'x-luxor-wallet': session.wallet, 'x-luxor-message': session.message, 'x-luxor-signature': session.signature };
+}
+
 async function signSession(
   signMessage: (message: Uint8Array) => Promise<Uint8Array>,
   wallet: string,
@@ -82,7 +97,20 @@ async function signSession(
   ].join('\n');
 
   const bytes = new TextEncoder().encode(text);
-  const signature = await signMessage(bytes);
+  let signature: Uint8Array;
+  try {
+    signature = await signMessage(bytes);
+  } catch (err: any) {
+    const isUserRejection =
+      err?.name === 'WalletSignMessageError' ||
+      err?.code === 4001 ||
+      (typeof err?.message === 'string' && /user rejected|rejected|canceled|cancelled/i.test(err.message));
+    if (isUserRejection) {
+      throw new Error('Signature cancelled in wallet.');
+    }
+    throw err;
+  }
+
   const session: StoredSession = {
     wallet,
     merchantId,
@@ -105,8 +133,14 @@ function readSession(): StoredSession | null {
   return cached;
 }
 
+/** Whether a valid signed session for exactly this wallet and the signed-in account already exists. */
+export function hasWalletSession(wallet: string): boolean {
+  return peekWalletAuthHeaders()['x-luxor-wallet'] === wallet;
+}
+
 function writeSession(session: StoredSession): void {
   cached = session;
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(WALLET_SESSION_EVENT));
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
   } catch {

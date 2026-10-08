@@ -316,7 +316,7 @@ export default function DashboardOverviewPage() {
             merchantWallet={merchantWallet}
             onSendClick={() => setIsTransferModalOpen(true)}
             onDepositClick={() => setIsQrModalOpen(true)}
-            onTradeClick={() => router.push('/dashboard/swap')}
+            onTradeClick={() => router.push('/dashboard/treasury?trade=1')}
             showExtraPanels={false}
           />
           {merchantWallet && <OverviewChart />}
@@ -328,7 +328,7 @@ export default function DashboardOverviewPage() {
             balanceData={balanceData}
             solBalance={balanceData?.solBalance}
             onSendClick={() => setIsTransferModalOpen(true)}
-            onTradeClick={() => router.push('/dashboard/swap')}
+            onTradeClick={() => router.push('/dashboard/treasury?trade=1')}
           />
         )}
 

@@ -3,10 +3,10 @@
 /**
  * TreasuryContainer — Redesigned with Container Minimization (Rule 10).
  * Fluid, clean, responsive UI aligned with the Sterling design system.
- * Supports Squads v4 Account Detail Views & Main Overview seamlessly.
+ * Account detail views and the main overview.
  */
 
-import React, { useState, useMemo, useEffect, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
   ArrowDown,
@@ -20,6 +20,7 @@ import {
   ExternalLink,
   ShieldCheck,
   Loader2,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMerchant } from '@/features/merchant/context/MerchantContext';
@@ -45,6 +46,8 @@ import { TreasuryAccountsList } from './TreasuryAccountsList';
 import { AccountActionsMenu } from './AccountActionsMenu';
 import { AccountFormModal } from './AccountFormModal';
 import { TreasuryLoadError, TreasuryLoadingSkeleton } from './TreasuryLoadStates';
+import { OffChainNotice } from './OffChainNotice';
+import { TreasuryAddMemberStat } from './TreasuryAddMemberStat';
 import {
   formatVaultLabel,
   helperShort,
@@ -133,6 +136,7 @@ function TreasuryContainerInner() {
     }))
   );
   const [isPrivacyMode, setIsPrivacyMode] = useState(false);
+  const [isCollectorDismissed, setIsCollectorDismissed] = useState(false);
 
   useEffect(() => {
     if (vaults) {
@@ -266,13 +270,23 @@ function TreasuryContainerInner() {
     showProposals(true);
   };
 
+  // Arriving from a "Trade" shortcut (?trade=1): open the swap proposal form once the treasury has loaded.
+  const tradeHandled = useRef(false);
+  useEffect(() => {
+    if (searchParams.get('trade') !== '1' || isTreasuryLoading || tradeHandled.current) return;
+    tradeHandled.current = true;
+    router.replace('/dashboard/treasury');
+    startTrade();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, isTreasuryLoading]);
+
   const handleRedistribute = async () => {
     if (!requireWallet()) return;
     if (!isOnChain) {
       toast.error('Activa el multisig antes de redistribuir.');
       return;
     }
-    // One proposal per asset so every Squads transaction fits; each needs one signature to create.
+    // One proposal per asset so every transaction fits; each needs one signature to create.
     const principal = accountList.find((v) => v.index === 0);
     const mints = [
       ...(Number(principal?.solBalance ?? 0) > 0.02 ? ['11111111111111111111111111111111'] : []),
@@ -305,7 +319,7 @@ function TreasuryContainerInner() {
   };
 
   // Deposit only shows a QR / address to receive funds: it signs nothing, so it isn't wallet-gated.
-  // Payments that landed in the custodial collection wallet → Principal Squads vault.
+  // Payments that landed in the custodial collection wallet → Principal vault.
   const handleSweep = async () => {
     if (!requireWallet()) return;
     setIsSweeping(true);
@@ -340,7 +354,7 @@ function TreasuryContainerInner() {
     try {
       const deployed = await deployMultisig();
       // The backend caps the threshold at the number of signers when needed.
-      toast.success(`Multisig activo en Squads v4 · umbral ${deployed.threshold} de ${deployed.memberCount ?? memberTotal}`);
+      toast.success(`Multisig activo con el contrato Luxor · umbral ${deployed.threshold} de ${deployed.memberCount ?? memberTotal}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'No se pudo desplegar el multisig');
     } finally {
@@ -502,24 +516,25 @@ function TreasuryContainerInner() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
     >
-      {/* 1. Header Breadcrumbs */}
-      <BreadcrumbNav>
+      <BreadcrumbNav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
         {activeAccount ? (
-          <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <BreadcrumbBtn type="button" onClick={() => handleSelectAccount(null)}>
               Treasury
             </BreadcrumbBtn>
             <BreadcrumbSep>/</BreadcrumbSep>
             <span>{formatVaultLabel(activeAccount.label, activeAccount.index === 0 || activeAccount.isDefault)}</span>
-          </>
+          </div>
         ) : (
-          <span>Treasury</span>
+          <span style={{ fontSize: 24, fontWeight: 600, fontFamily: "'Outfit', sans-serif", color: '#FFFFFF' }}>Treasury</span>
         )}
       </BreadcrumbNav>
 
+      <OffChainNotice config={config} onActivate={handleWalletAction} isDeploying={isDeploying} connected={connected} />
+
       {/* 2. MAIN ACCOUNT VIEW OR OVERVIEW MODE */}
       {activeAccount ? (
-        /* ── SINGLE ACCOUNT DETAIL VIEW (Squads Images 2 & 3) ── */
+        /* ── SINGLE ACCOUNT DETAIL VIEW (account view) ── */
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           <AccountDetailHeader>
             <AccountHeaderTopRow>
@@ -570,6 +585,7 @@ function TreasuryContainerInner() {
                     <StatLabel>Threshold</StatLabel>
                   </StatValueGroup>
                 </StatItem>
+                <TreasuryAddMemberStat />
                 <StatItem>
                   <StatIconBadge><Coins size={18} /></StatIconBadge>
                   <StatValueGroup>
@@ -708,6 +724,8 @@ function TreasuryContainerInner() {
                 </StatValueGroup>
               </StatItem>
 
+              <TreasuryAddMemberStat />
+
               <StatItem>
                 <StatIconBadge>
                   <Coins size={18} />
@@ -753,30 +771,6 @@ function TreasuryContainerInner() {
           </div>
 
           {/* Accounts Section */}
-          {isOnChain && collector && (collector.canSweep || collector.blockedReason) && (
-            <div
-              style={{
-                display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                padding: '12px 16px', borderRadius: 14, marginBottom: 16,
-                background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)',
-              }}
-            >
-              <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: '#EDEDED' }}>
-                <strong style={{ color: '#F59E0B' }}>
-                  {isPrivacyMode ? '$ •••••' : `$${collector.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-                </strong>{' '}
-                en cobros recibidos ({helperShort(collector.address ?? '')}).{' '}
-                {collector.blockedReason
-                  ? collector.blockedReason
-                  : 'Se están pasando automáticamente a la Bóveda Principal del multisig.'}
-              </div>
-              {(collector.canSweep || collector.needsFeePayer) && (
-                <ActionPillButton type="button" $variant="secondary" onClick={handleSweep} disabled={isSweeping}>
-                  {isSweeping ? <Loader2 size={15} className="animate-spin" /> : <ArrowDown size={15} />} Mover ahora
-                </ActionPillButton>
-              )}
-            </div>
-          )}
 
 
           <SectionTitleRow>
@@ -812,6 +806,7 @@ function TreasuryContainerInner() {
               defaultVaultId={proposeVaultId}
               openCreateOnMount={openProposalForm}
               defaultType={proposalType}
+              onCloseCreate={() => setOpenProposalForm(false)}
             />
           </div>
         </>

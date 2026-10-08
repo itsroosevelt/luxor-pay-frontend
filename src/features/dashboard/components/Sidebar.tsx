@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Sidebar — Squads.xyz-inspired navigation rail for the Sterling Pay dashboard.
+ * Sidebar — Navigation rail for the Sterling Pay dashboard.
  *
  * Structure:
  *   1. Brand (Sterling Pay logo + wordmark + collapse toggle)
@@ -40,6 +40,7 @@ import {
 import { clsx } from 'clsx';
 import type { MerchantProfile } from '@sterling/contracts';
 import { PortalSwitcher } from '@/features/dashboard/components/PortalSwitcher';
+import { TreasurySwitcher } from '@/features/treasury/components/TreasurySwitcher';
 
 const LOGO_SRC =
   'https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b';
@@ -517,26 +518,30 @@ function SidebarInner({
     try {
       const saved = localStorage.getItem('luxor_treasury_vaults');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          const items = parsed.map((v: { id?: string; label?: string; usdValue?: number }, idx: number) => {
-            const isPrincipal = idx === 0;
-            let rawLabel = (v.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim();
-            if (isPrincipal && (!rawLabel || rawLabel.toLowerCase() === 'principal' || rawLabel.toLowerCase() === 'bóveda principal')) {
-              rawLabel = 'Roosevelt';
-            }
-            if (!rawLabel) rawLabel = 'Roosevelt';
-            const label = isPrincipal ? (rawLabel.toLowerCase().includes('principal') ? 'Roosevelt' : rawLabel) : rawLabel;
-            const accSlug = v.id || label.toLowerCase().replace(/\s+/g, '-') || idx.toString();
-            const balanceStr = v.usdValue != null ? `$${v.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : undefined;
-            return {
-              href: `/dashboard/treasury?account=${encodeURIComponent(accSlug)}`,
-              label,
-              balance: balanceStr,
-            };
-          });
-          setTreasuryChildren(items);
-          return;
+        if (saved.includes('B8NU')) {
+          localStorage.removeItem('luxor_treasury_vaults');
+        } else {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const items = parsed.map((v: { id?: string; label?: string; usdValue?: number }, idx: number) => {
+              const isPrincipal = idx === 0;
+              let rawLabel = (v.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim();
+              if (isPrincipal && (!rawLabel || rawLabel.toLowerCase() === 'principal' || rawLabel.toLowerCase() === 'bóveda principal')) {
+                rawLabel = 'Roosevelt';
+              }
+              if (!rawLabel) rawLabel = 'Roosevelt';
+              const label = isPrincipal ? (rawLabel.toLowerCase().includes('principal') ? 'Roosevelt' : rawLabel) : rawLabel;
+              const accSlug = v.id || label.toLowerCase().replace(/\s+/g, '-') || idx.toString();
+              const balanceStr = v.usdValue != null ? `$${v.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : undefined;
+              return {
+                href: `/dashboard/treasury?account=${encodeURIComponent(accSlug)}`,
+                label,
+                balance: balanceStr,
+              };
+            });
+            setTreasuryChildren(items);
+            return;
+          }
         }
       }
     } catch {
@@ -619,6 +624,12 @@ function SidebarInner({
           </>
         )}
       </div>
+
+      {!isCollapsed && (
+        <div className="px-4 py-2 border-b border-white/[0.06] flex items-center justify-center">
+          <TreasurySwitcher />
+        </div>
+      )}
 
       {/* 2 · Primary navigation with structured categories */}
       <nav className="mt-3 flex-1 space-y-4 overflow-y-auto px-3 pb-2 no-scrollbar [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">

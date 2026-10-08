@@ -577,7 +577,7 @@ export const MobileAccountCard = styled(motion.div)`
   gap: 12px;
 `;
 
-/* ──────────────────────── Account Detail Views (Squads Style) ──────────────── */
+/* ──────────────────────── Account Detail Views (account view) ──────────────── */
 
 export const AccountDetailHeader = styled.div`
   display: flex;

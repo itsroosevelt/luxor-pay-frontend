@@ -25,8 +25,9 @@ async function proxy(request: NextRequest, context: { params: Promise<{ path: st
   if (authorization) headers.set('Authorization', authorization);
   const contentType = request.headers.get('content-type');
   if (contentType) headers.set('Content-Type', contentType);
-  // Treasury writes carry a wallet-signed session the backend verifies (WalletAuthGuard).
-  for (const name of ['x-luxor-wallet', 'x-luxor-message', 'x-luxor-signature']) {
+  // Treasury writes carry a wallet-signed session the backend verifies (WalletAuthGuard);
+  // x-luxor-treasury says which of the organization's treasuries the request is about.
+  for (const name of ['x-luxor-wallet', 'x-luxor-message', 'x-luxor-signature', 'x-luxor-treasury']) {
     const value = request.headers.get(name);
     if (value) headers.set(name, value);
   }

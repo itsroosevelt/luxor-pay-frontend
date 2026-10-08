@@ -49,4 +49,25 @@ describe('getWalletAuthHeaders', () => {
     const { getWalletAuthHeaders, WalletRequiredError } = await load();
     await expect(getWalletAuthHeaders({ publicKey: null })).rejects.toBeInstanceOf(WalletRequiredError);
   });
+
+  it('knows whether a valid session exists for exactly this wallet', async () => {
+    const { getWalletAuthHeaders, hasWalletSession } = await load();
+    const wallet = 'Wallet1111111111111111111111111111111111111';
+    expect(hasWalletSession(wallet)).toBe(false);
+    await getWalletAuthHeaders({ publicKey, signMessage: async (b: Uint8Array) => b.slice(0, 64) });
+    expect(hasWalletSession(wallet)).toBe(true);
+    expect(hasWalletSession('SomeOtherWallet')).toBe(false);
+  });
+
+  it('announces a new session once, and not when the session is only reused', async () => {
+    const dispatchEvent = vi.fn();
+    vi.stubGlobal('window', { dispatchEvent });
+    const { getWalletAuthHeaders, WALLET_SESSION_EVENT } = await load();
+    const signMessage = async (b: Uint8Array) => b.slice(0, 64);
+    await getWalletAuthHeaders({ publicKey, signMessage });
+    await getWalletAuthHeaders({ publicKey, signMessage });
+    expect(dispatchEvent).toHaveBeenCalledTimes(1);
+    expect(dispatchEvent.mock.calls[0][0].type).toBe(WALLET_SESSION_EVENT);
+    vi.unstubAllGlobals();
+  });
 });

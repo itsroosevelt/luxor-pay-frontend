@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import {
   getProposals,
@@ -9,12 +9,14 @@ import {
   cancelProposal,
   activateProposal,
   createRedistribution,
+  getReclaimable,
+  reclaimRentRequest,
   syncProposal,
   type Proposal,
   type CreateProposalPayload,
   type ProposalMutationResponse,
 } from '@/features/treasury/api/proposals-api';
-import { notifyTreasuryChanged, signAndSendPending, walletAddress, finalAction } from '@/features/treasury/lib/squads-tx';
+import { TREASURY_CHANGED_EVENT, notifyTreasuryChanged, signAndSendPending, walletAddress, finalAction } from '@/features/treasury/lib/multisig-tx';
 import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { createSharedResource } from '@/lib/shared-resource';
 
@@ -33,6 +35,10 @@ interface UseProposalsReturn {
   activate: (id: string) => Promise<Proposal>;
   /** Proposes moving the Principal's balance to the sub-vaults by their target weights. */
   redistribute: (mint?: string) => Promise<Proposal>;
+  /** Finished proposals whose accounts still hold rent (Luxor contract). */
+  countReclaimable: () => Promise<number>;
+  /** Closes a batch of them: the wallet signs, the rent goes back to whoever paid it. */
+  reclaimRent: () => Promise<{ count: number; remaining: number }>;
 }
 
 /**
@@ -42,7 +48,7 @@ interface UseProposalsReturn {
 const proposalsResource = createSharedResource<Proposal[]>(
   [],
   async () => (await getProposals()).data ?? [],
-  { refreshMs: 30_000, refreshOnFocus: true },
+  { refreshMs: 12_000, refreshOnFocus: true },
 );
 
 export function useProposals(): UseProposalsReturn {
@@ -51,6 +57,12 @@ export function useProposals(): UseProposalsReturn {
   const { data, isLoading, isError, errorMessage } = proposalsResource.useState();
   const setData = (update: (prev: Proposal[]) => Proposal[]) => proposalsResource.setData(update);
   const refetch = useCallback(() => proposalsResource.load(), []);
+
+  useEffect(() => {
+    const onChange = () => { void proposalsResource.load({ silent: true }); };
+    window.addEventListener(TREASURY_CHANGED_EVENT, onChange);
+    return () => window.removeEventListener(TREASURY_CHANGED_EVENT, onChange);
+  }, []);
 
   /**
    * Adds a just-created proposal at the top — or replaces it if a background refresh
@@ -62,15 +74,18 @@ export function useProposals(): UseProposalsReturn {
     setData((prev) => prev.map((p) => (p.id === next.id ? next : p)));
 
   /**
-   * On-chain multisig: the backend answers with a Squads transaction; the
+   * On-chain multisig: the backend answers with a transaction; the
    * member wallet signs and sends it, then the proposal is re-read from chain.
    * Off-chain / mock: `pendingTransaction` is absent and `data` is final.
    */
   const settle = async (res: ProposalMutationResponse): Promise<Proposal> => {
-    if (!res.pendingTransaction) return res.data;
+    if (!res.pendingTransaction) {
+      notifyTreasuryChanged();
+      return res.data;
+    }
     const signature = await signAndSendPending(res.pendingTransaction, wallet, connection);
     const synced = await syncProposal(res.data.id, { signature, action: finalAction(res.pendingTransaction) });
-    if (finalAction(res.pendingTransaction) === 'execute') notifyTreasuryChanged();
+    notifyTreasuryChanged();
     if (synced.data.payoutStatus === 'failed') {
       replace(synced.data);
       throw new Error(`Propuesta ejecutada, pero el pago desde la Bóveda Principal falló: ${synced.data.payoutError ?? 'error desconocido'}`);
@@ -118,12 +133,30 @@ export function useProposals(): UseProposalsReturn {
       return next;
     };
 
+  const countReclaimable = async (): Promise<number> => {
+    try {
+      return (await getReclaimable()).data.count;
+    } catch {
+      return 0; // a convenience: never get in the way of the page
+    }
+  };
+
+  const reclaimRent = async (): Promise<{ count: number; remaining: number }> => {
+    const headers = await getWalletAuthHeaders(wallet);
+    const res = await reclaimRentRequest(headers);
+    if (res.pendingTransaction) await signAndSendPending(res.pendingTransaction, wallet, connection);
+    notifyTreasuryChanged();
+    return res.data;
+  };
+
   return {
     data,
     isLoading,
     isError,
     errorMessage,
     refetch,
+    countReclaimable,
+    reclaimRent,
     createProposal,
     approve: runAction(approveProposal),
     reject: runAction(rejectProposal),

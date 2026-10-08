@@ -1,9 +1,9 @@
-import { bearerAuth } from '@/lib/auth-client';
+import { treasuryAuth } from '@/lib/active-treasury';
 import { apiUrl } from '@/lib/api-client';
-import type { PendingTransaction } from '@/features/treasury/lib/squads-tx';
+import type { PendingTransaction } from '@/features/treasury/lib/multisig-tx';
 
 /**
- * SRS role matrix (Squads v4 reference):
+ * SRS role matrix (the contract's permission model):
  *   admin    — añade/remueve miembros y modifica el umbral de firmas
  *   signer   — vota propuestas; cuenta para el umbral M-de-N
  *   proposer — puede iniciar propuestas de transacción
@@ -33,9 +33,9 @@ export interface Member {
   roles: MemberRoles;
   /** True for the signed-in user's own membership. */
   isCurrentUser?: boolean;
-  /** null while the multisig is off-chain; otherwise whether the wallet is a Squads member. */
+  /** null while the multisig is off-chain; otherwise whether the wallet is a member. */
   onChain?: boolean | null;
-  /** Membership change waiting for its Squads config proposal to execute. */
+  /** Membership change waiting for its config proposal to execute. */
   pendingChange?: PendingMemberChange | null;
   createdAt: string;
   updatedAt: string;
@@ -49,7 +49,7 @@ export interface PendingMemberChange {
 }
 
 /**
- * On an on-chain multisig, member writes answer with the Squads config proposal
+ * On an on-chain multisig, member writes answer with the config proposal
  * (AddMember / RemoveMember) that the connected wallet must sign.
  */
 export interface MemberProposalResult {
@@ -72,7 +72,7 @@ export async function getMembers(): Promise<MembersResponse> {
   const response = await fetch(apiUrl('/members'), {
     method: 'GET',
     headers: {
-      ...(await bearerAuth()),
+      ...(await treasuryAuth()),
       'Content-Type': 'application/json',
     },
   });
@@ -92,7 +92,7 @@ export async function createMember(
   const response = await fetch(apiUrl('/members'), {
     method: 'POST',
     headers: {
-      ...(await bearerAuth()),
+      ...(await treasuryAuth()),
       'Content-Type': 'application/json',
       ...(walletHeaders ?? {}),
     },
@@ -123,7 +123,7 @@ export async function updateMemberDetails(
   const response = await fetch(apiUrl(`/members/${id}`), {
     method: 'PATCH',
     headers: {
-      ...(await bearerAuth()),
+      ...(await treasuryAuth()),
       'Content-Type': 'application/json',
       ...(walletHeaders ?? {}),
     },
@@ -145,7 +145,7 @@ export async function deleteMember(
   const response = await fetch(apiUrl(`/members/${id}`), {
     method: 'DELETE',
     headers: {
-      ...(await bearerAuth()),
+      ...(await treasuryAuth()),
       ...(walletHeaders ?? {}),
     },
   });

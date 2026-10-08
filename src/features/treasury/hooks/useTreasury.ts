@@ -17,11 +17,12 @@ import {
   type CreateVaultPayload,
 } from '@/features/treasury/api/treasury-api';
 import { syncProposal } from '@/features/treasury/api/proposals-api';
-import { TREASURY_CHANGED_EVENT, signAndSendPending, walletAddress, finalAction } from '@/features/treasury/lib/squads-tx';
+import { TREASURY_CHANGED_EVENT, notifyTreasuryChanged, signAndSendPending, walletAddress, finalAction } from '@/features/treasury/lib/multisig-tx';
 import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { createSharedResource } from '@/lib/shared-resource';
+import { getActiveTreasuryId, setActiveTreasuryId } from '@/lib/active-treasury';
 
-const BALANCE_REFRESH_MS = 30_000;
+const BALANCE_REFRESH_MS = 12_000;
 
 
 interface UseTreasuryReturn {
@@ -36,14 +37,15 @@ interface UseTreasuryReturn {
   /** Updates a vault's name and/or target weight (%). */
   updateVault: (id: string, changes: { label?: string; targetWeight?: number }) => Promise<Vault>;
   removeVault: (id: string) => Promise<void>;
-  setThreshold: (threshold: number) => Promise<void>;
-  /** Deploys the Squads v4 multisig on-chain, signed by the connected wallet. */
+  /** Changes how many signers must approve. On-chain it is a config proposal: `executed` says whether it already took effect. */
+  setThreshold: (threshold: number) => Promise<{ proposalIndex?: number; executed: boolean }>;
+  /** Deploys the Luxor multisig on-chain, signed by the connected wallet. */
   deployMultisig: () => Promise<MultisigConfig>;
-  /** Links an existing Squads v4 multisig by address. */
+  /** Links an existing Luxor multisig by address. */
   linkMultisig: (address: string) => Promise<MultisigConfig>;
   /** Payments sitting in the custodial collection wallet. */
   collector: CollectorInfo | null;
-  /** Moves them into the Principal Squads vault; returns the transaction signatures. */
+  /** Moves them into the Principal vault; returns the transaction signatures. */
   sweepCollector: () => Promise<string[]>;
 }
 
@@ -57,12 +59,19 @@ interface TreasuryData {
 const treasuryResource = createSharedResource<TreasuryData>(
   { config: null, vaults: [], collector: null },
   async () => {
-    const [cfg, vs] = await Promise.all([getMultisig(), getVaults()]);
-    // Non-fatal and not awaited: the treasury renders even if the collection wallet can't be read.
-    getCollector()
-      .then((c) => treasuryResource.setData((prev) => ({ ...prev, collector: c.data })))
-      .catch(() => undefined);
-    return { config: cfg.data ?? null, vaults: vs.data ?? [], collector: null };
+    try {
+      const [cfg, vs] = await Promise.all([getMultisig(), getVaults()]);
+      // Non-fatal and not awaited: the treasury renders even if the collection wallet can't be read.
+      getCollector()
+        .then((c) => treasuryResource.setData((prev) => ({ ...prev, collector: c.data })))
+        .catch(() => undefined);
+      return { config: cfg.data ?? null, vaults: vs.data ?? [], collector: null };
+    } catch (err: any) {
+      if (getActiveTreasuryId() && (err?.message?.includes('not found') || err?.message?.includes('404'))) {
+        setActiveTreasuryId(null);
+      }
+      throw err;
+    }
   },
   // Balances change on-chain at any time (deposits, executions): keep them live.
   { refreshMs: BALANCE_REFRESH_MS },
@@ -122,14 +131,18 @@ export function useTreasury(): UseTreasuryReturn {
     return signatures;
   };
 
-  const setThreshold = async (threshold: number): Promise<void> => {
+  const setThreshold = async (threshold: number): Promise<{ proposalIndex?: number; executed: boolean }> => {
     const res = await updateThresholdReq(threshold, walletAddress(wallet), await signed());
+    let outcome: { proposalIndex?: number; executed: boolean } = { executed: true };
     if (res.pendingTransaction && res.proposal) {
       // On-chain: the change is a config proposal; the threshold updates once it executes.
       const signature = await signAndSendPending(res.pendingTransaction, wallet, connection);
-      await syncProposal(res.proposal.id, { signature, action: finalAction(res.pendingTransaction) });
+      const synced = await syncProposal(res.proposal.id, { signature, action: finalAction(res.pendingTransaction) });
+      outcome = { proposalIndex: res.proposal.index, executed: synced.data.status === 'executed' };
+      notifyTreasuryChanged(); // the config and the proposals list re-read the chain
     }
     setConfig(res.data);
+    return outcome;
   };
 
   const deployMultisig = async (): Promise<MultisigConfig> => {

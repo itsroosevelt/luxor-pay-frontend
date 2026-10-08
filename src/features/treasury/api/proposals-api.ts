@@ -1,12 +1,12 @@
 /**
  * Multisig proposal client — the create → vote → execute lifecycle over a
- * Squads v4 program account. In Mock Mode these calls are served by
+ * Luxor multisig program account. In Mock Mode these calls are served by
  * `src/mocks/handlers.ts`.
  */
 
-import { bearerAuth } from '@/lib/auth-client';
+import { treasuryAuth } from '@/lib/active-treasury';
 import { apiUrl, describeApiError, describeNetworkError } from '@/lib/api-client';
-import type { PendingTransaction } from '@/features/treasury/lib/squads-tx';
+import type { PendingTransaction } from '@/features/treasury/lib/multisig-tx';
 
 export type ProposalType = 'transfer' | 'swap' | 'config' | 'redistribute';
 
@@ -66,10 +66,10 @@ export interface Proposal {
   updatedAt: string;
   executedAt: string | null;
   executedSig: string | null;
-  /** true when backed by a Squads v4 proposal account (state mirrored from the chain). */
+  /** true when backed by an on-chain proposal account (state mirrored from the chain). */
   onChain?: boolean;
   /**
-   * Outflow from the custodial Principal: the Squads transaction approves a
+   * Outflow from the custodial Principal: the on-chain transaction approves a
    * plan (committed by hash) and the backend pays only after it executes.
    */
   custodial?: boolean;
@@ -81,7 +81,7 @@ export interface Proposal {
 }
 
 /**
- * Mutations on an on-chain multisig return the Squads transaction that the
+ * Mutations on an on-chain multisig return the transaction that the
  * member wallet must sign; `data` is updated via `syncProposal` afterwards.
  */
 export interface ProposalMutationResponse {
@@ -115,7 +115,7 @@ export const PROPOSAL_STATUS_META: Record<
 };
 
 async function authed<T>(path: string, init?: RequestInit): Promise<T> {
-  const authorization = await bearerAuth();
+  const authorization = await treasuryAuth();
   let response: Response;
   try {
     response = await fetch(apiUrl(path), {
@@ -162,13 +162,25 @@ export const activateProposal = proposalAction('activate');
 export function createRedistribution(
   wallet?: string,
   walletHeaders?: Record<string, string>,
-  /** One asset per proposal so each Squads transaction fits; omit to include all. */
+  /** One asset per proposal so each transaction fits; omit to include all. */
   mint?: string,
 ): Promise<ProposalMutationResponse> {
   return authed('/proposals/redistribute', { method: 'POST', body: JSON.stringify({ wallet, mint }), headers: walletHeaders });
 }
 
-/** Confirms a signed Squads transaction and returns the proposal as mirrored from the chain. */
+/** How many finished proposals still lock rent on the Luxor contract (0 on other treasuries). */
+export function getReclaimable(): Promise<{ data: { count: number } }> {
+  return authed('/proposals/reclaimable');
+}
+
+/** The transaction that closes a batch of finished proposals and returns their rent to the wallets that paid it. */
+export function reclaimRentRequest(
+  walletHeaders?: Record<string, string>,
+): Promise<{ data: { count: number; remaining: number }; pendingTransaction?: PendingTransaction }> {
+  return authed('/proposals/reclaim-rent', { method: 'POST', body: '{}', headers: walletHeaders });
+}
+
+/** Confirms a signed transaction and returns the proposal as mirrored from the chain. */
 export function syncProposal(
   id: string,
   body: { signature?: string; action?: string } = {},

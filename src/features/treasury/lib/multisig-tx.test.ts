@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Keypair, SystemProgram, TransactionMessage, VersionedTransaction } from '@solana/web3.js';
-import { finalAction, signAndSendPending, type PendingTransaction } from './squads-tx';
+import { finalAction, programErrorMessage, signAndSendPending, type PendingTransaction } from './multisig-tx';
 
 const payer = Keypair.generate();
 
@@ -54,5 +54,34 @@ describe('signAndSendPending', () => {
   it('finalAction reports the execution at the end of the chain', () => {
     expect(finalAction(pending('create_proposal', pending('execute')))).toBe('execute');
     expect(finalAction(pending('approve'))).toBe('approve');
+  });
+});
+
+describe('program errors', () => {
+  it('turns the contract error code of a failed simulation into a reason', () => {
+    expect(programErrorMessage('Simulation failed. Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1774.')).toContain('al menos un admin');
+    expect(programErrorMessage('custom program error: 0x1771')).toContain('permiso');
+  });
+
+  it('reads the code of an on-chain failure too', () => {
+    expect(programErrorMessage(JSON.stringify({ InstructionError: [0, { Custom: 6008 }] }))).toContain('obsoleta');
+    expect(programErrorMessage(JSON.stringify({ InstructionError: [0, { Custom: 6010 }] }))).toContain('ya votó');
+  });
+
+  it('ignores errors that are not from the contract', () => {
+    expect(programErrorMessage('Blockhash not found')).toBeNull();
+    expect(programErrorMessage('custom program error: 0x1')).toBeNull();
+  });
+
+  it('shows the reason instead of a raw code when sending fails', async () => {
+    const conn = { sendRawTransaction: vi.fn(async () => { throw new Error('custom program error: 0x1772'); }), confirmTransaction: vi.fn() };
+    const wallet = { publicKey: payer.publicKey, signTransaction: vi.fn(async (tx: VersionedTransaction) => tx) };
+    await expect(signAndSendPending(pending('create_proposal'), wallet as any, conn as any)).rejects.toThrow('lista de miembros');
+  });
+
+  it('rejected on-chain: explains the reason', async () => {
+    const conn = { sendRawTransaction: vi.fn(async () => 'sig'), confirmTransaction: vi.fn(async () => ({ value: { err: { InstructionError: [0, { Custom: 6011 }] } } })) };
+    const wallet = { publicKey: payer.publicKey, signTransaction: vi.fn(async (tx: VersionedTransaction) => tx) };
+    await expect(signAndSendPending(pending('execute'), wallet as any, conn as any)).rejects.toThrow('time lock');
   });
 });

@@ -1,7 +1,7 @@
 /**
- * Wallet signing for Squads v4 multisig operations.
+ * Wallet signing for Luxor multisig operations.
  *
- * The backend builds every Squads instruction (PDAs, vault transactions,
+ * The backend builds every multisig instruction (PDAs, vault transactions,
  * votes, execution) and returns it unsigned. The member's wallet (Phantom /
  * Solflare) signs it here and broadcasts it; the program itself enforces that
  * only multisig members with the right permission can vote or execute.
@@ -10,7 +10,7 @@
 import { Connection, VersionedTransaction } from '@solana/web3.js';
 import type { WalletContextState } from '@solana/wallet-adapter-react';
 
-export type SquadsAction =
+export type MultisigAction =
   | 'create_multisig'
   | 'create_proposal'
   | 'approve'
@@ -18,10 +18,11 @@ export type SquadsAction =
   | 'cancel'
   | 'activate'
   | 'execute'
+  | 'close'
   | 'sweep';
 
 export interface PendingTransaction {
-  action: SquadsAction;
+  action: MultisigAction;
   /** base64 serialized v0 transaction (may already carry the multisig createKey signature). */
   transaction: string;
   blockhash: string;
@@ -37,7 +38,7 @@ type SigningWallet = Pick<WalletContextState, 'publicKey' | 'signTransaction'> &
   Partial<Pick<WalletContextState, 'signAllTransactions'>>;
 
 /** What the whole pending operation ends with ('execute' when it executes in the same signature). */
-export function finalAction(pending: PendingTransaction): SquadsAction {
+export function finalAction(pending: PendingTransaction): MultisigAction {
   return pending.followUp ? finalAction(pending.followUp) : pending.action;
 }
 
@@ -90,7 +91,9 @@ async function sendAndConfirm(
 ): Promise<string> {
   let signature: string;
   try {
-    signature = await connection.sendRawTransaction(signed.serialize(), { maxRetries: 3 });
+    // The backend took this blockhash at 'confirmed' from a possibly different RPC node: simulating at
+    // a stricter level (or on a node that has not seen it yet) answers "Blockhash not found".
+    signature = await connection.sendRawTransaction(signed.serialize(), { maxRetries: 3, preflightCommitment: 'processed' });
   } catch (err) {
     throw new Error(`No se pudo enviar la transacción a Solana (${friendlyRpcError(err)}). No se ha movido nada; inténtalo de nuevo.`);
   }
@@ -108,13 +111,49 @@ async function sendAndConfirm(
     return signature;
   }
   if (result.value.err) {
-    throw new Error(`La transacción falló on-chain: ${JSON.stringify(result.value.err)}`);
+    const reason = programErrorMessage(JSON.stringify(result.value.err));
+    throw new Error(reason ? `La operación fue rechazada: ${reason}.` : `La transacción falló on-chain: ${JSON.stringify(result.value.err)}`);
   }
   return signature;
 }
 
+/** Errors of the luxor_multisig program, by Anchor code (6000 + position in the program's error list). */
+const PROGRAM_ERRORS: Record<number, string> = {
+  6000: 'tu wallet no es miembro de este multisig',
+  6001: 'tu wallet no tiene el permiso necesario para esta acción',
+  6002: 'la lista de miembros no es válida (vacía, demasiado larga o con duplicados)',
+  6003: 'los permisos de un miembro no son válidos',
+  6004: 'el multisig debe conservar al menos un admin, un proponente, un firmante y un ejecutor',
+  6005: 'el umbral debe estar entre 1 y el número de firmantes',
+  6006: 'otra propuesta se creó al mismo tiempo; vuelve a intentarlo',
+  6007: 'la propuesta está vacía o es demasiado grande',
+  6008: 'la propuesta quedó obsoleta: un cambio de configuración posterior la invalidó',
+  6009: 'la propuesta no está en el estado correcto para esta acción',
+  6010: 'tu wallet ya votó esta propuesta',
+  6011: 'todavía no pasó el tiempo de espera (time lock) de esta propuesta',
+  6012: 'esta propuesta no es del tipo que se está ejecutando',
+  6013: 'la propuesta pide una firma que no es la de la bóveda',
+  6014: 'la propuesta intenta tocar cuentas del propio multisig',
+  6015: 'faltan cuentas para ejecutar la propuesta',
+  6016: 'esa wallet ya es miembro',
+  6017: 'esa wallet no es miembro',
+  6018: 'desbordamiento aritmético',
+  6019: 'la propuesta sigue abierta: solo se pueden cerrar las ejecutadas, rechazadas, canceladas u obsoletas',
+};
+
+/** Reads `custom program error: 0x1771` or `{"Custom":6001}` and returns the plain-language reason. */
+export function programErrorMessage(text: string): string | null {
+  const hex = /custom program error: 0x([0-9a-f]+)/i.exec(text);
+  const dec = /"Custom"\s*:\s*(\d+)/.exec(text);
+  const code = hex ? parseInt(hex[1], 16) : dec ? Number(dec[1]) : NaN;
+  return PROGRAM_ERRORS[code] ?? null;
+}
+
 function friendlyRpcError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
+  const program = programErrorMessage(msg);
+  if (program) return program;
+  if (/Blockhash not found/i.test(msg)) return 'la operación caducó antes de enviarse (pasó demasiado tiempo desde que se preparó); vuelve a intentarlo y firma enseguida';
   if (/429|Too Many Requests|rate limit/i.test(msg)) return 'la red está saturada';
   if (/fetch|network|Failed to fetch/i.test(msg)) return 'sin conexión con la red';
   return msg;

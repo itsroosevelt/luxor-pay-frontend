@@ -27,7 +27,6 @@ Cada carpeta agrupa todo lo de un dominio de negocio. Dentro, la misma forma:
 | `qr`                | Escáner QR y enrutado de lo escaneado. |
 | `stake`             | Estilos de la página de staking. |
 | `subscription`      | Plan / suscripción. |
-| `swap`              | Swap de tokens (Jupiter). |
 | `transactions`      | Historial, tarjetas de transacción, estados de cuenta PDF. |
 | `transfers`         | Envíos (modal, hooks, `transfers-api`). |
 | `treasury`          | Tesorería multisig Squads v4: bóvedas, propuestas, miembros. |

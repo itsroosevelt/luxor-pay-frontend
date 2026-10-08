@@ -3,13 +3,13 @@
 /**
  * ProposalsPanel — Module 1 "Gestión de Transacciones y Propuestas".
  *
- * The Squads-style lifecycle: a proposer creates a proposal → signers
+ * The proposal lifecycle: a proposer creates a proposal → signers
  * approve / reject → once approvals reach the threshold any authorised
  * member executes it. Every action is gated on the signed-in member's
  * roles and served by `src/mocks/handlers.ts` in Mock Mode.
  */
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, X, Loader2, ArrowUpRight, Repeat, Settings2, ShieldCheck, Shuffle,
@@ -108,9 +108,9 @@ const fieldStyle: React.CSSProperties = {
 };
 
 export function ProposalsPanel({
-  defaultVaultId, openCreateOnMount, defaultType,
-}: { defaultVaultId?: string; openCreateOnMount?: boolean; defaultType?: ProposalType }) {
-  const { data: proposals, isLoading, isError, errorMessage, refetch, createProposal, approve, reject, execute, cancel, activate } = useProposals();
+  defaultVaultId, openCreateOnMount, defaultType, onCloseCreate,
+}: { defaultVaultId?: string; openCreateOnMount?: boolean; defaultType?: ProposalType; onCloseCreate?: () => void }) {
+  const { data: proposals, isLoading, isError, errorMessage, refetch, createProposal, approve, reject, execute, cancel, activate, countReclaimable, reclaimRent } = useProposals();
   const { data: members } = useMembers();
   const { vaults, config } = useTreasury();
   const { tokens } = useTokenRegistry();
@@ -137,7 +137,7 @@ export function ProposalsPanel({
         : members.find((m) => m.isCurrentUser) ?? null,
     [members, connectedWallet],
   );
-  // Once on-chain, only members that are actually in the Squads multisig can vote.
+  // Once on-chain, only members that are actually in the multisig can vote.
   const signers = useMemo(
     () => members.filter((m) => m.roles.signer && (!config?.onChain || m.onChain !== false)),
     [members, config?.onChain],
@@ -204,11 +204,36 @@ export function ProposalsPanel({
     try {
       const created = await createProposal(payload);
       setCreateOpen(false);
+      onCloseCreate?.();
       setForm((f) => ({ ...f, title: '', destination: '', destinationLabel: '', amount: '', memo: '' }));
       // When the creator's vote already meets the threshold it executes in the same signature.
       toast.success(created?.status === 'executed' ? 'Propuesta ejecutada on-chain' : 'Proposal created · open for voting');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not create proposal'); }
     finally { setBusy(null); }
+  };
+
+  // Finished proposals still hold the SOL that paid for their accounts: the team can get it back.
+  const [reclaimable, setReclaimable] = useState(0);
+  const [reclaiming, setReclaiming] = useState(false);
+  useEffect(() => {
+    let alive = true;
+    void countReclaimable().then((n) => { if (alive) setReclaimable(n); });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposals.length, proposals.map((p) => p.status).join()]);
+
+  const handleReclaim = async () => {
+    if (!requireWallet()) return;
+    setReclaiming(true);
+    try {
+      const { count, remaining } = await reclaimRent();
+      toast.success(count === 0 ? 'No hay propuestas por cerrar.' : remaining > 0 ? `Se cerraron ${count} propuestas y recuperaste su rent. Quedan ${remaining}: pulsa de nuevo.` : `Se cerraron ${count} propuestas y recuperaste su rent.`);
+      setReclaimable(remaining);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'No se pudo recuperar el rent');
+    } finally {
+      setReclaiming(false);
+    }
   };
 
   return (
@@ -219,11 +244,20 @@ export function ProposalsPanel({
           <ShieldCheck size={14} />
           Current Threshold: <strong style={{ color: 'var(--lx-text)' }}>{config ? `${effectiveThreshold} of ${effectiveSignerCount}` : '—'}</strong> signers
         </div>
+        <div className="flex items-center gap-2">
+        {reclaimable > 0 && (
+          <button type="button" className="lx-btn" disabled={!connected || reclaiming}
+            title="Cierra las propuestas terminadas y devuelve a quien las creó el SOL que costaron sus cuentas"
+            onClick={handleReclaim}>
+            {reclaiming ? <Loader2 size={14} className="animate-spin" /> : null} Recuperar rent ({reclaimable})
+          </button>
+        )}
         <button type="button" className="lx-btn lx-btn-primary" disabled={!connected}
           title={!connected ? 'Conecta tu wallet para crear propuestas' : undefined}
           onClick={() => { if (!requireWallet()) return; setCreateOpen(true); }}>
           <Plus size={15} /> New Proposal
         </button>
+        </div>
       </div>
 
       {isLoading && proposals.length === 0 && (
@@ -373,7 +407,7 @@ export function ProposalsPanel({
       {/* create modal */}
       <AnimatePresence>
         {createOpen && (
-          <Modal onClose={() => busy !== 'create' && setCreateOpen(false)} title="New Proposal" icon={<Plus size={18} style={{ color: 'rgba(255,255,255,0.7)' }} />} maxWidth={520}>
+          <Modal onClose={() => { if (busy !== 'create') { setCreateOpen(false); onCloseCreate?.(); } }} title="New Proposal" icon={<Plus size={18} style={{ color: 'rgba(255,255,255,0.7)' }} />} maxWidth={520}>
             <form onSubmit={submitCreate} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>

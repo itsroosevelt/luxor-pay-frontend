@@ -26,7 +26,6 @@ import {
   MOCK_PRICES_USD,
   MOCK_USER,
   MINTS,
-  buildMockSwapQuote,
 } from './data';
 import type { PaymentRequest } from '@/features/payment-requests/api/payment-requests-api';
 import type { Transfer } from '@/features/transfers/api/transfers-api';
@@ -34,6 +33,7 @@ import type { Contact } from '@/features/contacts/api/contacts-api';
 import type { Member } from '@/features/treasury/api/members-api';
 import type { MultisigConfig, Vault } from '@/features/treasury/api/treasury-api';
 import type { Proposal } from '@/features/treasury/api/proposals-api';
+import { getActiveTreasuryId } from '@/lib/active-treasury';
 
 export interface MockResult {
   status: number;
@@ -278,8 +278,30 @@ export function resolveMock(
   }
 
   /* ───────────────── Multisig config (Squads v4-style) ───────────────── */
+  const activeTreasuryId = getActiveTreasuryId();
+  const allTreasuries: MultisigConfig[] = [
+    {
+      id: 'default-sterling-treasury',
+      name: 'Tesorería Sterling',
+      address: '',
+      threshold: 1,
+      timeLock: 0,
+      transactionIndex: 0,
+      createKey: '',
+      createdAt: nowIso(),
+      updatedAt: nowIso(),
+      onChain: false,
+      memberCount: 1,
+      isDefault: true,
+    },
+  ];
+
+  if (p === '/multisig/treasuries' && method === 'GET') {
+    return ok({ data: allTreasuries });
+  }
   if (p === '/multisig' && method === 'GET') {
-    return ok({ data: { ...multisig, memberCount: members.length } });
+    const activeCfg = allTreasuries.find((t) => t.id === activeTreasuryId) ?? allTreasuries[0];
+    return ok({ data: { ...activeCfg, memberCount: activeCfg.memberCount ?? 1 } });
   }
   if (p === '/multisig' && method === 'PATCH') {
     const next = Number(body?.threshold);
@@ -291,7 +313,20 @@ export function resolveMock(
   }
 
   /* ───────────────── Vaults (sub-bóvedas / Vault PDAs) ───────────────── */
-  if (p === '/vaults' && method === 'GET') return ok({ data: vaults });
+  if (p === '/vaults/balance-history' && method === 'GET') {
+    const range = search.get('range') ?? '1W';
+    const count = range === '1Y' ? 12 : range === '1M' ? 15 : 7;
+    const stepMs = range === '1Y' ? 30 * 86_400_000 : range === '1M' ? 2 * 86_400_000 : 86_400_000;
+    const total = vaults.reduce((acc, v) => acc + (v.usdValue ?? 0), 0);
+    const points = Array.from({ length: count }, (_, i) => ({
+      t: new Date(Date.now() - (count - 1 - i) * stepMs).toISOString(),
+      usd: Math.round(total * (0.8 + 0.2 * (i / Math.max(1, count - 1))) * 100) / 100,
+    }));
+    return ok({ data: { range, points, truncated: false } });
+  }
+  if (p === '/vaults' && method === 'GET') {
+    return ok({ data: vaults });
+  }
   if (p === '/vaults' && method === 'POST') {
     const index = vaults.length;
     const vault: Vault = {
@@ -512,21 +547,6 @@ export function resolveMock(
     return ok({ data: { ...MOCK_WALLET_BALANCE, publicKey: search.get('publicKey') ?? MOCK_USER.wallet } });
   }
 
-  /* ───────────────── Swap ───────────────── */
-  if (p === '/swap/quote' && method === 'GET') {
-    return ok(
-      buildMockSwapQuote({
-        inputMint: search.get('inputMint') ?? MINTS.SOL,
-        outputMint: search.get('outputMint') ?? MINTS.USDC,
-        amount: search.get('amount') ?? '0',
-        slippageBps: search.get('slippageBps') ? Number(search.get('slippageBps')) : undefined,
-      }),
-    );
-  }
-  if (p === '/swap/execute' && method === 'POST') {
-    return ok({ txid: mockSig() });
-  }
-
   /* ───────────────── Token catalog ───────────────── */
   if (p === '/tokens' && method === 'GET') return ok(MOCK_TOKENS);
 
@@ -549,7 +569,7 @@ export function resolveMock(
 
   /* ───────────────── KYC / Onramp (Stripe) ───────────────── */
   if (p === '/stripe/kyc/init' && method === 'POST') {
-    return ok({ data: { url: 'https://example.com/mock-kyc', sessionId: rid('kyc') } });
+    return ok({ success: true, url: 'https://verify.stripe.com/test_mock_identity_verification', client_secret: 'mock_secret' });
   }
   if (p === '/onramp/create-session' && method === 'POST') {
     return ok({ data: { sessionId: rid('onr'), clientSecret: 'mock_secret', url: 'https://example.com/mock-onramp' } });

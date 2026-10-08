@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useTokenPrice } from '@/features/wallet/hooks/useTokenPrice';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
+import { useTreasury } from '@/features/treasury/hooks/useTreasury';
 import {
   Overlay,
   ModalContent,
@@ -88,7 +89,9 @@ export function QrOperationsModal({
   onCreatePaymentRequest,
 }: QrOperationsModalProps) {
   const router = useRouter();
+  const { vaults } = useTreasury();
   const [mode, setMode] = useState<'select' | 'receive' | 'scan'>('select');
+  const [selectedVaultAddress, setSelectedVaultAddress] = useState<string>('');
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('USDC');
   const [chargeNote, setChargeNote] = useState('');
@@ -109,6 +112,27 @@ export function QrOperationsModal({
     }
   }, []);
 
+  const accountOptions = useMemo(() => {
+    const list: Array<{ label: string; address: string }> = [];
+
+    if (vaults && vaults.length > 0) {
+      vaults.forEach((v) => {
+        list.push({ label: v.label, address: v.address });
+      });
+    }
+
+    if (merchantWallet?.trim() && !list.some((item) => item.address === merchantWallet.trim())) {
+      const rawLabel = recipientLabel?.trim();
+      const label = rawLabel && rawLabel.toLowerCase() !== 'mey' && rawLabel.toLowerCase() !== 'luxor' ? rawLabel : 'Primary Wallet';
+      list.unshift({
+        label,
+        address: merchantWallet.trim(),
+      });
+    }
+
+    return list;
+  }, [vaults, merchantWallet, recipientLabel]);
+
   useEffect(() => {
     if (isOpen) {
       setMode(initialMode);
@@ -119,14 +143,35 @@ export function QrOperationsModal({
       setAddressCopied(false);
       setQrType('link');
       setExpiryDuration('never');
+
+      const defaultAddr = merchantWallet?.trim() || (vaults && vaults.length > 0 ? vaults[0].address : '');
+      setSelectedVaultAddress(defaultAddr);
     }
   }, [isOpen, initialMode]);
 
-  const recipientWallet = merchantWallet?.trim() || null;
+  useEffect(() => {
+    if (isOpen && !selectedVaultAddress && accountOptions.length > 0) {
+      setSelectedVaultAddress(accountOptions[0].address);
+    }
+  }, [isOpen, selectedVaultAddress, accountOptions]);
 
-  const checkoutLabel = useMemo(() => {
-    return recipientLabel?.trim() || undefined;
-  }, [recipientLabel]);
+  const effectiveRecipientWallet = useMemo(() => {
+    if (selectedVaultAddress) return selectedVaultAddress;
+    if (accountOptions.length > 0) return accountOptions[0].address;
+    return merchantWallet?.trim() || '';
+  }, [selectedVaultAddress, accountOptions, merchantWallet]);
+
+  const selectedAccountObj = useMemo(() => {
+    return accountOptions.find((opt) => opt.address === effectiveRecipientWallet);
+  }, [accountOptions, effectiveRecipientWallet]);
+
+  const effectiveRecipientLabel = useMemo(() => {
+    const raw = selectedAccountObj?.label || recipientLabel?.trim() || 'Sterling Enterprise';
+    if (raw.toLowerCase() === 'mey' || raw.toLowerCase() === 'luxor') {
+      return 'Sterling Enterprise';
+    }
+    return raw;
+  }, [selectedAccountObj, recipientLabel]);
 
   const exitScanMode = () => {
     if (initialMode === 'scan') {
@@ -173,11 +218,11 @@ export function QrOperationsModal({
   }, [expiryDuration]);
 
   const receiveCheckoutParams = useMemo(() => {
-    if (!recipientWallet) return null;
+    if (!effectiveRecipientWallet) return null;
 
     const baseParams: any = {
-      recipient: recipientWallet,
-      label: checkoutLabel,
+      recipient: effectiveRecipientWallet,
+      label: effectiveRecipientLabel,
     };
 
     if (amount && parseFloat(amount) > 0) {
@@ -196,7 +241,7 @@ export function QrOperationsModal({
     }
 
     return baseParams;
-  }, [recipientWallet, checkoutLabel, amount, currency, chargeRef, expiryTimestamp, usdAmount, chargeNote]);
+  }, [effectiveRecipientWallet, effectiveRecipientLabel, amount, currency, chargeRef, expiryTimestamp, usdAmount, chargeNote]);
 
   const receiveCheckoutPath = useMemo(() => {
     if (!receiveCheckoutParams) return null;
@@ -209,22 +254,22 @@ export function QrOperationsModal({
   }, [receiveCheckoutPath, origin]);
 
   const walletQrUrl = useMemo(() => {
-    if (!recipientWallet) return '';
+    if (!effectiveRecipientWallet) return '';
     const mint = currency !== 'SOL' ? getMintForSymbol(currency) : null;
     try {
       return encodeSolanaPayUrl({
-        recipient: recipientWallet,
+        recipient: effectiveRecipientWallet,
         amount: amount || undefined,
         splToken: mint,
-        label: checkoutLabel,
+        label: effectiveRecipientLabel,
         message: chargeNote.trim() || undefined,
         reference: chargeRef || undefined,
       });
     } catch (e) {
       console.error('Error encoding solana pay url:', e);
-      return recipientWallet;
+      return effectiveRecipientWallet;
     }
-  }, [recipientWallet, amount, currency, checkoutLabel, chargeNote, chargeRef]);
+  }, [effectiveRecipientWallet, amount, currency, effectiveRecipientLabel, chargeNote, chargeRef, getMintForSymbol]);
 
   if (!isOpen) return null;
 
@@ -271,10 +316,10 @@ export function QrOperationsModal({
   };
 
   const handleCopyAddress = async () => {
-    if (!recipientWallet) return;
+    if (!effectiveRecipientWallet) return;
 
     try {
-      await navigator.clipboard.writeText(recipientWallet);
+      await navigator.clipboard.writeText(effectiveRecipientWallet);
       setAddressCopied(true);
       toast.success('Address copied');
       setTimeout(() => setAddressCopied(false), 2000);
@@ -368,7 +413,7 @@ export function QrOperationsModal({
               </ReceiveHeader>
 
               <ReceiveVisualWrapper>
-                {recipientWallet && receivePaymentLinkUrl ? (
+                {effectiveRecipientWallet && receivePaymentLinkUrl ? (
                   <>
                     <ReceiveQrSection>
 
@@ -428,7 +473,7 @@ export function QrOperationsModal({
                         Your deposit address
                       </RightAddressLabel>
                       <AddressWrapper>
-                        <AddressText>{recipientWallet}</AddressText>
+                        <AddressText>{effectiveRecipientWallet}</AddressText>
                         <IconButton
                           type="button"
                           $copied={addressCopied}
@@ -446,19 +491,33 @@ export function QrOperationsModal({
 
               <ReceiveConfigSection>
                 <ConfigFields>
-                  {recipientLabel && (
-                    <FieldGroup>
-                      <FieldLabel>Business Name</FieldLabel>
-                      <InfoField>{recipientLabel}</InfoField>
-                    </FieldGroup>
-                  )}
+                  <FieldGroup>
+                    <FieldLabel>Business Name</FieldLabel>
+                    <InfoField>{effectiveRecipientLabel}</InfoField>
+                  </FieldGroup>
 
-                  {recipientWallet && (
-                    <FieldGroup>
-                      <FieldLabel>Receiving Wallet Address</FieldLabel>
-                      <InfoField $mono>{recipientWallet}</InfoField>
-                    </FieldGroup>
-                  )}
+                  <FieldGroup>
+                    <FieldLabel>Receiving Account / Vault</FieldLabel>
+                    {accountOptions.length > 1 ? (
+                      <ContactSelect
+                        value={effectiveRecipientWallet}
+                        onChange={(e) => setSelectedVaultAddress(e.target.value)}
+                        aria-label="Select Receiving Account"
+                      >
+                        {accountOptions.map((account) => (
+                          <option key={account.address} value={account.address}>
+                            {account.label} ({account.address.slice(0, 4)}...{account.address.slice(-4)})
+                          </option>
+                        ))}
+                      </ContactSelect>
+                    ) : accountOptions.length === 1 ? (
+                      <InfoField $mono>
+                        {accountOptions[0].label} ({accountOptions[0].address.slice(0, 4)}...{accountOptions[0].address.slice(-4)})
+                      </InfoField>
+                    ) : (
+                      <InfoField $mono>{effectiveRecipientWallet || 'No account configured'}</InfoField>
+                    )}
+                  </FieldGroup>
 
                   <FieldGroup>
                     <FieldLabel>Pay in</FieldLabel>
@@ -533,7 +592,7 @@ export function QrOperationsModal({
                   )}
                 </ConfigFields>
 
-                {!(recipientWallet && receivePaymentLinkUrl) && (
+                {!(effectiveRecipientWallet && receivePaymentLinkUrl) && (
                   <div style={{ marginBottom: '24px', color: '#F87171' }}>
                     No configured address found. Add it in Settings.
                   </div>

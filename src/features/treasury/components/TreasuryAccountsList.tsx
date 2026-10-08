@@ -140,7 +140,7 @@ export function TreasuryAccountsList({
                                 type="button"
                                 onClick={onActivate}
                                 disabled={isDeploying}
-                                title={connected ? 'Activar el multisig de Squads v4 en Solana' : 'Conecta tu wallet para activar'}
+                                title={connected ? 'Activar el multisig con el contrato de Luxor en Solana' : 'Conecta tu wallet para activar'}
                               >
                                 {isDeploying ? <Loader2 size={11} className="animate-spin" /> : null}
                                 {connected ? 'Activar' : 'Conectar'}
@@ -164,14 +164,6 @@ export function TreasuryAccountsList({
                       <TableTd>
                         <BalanceValueRow>
                           <span>{displayBalance}</span>
-                          {acc.stale && (
-                            <span
-                              title="Solana no respondió: es el último saldo conocido. Se actualizará solo."
-                              style={{ fontSize: 10, fontFamily: 'Montserrat, sans-serif', color: '#F59E0B' }}
-                            >
-                              sin actualizar
-                            </span>
-                          )}
                           {topAssetsOf(acc).length > 0 && (
                             <TokenBadgeContainer>
                               {topAssetsOf(acc).map((a) => (
@@ -315,14 +307,6 @@ export function TreasuryAccountsList({
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                     <BalanceValueRow>
                       <span>{displayBalance}</span>
-                      {acc.stale && (
-                        <span
-                          title="Solana no respondió: es el último saldo conocido. Se actualizará solo."
-                          style={{ fontSize: 10, fontFamily: 'Montserrat, sans-serif', color: '#F59E0B' }}
-                        >
-                          sin actualizar
-                        </span>
-                      )}
                       {topAssetsOf(acc).length > 0 && (
                         <TokenBadgeContainer>
                           {topAssetsOf(acc).map((a) => (

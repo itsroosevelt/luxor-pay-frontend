@@ -20,8 +20,8 @@ import { MOCK_SIGNED_OUT_KEY } from '@/lib/mock/mock-config';
  */
 export const DEMO_IDENTITY = {
   uid: 'mock-demo-user-0001',
-  name: 'Demo User',
-  email: 'demo@sterlingpay.app',
+  name: 'Sterling Admin',
+  email: 'admin@sterling.io',
   wallet: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU',
   status: 'authenticated' as const,
 };

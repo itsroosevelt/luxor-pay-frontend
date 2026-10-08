@@ -15,10 +15,10 @@ import { getWalletAuthHeaders } from '@/lib/wallet-session';
 import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 import { syncProposal } from '@/features/treasury/api/proposals-api';
 import type { MemberProposalResult } from '@/features/treasury/api/members-api';
-import { TREASURY_CHANGED_EVENT, notifyTreasuryChanged, signAndSendPending, finalAction } from '@/features/treasury/lib/squads-tx';
+import { TREASURY_CHANGED_EVENT, notifyTreasuryChanged, signAndSendPending, finalAction } from '@/features/treasury/lib/multisig-tx';
 
 /**
- * Outcome of a member write. On an on-chain multisig the change is a Squads config
+ * Outcome of a member write. On an on-chain multisig the change is a config
  * proposal (`proposalIndex`) that the team still has to approve and execute.
  */
 export interface MemberWriteOutcome {
@@ -91,7 +91,7 @@ export function useMembers(): UseMembersReturn {
   };
 
   /**
-   * On-chain multisig: the backend answered with a Squads config proposal (AddMember /
+   * On-chain multisig: the backend answered with a config proposal (AddMember /
    * RemoveMember). The connected wallet signs and sends it, then the proposal is synced.
    */
   const settle = async (res: MemberProposalResult): Promise<MemberWriteOutcome> => {

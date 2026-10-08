@@ -3,7 +3,7 @@
 /**
  * Members — the SRS "Control de Roles y Miembros" surface for Module 1.
  *
- * Maps wallet pubkeys to the Squads-style role matrix (admin / signer /
+ * Maps wallet pubkeys to the role matrix (admin / signer /
  * proposer / auditor), shows the M-de-N signing policy, and gates every
  * mutation on the signed-in member's own roles. All data is served by
  * `src/mocks/handlers.ts` while Mock Mode is on.
@@ -14,13 +14,16 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Plus, Trash2, X, User, Copy, Loader2, AlertTriangle, ShieldCheck,
-  Minus, Check, ExternalLink, Eye, KeyRound, Info,
+  Plus, Trash2, User, Copy, Loader2, AlertTriangle,
+  ExternalLink, Eye, KeyRound, Info,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useMembers } from '@/features/treasury/hooks/useMembers';
-import { useMerchant } from '@/features/merchant/context/MerchantContext';
 import { useTreasury } from '@/features/treasury/hooks/useTreasury';
+import { OffChainNotice } from '@/features/treasury/components/OffChainNotice';
+import { ModalShell, RoleChip, fieldStyle } from '@/features/treasury/components/member-ui';
+import { AddMemberModal } from '@/features/treasury/components/AddMemberModal';
+import { ApprovalRulesCard } from '@/features/treasury/components/ApprovalRulesCard';
 import {
   MEMBER_ROLE_META,
   type Member,
@@ -31,81 +34,13 @@ import {
 const ROLE_KEYS: MemberRoleKey[] = ['admin', 'signer', 'proposer', 'auditor'];
 const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a);
 
-/* ───────────────────────── small building blocks ───────────────────────── */
-
-function RoleChip({
-  role, active, onClick, disabled,
-}: { role: MemberRoleKey; active: boolean; onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void; disabled?: boolean }) {
-  const meta = MEMBER_ROLE_META[role];
-  return (
-    <button
-      type="button"
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick?.(e);
-      }}
-      disabled={disabled}
-      title={disabled ? meta.description : `${meta.description} — clic para cambiar`}
-      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors disabled:cursor-default"
-      style={{
-        background: active ? 'var(--lx-fill-hover)' : 'transparent',
-        color: active ? 'var(--lx-text)' : 'var(--lx-text-dim)',
-        border: `1px solid ${active ? 'var(--lx-border-hover)' : 'var(--lx-border)'}`,
-        cursor: disabled ? 'default' : 'pointer',
-      }}
-    >
-      {active && <Check size={11} />}
-      {meta.short}
-    </button>
-  );
-}
-
-function ModalShell({
-  title, icon, onClose, children, maxWidth = 480,
-}: {
-  title: string; icon: React.ReactNode; onClose: () => void;
-  children: React.ReactNode; maxWidth?: number;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      onClick={onClose}
-      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
-    >
-      <motion.div
-        onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.96, y: 16 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 16 }}
-        transition={{ type: 'spring', bounce: 0.32, duration: 0.45 }}
-        className="lx-card-lg w-full"
-        style={{ maxWidth, background: 'var(--lx-surface)', boxShadow: 'var(--lx-shadow-lg)' }}
-      >
-        <div className="mb-5 flex items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 text-[17px] font-semibold" style={{ color: 'var(--lx-text)' }}>
-            {icon} {title}
-          </h2>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="flex h-8 w-8 items-center justify-center rounded-full" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
-            <X size={15} />
-          </button>
-        </div>
-        {children}
-      </motion.div>
-    </motion.div>
-  );
-}
-
-const fieldStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 12px', borderRadius: 10,
-  background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)',
-  color: 'var(--lx-text)', fontSize: 14, outline: 'none', boxSizing: 'border-box',
-};
-
-/** Squads status of a member: pending proposal, on-chain, or not in the multisig. Hidden while off-chain. */
+/** On-chain status of a member: pending proposal, on-chain, or not in the multisig. Hidden while off-chain. */
 function MemberChainBadge({ member }: { member: Member }) {
   const pending = member.pendingChange;
   if (pending) {
     const label = pending.op === 'add' ? 'Alta pendiente' : pending.op === 'remove' ? 'Baja pendiente' : 'Cambio pendiente';
     return (
-      <span title="Propuesta de configuración de Squads esperando firmas / ejecución"
+      <span title="Propuesta de configuración esperando firmas / ejecución"
         className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-amber-300">
         {label} #{pending.proposalIndex}
       </span>
@@ -116,8 +51,8 @@ function MemberChainBadge({ member }: { member: Member }) {
   }
   if (member.onChain === false) {
     return (
-      <span title="No es miembro del multisig de Squads (solo Luxor)"
-        className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-white/10 text-white/50">Fuera de Squads</span>
+      <span title="No es miembro del multisig on-chain (solo figura en Luxor)"
+        className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-white/10 text-white/50">Fuera del multisig</span>
     );
   }
   return null;
@@ -133,7 +68,7 @@ export default function MembersPage() {
   // Demo-only: preview the UI as a read-only auditor without editing fixtures.
   const [previewReadOnly, setPreviewReadOnly] = useState(false);
   const { connected } = useWallet();
-  const { profile } = useMerchant();
+  const { config } = useTreasury();
   const { setVisible: openWalletModal } = useWalletModal();
 
   const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? members[0] ?? null, [members]);
@@ -144,11 +79,6 @@ export default function MembersPage() {
   const [detail, setDetail] = useState<Member | null>(null);
   const [deleting, setDeleting] = useState<Member | null>(null);
   const [busy, setBusy] = useState(false);
-
-  const [form, setForm] = useState<{ name: string; walletAddress: string; roles: MemberRoles }>({
-    name: '', walletAddress: '',
-    roles: { admin: false, signer: true, proposer: true, auditor: false },
-  });
 
   const copy = (v: string) => { navigator.clipboard.writeText(v); toast.success('Copied to clipboard'); };
 
@@ -175,7 +105,7 @@ export default function MembersPage() {
     try {
       const { proposalIndex } = await updateMember(m.id, { roles });
       if (proposalIndex) {
-        // On-chain multisig: Squads permissions change only when the proposal executes.
+        // On-chain multisig: permissions change only when the proposal executes.
         toast.success(`Propuesta #${proposalIndex} creada · los permisos de ${m.name} cambiarán cuando el multisig la apruebe y ejecute`);
         return;
       }
@@ -184,27 +114,13 @@ export default function MembersPage() {
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not update role'); }
   };
 
-  const submitAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!guard()) return;
-    if (!form.name.trim() || !form.walletAddress.trim()) { toast.error('Name and address are required'); return; }
-    if (profile?.merchantWallet && form.walletAddress.trim() === profile.merchantWallet) {
-      // The collection wallet's key is held by Sterling's server: it can't sign as a member.
-      toast.error('Esa es la cuenta de cobros de Sterling, no tu wallet. Copia la dirección desde Phantom o Solflare.');
-      return;
-    }
-    setBusy(true);
-    try {
-      const { proposalIndex } = await addMember({ name: form.name.trim(), walletAddress: form.walletAddress.trim(), roles: form.roles });
-      setForm({ name: '', walletAddress: '', roles: { admin: false, signer: true, proposer: true, auditor: false } });
-      setAddOpen(false);
-      toast.success(
-        proposalIndex
-          ? `Propuesta #${proposalIndex} creada · ${form.name.trim()} entrará al multisig cuando se apruebe y ejecute`
-          : 'Member added to multisig',
-      );
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not add member'); }
-    finally { setBusy(false); }
+  const [editingName, setEditingName] = useState('');
+  const [editingRoles, setEditingRoles] = useState<MemberRoles>({ admin: false, signer: false, proposer: false, auditor: false });
+
+  const openDetail = (m: Member) => {
+    setDetail(m);
+    setEditingName(m.name);
+    setEditingRoles({ ...m.roles });
   };
 
   const confirmDelete = async () => {
@@ -212,15 +128,16 @@ export default function MembersPage() {
     if (deleting.roles.admin && adminCount <= 1) { toast.error('Cannot remove the only Administrator'); return; }
     setBusy(true);
     try {
+      toast.info('Confirma la transacción en tu wallet (Phantom/Solflare) para eliminar al miembro en la blockchain...');
       const { proposalIndex } = await removeMember(deleting.id);
       toast.success(
         proposalIndex
-          ? `Propuesta #${proposalIndex} creada · ${deleting.name} saldrá del multisig cuando se apruebe y ejecute`
-          : `${deleting.name} was removed from multisig`,
+          ? `Propuesta #${proposalIndex} enviada · ${deleting.name} desvinculado del multisig`
+          : `${deleting.name} fue eliminado del multisig`,
       );
       if (detail?.id === deleting.id) setDetail(null);
       setDeleting(null);
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not remove member'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al eliminar el miembro'); }
     finally { setBusy(false); }
   };
 
@@ -261,6 +178,8 @@ export default function MembersPage() {
           </button>
         </div>
 
+        <OffChainNotice config={config} />
+
         {/* Disconnected wallet warning banner */}
         {!connected && (
           <div className="flex items-center gap-3 rounded-2xl p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm">
@@ -278,6 +197,8 @@ export default function MembersPage() {
             </button>
           </div>
         )}
+
+        <ApprovalRulesCard members={members} canEdit={canManage} guard={guard} />
 
         {/* Members list */}
         <section className="space-y-4 pt-4">
@@ -316,7 +237,7 @@ export default function MembersPage() {
                     layout
                     initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ type: 'spring', bounce: 0.28, duration: 0.45 }}
-                    onClick={() => setDetail(m)}
+                    onClick={() => openDetail(m)}
                     className="cursor-pointer border-b border-white/10 pb-4 pt-2 flex flex-col gap-3.5 hover:opacity-90 transition-opacity"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -362,90 +283,114 @@ export default function MembersPage() {
 
       </div>
 
-      {/* Add modal */}
-      <AnimatePresence>
-        {addOpen && (
-          <ModalShell title="Add member" icon={<Plus size={18} style={{ color: 'var(--lx-text-muted)' }} />} onClose={() => !busy && setAddOpen(false)}>
-            <form onSubmit={submitAdd} className="space-y-4">
-              {!connected && (
-                <div className="rounded-xl p-3 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-center justify-between">
-                  <span>Conecta tu billetera para agregar miembros</span>
-                  <button type="button" onClick={() => openWalletModal(true)} className="underline text-amber-400 font-semibold">Conectar</button>
-                </div>
-              )}
-              <label className="block">
-                <span className="lx-eyebrow">Name / Alias</span>
-                <input style={fieldStyle} className="mt-1.5" value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="e.g. Sarah Jenkins" required />
-              </label>
-              <label className="block">
-                <span className="lx-eyebrow">Wallet Address (Solana)</span>
-                <input style={{ ...fieldStyle, fontFamily: 'monospace', fontSize: 13 }} className="mt-1.5" value={form.walletAddress} onChange={(e) => setForm((f) => ({ ...f, walletAddress: e.target.value }))} placeholder="Pubkey base58" required />
-              </label>
-              <div>
-                <span className="lx-eyebrow">Assigned Roles</span>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {ROLE_KEYS.map((k) => (
-                    <RoleChip key={k} role={k} active={form.roles[k]} disabled={!connected}
-                      onClick={() => setForm((f) => ({ ...f, roles: { ...f.roles, [k]: !f.roles[k] } }))} />
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setAddOpen(false)} disabled={busy}>Cancel</button>
-                <button type="submit" className="lx-btn lx-btn-primary" disabled={busy || !connected}>
-                  {busy ? <><Loader2 size={15} className="animate-spin" /> Adding…</> : !connected ? 'Wallet required' : 'Add member'}
-                </button>
-              </div>
-            </form>
-          </ModalShell>
-        )}
-      </AnimatePresence>
+      <AddMemberModal open={addOpen} onClose={() => setAddOpen(false)} addMember={addMember} />
 
       {/* Detail modal */}
       <AnimatePresence>
         {detail && (
-          <ModalShell title={detail.name} icon={<User size={18} style={{ color: 'var(--lx-text-muted)' }} />} onClose={() => setDetail(null)} maxWidth={520}>
+          <ModalShell
+            title={`Edit ${detail.name}`}
+            subtitle="Manage member details, assigned permissions, and on-chain status."
+            onClose={() => setDetail(null)}
+            maxWidth={520}
+          >
             <div className="space-y-5">
-              <div>
-                <div className="mb-2 flex items-center gap-1.5">
-                  <span className="lx-eyebrow">Permissions</span>
-                  <Info size={12} style={{ color: 'var(--lx-text-dim)' }} />
+              {!connected && (
+                <div className="rounded-2xl p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-center justify-between">
+                  <span>Conecta tu billetera para editar miembros</span>
+                  <button type="button" onClick={() => openWalletModal(true)} className="px-3.5 py-1 rounded-full bg-amber-500 text-black font-semibold">Conectar</button>
                 </div>
-                <div className="flex flex-wrap gap-1.5">
+              )}
+
+              {/* Editable Name Input */}
+              <label className="block space-y-2">
+                <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white/50 font-sans">Name / Alias</span>
+                <input
+                  style={fieldStyle}
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  placeholder="e.g. Sarah Jenkins"
+                  disabled={!canManage || !connected}
+                />
+              </label>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white/50 font-sans">Permissions</span>
+                  <Info size={13} className="text-white/40" />
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
                   {ROLE_KEYS.map((k) => (
-                    <RoleChip key={k} role={k} active={detail.roles[k]} disabled={!canManage || !connected}
-                      onClick={() => toggleRole(detail, k)} />
+                    <RoleChip key={k} role={k} active={editingRoles[k]} disabled={!canManage || !connected}
+                      onClick={() => {
+                        if (k === 'admin' && editingRoles.admin && adminCount <= 1) {
+                          toast.error('At least one Administrator must remain');
+                          return;
+                        }
+                        setEditingRoles((r) => ({ ...r, [k]: !r[k] }));
+                      }} />
                   ))}
                 </div>
+                {detail.onChain && (
+                  <p className="mt-2 text-[11px] text-white/40 leading-relaxed font-body">
+                    * Los cambios en permisos de miembros en-cadena generan una propuesta en el multisig que debe ser firmada por el umbral del multisig.
+                  </p>
+                )}
               </div>
 
-              <div>
-                <span className="lx-eyebrow">Address</span>
-                <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl p-3" style={{ background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)' }}>
-                  <span className="break-all font-mono text-[12px]" style={{ color: 'var(--lx-text)' }}>{detail.walletAddress}</span>
-                  <div className="flex flex-shrink-0 gap-1.5">
-                    <button type="button" onClick={() => copy(detail.walletAddress)} title="Copy" className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
-                      <Copy size={14} />
+              <div className="space-y-2">
+                <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white/50 font-sans block">Wallet Address</span>
+                <div className="flex items-center justify-between gap-3 font-mono text-[13px] text-white/90" style={fieldStyle}>
+                  <span className="break-all">{detail.walletAddress}</span>
+                  <div className="flex flex-shrink-0 gap-1.5 ml-2">
+                    <button type="button" onClick={() => copy(detail.walletAddress)} title="Copy" className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+                      <Copy size={13} />
                     </button>
                     <button type="button" title="View on Solana Explorer"
                       onClick={() => window.open(`https://explorer.solana.com/address/${detail.walletAddress}?cluster=devnet`, '_blank', 'noopener,noreferrer')}
-                      className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--lx-fill)', border: '1px solid var(--lx-border)', color: 'var(--lx-text-muted)' }}>
-                      <ExternalLink size={14} />
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all cursor-pointer">
+                      <ExternalLink size={13} />
                     </button>
                   </div>
                 </div>
               </div>
 
-              {canManage && (
-                <div className="flex justify-end pt-1">
-                  <button type="button" className="lx-btn lx-btn-secondary" style={{ color: 'var(--lx-danger)' }}
+              <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                {canManage && (
+                  <button type="button" className="px-4 py-2.5 rounded-full border border-red-500/30 bg-red-500/10 text-red-400 text-xs font-medium hover:bg-red-500/20 transition-all flex items-center gap-1.5 disabled:opacity-40 cursor-pointer"
                     disabled={!connected}
-                    title={!connected ? 'Conecta tu billetera para eliminar miembros' : undefined}
                     onClick={() => { if (guard()) { setDeleting(detail); setDetail(null); } }}>
-                    <Trash2 size={14} /> Remove from multisig
+                    <Trash2 size={14} /> Remove member
                   </button>
+                )}
+                <div className="flex items-center gap-3 ml-auto">
+                  <button type="button" className="px-5 py-2.5 rounded-full border border-white/15 bg-white/5 text-white text-xs font-medium hover:bg-white/10 transition-all cursor-pointer" onClick={() => setDetail(null)}>
+                    Close
+                  </button>
+                  {canManage && connected && (
+                    <button
+                      type="button"
+                      className="px-6 py-2.5 rounded-full bg-white text-black text-xs font-semibold hover:bg-neutral-200 transition-all cursor-pointer disabled:opacity-40"
+                      disabled={busy || !editingName.trim() || (editingName.trim() === detail.name && JSON.stringify(editingRoles) === JSON.stringify(detail.roles))}
+                      onClick={async () => {
+                        if (!guard()) return;
+                        setBusy(true);
+                        try {
+                          const { proposalIndex } = await updateMember(detail.id, { name: editingName.trim(), roles: editingRoles });
+                          toast.success(proposalIndex ? `Propuesta #${proposalIndex} creada · los permisos cambiarán cuando el multisig la apruebe` : 'Miembro actualizado correctamente');
+                          setDetail(null);
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : 'Error al actualizar el miembro');
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      {busy ? <Loader2 size={14} className="animate-spin inline mr-1" /> : 'Save Changes'}
+                    </button>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </ModalShell>
         )}
@@ -454,15 +399,22 @@ export default function MembersPage() {
       {/* Delete confirm */}
       <AnimatePresence>
         {deleting && (
-          <ModalShell title="Remove member" icon={<Trash2 size={18} style={{ color: 'var(--lx-danger)' }} />} onClose={() => !busy && setDeleting(null)} maxWidth={420}>
-            <p className="text-[14px]" style={{ color: 'var(--lx-text-muted)' }}>
-              Remove <strong style={{ color: 'var(--lx-text)' }}>{deleting.name}</strong> from multisig?
+          <ModalShell
+            title="Remove member"
+            subtitle="Confirm removing this wallet from the multisig organization."
+            onClose={() => !busy && setDeleting(null)}
+            maxWidth={440}
+          >
+            <p className="text-[14px] text-white/70 font-body leading-relaxed">
+              Remove <strong className="text-white">{deleting.name}</strong> from multisig?
               They will lose proposal and voting rights. This requires an on-chain configuration transaction.
             </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button type="button" className="lx-btn lx-btn-secondary" onClick={() => setDeleting(null)} disabled={busy}>Cancel</button>
-              <button type="button" className="lx-btn" style={{ background: 'var(--lx-danger)', color: '#fff' }} onClick={confirmDelete} disabled={busy}>
-                {busy ? <Loader2 size={15} className="animate-spin" /> : 'Remove'}
+            <div className="mt-6 flex justify-end gap-3 pt-2">
+              <button type="button" className="px-5 py-2.5 rounded-full border border-white/15 bg-white/5 text-white text-xs font-medium hover:bg-white/10 transition-all cursor-pointer" onClick={() => setDeleting(null)} disabled={busy}>
+                Cancel
+              </button>
+              <button type="button" className="px-6 py-2.5 rounded-full bg-red-600 text-white text-xs font-semibold hover:bg-red-500 transition-all cursor-pointer disabled:opacity-40 inline-flex items-center gap-1.5" onClick={confirmDelete} disabled={busy}>
+                {busy ? <Loader2 size={14} className="animate-spin" /> : 'Remove'}
               </button>
             </div>
           </ModalShell>

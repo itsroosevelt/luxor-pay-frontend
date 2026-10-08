@@ -73,9 +73,9 @@ export const MOCK_PRICES_USD: Record<string, number> = {
 
 export const MOCK_MERCHANT_PROFILE: MerchantProfile = {
   id: 'merchant-0001',
-  email: 'siomeyromero@gmail.com',
-  businessName: 'mey',
-  merchantWallet: 'B8NUjS864N2N9iK8iZ1w2J3K4L5M6N7P8Q9R0S1T2U3V',
+  email: 'admin@sterling.io',
+  businessName: 'Sterling Enterprise',
+  merchantWallet: 'Gwm7E9Rmy5k6D9PxzQdHnzc653AAaRCBCNEF7aL7di5x',
   kyc: true,
   kycStatus: 'VERIFIED',
   createdAt: iso(),
@@ -122,7 +122,7 @@ export const DEFAULT_OWNER_MEMBER = {
   id: 'member_owner_main',
   merchantId: 'merchant-0001',
   name: 'Cuenta Principal (Admin)',
-  walletAddress: 'B8NUjS864N2N9iK8iZ1w2J3K4L5M6N7P8Q9R0S1T2U3V',
+  walletAddress: 'Gwm7E9Rmy5k6D9PxzQdHnzc653AAaRCBCNEF7aL7di5x',
   roles: { admin: true, signer: true, proposer: true, auditor: true },
   isCurrentUser: true,
   createdAt: iso(),
@@ -134,6 +134,9 @@ export const MOCK_MEMBERS: any[] = [DEFAULT_OWNER_MEMBER];
 /* ──────────────── Multisig treasury (Squads v4-style) ─────────────── */
 
 export const MOCK_MULTISIG = {
+  id: 'mock-treasury',
+  name: 'Tesorería Sterling',
+  isDefault: true,
   address: '',
   threshold: 1,
   timeLock: 0,
@@ -147,18 +150,36 @@ export const DEFAULT_GEMINI_VAULT = {
   id: 'vault-gemini-001',
   index: 0,
   label: 'Roosevelt',
-  address: 'B8NUjS864N2N9iK8iZ1w2J3K4L5M6N7P8Q9R0S1T2U3V',
+  address: '7cZ1k4R4Z9LQ6RmrLHUSnMM4n9vMhpMnoo5yLyWdMZ1',
   description: 'Bóveda principal por defecto del ecosistema',
   isDefault: true,
-  usdValue: 0.00,
-  weight: 100,
-  solBalance: '0.0000',
-  tokens: [],
+  usdValue: 741.01,
+  weight: 40.3,
+  solBalance: '5.990921',
+  tokens: [
+    { mint: MINTS.SOL, symbol: 'SOL', uiAmount: '5.990921', usdValue: 724.97 },
+    { mint: MINTS.USDC, symbol: 'USDC', uiAmount: '10.55', usdValue: 10.55 },
+    { mint: 'EURC_MINT_MOCK_11111111111111111111111111111', symbol: 'EURC', uiAmount: '4.875', usdValue: 5.49 },
+  ],
+  createdAt: iso(),
+};
+
+export const PRUEBA_VAULT = {
+  id: 'vault-prueba-002',
+  index: 1,
+  label: 'prueba',
+  address: 'AdnVK4R4Z9LQ6RmrLHUSnMM4n9vMhpMnoo5yLyWRkaXT',
+  description: 'Bóveda secundaria',
+  isDefault: false,
+  usdValue: 1099.97,
+  weight: 59.7,
+  solBalance: '6.2573',
+  tokens: [{ mint: MINTS.USDC, symbol: 'USDC', uiAmount: '1099.97', usdValue: 1099.97 }],
   createdAt: iso(),
 };
 
 /* Sub-vaults */
-export const MOCK_VAULTS: any[] = [DEFAULT_GEMINI_VAULT];
+export const MOCK_VAULTS: any[] = [DEFAULT_GEMINI_VAULT, PRUEBA_VAULT];
 
 /* Multisig proposals */
 export const MOCK_PROPOSALS: any[] = [];
@@ -171,48 +192,3 @@ export const MOCK_OVERVIEW_STATS = {
   apiStatus: 'operational' as const,
 };
 
-/* ─────────────────────────── Swap quote ───────────────────────────── */
-
-export function buildMockSwapQuote(params: {
-  inputMint: string;
-  outputMint: string;
-  amount: string;
-  slippageBps?: number;
-}) {
-  const inMeta = MOCK_TOKENS.find((t) => t.mint === params.inputMint) ?? MOCK_TOKENS[0];
-  const outMeta = MOCK_TOKENS.find((t) => t.mint === params.outputMint) ?? MOCK_TOKENS[1];
-  const inUi = Number(params.amount) / 10 ** inMeta.decimals;
-  const usd = inUi * (MOCK_PRICES_USD[params.inputMint] ?? 0);
-  const outUi = usd / (MOCK_PRICES_USD[params.outputMint] || 1);
-  const outAmount = BigInt(Math.max(0, Math.round(outUi * 10 ** outMeta.decimals))).toString();
-  const slippageBps = params.slippageBps ?? 50;
-  const threshold = BigInt(
-    Math.round(Number(outAmount) * (1 - slippageBps / 10_000)),
-  ).toString();
-
-  return {
-    inputMint: params.inputMint,
-    inAmount: params.amount,
-    outputMint: params.outputMint,
-    outAmount,
-    otherAmountThreshold: threshold,
-    swapMode: 'ExactIn',
-    slippageBps,
-    priceImpactPct: '0.0007',
-    routePlan: [
-      {
-        swapInfo: {
-          ammKey: 'SterlingAmm111111111111111111111111111111111111',
-          label: 'Sterling LP',
-          inputMint: params.inputMint,
-          outputMint: params.outputMint,
-          inAmount: params.amount,
-          outAmount,
-          feeAmount: '0',
-          feeMint: params.inputMint,
-        },
-        percent: 100,
-      },
-    ],
-  };
-}

@@ -36,7 +36,7 @@ function SettingsContent() {
   const { config: treasuryConfig, isLoading: cfgLoading, setThreshold } = useTreasury();
   const { data: members = [] } = useMembers();
 
-  const signerCount = members.filter((m) => m.roles?.signer).length || 3;
+  const signerCount = members.filter((m) => m.roles?.signer).length || 1;
   const threshold = treasuryConfig?.threshold ?? 1;
 
   const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a);

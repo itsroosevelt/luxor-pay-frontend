@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { auth } from '@/lib/firebase';
 import { getVaultActivity, type VaultActivityItem } from '@/features/treasury/api/treasury-api';
-import { TREASURY_CHANGED_EVENT } from '@/features/treasury/lib/squads-tx';
+import { TREASURY_CHANGED_EVENT } from '@/features/treasury/lib/multisig-tx';
 
 const ACTIVITY_REFRESH_MS = 30_000;
 
