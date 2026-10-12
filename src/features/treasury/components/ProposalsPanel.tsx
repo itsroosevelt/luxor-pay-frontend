@@ -117,8 +117,8 @@ const fieldStyle: React.CSSProperties = {
 };
 
 export function ProposalsPanel({
-  defaultVaultId, openCreateOnMount, defaultType, onCloseCreate,
-}: { defaultVaultId?: string; openCreateOnMount?: boolean; defaultType?: ProposalType; onCloseCreate?: () => void }) {
+  defaultVaultId, openCreateOnMount, defaultType, onCloseCreate, focusProposalId,
+}: { defaultVaultId?: string; openCreateOnMount?: boolean; defaultType?: ProposalType; onCloseCreate?: () => void; focusProposalId?: string | null }) {
   const { data: proposals, isLoading, isError, errorMessage, refetch, createProposal, approve, reject, execute, cancel, activate, countReclaimable, reclaimRent } = useProposals();
   const { data: members } = useMembers();
   const { vaults, config } = useTreasury();
@@ -158,7 +158,7 @@ export function ProposalsPanel({
   const canPropose = true; // Any connected user or merchant can create proposals
 
   // `detail` is derived from the id so it always reflects the freshest list data.
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(focusProposalId ?? null);
   const detail = useMemo(() => proposals.find((p) => p.id === detailId) ?? null, [proposals, detailId]);
   // Opened from Send/Trade only after the caller checked the wallet; re-checked on submit.
   const [createOpen, setCreateOpen] = useState(!!openCreateOnMount);

@@ -10,7 +10,6 @@ import { SolanaMobileWalletAdapter, createDefaultAddressSelector, createDefaultA
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import { clusterApiUrl, type ConnectionConfig } from '@solana/web3.js';
 import { createFailoverFetch, rpcEndpoints } from '@/lib/rpc-failover';
-import { WalletSessionPrompt } from '@/web3/components/WalletSessionPrompt';
 
 import '@solana/wallet-adapter-react-ui/styles.css';
 
@@ -86,7 +85,7 @@ export const SolanaProvider = ({ children }: { children: React.ReactNode }) => {
       new SolflareWalletAdapter(),
       new SolanaMobileWalletAdapter({
         addressSelector: createDefaultAddressSelector(),
-        appIdentity: { name: 'Sterling Pay', icon: '/icon.jpg' },
+        appIdentity: { name: 'Sterling', icon: '/icon.jpg' },
         authorizationResultCache: createDefaultAuthorizationResultCache(),
         cluster: network,
         onWalletNotFound: createDefaultWalletNotFoundHandler()
@@ -146,7 +145,6 @@ export const SolanaProvider = ({ children }: { children: React.ReactNode }) => {
       <WalletProvider wallets={wallets} autoConnect onError={handleWalletError}>
         <WalletModalProvider>
           <ResetSelectionOnConnectError signal={connectErrorSignal} />
-          <WalletSessionPrompt />
           {children}
         </WalletModalProvider>
       </WalletProvider>

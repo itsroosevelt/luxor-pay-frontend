@@ -89,6 +89,8 @@ function TreasuryContainerInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const accountQueryParam = searchParams.get('account');
+  // Arriving from a pending-change notice (/dashboard/treasury?proposal=<id>): open that proposal.
+  const proposalQueryParam = searchParams.get('proposal');
 
   const { profile } = useMerchant();
   const merchantWallet = profile?.merchantWallet ?? '';
@@ -235,6 +237,12 @@ function TreasuryContainerInner() {
   const [depositVault, setDepositVault] = useState<Vault | null>(null);
 
   const defaultVault = accountList.find((v) => v.isDefault) ?? accountList[0] ?? null;
+
+  useEffect(() => {
+    if (!proposalQueryParam) return;
+    const t = setTimeout(() => proposalsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+    return () => clearTimeout(t);
+  }, [proposalQueryParam]);
 
   const showProposals = (openForm: boolean) => {
     setOpenProposalForm(openForm);
@@ -797,6 +805,7 @@ function TreasuryContainerInner() {
               openCreateOnMount={openProposalForm}
               defaultType={proposalType}
               onCloseCreate={() => setOpenProposalForm(false)}
+              focusProposalId={proposalQueryParam}
             />
           </div>
         </>
