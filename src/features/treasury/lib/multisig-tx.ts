@@ -19,7 +19,9 @@ export type MultisigAction =
   | 'activate'
   | 'execute'
   | 'close'
-  | 'sweep';
+  | 'sweep'
+  | 'upload'
+  | 'abort';
 
 export interface PendingTransaction {
   action: MultisigAction;
@@ -32,6 +34,11 @@ export interface PendingTransaction {
    * wallet prompt) and sent once the first one confirms.
    */
   followUp?: PendingTransaction;
+  /**
+   * Only on a chunked upload: closes the buffer and returns its rent. It is signed with the rest (one prompt)
+   * but sent only if the upload is interrupted.
+   */
+  abort?: PendingTransaction;
 }
 
 type SigningWallet = Pick<WalletContextState, 'publicKey' | 'signTransaction'> &
@@ -62,7 +69,8 @@ export async function signAndSendPending(
   const chain: PendingTransaction[] = [];
   for (let p: PendingTransaction | undefined = pending; p; p = p.followUp) chain.push(p);
   const txs = chain.map((p) => VersionedTransaction.deserialize(base64ToBytes(p.transaction)));
-  for (const tx of txs) {
+  const abortTx = pending.abort ? VersionedTransaction.deserialize(base64ToBytes(pending.abort.transaction)) : null;
+  for (const tx of abortTx ? [...txs, abortTx] : txs) {
     const payer = tx.message.staticAccountKeys[0];
     if (!payer.equals(wallet.publicKey)) {
       throw new Error(`Esta operación debe firmarla la wallet ${payer.toBase58().slice(0, 4)}…${payer.toBase58().slice(-4)}.`);
@@ -70,18 +78,47 @@ export async function signAndSendPending(
   }
 
   // signTransaction / signAllTransactions (not sendTransaction) keep signatures the backend already added.
+  const toSign = abortTx ? [...txs, abortTx] : txs;
   const signed =
-    txs.length > 1 && wallet.signAllTransactions
-      ? await wallet.signAllTransactions(txs)
+    toSign.length > 1 && wallet.signAllTransactions
+      ? await wallet.signAllTransactions(toSign)
       : [await wallet.signTransaction(txs[0])];
 
   let signature = '';
   for (let i = 0; i < chain.length; i++) {
-    // Wallets without signAllTransactions sign the follow-up after the first one lands.
-    const tx = signed[i] ?? (await wallet.signTransaction(txs[i]));
-    signature = await sendAndConfirm(tx, chain[i], connection);
+    try {
+      // Wallets without signAllTransactions sign the follow-up after the first one lands.
+      const tx = signed[i] ?? (await wallet.signTransaction(txs[i]));
+      signature = await sendAndConfirm(tx, chain[i], connection);
+    } catch (err) {
+      // A chunked upload interrupted once its buffer exists (any step but the first, and before the
+      // proposal was created): close the buffer so the rent comes back.
+      const bufferExists = i >= 1 && chain[i].action !== 'execute';
+      if (pending.abort && abortTx && bufferExists && (await abortUpload(signed[chain.length], abortTx, pending.abort, wallet, connection))) {
+        throw new Error(`${err instanceof Error ? err.message : String(err)} La subida parcial se canceló y se devolvió su depósito.`);
+      }
+      throw err;
+    }
   }
   return signature;
+}
+
+/** Sends the pre-built "close the buffer" transaction; never throws (it only tidies up after a failure). */
+async function abortUpload(
+  signed: VersionedTransaction | undefined,
+  abortTx: VersionedTransaction,
+  abort: PendingTransaction,
+  wallet: SigningWallet,
+  connection: Connection,
+): Promise<boolean> {
+  try {
+    const tx = signed ?? (await wallet.signTransaction!(abortTx));
+    await sendAndConfirm(tx, abort, connection);
+    return true;
+  } catch (err) {
+    console.warn('Could not close the interrupted upload buffer:', err);
+    return false;
+  }
 }
 
 async function sendAndConfirm(
@@ -139,6 +176,10 @@ const PROGRAM_ERRORS: Record<number, string> = {
   6017: 'esa wallet no es miembro',
   6018: 'desbordamiento aritmético',
   6019: 'la propuesta sigue abierta: solo se pueden cerrar las ejecutadas, rechazadas, canceladas u obsoletas',
+  6020: 'el tamaño de la propuesta es cero o supera el máximo permitido (4000 bytes)',
+  6021: 'la propuesta todavía no se subió completa',
+  6022: 'lo subido no coincide con la propuesta que se firmó; vuelve a intentarlo',
+  6023: 'un trozo de la propuesta no cabe en el espacio reservado',
 };
 
 /** Reads `custom program error: 0x1771` or `{"Custom":6001}` and returns the plain-language reason. */
