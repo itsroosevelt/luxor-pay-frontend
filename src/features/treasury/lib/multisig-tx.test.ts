@@ -4,21 +4,21 @@ import { finalAction, programErrorMessage, signAndSendPending, type PendingTrans
 
 const payer = Keypair.generate();
 
-function pending(action: PendingTransaction['action'], followUp?: PendingTransaction): PendingTransaction {
+function pending(action: PendingTransaction['action'], followUp?: PendingTransaction, abort?: PendingTransaction): PendingTransaction {
   const msg = new TransactionMessage({
     payerKey: payer.publicKey,
     recentBlockhash: '11111111111111111111111111111111',
     instructions: [SystemProgram.transfer({ fromPubkey: payer.publicKey, toPubkey: Keypair.generate().publicKey, lamports: 1 })],
   }).compileToV0Message();
   const transaction = Buffer.from(new VersionedTransaction(msg).serialize()).toString('base64');
-  return { action, transaction, blockhash: '11111111111111111111111111111111', lastValidBlockHeight: 1, followUp };
+  return { action, transaction, blockhash: '11111111111111111111111111111111', lastValidBlockHeight: 1, followUp, abort };
 }
 
 function connection() {
   let n = 0;
   return {
     sendRawTransaction: vi.fn(async () => `sig-${++n}`),
-    confirmTransaction: vi.fn(async () => ({ value: { err: null } })),
+    confirmTransaction: vi.fn(async (): Promise<{ value: { err: unknown } }> => ({ value: { err: null } })),
   };
 }
 
@@ -37,6 +37,42 @@ describe('signAndSendPending', () => {
     expect(wallet.signTransaction).not.toHaveBeenCalled();
     expect(conn.sendRawTransaction).toHaveBeenCalledTimes(2);
     expect(sig).toBe('sig-2'); // the execution's signature
+  });
+
+  describe('chunked upload', () => {
+    const upload = () => pending('upload', pending('upload', pending('create_proposal')), pending('abort'));
+    const walletFor = () => ({
+      publicKey: payer.publicKey,
+      signTransaction: vi.fn(async (tx: VersionedTransaction) => tx),
+      signAllTransactions: vi.fn(async (txs: VersionedTransaction[]) => txs),
+    });
+
+    it('signs every step and the abort in ONE prompt, and never sends the abort when all goes well', async () => {
+      const conn = connection();
+      const wallet = walletFor();
+      const sig = await signAndSendPending(upload(), wallet as never, conn as never);
+      expect(wallet.signAllTransactions).toHaveBeenCalledTimes(1);
+      expect(wallet.signAllTransactions.mock.calls[0][0]).toHaveLength(4); // 3 steps + abort
+      expect(conn.sendRawTransaction).toHaveBeenCalledTimes(3);
+      expect(sig).toBe('sig-3');
+    });
+
+    it('closes the buffer when a later step fails, so the deposit comes back', async () => {
+      const conn = connection();
+      conn.confirmTransaction
+        .mockResolvedValueOnce({ value: { err: null } })
+        .mockResolvedValueOnce({ value: { err: { InstructionError: [0, { Custom: 6022 }] } } })
+        .mockResolvedValue({ value: { err: null } });
+      await expect(signAndSendPending(upload(), walletFor() as never, conn as never)).rejects.toThrow(/depósito/);
+      expect(conn.sendRawTransaction).toHaveBeenCalledTimes(3); // upload, failed upload, then the abort
+    });
+
+    it('does not try to close a buffer that was never created (first step failed)', async () => {
+      const conn = connection();
+      conn.confirmTransaction.mockResolvedValueOnce({ value: { err: { InstructionError: [0, { Custom: 6001 }] } } });
+      await expect(signAndSendPending(upload(), walletFor() as never, conn as never)).rejects.toThrow(/permiso/);
+      expect(conn.sendRawTransaction).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('a single transaction keeps using signTransaction', async () => {
