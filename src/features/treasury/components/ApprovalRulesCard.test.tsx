@@ -11,7 +11,7 @@ vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 import { ApprovalRulesCard } from './ApprovalRulesCard';
 
 const member = (n: number, over: Partial<Member['roles']> = {}, onChain: boolean | null = true): Member =>
-  ({ id: `m${n}`, name: `M${n}`, walletAddress: `W${n}`, roles: { admin: n === 1, signer: true, proposer: true, auditor: false, ...over }, onChain }) as Member;
+  ({ id: `m${n}`, name: `M${n}`, walletAddress: `W${n}`, roles: { proposer: true, signer: true, executor: true, ...over }, onChain }) as Member;
 
 const render = (members: Member[], canEdit = true) => renderToStaticMarkup(<ApprovalRulesCard members={members} canEdit={canEdit} guard={() => true} />);
 
@@ -30,8 +30,8 @@ describe('ApprovalRulesCard', () => {
     expect(html).toContain('Proponer 2 de 3');
   });
 
-  it('counts only signers that are really in the multisig, and ignores auditors', () => {
-    const html = render([member(1), member(2), member(3, { signer: false, auditor: true }), member(4, {}, false)]);
+  it('counts only voters that are really in the multisig', () => {
+    const html = render([member(1), member(2), member(3, { signer: false }), member(4, {}, false)]);
     expect(html.match(/role="radio"/g)).toHaveLength(2); // M3 cannot sign, M4 is not on-chain
   });
 
@@ -45,7 +45,7 @@ describe('ApprovalRulesCard', () => {
     expect(render([member(1), member(2), member(3)])).toContain('pierde el acceso');
   });
 
-  it('tells the admin a pending rule change blocks another one', () => {
+  it('tells the proposer a pending rule change blocks another one', () => {
     proposals = [{ id: 'p', index: 14, type: 'config', title: 'Cambiar umbral a 3', status: 'active' }];
     const html = render([member(1), member(2), member(3)]);
     expect(html).toContain('propuesta #14');

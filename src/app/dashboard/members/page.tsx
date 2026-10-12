@@ -3,8 +3,8 @@
 /**
  * Members — the SRS "Control de Roles y Miembros" surface for Module 1.
  *
- * Maps wallet pubkeys to the role matrix (admin / signer /
- * proposer / auditor), shows the M-de-N signing policy, and gates every
+ * Maps wallet pubkeys to Squads' three roles (proposer / voter /
+ * executor), shows the M-de-N signing policy, and gates every
  * mutation on the signed-in member's own roles. All data is served by
  * `src/mocks/handlers.ts` while Mock Mode is on.
  */
@@ -25,12 +25,13 @@ import { ModalShell, RoleChip, fieldStyle } from '@/features/treasury/components
 import { AddMemberModal } from '@/features/treasury/components/AddMemberModal';
 import {
   MEMBER_ROLE_META,
+  MEMBER_ROLE_KEYS,
   type Member,
   type MemberRoles,
   type MemberRoleKey,
 } from '@/features/treasury/api/members-api';
 
-const ROLE_KEYS: MemberRoleKey[] = ['admin', 'signer', 'proposer', 'auditor'];
+const ROLE_KEYS: MemberRoleKey[] = MEMBER_ROLE_KEYS;
 const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}` : a);
 
 /** On-chain status of a member: pending proposal, on-chain, or not in the multisig. Hidden while off-chain. */
@@ -64,15 +65,15 @@ export default function MembersPage() {
     data: members, isLoading, isError, errorMessage,
     addMember, updateMember, removeMember,
   } = useMembers();
-  // Demo-only: preview the UI as a read-only auditor without editing fixtures.
+  // Demo-only: preview the UI as a member without any role, without editing fixtures.
   const [previewReadOnly, setPreviewReadOnly] = useState(false);
   const { connected } = useWallet();
   const { config } = useTreasury();
   const { setVisible: openWalletModal } = useWalletModal();
 
   const me = useMemo(() => members.find((m) => m.isCurrentUser) ?? members[0] ?? null, [members]);
-  const adminCount = useMemo(() => members.filter((m) => m.roles.admin).length, [members]);
-  const canManage = !previewReadOnly;
+  // Membership changes are proposals, and only a Proposer (Initiate) may create them.
+  const canManage = !previewReadOnly && (!me || me.roles.proposer);
 
   const [addOpen, setAddOpen] = useState(false);
   const [detail, setDetail] = useState<Member | null>(null);
@@ -88,7 +89,7 @@ export default function MembersPage() {
       return false;
     }
     if (!canManage) {
-      toast.error(previewReadOnly ? 'Read-only view active' : 'Administrator role required');
+      toast.error(previewReadOnly ? 'Read-only view active' : 'Necesitas el rol Proposer para proponer cambios de miembros');
       return false;
     }
     return true;
@@ -96,11 +97,11 @@ export default function MembersPage() {
 
   const toggleRole = async (m: Member, key: MemberRoleKey) => {
     if (!guard()) return;
-    if (key === 'admin' && m.roles.admin && adminCount <= 1) {
-      toast.error('At least one Administrator must remain');
+    const roles = { ...m.roles, [key]: !m.roles[key] };
+    if (!roles.proposer && !roles.signer && !roles.executor) {
+      toast.error('Un miembro necesita al menos un rol; para quitarlo del todo usa Eliminar');
       return;
     }
-    const roles = { ...m.roles, [key]: !m.roles[key] };
     try {
       const { proposalIndex } = await updateMember(m.id, { roles });
       if (proposalIndex) {
@@ -114,7 +115,7 @@ export default function MembersPage() {
   };
 
   const [editingName, setEditingName] = useState('');
-  const [editingRoles, setEditingRoles] = useState<MemberRoles>({ admin: false, signer: false, proposer: false, auditor: false });
+  const [editingRoles, setEditingRoles] = useState<MemberRoles>({ proposer: false, signer: false, executor: false });
 
   const openDetail = (m: Member) => {
     setDetail(m);
@@ -124,7 +125,6 @@ export default function MembersPage() {
 
   const confirmDelete = async () => {
     if (!deleting || !guard()) return;
-    if (deleting.roles.admin && adminCount <= 1) { toast.error('Cannot remove the only Administrator'); return; }
     setBusy(true);
     try {
       toast.info('Confirma la transacción en tu wallet (Phantom/Solflare) para eliminar al miembro en la blockchain...');
@@ -171,9 +171,9 @@ export default function MembersPage() {
             type="button"
             onClick={() => setPreviewReadOnly((v) => !v)}
             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-medium bg-white/5 border border-white/15 text-white/70 hover:text-white hover:bg-white/10 transition-colors"
-            title="Preview interface as a read-only Auditor"
+            title="Preview the interface as a member who can only look"
           >
-            <Eye size={13} /> {previewReadOnly ? 'Auditor View Active' : 'Preview as Auditor'}
+            <Eye size={13} /> {previewReadOnly ? 'Read-only view active' : 'Preview read-only'}
           </button>
         </div>
 
@@ -320,10 +320,6 @@ export default function MembersPage() {
                   {ROLE_KEYS.map((k) => (
                     <RoleChip key={k} role={k} active={editingRoles[k]} disabled={!canManage || !connected}
                       onClick={() => {
-                        if (k === 'admin' && editingRoles.admin && adminCount <= 1) {
-                          toast.error('At least one Administrator must remain');
-                          return;
-                        }
                         setEditingRoles((r) => ({ ...r, [k]: !r[k] }));
                       }} />
                   ))}

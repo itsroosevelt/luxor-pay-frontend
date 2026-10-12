@@ -10,14 +10,14 @@ import { describeThreshold, formatTimeLock, rejectionCutoff, thresholdAdvice, th
 
 interface ApprovalRulesCardProps {
   members: Member[];
-  /** Whether the person looking at the page may change rules (admin, not a read-only preview). */
+  /** Whether the person looking at the page may change rules (a proposer, not a read-only preview). */
   canEdit: boolean;
   /** Same gate the rest of the Members page uses (wallet connected, role allowed); toasts when it says no. */
   guard: () => boolean;
 }
 
 /**
- * "How many signers must approve a transaction?": shows the rule in force, lets an admin pick another one
+ * "How many signers must approve a transaction?": shows the rule in force, lets a proposer pick another one
  * and explains what each choice means. On an on-chain multisig the change is itself a proposal, approved with
  * the rule that is in force now.
  */
@@ -31,7 +31,7 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
     [members, config?.onChain],
   );
   const current = config?.threshold ?? 1;
-  // What the admin picked; until they pick something it follows the rule in force.
+  // What the proposer picked; until they pick something it follows the rule in force.
   const [picked, setPicked] = useState<number | null>(null);
   const next = Math.min(picked ?? current, voters);
   const setNext = (n: number) => setPicked(n);
@@ -135,7 +135,7 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-[12px] text-white/45">
           {needsProposal
-            ? 'Solo un administrador puede proponer el cambio, y se aprueba con la regla que está vigente ahora. Si la regla actual es 1 de N, se aplica al instante.'
+            ? 'Cualquier Proposer puede proponer el cambio, y se aprueba con la regla que está vigente ahora. Si la regla actual es 1 de N, se aplica al instante.'
             : 'Este multisig aún no está activado: el cambio se guarda en Luxor y se aplicará al activarlo.'}
         </p>
         <button

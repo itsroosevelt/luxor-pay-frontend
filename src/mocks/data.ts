@@ -121,9 +121,9 @@ export const MOCK_CONTACTS: Contact[] = [];
 export const DEFAULT_OWNER_MEMBER = {
   id: 'member_owner_main',
   merchantId: 'merchant-0001',
-  name: 'Cuenta Principal (Admin)',
+  name: 'Cuenta Principal',
   walletAddress: 'Gwm7E9Rmy5k6D9PxzQdHnzc653AAaRCBCNEF7aL7di5x',
-  roles: { admin: true, signer: true, proposer: true, auditor: true },
+  roles: { proposer: true, signer: true, executor: true },
   isCurrentUser: true,
   createdAt: iso(),
   updatedAt: iso(),

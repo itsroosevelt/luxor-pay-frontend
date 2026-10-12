@@ -121,10 +121,9 @@ export function useMembers(): UseMembersReturn {
         name: payload.name,
         walletAddress: payload.walletAddress,
         roles: {
-          admin: payload.roles?.admin ?? false,
           signer: payload.roles?.signer ?? true,
           proposer: payload.roles?.proposer ?? true,
-          auditor: payload.roles?.auditor ?? false,
+          executor: payload.roles?.executor ?? true,
         },
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

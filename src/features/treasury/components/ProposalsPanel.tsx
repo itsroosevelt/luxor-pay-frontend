@@ -829,7 +829,7 @@ function ProposalActions({
 }) {
   if (!me) return null;
   const iVoted = p.approvals.includes(me.id) || p.rejections.includes(me.id);
-  const isOwnerOrAdmin = p.createdBy === me.id || me.roles.admin;
+  const isOwner = p.createdBy === me.id;
   const spin = <Loader2 size={15} className="animate-spin" />;
 
   if (p.status === 'executed') {
@@ -846,7 +846,7 @@ function ProposalActions({
 
   return (
     <div className="flex flex-wrap gap-2">
-      {p.status === 'draft' && isOwnerOrAdmin && (
+      {p.status === 'draft' && isOwner && (
         <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para abrir a votación' : undefined} onClick={onActivate}>
           {busy === 'activate' ? spin : <><Play size={14} /> Abrir a votación</>}
         </button>
@@ -867,16 +867,16 @@ function ProposalActions({
         <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>Ya registraste tu voto.</p>
       )}
       {p.status === 'active' && !me.roles.signer && (
-        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>No tienes rol de Firmante para votar.</p>
+        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>No tienes el rol de Voter para votar.</p>
       )}
 
-      {p.status === 'approved' && (me.roles.signer || me.roles.proposer || me.roles.admin) && (
+      {p.status === 'approved' && me.roles.executor && (
         <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para ejecutar' : undefined} onClick={onExecute}>
           {busy === 'execute' ? spin : <><Play size={14} /> Ejecutar on-chain</>}
         </button>
       )}
 
-      {(p.status === 'draft' || p.status === 'active') && isOwnerOrAdmin && (
+      {(p.status === 'draft' || p.status === 'active') && isOwner && (
         <button type="button" className="lx-btn lx-btn-secondary justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para cancelar' : undefined} onClick={onCancel}>
           {busy === 'cancel' ? spin : <><Ban size={14} /> Cancelar</>}
         </button>
