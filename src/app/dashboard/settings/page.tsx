@@ -13,6 +13,9 @@ import { useMerchant } from '@/features/merchant/context/MerchantContext';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useTreasury } from '@/features/treasury/hooks/useTreasury';
 import { useMembers } from '@/features/treasury/hooks/useMembers';
+import { useProposals } from '@/features/treasury/hooks/useProposals';
+import { PendingChangeNotice } from '@/features/treasury/components/PendingChangeNotice';
+import { findPendingThresholdProposal } from '@/features/treasury/lib/pending-config';
 import {
   Settings as SettingsIcon,
   Terminal,
@@ -58,6 +61,9 @@ function SettingsContent() {
   const wallet = useWallet();
   const { config: treasuryConfig, isLoading: cfgLoading, setThreshold } = useTreasury();
   const { data: members = [] } = useMembers();
+  const { data: proposals = [] } = useProposals();
+  // A threshold change waits for signatures on-chain: say so, and don't let a second one pile up.
+  const pendingThreshold = findPendingThresholdProposal(proposals);
 
   const signerCount = members.filter((m) => m.roles?.signer).length || 1;
   const threshold = treasuryConfig?.threshold ?? 1;
@@ -73,6 +79,7 @@ function SettingsContent() {
   }, [threshold, isEditingThreshold]);
 
   const handleStartEdit = () => {
+    if (pendingThreshold) return;
     setEditableThreshold(threshold);
     setIsEditingThreshold(true);
   };
@@ -348,7 +355,7 @@ function SettingsContent() {
         <div>
           <h1 className="lx-page-title">Settings</h1>
           <p className="lx-page-subtitle">
-            Manage your account preferences, Squads multisig security, POS terminals, and developer API keys.
+            Manage your account preferences, treasury multisig security, POS terminals, and developer API keys.
           </p>
         </div>
       </header>
@@ -365,7 +372,7 @@ function SettingsContent() {
                 : 'bg-transparent text-gray-400 hover:text-white'
             }`}
           >
-            <SettingsIcon size={15} /> General & Squads Multisig
+            <SettingsIcon size={15} /> General & Multisig
           </button>
 
           <button
@@ -393,22 +400,22 @@ function SettingsContent() {
           </button>
         </div>
 
-        {/* Tab 1: General & Squads Settings - FLUID SINGLE CONTAINER */}
+        {/* Tab 1: General & Multisig Settings - FLUID SINGLE CONTAINER */}
         {activeTab === 'general' && (
           <div className="space-y-8">
-            {/* Active Squad Header - Clean, Fluid Layout */}
+            {/* Active treasury header - Clean, Fluid Layout */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-6">
               <div>
                 <h2 className="text-2xl font-semibold text-white font-outfit">{activeTreasuryName}</h2>
                 <p className="text-xs text-gray-400 font-montserrat mt-1">
-                  Created on Feb 20, 2026 · Squads V4 Multisig
+                  {treasuryConfig?.createdAt ? `Created on ${new Date(treasuryConfig.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })} · ` : ''}Luxor multisig
                 </p>
               </div>
 
               <div className="flex items-center gap-4 text-xs font-outfit">
                 <div>
                   <span className="text-gray-400 block text-[10px] uppercase tracking-wider font-semibold">Members</span>
-                  <span className="text-white font-semibold text-base">{members.length || 2}</span>
+                  <span className="text-white font-semibold text-base">{members.length}</span>
                 </div>
                 <div className="h-6 w-px bg-white/10" />
                 <div>
@@ -418,10 +425,10 @@ function SettingsContent() {
               </div>
             </div>
 
-            {/* Squad Accounts (Read-Only) */}
+            {/* Treasury vault (read-only) */}
             <div className="space-y-4 border-b border-white/10 pb-6">
               <div>
-                <span className="text-xs font-semibold text-gray-400 block mb-1 font-outfit">Squad Vault</span>
+                <span className="text-xs font-semibold text-gray-400 block mb-1 font-outfit">Treasury Vault</span>
                 <div className="flex items-center justify-between py-2 text-sm font-mono text-white">
                   <span className="truncate">{vaultAddress}</span>
                   <div className="flex items-center gap-2 shrink-0">
@@ -429,10 +436,10 @@ function SettingsContent() {
                       type="button"
                       onClick={() => {
                         navigator.clipboard.writeText(vaultAddress);
-                        toast.success('Squad Vault address copied');
+                        toast.success('Vault address copied');
                       }}
                       className="p-1.5 text-gray-400 hover:text-white transition-colors"
-                      title="Copy Squad Vault address"
+                      title="Copy vault address"
                     >
                       <Copy size={15} />
                     </button>
@@ -538,7 +545,7 @@ function SettingsContent() {
                 <div>
                   <h3 className="text-sm font-semibold text-white font-outfit">Privacy</h3>
                   <p className="text-xs text-gray-400 font-montserrat">
-                    Restricts Squad viewing to members only. On-chain transactions remain visible.
+                    Restricts treasury viewing to members only. On-chain transactions remain visible.
                   </p>
                 </div>
                 <button
@@ -584,6 +591,8 @@ function SettingsContent() {
                 </select>
               </div>
 
+              {pendingThreshold && <PendingChangeNotice proposal={pendingThreshold} />}
+
               {/* Threshold Adjuster */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between py-2 gap-3">
                 <div>
@@ -607,7 +616,9 @@ function SettingsContent() {
                     <button
                       type="button"
                       onClick={handleStartEdit}
-                      className="px-4 py-1.5 border border-white/20 text-white font-medium text-xs rounded-full hover:bg-white/10 transition-colors font-outfit flex items-center gap-1.5"
+                      disabled={!!pendingThreshold}
+                      title={pendingThreshold ? `Hay un cambio pendiente (#${pendingThreshold.index}): apruébalo o recházalo antes de crear otro` : undefined}
+                      className="px-4 py-1.5 border border-white/20 text-white font-medium text-xs rounded-full hover:bg-white/10 transition-colors font-outfit flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Pencil size={13} /> Editar
                     </button>
