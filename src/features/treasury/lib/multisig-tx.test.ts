@@ -59,7 +59,7 @@ describe('signAndSendPending', () => {
 
 describe('program errors', () => {
   it('turns the contract error code of a failed simulation into a reason', () => {
-    expect(programErrorMessage('Simulation failed. Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1774.')).toContain('al menos un admin');
+    expect(programErrorMessage('Simulation failed. Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1774.')).toContain('al menos un proponente');
     expect(programErrorMessage('custom program error: 0x1771')).toContain('permiso');
   });
 

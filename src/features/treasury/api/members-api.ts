@@ -3,27 +3,27 @@ import { apiUrl } from '@/lib/api-client';
 import type { PendingTransaction } from '@/features/treasury/lib/multisig-tx';
 
 /**
- * SRS role matrix (the contract's permission model):
- *   admin    — añade/remueve miembros y modifica el umbral de firmas
- *   signer   — vota propuestas; cuenta para el umbral M-de-N
- *   proposer — puede iniciar propuestas de transacción
- *   auditor  — solo lectura (balances, bóvedas, historial), sin claves de firma
+ * Roles, exactly Squads' three permissions (there is no admin: what a proposal changes is decided by the vote):
+ *   proposer — Initiate: crea propuestas (envíos, swaps y cambios de miembros / umbral)
+ *   signer   — Vote ("Voter"): aprueba o rechaza; cuenta para el umbral M-de-N
+ *   executor — Execute: ejecuta las propuestas ya aprobadas
  */
 export interface MemberRoles {
-  admin: boolean;
-  signer: boolean;
   proposer: boolean;
-  auditor: boolean;
+  signer: boolean;
+  executor: boolean;
 }
 
 export type MemberRoleKey = keyof MemberRoles;
 
 export const MEMBER_ROLE_META: Record<MemberRoleKey, { label: string; short: string; description: string }> = {
-  admin: { label: 'Administrator', short: 'Admin', description: 'Manages members and signature threshold.' },
-  signer: { label: 'Signer', short: 'Signer', description: 'Votes on proposals; counts towards threshold.' },
-  proposer: { label: 'Proposer', short: 'Proposer', description: 'Can propose transactions.' },
-  auditor: { label: 'Auditor', short: 'Auditor', description: 'Read-only: balances, vaults, and history.' },
+  proposer: { label: 'Proposer', short: 'Proposer', description: 'Creates proposals: transfers, swaps, member and threshold changes.' },
+  signer: { label: 'Voter', short: 'Voter', description: 'Approves or rejects proposals; counts towards the threshold.' },
+  executor: { label: 'Executor', short: 'Executor', description: 'Executes proposals once they are approved.' },
 };
+
+/** Display order of the roles. */
+export const MEMBER_ROLE_KEYS: MemberRoleKey[] = ['proposer', 'signer', 'executor'];
 
 export interface Member {
   id: string;

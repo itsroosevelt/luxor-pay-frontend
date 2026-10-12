@@ -245,10 +245,9 @@ export function resolveMock(
       name: String(body?.name ?? 'Nuevo miembro'),
       walletAddress: String(body?.walletAddress ?? ''),
       roles: {
-        admin: Boolean(r.admin ?? false),
         signer: Boolean(r.signer ?? true),
         proposer: Boolean(r.proposer ?? true),
-        auditor: Boolean(r.auditor ?? false),
+        executor: Boolean(r.executor ?? true),
       },
       isCurrentUser: false,
       createdAt: nowIso(),

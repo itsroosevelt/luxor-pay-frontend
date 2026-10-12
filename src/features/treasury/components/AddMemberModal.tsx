@@ -7,11 +7,10 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { toast } from 'sonner';
 import { useMerchant } from '@/features/merchant/context/MerchantContext';
-import type { CreateMemberPayload, Member, MemberRoleKey, MemberRoles } from '@/features/treasury/api/members-api';
+import { MEMBER_ROLE_KEYS, type CreateMemberPayload, type Member, type MemberRoles } from '@/features/treasury/api/members-api';
 import { ModalShell, RoleChip, fieldStyle } from './member-ui';
 
-const ROLE_KEYS: MemberRoleKey[] = ['admin', 'signer', 'proposer', 'auditor'];
-const DEFAULT_ROLES: MemberRoles = { admin: false, signer: true, proposer: true, auditor: false };
+const DEFAULT_ROLES: MemberRoles = { proposer: true, signer: true, executor: true };
 
 interface AddMemberModalProps {
   open: boolean;
@@ -38,6 +37,10 @@ export function AddMemberModal({ open, onClose, addMember }: AddMemberModalProps
     const walletAddress = form.walletAddress.trim();
     if (!name || !walletAddress) {
       toast.error('El nombre y la dirección son obligatorios');
+      return;
+    }
+    if (!form.roles.proposer && !form.roles.signer && !form.roles.executor) {
+      toast.error('Elige al menos un rol: Proposer, Voter o Executor');
       return;
     }
     if (profile?.merchantWallet && walletAddress === profile.merchantWallet) {
@@ -67,7 +70,7 @@ export function AddMemberModal({ open, onClose, addMember }: AddMemberModalProps
       {open && (
         <ModalShell
           title="Add member"
-          subtitle="Añade la wallet de un firmante o auditor a este multisig."
+          subtitle="Añade una wallet a este multisig y elige qué puede hacer: proponer, votar o ejecutar."
           onClose={() => !busy && onClose()}
           maxWidth={500}
         >
@@ -89,7 +92,7 @@ export function AddMemberModal({ open, onClose, addMember }: AddMemberModalProps
             <div className="space-y-2">
               <span className="text-[11px] font-bold tracking-[0.25em] uppercase text-white/50 font-sans block">Assigned Roles</span>
               <div className="flex flex-wrap gap-2 pt-1">
-                {ROLE_KEYS.map((k) => (
+                {MEMBER_ROLE_KEYS.map((k) => (
                   <RoleChip key={k} role={k} active={form.roles[k]} disabled={!connected}
                     onClick={() => setForm((f) => ({ ...f, roles: { ...f.roles, [k]: !f.roles[k] } }))} />
                 ))}
