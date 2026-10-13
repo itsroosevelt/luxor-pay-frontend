@@ -12,6 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { TokenIcon } from '@/components/ui/TokenIcon';
+import type { Vault } from '@/features/treasury/api/treasury-api';
 import { formatVaultLabel, helperShort, topAssetsOf, isRooseveltAccount } from './treasury-utils';
 import {
   ActionPillButton,
