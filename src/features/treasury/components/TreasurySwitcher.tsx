@@ -166,14 +166,14 @@ function short(address: string): string {
 }
 
 function thresholdLabel(t: MultisigConfig): string {
-  if (!t.onChain || !t.address) return 'Sin multisig';
+  if (!t.onChain || !t.address) return 'No multisig';
   return t.memberCount ? `${t.threshold}/${t.memberCount}` : String(t.threshold);
 }
 
 /**
  * The organization's treasuries (Luxor multisigs), read from the backend. Picking one makes
  * every treasury / vault / member / proposal request use it (x-luxor-treasury header).
- * "Vincular" mirrors an existing multisig (e.g. a shared one) as one more treasury; the
+ * "Link" mirrors an existing multisig (e.g. a shared one) as one more treasury; the
  * connected wallet must be one of its on-chain members.
  */
 export function TreasurySwitcher({ compact }: TreasurySwitcherProps) {
@@ -223,9 +223,9 @@ export function TreasurySwitcher({ compact }: TreasurySwitcherProps) {
       const res = await listTreasuries();
       setList(res.data ?? []);
       const found = (res.data ?? []).filter((t) => t.shared).length;
-      const who = wallet.publicKey ? `${wallet.publicKey.toBase58().slice(0, 4)}…${wallet.publicKey.toBase58().slice(-4)}` : 'tu wallet';
-      if (found > 0) toast.success(found === 1 ? 'Tienes 1 tesorería compartida.' : `Tienes ${found} tesorerías compartidas.`);
-      else if (!auto) toast.info(`La wallet ${who} no figura como miembro de tesorerías de otras organizaciones. Pide que te añadan con esa wallet.`);
+      const who = wallet.publicKey ? `${wallet.publicKey.toBase58().slice(0, 4)}…${wallet.publicKey.toBase58().slice(-4)}` : 'your wallet';
+      if (found > 0) toast.success(found === 1 ? 'You have 1 shared treasury.' : `You have ${found} shared treasuries.`);
+      else if (!auto) toast.info(`Wallet ${who} is not listed as a member of treasuries from other organizations. Ask to be added with that wallet.`);
     } catch (err: any) {
       const isRejection =
         err?.message?.includes('cancelled') ||
@@ -257,11 +257,11 @@ export function TreasurySwitcher({ compact }: TreasurySwitcherProps) {
       try {
         await getWalletAuthHeaders(wallet);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : 'Firma con tu wallet para abrir una tesorería compartida.');
+        toast.error(err instanceof Error ? err.message : 'Sign with your wallet to open a shared treasury.');
         return;
       }
     }
-    toast.success(`Cambiando a ${t.name}…`);
+    toast.success(`Switching to ${t.name}…`);
     setActiveTreasuryId(t.id || t.address);
   };
 
@@ -272,10 +272,10 @@ export function TreasurySwitcher({ compact }: TreasurySwitcherProps) {
     try {
       const headers = await getWalletAuthHeaders(wallet);
       const res = await linkTreasury(address.trim(), name.trim() || undefined, headers);
-      toast.success(`Tesorería "${res.data.name}" vinculada.`);
+      toast.success(`Treasury "${res.data.name}" linked successfully.`);
       setActiveTreasuryId(res.data.isDefault ? null : res.data.id);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo vincular la tesorería.');
+      toast.error(err instanceof Error ? err.message : 'Could not link treasury.');
       setBusy(false);
     }
   };

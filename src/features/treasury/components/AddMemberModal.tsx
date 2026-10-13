@@ -36,16 +36,16 @@ export function AddMemberModal({ open, onClose, addMember }: AddMemberModalProps
     const name = form.name.trim();
     const walletAddress = form.walletAddress.trim();
     if (!name || !walletAddress) {
-      toast.error('El nombre y la dirección son obligatorios');
+      toast.error('Name and wallet address are required');
       return;
     }
     if (!form.roles.proposer && !form.roles.signer && !form.roles.executor) {
-      toast.error('Elige al menos un rol: Proposer, Voter o Executor');
+      toast.error('Select at least one role: Proposer, Voter, or Executor');
       return;
     }
     if (profile?.merchantWallet && walletAddress === profile.merchantWallet) {
       // The collection wallet's key is held by Sterling's server: it can't sign as a member.
-      toast.error('Esa es la cuenta de cobros de Sterling, no tu wallet. Copia la dirección desde Phantom o Solflare.');
+      toast.error('That is the Sterling merchant collection wallet, not your personal wallet. Copy your address from Phantom or Solflare.');
       return;
     }
     setBusy(true);
@@ -55,11 +55,11 @@ export function AddMemberModal({ open, onClose, addMember }: AddMemberModalProps
       onClose();
       toast.success(
         proposalIndex
-          ? `Propuesta #${proposalIndex} creada · ${name} entrará al multisig cuando se apruebe y ejecute`
-          : `${name} ya es miembro del multisig`,
+          ? `Proposal #${proposalIndex} created · ${name} will join the multisig once approved and executed`
+          : `${name} is now a member of the multisig`,
       );
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo añadir al miembro');
+      toast.error(err instanceof Error ? err.message : 'Could not add member');
     } finally {
       setBusy(false);
     }
@@ -70,15 +70,15 @@ export function AddMemberModal({ open, onClose, addMember }: AddMemberModalProps
       {open && (
         <ModalShell
           title="Add member"
-          subtitle="Añade una wallet a este multisig y elige qué puede hacer: proponer, votar o ejecutar."
+          subtitle="Add a wallet to this multisig and select its permissions: propose, vote, or execute."
           onClose={() => !busy && onClose()}
           maxWidth={500}
         >
           <form onSubmit={submit} className="space-y-5">
             {!connected && (
               <div className="rounded-2xl p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-center justify-between">
-                <span>Conecta tu billetera para agregar miembros</span>
-                <button type="button" onClick={() => openWalletModal(true)} className="px-3.5 py-1 rounded-full bg-amber-500 text-black font-semibold">Conectar</button>
+                <span>Connect your wallet to add members</span>
+                <button type="button" onClick={() => openWalletModal(true)} className="px-3.5 py-1 rounded-full bg-amber-500 text-black font-semibold">Connect</button>
               </div>
             )}
             <label className="block space-y-2">

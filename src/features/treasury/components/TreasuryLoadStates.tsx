@@ -43,12 +43,12 @@ export function TreasuryLoadError({ message, onRetry }: TreasuryLoadErrorProps) 
           background: 'rgba(239, 68, 68, 0.06)', border: '1px solid rgba(239, 68, 68, 0.3)',
         }}
       >
-        <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, color: '#FFFFFF' }}>No se pudo cargar la tesorería</div>
+        <div style={{ fontFamily: 'Outfit, sans-serif', fontSize: 18, color: '#FFFFFF' }}>Failed to load treasury</div>
         <div style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
-          {message ?? 'Error desconocido'}
+          {message ?? 'Unknown error'}
         </div>
         <ActionPillButton type="button" $variant="secondary" onClick={onRetry}>
-          Reintentar
+          Retry
         </ActionPillButton>
       </div>
     </PageContainer>

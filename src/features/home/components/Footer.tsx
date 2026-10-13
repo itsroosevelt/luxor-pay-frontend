@@ -6,10 +6,193 @@ import { Globe, Heart, ChevronDown } from 'lucide-react';
 import { getSocialLinks } from '@/features/home/lib/social-links';
 import { BlueParticles } from '@/components/ui/BlueParticles';
 
+type FooterLink = { name: string; href: string; target?: string; isHighlight?: boolean; isBlue?: boolean };
+
+interface RegularSection {
+    title: string;
+    type?: 'regular';
+    links: FooterLink[];
+    hasExpandLimit?: boolean;
+}
+
+interface AssetsSection {
+    title: string;
+    type: 'assets';
+    assets: FooterLink[];
+    ecosystemSubtitle: string;
+    ecosystemLinks: FooterLink[];
+}
+
+type FooterSectionItem = RegularSection | AssetsSection;
+
+const LUXOR_FOOTER_SECTIONS: FooterSectionItem[] = [
+    {
+        title: "Project",
+        links: [
+            { name: "Team", href: "https://luxorintelligence.com/team", target: "_blank" },
+            { name: "Roadmap", href: "https://luxorintelligence.com/roadmap", target: "_blank" },
+            { name: "Whitepaper (Docs)", href: "https://github.com/admluxorsys/luxor/blob/main/Whitepaper.md", target: "_blank" },
+            { name: "Press & Media", href: "#" },
+            { name: "Education", href: "https://luxorintelligence.com/education", target: "_blank" },
+            { name: "Our Partners", href: "#" },
+        ]
+    },
+    {
+        title: "Assets",
+        type: "assets",
+        assets: [
+            { name: "$LXR | Luxor Utility Asset", href: "https://luxorstandard.com/", target: "_blank" },
+            { name: "$XLS | Real world Asset", href: "https://excelsiorstandard.com/", target: "_blank" },
+            { name: "$USDX | Stable Asset", href: "https://occidentstandard.com/", target: "_blank" },
+        ],
+        ecosystemSubtitle: "ECOSYSTEM",
+        ecosystemLinks: [
+            { name: "Roosevelt", href: "https://itsroosevelt.com/", target: "_blank" },
+            { name: "Royalty", href: "https://itsroyalty.us/", target: "_blank" },
+            { name: "Sterling", href: "https://itssterling.com/", target: "_blank" },
+        ],
+    },
+    {
+        title: "Tokenomics",
+        links: [
+            { name: "Total Supply", href: "#" },
+            { name: "Circulating Supply", href: "#" },
+            { name: "Network Contract Address", href: "https://solscan.io/token/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
+            { name: "Public Sale / IDO", href: "#" },
+            { name: "Liquidity Pool", href: "#" },
+            { name: "TGE (Token Generation Event)", href: "#" },
+            { name: "Transaction Fees", href: "#" },
+            { name: "Buy-back & Burn", href: "#" },
+        ]
+    },
+    {
+        title: "Utility",
+        links: [
+            { name: "Staking & Rewards", href: "https://luxorintelligence.com/coming-soon", target: "_blank" },
+            { name: "SI Premium Access", href: "https://luxorintelligence.com/coming-soon", target: "_blank" },
+            { name: "Hardware Discounts", href: "https://luxorintelligence.com/coming-soon", target: "_blank" },
+            { name: "Governance (DAO)", href: "https://luxorintelligence.com/coming-soon", target: "_blank" },
+            { name: "Cashback for Usage", href: "https://luxorintelligence.com/coming-soon", target: "_blank" },
+            { name: "Suggestions", href: "mailto:support@luxorintelligence.com" },
+        ]
+    },
+    {
+        title: "Security & Legal",
+        links: [
+            { name: "Technical Audit", href: "#" },
+            { name: "Security Certificates", href: "#" },
+            { name: "Verified Contract", href: "https://solscan.io/token/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
+            { name: "Bug Bounty Program", href: "#" },
+            { name: "Transparency of Funds", href: "#" },
+            { name: "Privacy Policy", href: "/privacy" },
+            { name: "Terms of Use", href: "/terms" },
+            { name: "Data Deletion", href: "https://luxorintelligence.com/data-deletion", target: "_blank" },
+            { name: "Disclaimer", href: "#" },
+            { name: "AML / KYC Policy", href: "#" },
+        ]
+    },
+    {
+        title: "On-Chain Links",
+        links: [
+            { name: "Solscan (Explorer)", href: "https://solscan.io/token/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
+            { name: "DexScreener", href: "https://dexscreener.com/solana/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
+            { name: "Raydium (Swap)", href: "https://raydium.io/swap/?inputMint=sol&outputMint=7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
+            { name: "Phantom Wallet", href: "https://phantom.app/", target: "_blank" },
+            { name: "Dial.to (Blinks)", href: "https://dial.to/?action=solana-action:https://jup.ag/swap/SOL-7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
+            { name: "Jupiter", href: "https://jup.ag/", target: "_blank" },
+            { name: "Meteora", href: "https://www.meteora.ag/", target: "_blank" },
+            { name: "Events", href: "#" },
+            { name: "Blog", href: "#" },
+        ]
+    },
+    {
+        title: "Documentation",
+        links: [
+            { name: "Whitepaper", href: "https://github.com/admluxorsys/luxor/blob/main/Whitepaper.md", target: "_blank" },
+            { name: "API & SDK", href: "#" },
+            { name: "Integration Guides", href: "#" },
+            { name: "Legal Files", href: "#" },
+            { name: "Github Repository", href: "https://github.com/admluxorsys/luxor", target: "_blank" },
+        ]
+    },
+    {
+        title: "Company",
+        links: [
+            { name: "Technical Support", href: "https://mail.google.com/mail/?view=cm&fs=1&to=support@luxorintelligence.com", target: "_blank" },
+            { name: "Help Center (FAQ)", href: "#" },
+            { name: "Careers", href: "https://luxorintelligence.com/careers", target: "_blank" },
+            { name: "Business Contact", href: "https://mail.google.com/mail/?view=cm&fs=1&to=business@luxorintelligence.com", target: "_blank" },
+            { name: "Report an Error", href: "https://mail.google.com/mail/?view=cm&fs=1&to=support@luxorintelligence.com", target: "_blank" },
+            { name: "support@luxorintelligence.com", href: "https://mail.google.com/mail/?view=cm&fs=1&to=support@luxorintelligence.com", target: "_blank", isBlue: true },
+            { name: "legal@luxorintelligence.com", href: "https://mail.google.com/mail/?view=cm&fs=1&to=legal@luxorintelligence.com", target: "_blank", isBlue: true },
+            { name: "careers@luxorintelligence.com", href: "https://mail.google.com/mail/?view=cm&fs=1&to=careers@luxorintelligence.com", target: "_blank", isBlue: true },
+            { name: "+1 (385) 865-3535", href: "https://wa.me/13858653535", target: "_blank", isBlue: true },
+            { name: "470 W 200 N, Salt Lake City, UT 84103", href: "https://maps.google.com/?q=470+W+200+N,+Salt+Lake+City,+UT+84103", target: "_blank" },
+        ]
+    }
+];
+
+const STERLING_SECTIONS: RegularSection[] = [
+    {
+        title: "Products",
+        hasExpandLimit: true,
+        links: [
+            { name: "Pricing", href: "/dashboard/developers/programs" },
+            { name: "Web Gateway (eCommerce)", href: "#features" },
+            { name: "Point of Sale (POS)", href: "#features" },
+            { name: "Recurring Payments", href: "#features" },
+            { name: "Ecosystem & Tokenization", href: "#features" },
+            { name: "Payments Engine", href: "#features" },
+            { name: "Checkout", href: "#" },
+            { name: "Invoicing", href: "#" },
+            { name: "Crypto Onramp", href: "#" },
+            { name: "Global Payouts", href: "#" },
+            { name: "Radar Fraud Protection", href: "#" },
+            { name: "Sterling Sigma Analytics", href: "#" }
+        ]
+    },
+    {
+        title: "Solutions",
+        hasExpandLimit: true,
+        links: [
+            { name: "Enterprises", href: "#" },
+            { name: "Startups", href: "#" },
+            { name: "SMBs", href: "#" },
+            { name: "Retail & Physical Stores", href: "#" },
+            { name: "eCommerce & Digital", href: "#" },
+            { name: "Marketplaces", href: "#" },
+            { name: "Local Businesses", href: "#" },
+            { name: "Platforms", href: "#" }
+        ]
+    },
+    {
+        title: "Developers",
+        hasExpandLimit: true,
+        links: [
+            { name: "Documentation", href: "/dashboard/developers/programs" },
+            { name: "API Reference", href: "/dashboard/developers/programs" },
+            { name: "Libraries & SDKs", href: "/dashboard/developers/programs" },
+            { name: "Sandbox / Testnet", href: "/dashboard/developers/tx-builder" },
+            { name: "Token Manager", href: "/dashboard/developers/token-manager" }
+        ]
+    },
+    {
+        title: "Resources",
+        hasExpandLimit: true,
+        links: [
+            { name: "Blog", href: "#" },
+            { name: "Help Center", href: "#" },
+            { name: "Governance / DAO", href: "#" },
+            { name: "Guides", href: "#" },
+            { name: "Community Forum", href: "#" }
+        ]
+    }
+];
+
 export default function Footer() {
     const socialLinks = getSocialLinks('Docs');
+    const [activeTab, setActiveTab] = useState<'ecosystem' | 'platform'>('ecosystem');
 
-    // Track expanded state for columns with more than 10 links
     const [expandedColumns, setExpandedColumns] = useState<Record<string, boolean>>({
         "Products": false,
         "Solutions": false,
@@ -24,155 +207,7 @@ export default function Footer() {
         }));
     };
 
-    type FooterLink = { name: string; href: string; target?: string; isHighlight?: boolean };
-
-    interface FooterSection {
-        title: string;
-        links: FooterLink[];
-        hasExpandLimit?: boolean;
-    }
-
-    const footerSections: FooterSection[] = [
-        {
-            title: "Products",
-            hasExpandLimit: true,
-            links: [
-                { name: "Pricing", href: "#pricing" },
-                { name: "Atlas", href: "#" },
-                { name: "Authorization Boost", href: "#" },
-                { name: "Billing", href: "#" },
-                { name: "Capital", href: "#" },
-                { name: "Capital for Platforms", href: "#" },
-                { name: "Checkout", href: "#" },
-                { name: "Climate", href: "#" },
-                { name: "Connect", href: "#" },
-                { name: "Crypto", href: "#" },
-                { name: "Crypto Onramp", href: "#" },
-                { name: "Data Pipeline", href: "#" },
-                { name: "Elements", href: "#" },
-                { name: "Financial Connections", href: "#" },
-                { name: "Global Payouts", href: "#" },
-                { name: "Identity", href: "#" },
-                { name: "Invoicing", href: "#" },
-                { name: "Issuing", href: "#" },
-                { name: "Link", href: "#" },
-                { name: "Managed Payments", href: "#" },
-                { name: "Payment Links", href: "#" },
-                { name: "Payment Methods", href: "#" },
-                { name: "Payments Engine", href: "#" },
-                { name: "Radar (Fraud protection)", href: "#" },
-                { name: "Revenue Recognition", href: "#" },
-                { name: "Sterling Sigma Analytics", href: "#" },
-                { name: "Subscriptions", href: "#" },
-                { name: "Tax Automation", href: "#" },
-                { name: "POS Terminal", href: "#" },
-                { name: "Treasury", href: "#" },
-                { name: "Treasury for Platforms", href: "#" },
-                { name: "Usage-based Billing", href: "#" }
-            ]
-        },
-        {
-            title: "Solutions",
-            hasExpandLimit: true,
-            links: [
-                { name: "Enterprises", href: "#" },
-                { name: "Startups", href: "#" },
-                { name: "Agentic Commerce (AI)", href: "#" },
-                { name: "Crypto Platforms", href: "#" },
-                { name: "Ecommerce", href: "#" },
-                { name: "Embedded Finance", href: "#" },
-                { name: "Finance Automation", href: "#" },
-                { name: "Global Businesses", href: "#" },
-                { name: "In-app Payments", href: "#" },
-                { name: "Marketplaces", href: "#" },
-                { name: "Platforms", href: "#" },
-                { name: "SaaS", href: "#" },
-                { name: "AI Companies", href: "#" },
-                { name: "Creator Economy", href: "#" },
-                { name: "Gaming", href: "#" },
-                { name: "Hospitality, Travel & Leisure", href: "#" },
-                { name: "Insurance", href: "#" },
-                { name: "Media & Entertainment", href: "#" },
-                { name: "Nonprofits", href: "#" },
-                { name: "Public Sector", href: "#" },
-                { name: "Retail", href: "#" }
-            ]
-        },
-        {
-            title: "Developers",
-            hasExpandLimit: true,
-            links: [
-                { name: "Documentation", href: "#" },
-                { name: "API Reference", href: "#" },
-                { name: "API Status", href: "#" },
-                { name: "API Changelog", href: "#" },
-                { name: "Libraries & SDKs", href: "#" },
-                { name: "Developer Blog", href: "#" },
-                { name: "App Marketplace", href: "#" },
-                { name: "Partner Ecosystem", href: "#" },
-                { name: "Professional Services", href: "#" }
-            ]
-        },
-        {
-            title: "Resources",
-            hasExpandLimit: true,
-            links: [
-                { name: "Product Roadmap", href: "#" },
-                { name: "Guides", href: "#" },
-                { name: "Customer Stories", href: "#" },
-                { name: "Blog", href: "#" },
-                { name: "Community Forum", href: "#" },
-                { name: "Sessions Conference", href: "#" },
-                { name: "Prohibited Businesses", href: "#" },
-                { name: "Licenses", href: "#" },
-                { name: "Sitemap", href: "#" },
-                { name: "Cookie Settings", href: "#" },
-                { name: "Your Privacy Choices", href: "#" }
-            ]
-        },
-        {
-            title: "Company",
-            links: [
-                { name: "Jobs / Careers", href: "#" },
-                { name: "Newsroom", href: "#" },
-                { name: "Sterling Press Publications", href: "#" },
-                { name: "Contact Sales", href: "mailto:services@bysterling.com" }
-            ]
-        },
-        {
-            title: "Support",
-            links: [
-                { name: "Get Support", href: "#" },
-                { name: "Managed Support Plans", href: "#" },
-                { name: "CA Support: +1 888 926 2289", href: "tel:+18889262289" },
-                { name: "Sign In", href: "/login" }
-            ]
-        },
-        {
-            title: "Ecosystem",
-            links: [
-                { name: "POS", href: "#" },
-                { name: "Sterling", href: "/" },
-                { name: "Royalty Wallet", href: "#" },
-                { name: "Intelligent Glasses", href: "#" },
-                { name: "STERLING UTILITY ASSET | $STR", href: "#" },
-                { name: "USDX STABLECOIN ASSET | $USDX", href: "#" },
-                { name: "ROOSEVELT | ARTIFICIAL INTELLIGENCE", href: "https://www.byroosevelt.com/", target: "_blank" },
-                { name: "EXCELSIOR REAL WORLD ASSET | $XLS", href: "#" }
-            ]
-        },
-        {
-            title: "On-Chain",
-            links: [
-                { name: "Solscan Explorer", href: "https://solscan.io/token/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
-                { name: "DexScreener Chart", href: "https://dexscreener.com/solana/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
-                { name: "Raydium Pool", href: "https://raydium.io/swap/?inputMint=sol&outputMint=7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", target: "_blank" },
-                { name: "Squads Multisig (3/6)", href: "#" },
-                { name: "Whitepaper", href: "https://github.com/admluxorsys/luxor/blob/main/Whitepaper.md", target: "_blank" },
-                { name: "Security Audit", href: "#" }
-            ]
-        }
-    ];
+    const currentSections = activeTab === 'ecosystem' ? LUXOR_FOOTER_SECTIONS : STERLING_SECTIONS;
 
     return (
         <footer className="bg-transparent text-white pt-24 pb-12 overflow-hidden border-t border-white/5 font-sans w-full relative">
@@ -204,7 +239,7 @@ export default function Footer() {
                     <div className="flex flex-col gap-5 w-full max-w-[440px]">
                         <div className="space-y-1">
                             <h3 className="text-white text-lg font-sans font-medium tracking-tight">Newsletter</h3>
-                            <p className="text-white/40 text-xs leading-relaxed">Subscribe to receive the latest Sterling ecosystem updates.</p>
+                            <p className="text-white/40 text-xs leading-relaxed">Subscribe to receive the latest ecosystem and platform updates.</p>
                         </div>
                         <div className="flex gap-2 w-full">
                             <input
@@ -227,28 +262,54 @@ export default function Footer() {
                     {/* Left Side: Slogan */}
                     <div className="lg:w-1/4">
                         <h2 className="text-2xl md:text-3xl font-sans font-medium tracking-tight leading-tight sticky top-24 text-white">
-                            Making <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Sterling</span> <br />
+                            Making <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Luxor</span> <br />
                             helpful for <br />
                             everyone
                         </h2>
+
+                        {/* Optional View Switcher */}
+                        <div className="flex items-center gap-2 mt-8">
+                            <button
+                                onClick={() => setActiveTab('ecosystem')}
+                                className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
+                                    activeTab === 'ecosystem'
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                                        : 'text-white/40 hover:text-white bg-white/5 hover:bg-white/10'
+                                }`}
+                            >
+                                Luxor Ecosystem
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('platform')}
+                                className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
+                                    activeTab === 'platform'
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
+                                        : 'text-white/40 hover:text-white bg-white/5 hover:bg-white/10'
+                                }`}
+                            >
+                                Sterling Platform
+                            </button>
+                        </div>
                     </div>
 
                     {/* Right Side: Columns in a Grid */}
                     <div className="lg:w-3/4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-10 gap-y-12">
-                            {footerSections.map((section, idx) => {
-                                const isExpanded = expandedColumns[section.title];
-                                const maxVisibleLinks = section.hasExpandLimit && !isExpanded ? 10 : section.links.length;
-                                const visibleLinks = section.links.slice(0, maxVisibleLinks);
-                                const hasMore = section.hasExpandLimit && section.links.length > 10;
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-10 gap-y-16">
+                            {currentSections.map((section, idx) => {
+                                const isAssets = section.type === 'assets';
+                                const regularSec = !isAssets ? (section as RegularSection) : null;
+                                const isExpanded = regularSec ? expandedColumns[regularSec.title] : true;
+                                const maxVisibleLinks = regularSec?.hasExpandLimit && !isExpanded ? 10 : (regularSec?.links.length || 0);
+                                const visibleLinks = regularSec ? regularSec.links.slice(0, maxVisibleLinks) : [];
+                                const hasMore = (regularSec?.hasExpandLimit && regularSec.links.length > 10) || false;
 
                                 return (
                                     <div key={idx} className="flex flex-col gap-4 pb-6 lg:pb-0">
                                         <div className="flex items-center gap-2">
                                             <h3 className="text-white text-base font-sans font-medium">{section.title}</h3>
-                                            {hasMore && (
+                                            {hasMore && regularSec && (
                                                 <button
-                                                    onClick={() => toggleColumnExpand(section.title)}
+                                                    onClick={() => toggleColumnExpand(regularSec.title)}
                                                     className="p-1 hover:bg-white/5 rounded-full transition-colors flex items-center justify-center"
                                                     aria-label={isExpanded ? "Collapse section" : "Expand section"}
                                                 >
@@ -260,22 +321,65 @@ export default function Footer() {
                                             )}
                                         </div>
 
-                                        <ul className="flex flex-col gap-3">
-                                            {visibleLinks.map((link, lIdx) => (
-                                                <li key={lIdx}>
-                                                    <Link
-                                                        href={link.href}
-                                                        target={link.target}
-                                                        className={`${link.isHighlight
-                                                            ? 'bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent font-bold'
-                                                            : 'text-white/60 hover:text-white'
-                                                            } text-sm font-sans transition-colors flex items-center gap-2 group decoration-transparent`}
-                                                    >
-                                                        {link.name}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
+                                        {isAssets ? (
+                                            <div className="flex flex-col gap-2">
+                                                <ul className="flex flex-col gap-2.5">
+                                                    {(section as AssetsSection).assets.map((link, lIdx) => (
+                                                        <li key={`asset-${lIdx}`}>
+                                                            <a
+                                                                href={link.href}
+                                                                target={link.target}
+                                                                rel={link.target === '_blank' ? 'noopener noreferrer' : undefined}
+                                                                className="text-sky-400 hover:text-sky-300 text-sm font-sans transition-colors block"
+                                                            >
+                                                                {link.name}
+                                                            </a>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                                <div className="pt-3">
+                                                    <h4 className="text-white/40 text-xs font-sans font-medium uppercase tracking-wider mb-2.5">
+                                                        {(section as AssetsSection).ecosystemSubtitle}
+                                                    </h4>
+                                                    <ul className="flex flex-col gap-2.5">
+                                                        {(section as AssetsSection).ecosystemLinks.map((link, lIdx) => (
+                                                            <li key={`eco-${lIdx}`}>
+                                                                <a
+                                                                    href={link.href}
+                                                                    target={link.target}
+                                                                    rel={link.target === '_blank' ? 'noopener noreferrer' : undefined}
+                                                                    className="text-sky-400 hover:text-sky-300 text-sm font-sans transition-colors block"
+                                                                >
+                                                                    {link.name}
+                                                                </a>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <ul className="flex flex-col gap-2.5">
+                                                {visibleLinks.map((link, lIdx) => {
+                                                    const isBlueLink = link.isBlue || link.name === '+1 (385) 865-3535' || /^(support|legal|careers)@luxorintelligence\.com$/.test(link.name);
+                                                    return (
+                                                        <li key={lIdx}>
+                                                            <a
+                                                                href={link.href}
+                                                                target={link.target}
+                                                                rel={link.target === '_blank' ? 'noopener noreferrer' : undefined}
+                                                                className={`${
+                                                                    isBlueLink
+                                                                        ? 'text-sky-400 hover:text-sky-300'
+                                                                        : 'text-white/60 hover:text-white'
+                                                                } text-sm font-sans transition-colors block decoration-transparent`}
+                                                            >
+                                                                {link.name}
+                                                            </a>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -353,16 +457,10 @@ export default function Footer() {
                                                     : brand.name === "Streamflow"
                                                     ? 'linear-gradient(to bottom, white 10%, transparent 100%)'
                                                     : undefined
-
-
-
                                             }}
                                         />
                                     </a>
                                 ))}
-
-
-
                             </div>
                         </div>
 
@@ -375,10 +473,10 @@ export default function Footer() {
                     <div className="flex items-center gap-3 group cursor-default">
                         <img
                             src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
-                            alt="Sterling Logo"
+                            alt="Logo"
                             className="w-8 h-8 object-contain brightness-125 filter group-hover:rotate-12 transition-transform duration-500"
                         />
-                        <span className="text-lg font-sans font-medium tracking-tighter">Sterling Economy</span>
+                        <span className="text-lg font-sans font-medium tracking-tighter">Luxor Intelligence &bull; Sterling</span>
                     </div>
 
                     {/* Secondary Navigation */}
@@ -388,7 +486,7 @@ export default function Footer() {
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
                         <span className="md:ml-4 flex items-center gap-1">
-                            © 2026 Sterling made with love <Heart className="w-3 h-3 text-red-500 fill-current" />
+                            © 2026 Luxor Intelligence LLC &bull; Sterling <Heart className="w-3 h-3 text-red-500 fill-current inline" />
                         </span>
                     </div>
 

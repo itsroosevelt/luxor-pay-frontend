@@ -23,11 +23,11 @@ describe('ApprovalRulesCard', () => {
 
   it('shows the rule in force and one option per signer', () => {
     const html = render([member(1), member(2), member(3)]);
-    expect(html).toContain('Regla actual');
-    expect(html).toContain('2 <span class="text-white/45">de 3</span>');
+    expect(html).toContain('Current Rule');
+    expect(html).toContain('2 <span class="text-white/45">of 3</span>');
     expect(html.match(/role="radio"/g)).toHaveLength(3);
-    expect(html).toContain('Hacen falta 2 de 3 firmantes distintos');
-    expect(html).toContain('Proponer 2 de 3');
+    expect(html).toContain('2 of 3 distinct signers are required');
+    expect(html).toContain('Propose 2 of 3');
   });
 
   it('counts only voters that are really in the multisig', () => {
@@ -37,32 +37,32 @@ describe('ApprovalRulesCard', () => {
 
   it('warns when a single signer could move the funds alone', () => {
     config = { onChain: true, threshold: 1, timeLock: 0 };
-    expect(render([member(1), member(2), member(3)])).toContain('por sí solo');
+    expect(render([member(1), member(2), member(3)])).toContain('alone');
   });
 
   it('warns when every signer is needed', () => {
     config = { onChain: true, threshold: 3, timeLock: 0 };
-    expect(render([member(1), member(2), member(3)])).toContain('pierde el acceso');
+    expect(render([member(1), member(2), member(3)])).toContain('loses access');
   });
 
   it('tells the proposer a pending rule change blocks another one', () => {
     proposals = [{ id: 'p', index: 14, type: 'config', title: 'Cambiar umbral a 3', status: 'active' }];
     const html = render([member(1), member(2), member(3)]);
-    expect(html).toContain('propuesta #14');
-    expect(html).toContain('pasar a 3');
+    expect(html).toContain('proposal #14');
+    expect(html).toContain('change to 3');
     expect(html).toContain('disabled');
   });
 
   it('explains that an unactivated multisig only stores the rule', () => {
     config = { onChain: false, threshold: 1, timeLock: 0 };
     const html = render([member(1), member(2)]);
-    expect(html).toContain('aún no está activado');
-    expect(html).toContain('Guardar 1 de 2');
+    expect(html).toContain('not yet active on-chain');
+    expect(html).toContain('Save 1 of 2');
   });
 
   it('shows the time lock', () => {
     config = { onChain: true, threshold: 1, timeLock: 7200 };
-    expect(render([member(1)])).toContain('2 horas de espera');
+    expect(render([member(1)])).toContain('2 hours delay');
   });
 
   it('is read-only for someone who cannot change rules', () => {

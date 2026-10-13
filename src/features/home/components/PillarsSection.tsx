@@ -23,10 +23,10 @@ export function PillarsSection() {
         <section className="py-20 md:py-32 lg:py-48 px-4 md:px-8 bg-transparent border-t border-white/5 relative overflow-hidden">
             <BlueParticles variant="section" />
             <motion.div 
-                initial={{ opacity: 0, scale: 0.85, y: 40 }}
-                whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.15 }}
+                transition={{ duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] }}
                 className="w-full max-w-[1800px] mx-auto"
             >
                 <div className="text-center mb-24 md:mb-32 max-w-3xl mx-auto">

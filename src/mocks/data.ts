@@ -121,7 +121,7 @@ export const MOCK_CONTACTS: Contact[] = [];
 export const DEFAULT_OWNER_MEMBER = {
   id: 'member_owner_main',
   merchantId: 'merchant-0001',
-  name: 'Cuenta Principal',
+  name: 'Main Account',
   walletAddress: 'Gwm7E9Rmy5k6D9PxzQdHnzc653AAaRCBCNEF7aL7di5x',
   roles: { proposer: true, signer: true, executor: true },
   isCurrentUser: true,
@@ -135,7 +135,7 @@ export const MOCK_MEMBERS: any[] = [DEFAULT_OWNER_MEMBER];
 
 export const MOCK_MULTISIG = {
   id: 'mock-treasury',
-  name: 'Tesorería Sterling',
+  name: 'Sterling Treasury',
   isDefault: true,
   address: '',
   threshold: 1,
@@ -151,7 +151,7 @@ export const DEFAULT_GEMINI_VAULT = {
   index: 0,
   label: 'Roosevelt',
   address: '7cZ1k4R4Z9LQ6RmrLHUSnMM4n9vMhpMnoo5yLyWdMZ1',
-  description: 'Bóveda principal por defecto del ecosistema',
+  description: 'Default main vault of the ecosystem',
   isDefault: true,
   usdValue: 741.01,
   weight: 40.3,

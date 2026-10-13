@@ -15,13 +15,13 @@ export function PendingChangeNotice({ proposal }: { proposal: Proposal }) {
       <span className="flex items-center gap-2 text-xs font-medium font-outfit">
         <Clock size={14} className="shrink-0 text-amber-400" />
         {pendingChangeLabel(proposal)}
-        <span className="text-amber-200/60">· propuesta #{proposal.index}</span>
+        <span className="text-amber-200/60">· proposal #{proposal.index}</span>
       </span>
       <Link
         href={pendingChangeHref(proposal)}
         className="rounded-full bg-amber-500 px-3 py-1 text-xs font-semibold text-black hover:bg-amber-400 transition-colors"
       >
-        Ver propuesta
+        View proposal
       </Link>
     </div>
   );

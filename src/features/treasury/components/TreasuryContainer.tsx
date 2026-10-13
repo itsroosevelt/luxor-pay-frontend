@@ -54,6 +54,7 @@ import {
   explorerAddressUrl,
   coinsOf,
   buildAccountFlows,
+  isRooseveltAccount,
 } from './treasury-utils';
 import {
   PageContainer,
@@ -111,13 +112,13 @@ function TreasuryContainerInner() {
 
   // Surface backend failures instead of silently showing stale or invented data.
   useEffect(() => {
-    if (treasuryError) toast.error(`No se pudo cargar la tesorería: ${treasuryErrorMessage ?? 'error desconocido'}`);
+    if (treasuryError) toast.error(`Failed to load treasury: ${treasuryErrorMessage ?? 'unknown error'}`);
   }, [treasuryError, treasuryErrorMessage]);
 
   // Every create / edit / delete / move needs a connected wallet that signs it.
   const requireWallet = (): boolean => {
     if (connected) return true;
-    toast.error('Conecta tu wallet (Phantom o Solflare) para realizar esta acción.');
+    toast.error('Connect your wallet (Phantom or Solflare) to perform this action.');
     openWalletModal(true);
     return false;
   };
@@ -257,7 +258,7 @@ function TreasuryContainerInner() {
     setDropdownPos(null);
     if (!requireWallet()) return;
     if (!isOnChain) {
-      toast.error('Activa el multisig para mover fondos: toda salida requiere una propuesta aprobada.');
+      toast.error('Activate multisig to transfer funds: all outflows require an approved proposal.');
       return;
     }
     setProposeVaultId((vault ?? activeAccount ?? defaultVault)?.id);
@@ -270,7 +271,7 @@ function TreasuryContainerInner() {
     setDropdownPos(null);
     if (!requireWallet()) return;
     if (!isOnChain) {
-      toast.error('Activa el multisig para operar: los swaps de la tesorería requieren una propuesta aprobada.');
+      toast.error('Activate multisig to trade: treasury swaps require an approved proposal.');
       return;
     }
     setProposeVaultId((vault ?? activeAccount ?? defaultVault)?.id);
@@ -281,7 +282,7 @@ function TreasuryContainerInner() {
   const handleRedistribute = async () => {
     if (!requireWallet()) return;
     if (!isOnChain) {
-      toast.error('Activa el multisig antes de redistribuir.');
+      toast.error('Activate multisig before rebalancing.');
       return;
     }
     // One proposal per asset so every transaction fits; each needs one signature to create.
@@ -291,7 +292,7 @@ function TreasuryContainerInner() {
       ...(principal?.tokens ?? []).filter((t) => Number(t.uiAmount) > 0).map((t) => t.mint),
     ];
     if (mints.length === 0) {
-      toast.error('La Bóveda Principal no tiene saldo para redistribuir.');
+      toast.error('Roosevelt vault has no balance to rebalance.');
       return;
     }
     setIsRedistributing(true);
@@ -307,7 +308,7 @@ function TreasuryContainerInner() {
         }
       }
       if (created > 0) {
-        toast.success(`${created} propuesta(s) de redistribución creadas · pendientes de firmas`);
+        toast.success(`${created} rebalance proposal(s) created · awaiting signatures`);
         showProposals(false);
       }
       if (failures.length > 0) toast.error(failures[0]);
@@ -323,9 +324,9 @@ function TreasuryContainerInner() {
     setIsSweeping(true);
     try {
       const sigs = await sweepCollector();
-      toast.success(`Cobros movidos a la Bóveda Principal (${sigs.length} transacción${sigs.length === 1 ? '' : 'es'})`);
+      toast.success(`Receipts swept to Roosevelt vault (${sigs.length} transaction${sigs.length === 1 ? '' : 's'})`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudieron mover los cobros');
+      toast.error(err instanceof Error ? err.message : 'Could not sweep collection receipts');
     } finally {
       setIsSweeping(false);
     }
@@ -336,7 +337,7 @@ function TreasuryContainerInner() {
     setDropdownPos(null);
     const target = vault ?? activeAccount ?? defaultVault;
     if (target && isAwaitingActivation(target)) {
-      toast.error('Esta sub-bóveda aún no tiene dirección: activa el multisig primero.');
+      toast.error('This sub-vault has no address yet: activate multisig first.');
       return;
     }
     setDepositVault(target);
@@ -352,9 +353,9 @@ function TreasuryContainerInner() {
     try {
       const deployed = await deployMultisig();
       // The backend caps the threshold at the number of signers when needed.
-      toast.success(`Multisig activo con el contrato Luxor · umbral ${deployed.threshold} de ${deployed.memberCount ?? memberTotal}`);
+      toast.success(`Multisig active on Solana · threshold ${deployed.threshold} of ${deployed.memberCount ?? memberTotal}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo desplegar el multisig');
+      toast.error(err instanceof Error ? err.message : 'Could not deploy multisig');
     } finally {
       setIsDeploying(false);
     }
@@ -364,7 +365,7 @@ function TreasuryContainerInner() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success('Dirección copiada');
+    toast.success('Address copied');
   };
 
   const totalBalanceNumber = useMemo(() => {
@@ -391,7 +392,7 @@ function TreasuryContainerInner() {
   const actualWeightOf = (v: Vault) =>
     totalBalanceNumber > 0 ? Math.round((v.usdValue / totalBalanceNumber) * 1000) / 10 : 0;
 
-  // More than 1 % away from the target anywhere → Redistribuir would move funds.
+  // More than 1 % away from the target anywhere → Rebalance would move funds.
   const needsRedistribution =
     subTargetTotal > 0 && totalBalanceNumber > 0 && accountList.some((v) => Math.abs(actualWeightOf(v) - targetWeightOf(v)) > 1);
 
@@ -406,7 +407,7 @@ function TreasuryContainerInner() {
   const handleAddAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAccountLabel.trim()) {
-      toast.error('Por favor ingrese un nombre para la cuenta');
+      toast.error('Please enter an account name');
       return;
     }
 
@@ -417,9 +418,9 @@ function TreasuryContainerInner() {
       setNewAccountLabel('');
       setNewAccountWeight('0');
       setAddAccountModalOpen(false);
-      toast.success('Cuenta creada exitosamente');
+      toast.success('Account created successfully');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo crear la cuenta');
+      toast.error(err instanceof Error ? err.message : 'Could not create account');
     } finally {
       setIsSavingAccount(false);
     }
@@ -428,6 +429,10 @@ function TreasuryContainerInner() {
   const handleEditAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedVault || !editAccountLabel.trim()) return;
+    if (isRooseveltAccount(selectedVault)) {
+      toast.error('The Roosevelt main account name cannot be edited.');
+      return;
+    }
     setIsSavingAccount(true);
     try {
       const updated = await updateVault(selectedVault.id, {
@@ -439,9 +444,9 @@ function TreasuryContainerInner() {
       );
       setEditAccountModalOpen(false);
       setSelectedVault(null);
-      toast.success('Cuenta actualizada');
+      toast.success('Account updated successfully');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo actualizar el nombre');
+      toast.error(err instanceof Error ? err.message : 'Could not update name');
     } finally {
       setIsSavingAccount(false);
     }
@@ -451,6 +456,10 @@ function TreasuryContainerInner() {
     setActiveDropdownId(null);
     setDropdownPos(null);
     if (!requireWallet()) return;
+    if (isRooseveltAccount(v)) {
+      toast.info('The Roosevelt main account name cannot be edited.');
+      return;
+    }
     setSelectedVault(v);
     setEditAccountLabel(v.label);
     setEditAccountWeight(String(v.targetWeight ?? 0));
@@ -485,10 +494,10 @@ function TreasuryContainerInner() {
     try {
       await removeVault(id);
       setAccountList((prev) => prev.filter((acc) => acc.id !== id));
-      toast.success('Cuenta eliminada');
+      toast.success('Account deleted successfully');
     } catch (err) {
       // Only remove it from the screen when the backend actually removed it.
-      toast.error(err instanceof Error ? err.message : 'No se pudo eliminar la cuenta');
+      toast.error(err instanceof Error ? err.message : 'Could not delete account');
     }
   };
 
@@ -553,13 +562,13 @@ function TreasuryContainerInner() {
               {activeAccount.address && (
                 <AccountAddressBox>
                   <span>{helperShort(activeAccount.address)}</span>
-                  <EditIconButton type="button" onClick={() => copyToClipboard(activeAccount.address)} title="Copiar dirección">
+                  <EditIconButton type="button" onClick={() => copyToClipboard(activeAccount.address)} title="Copy address">
                     <Copy size={13} />
                   </EditIconButton>
                   <EditIconButton
                     type="button"
                     onClick={() => window.open(explorerAddressUrl(activeAccount.address), '_blank')}
-                    title="Ver en Explorer"
+                    title="View on Explorer"
                   >
                     <ExternalLink size={13} />
                   </EditIconButton>
@@ -714,8 +723,8 @@ function TreasuryContainerInner() {
                   <StatLabel>
                     Threshold{isOnChain ? '' : ' · off-chain'}
                     {thresholdExceedsSigners && (
-                      <span style={{ color: '#F59E0B' }} title="Al activar se ajustará al número de firmantes">
-                        {' '}· se ajustará a {Math.max(1, memberTotal)}
+                      <span style={{ color: '#F59E0B' }} title="Will adjust to signer count upon activation">
+                        {' '}· will adjust to {Math.max(1, memberTotal)}
                       </span>
                     )}
                   </StatLabel>
@@ -773,7 +782,7 @@ function TreasuryContainerInner() {
 
           <SectionTitleRow>
             <SectionTitleText>Accounts</SectionTitleText>
-            <AddAccountBtn type="button" onClick={() => { if (requireWallet()) setAddAccountModalOpen(true); }} disabled={!connected} title={!connected ? 'Conecta tu wallet para realizar esta acción' : undefined}>
+            <AddAccountBtn type="button" onClick={() => { if (requireWallet()) setAddAccountModalOpen(true); }} disabled={!connected} title={!connected ? 'Connect your wallet to perform this action' : undefined}>
               <Plus size={14} /> Add Account
             </AddAccountBtn>
           </SectionTitleRow>
@@ -833,16 +842,16 @@ function TreasuryContainerInner() {
       {/* Add Account Modal */}
       <AccountFormModal
         open={addAccountModalOpen}
-        title="Crear Nueva Cuenta"
-        subtitle="Agrega una sub-bóveda para organizar los fondos de tu tesorería."
+        title="Create New Account"
+        subtitle="Add a sub-vault to organize your treasury funds."
         label={newAccountLabel}
         onLabelChange={setNewAccountLabel}
-        labelPlaceholder="Ej. Operativa"
+        labelPlaceholder="e.g. Operating"
         showWeight
         weight={newAccountWeight}
         onWeightChange={setNewAccountWeight}
         isSaving={isSavingAccount}
-        submitLabel="Crear Cuenta"
+        submitLabel="Create Account"
         onClose={() => setAddAccountModalOpen(false)}
         onSubmit={handleAddAccount}
       />
@@ -850,15 +859,15 @@ function TreasuryContainerInner() {
       {/* Edit Account Modal */}
       <AccountFormModal
         open={editAccountModalOpen && !!selectedVault}
-        title="Editar Cuenta"
-        subtitle="Modifica el nombre o la ponderación objetivo de esta sub-bóveda."
+        title="Edit Account"
+        subtitle="Modify the name or target weight for this sub-vault."
         label={editAccountLabel}
         onLabelChange={setEditAccountLabel}
         showWeight={!!selectedVault && selectedVault.index > 0}
         weight={editAccountWeight}
         onWeightChange={setEditAccountWeight}
         isSaving={isSavingAccount}
-        submitLabel="Guardar Cambios"
+        submitLabel="Save Changes"
         onClose={() => setEditAccountModalOpen(false)}
         onSubmit={handleEditAccount}
       />

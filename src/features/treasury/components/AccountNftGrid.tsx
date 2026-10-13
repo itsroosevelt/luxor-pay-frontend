@@ -14,7 +14,7 @@ interface AccountNftGridProps {
 export function AccountNftGrid({ nfts }: AccountNftGridProps) {
   return nfts.length === 0 ? (
       <EmptyStateContainer style={{ marginTop: 16 }}>
-        Esta cuenta no posee NFTs registrados en Solana.
+        This account does not hold any Solana NFTs.
       </EmptyStateContainer>
     ) : (
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 12, marginTop: 16 }}>

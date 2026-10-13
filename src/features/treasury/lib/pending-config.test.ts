@@ -33,10 +33,10 @@ describe('pending threshold change', () => {
   });
 
   it('words what is waiting', () => {
-    expect(pendingChangeLabel(proposal())).toBe('Cambio pendiente: umbral a 1 · faltan 1 firma');
-    expect(pendingChangeLabel(proposal({ threshold: 3 }))).toBe('Cambio pendiente: umbral a 1 · faltan 2 firmas');
-    expect(pendingChangeLabel(proposal({ status: 'approved' }))).toContain('falta ejecutarlo');
-    expect(pendingChangeLabel(proposal({ status: 'draft' }))).toContain('sin abrir a votación');
+    expect(pendingChangeLabel(proposal())).toBe('Pending change: threshold to 1 · needs 1 more signature');
+    expect(pendingChangeLabel(proposal({ threshold: 3 }))).toBe('Pending change: threshold to 1 · needs 2 more signatures');
+    expect(pendingChangeLabel(proposal({ status: 'approved' }))).toContain('pending execution');
+    expect(pendingChangeLabel(proposal({ status: 'draft' }))).toContain('not opened for voting');
   });
 
   it('links to the treasury page with the proposal', () => {

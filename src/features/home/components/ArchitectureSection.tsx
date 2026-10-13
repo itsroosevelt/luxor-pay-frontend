@@ -10,7 +10,7 @@ export function ArchitectureSection() {
         },
         { 
             title: "Programmed Autonomy", 
-            desc: "STR operates under open-source rules on Solana. No central entity can change the rules of use, giving you complete security." 
+            desc: "The Luxor token ($LXR) and Sterling gateway operate under open-source smart contracts on Solana. No central entity can alter the rules of use, giving you complete security." 
         },
         { 
             title: "Circular Economy", 

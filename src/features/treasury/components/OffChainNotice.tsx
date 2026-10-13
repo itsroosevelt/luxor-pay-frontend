@@ -26,12 +26,12 @@ export function OffChainNotice({ config, onActivate, isDeploying, connected }: O
       <AlertTriangle size={18} className="flex-shrink-0 text-amber-400" />
       <div className="min-w-[220px] flex-1">
         <p className="font-semibold text-amber-100">
-          {config.name ? `“${config.name}”` : 'Esta tesorería'} todavía no es un multisig real
+          {config.name ? `“${config.name}”` : 'This treasury'} is not yet a live on-chain multisig
         </p>
         <p className="mt-0.5 text-[13px] text-amber-200/80">
-          Los miembros, el umbral y las votaciones solo existen en Luxor: no se aplican en la cadena y las
-          propuestas no se pueden ejecutar ni mover fondos. Activa el multisig con el contrato de Luxor, o vincula uno
-          existente desde el selector de tesorerías.
+          Members, threshold, and votes currently exist in the database only: they are not enforced on-chain,
+          and proposals cannot execute or transfer funds. Activate the multisig on Solana, or link an existing one
+          from the treasury switcher.
         </p>
       </div>
       {onActivate && (
@@ -42,7 +42,7 @@ export function OffChainNotice({ config, onActivate, isDeploying, connected }: O
           className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-4 py-2 text-[13px] font-semibold text-black transition-opacity hover:opacity-90 disabled:opacity-60"
         >
           {isDeploying && <Loader2 size={14} className="animate-spin" />}
-          {connected ? 'Activar multisig' : 'Conectar wallet'}
+          {connected ? 'Activate multisig' : 'Connect wallet'}
         </button>
       )}
     </div>

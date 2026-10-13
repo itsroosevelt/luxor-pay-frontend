@@ -92,7 +92,7 @@ export function getSocialLinks(docsLabel = 'Docs'): SocialLink[] {
             name: 'GitHub' 
         },
         { icon: <FileText size={18} />, href: 'https://github.com/admluxorsys/luxor/blob/main/Whitepaper.md', name: docsLabel },
-        { icon: <Layers size={18} />, href: 'https://phantom.app/tokens/solana/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth', name: 'Phantom Token' },
+        { icon: <Layers size={18} />, href: 'https://phantom.app/tokens/solana/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth', name: 'Luxor ($LXR) Phantom' },
         { icon: <Search size={18} />, href: 'https://solscan.io/token/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth', name: 'Solscan' },
     ];
 }

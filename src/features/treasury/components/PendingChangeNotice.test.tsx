@@ -8,8 +8,8 @@ const proposal = { id: 'p-7', index: 7, type: 'config', title: 'Cambiar umbral a
 describe('PendingChangeNotice', () => {
   it('says what is pending, how many signatures are missing, and links to the proposal', () => {
     const html = renderToStaticMarkup(<PendingChangeNotice proposal={proposal} />);
-    expect(html).toContain('Cambio pendiente: umbral a 1 · faltan 1 firma');
-    expect(html).toContain('propuesta #7');
+    expect(html).toContain('Pending change: threshold to 1 · needs 1 more signature');
+    expect(html).toContain('proposal #7');
     expect(html).toContain('href="/dashboard/treasury?proposal=p-7"');
     expect(html).toContain('role="status"');
   });

@@ -64,7 +64,7 @@ export function useMembers(): UseMembersReturn {
     } catch (err: any) {
       console.warn('Members fetch failed:', err);
       setIsError(true);
-      setErrorMessage(err?.message || 'No se pudieron cargar los miembros');
+      setErrorMessage(err?.message || 'Could not load members');
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +86,7 @@ export function useMembers(): UseMembersReturn {
 
   const requireWallet = () => {
     if (!wallet.publicKey) {
-      throw new Error('Conecta tu billetera (Phantom o Solflare) para realizar esta acción.');
+      throw new Error('Connect your wallet (Phantom or Solflare) to perform this action.');
     }
   };
 

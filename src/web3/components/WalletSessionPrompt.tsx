@@ -38,7 +38,7 @@ export function WalletSessionPrompt() {
       asked.current = address;
       try {
         await getWalletAuthHeaders(walletRef.current);
-        toast.success('Wallet verificada · puedes operar con tus tesorerías durante 55 min');
+        toast.success('Wallet verified · you can manage your treasuries for 55 min');
       } catch (err) {
         // Rejecting the signature is a normal choice; anything else is worth a trace.
         const name = err instanceof Error ? err.name : '';

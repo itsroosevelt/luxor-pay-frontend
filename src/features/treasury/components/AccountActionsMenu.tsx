@@ -6,6 +6,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import type { Vault } from '@/features/treasury/api/treasury-api';
+import { isRooseveltAccount } from './treasury-utils';
 
 interface AccountActionsMenuProps {
   position: { top: number; right: number };
@@ -54,36 +55,38 @@ export function AccountActionsMenu({ position, account, connected, onViewDetail,
               borderRadius: 8,
             }}
           >
-            <Eye size={14} /> Ver Detalle
+            <Eye size={14} /> View Details
           </button>
-          <button
-            type="button"
-            disabled={!connected}
-            title={!connected ? 'Conecta tu wallet para editar' : undefined}
-            onClick={onEdit}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              width: '100%',
-              padding: '8px 12px',
-              background: 'transparent',
-              border: 'none',
-              color: connected ? '#EDEDED' : '#6B7280',
-              fontSize: 13,
-              fontFamily: 'Outfit, sans-serif',
-              cursor: connected ? 'pointer' : 'not-allowed',
-              borderRadius: 8,
-              opacity: connected ? 1 : 0.4,
-            }}
-          >
-            <Pencil size={14} /> Editar Nombre
-          </button>
+          {!isRooseveltAccount(account) && (
+            <button
+              type="button"
+              disabled={!connected}
+              title={!connected ? 'Connect your wallet to edit' : undefined}
+              onClick={onEdit}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                width: '100%',
+                padding: '8px 12px',
+                background: 'transparent',
+                border: 'none',
+                color: connected ? '#EDEDED' : '#6B7280',
+                fontSize: 13,
+                fontFamily: 'Outfit, sans-serif',
+                cursor: connected ? 'pointer' : 'not-allowed',
+                borderRadius: 8,
+                opacity: connected ? 1 : 0.4,
+              }}
+            >
+              <Pencil size={14} /> Edit Name
+            </button>
+          )}
           {(account?.index ?? 0) > 0 && (
             <button
               type="button"
               disabled={!connected}
-              title={!connected ? 'Conecta tu wallet para eliminar' : undefined}
+              title={!connected ? 'Connect your wallet to delete' : undefined}
               onClick={onDelete}
               style={{
                 display: 'flex',
@@ -101,7 +104,7 @@ export function AccountActionsMenu({ position, account, connected, onViewDetail,
                 opacity: connected ? 1 : 0.4,
               }}
             >
-              <Trash2 size={14} /> Eliminar Cuenta
+              <Trash2 size={14} /> Delete Account
             </button>
           )}
         </>

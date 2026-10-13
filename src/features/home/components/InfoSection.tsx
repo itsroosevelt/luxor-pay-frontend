@@ -77,28 +77,29 @@ export function InfoSection({
                 <div className="flex-1 space-y-6 z-10">
                     <div className="space-y-6">
                         <motion.h2 
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 25 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
+                            viewport={{ once: false, amount: 0.2 }}
+                            transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
                             className="text-2xl md:text-4xl lg:text-4xl font-normal text-white tracking-tight leading-tight"
                         >
                             {title}
                         </motion.h2>
                         <motion.p 
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 25 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.1 }}
+                            viewport={{ once: false, amount: 0.2 }}
+                            transition={{ duration: 0.6, delay: 0.08, ease: [0.21, 0.47, 0.32, 0.98] }}
                             className="text-base md:text-lg text-zinc-400 font-light leading-relaxed max-w-lg"
                         >
                             {subtitle}
                         </motion.p>
                         {description && (
                              <motion.p 
-                                initial={{ opacity: 0, y: 20 }}
+                                initial={{ opacity: 0, y: 25 }}
                                 whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: 0.15 }}
+                                viewport={{ once: false, amount: 0.2 }}
+                                transition={{ duration: 0.6, delay: 0.12, ease: [0.21, 0.47, 0.32, 0.98] }}
                                 className="text-sm text-zinc-500 leading-relaxed max-w-lg"
                             >
                                 {description}
@@ -111,11 +112,11 @@ export function InfoSection({
                             const Icon = iconMap[item.title] || Target;
                             return (
                                 <motion.div 
-                                    key={idx}
-                                    initial={{ opacity: 0, x: -10 }}
+                                    key={idx} 
+                                    initial={{ opacity: 0, x: -15 }}
                                     whileInView={{ opacity: 1, x: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ delay: 0.2 + (idx * 0.1) }}
+                                    viewport={{ once: false, amount: 0.2 }}
+                                    transition={{ duration: 0.5, delay: 0.1 + (idx * 0.08), ease: [0.21, 0.47, 0.32, 0.98] }}
                                     className="group space-y-1.5"
                                 >
                                     <div className="flex items-center gap-2">
@@ -135,10 +136,10 @@ export function InfoSection({
 
                 {/* Media Container */}
                 <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                    initial={{ opacity: 0, scale: 0.94, y: 20 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.2 }}
+                    transition={{ duration: 0.75, ease: [0.21, 0.47, 0.32, 0.98] }}
                     className="flex-1 w-full"
                 >
                     <div className="relative group">

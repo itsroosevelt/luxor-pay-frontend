@@ -206,10 +206,10 @@ const amount = (v: string) => Number(v).toLocaleString('en-US', { maximumFractio
 const short = (a: string) => (a.length > 12 ? `${a.slice(0, 4)}…${a.slice(-4)}` : a);
 
 const STAKE_STATE: Record<string, { label: string; tone: 'blue' | 'amber' | 'dim' }> = {
-  active: { label: 'Activo', tone: 'blue' },
-  activating: { label: 'Activando', tone: 'amber' },
-  deactivating: { label: 'Desactivando', tone: 'amber' },
-  inactive: { label: 'Inactivo', tone: 'dim' },
+  active: { label: 'Active', tone: 'blue' },
+  activating: { label: 'Activating', tone: 'amber' },
+  deactivating: { label: 'Deactivating', tone: 'amber' },
+  inactive: { label: 'Inactive', tone: 'dim' },
 };
 
 interface VaultDetailModalProps {
@@ -282,16 +282,16 @@ export function VaultDetailModal({
             {vault.address && (
               <Address>
                 <span>{vault.address}</span>
-                <IconBtn type="button" onClick={() => onCopy(vault.address)} title="Copiar dirección">
+                <IconBtn type="button" onClick={() => onCopy(vault.address)} title="Copy address">
                   <Copy size={12} />
                 </IconBtn>
-                <IconBtn type="button" onClick={() => window.open(explorerUrl(vault.address), '_blank')} title="Ver en Explorer">
+                <IconBtn type="button" onClick={() => window.open(explorerUrl(vault.address), '_blank')} title="View on Explorer">
                   <ExternalLink size={12} />
                 </IconBtn>
               </Address>
             )}
           </div>
-          <IconBtn type="button" onClick={onClose} aria-label="Cerrar">
+          <IconBtn type="button" onClick={onClose} aria-label="Close">
             <X size={18} />
           </IconBtn>
         </Header>
@@ -299,14 +299,14 @@ export function VaultDetailModal({
         <Value>{usd(vault.usdValue, isPrivacyMode)}</Value>
         <Sub>
           {vault.index === 0
-            ? `Roosevelt · recepción custodial · ${actualWeight}% del total`
-            : `${actualWeight}% del total · objetivo ${vault.targetWeight ?? 0}%`}
+            ? `Roosevelt · custodial reception · ${actualWeight}% of total`
+            : `${actualWeight}% of total · target ${vault.targetWeight ?? 0}%`}
         </Sub>
 
         <Actions>
-          <Pill type="button" $primary onClick={onSend} disabled={!connected} title={!connected ? 'Conecta tu wallet para realizar esta acción' : undefined}><ArrowUp size={14} /> Send</Pill>
-          <Pill type="button" onClick={onDeposit} disabled={!connected} title={!connected ? 'Conecta tu wallet para realizar esta acción' : undefined}><ArrowDown size={14} /> Deposit</Pill>
-          <Pill type="button" onClick={onTrade} disabled={!connected} title={!connected ? 'Conecta tu wallet para realizar esta acción' : undefined}><ArrowLeftRight size={14} /> Trade</Pill>
+          <Pill type="button" $primary onClick={onSend} disabled={!connected} title={!connected ? 'Connect your wallet to perform this action' : undefined}><ArrowUp size={14} /> Send</Pill>
+          <Pill type="button" onClick={onDeposit} disabled={!connected} title={!connected ? 'Connect your wallet to perform this action' : undefined}><ArrowDown size={14} /> Deposit</Pill>
+          <Pill type="button" onClick={onTrade} disabled={!connected} title={!connected ? 'Connect your wallet to perform this action' : undefined}><ArrowLeftRight size={14} /> Trade</Pill>
         </Actions>
 
         <Tabs>
@@ -318,7 +318,7 @@ export function VaultDetailModal({
         <List>
           {tab === 'coins' &&
             (coins.length === 0 ? (
-              <Empty>Esta cuenta no tiene tokens.</Empty>
+              <Empty>This account has no tokens.</Empty>
             ) : (
               coins.map((c) => (
                 <Item key={c.mint}>
@@ -329,7 +329,7 @@ export function VaultDetailModal({
                   </ItemMain>
                   <ItemRight>
                     <div>{isPrivacyMode ? '•••' : amount(c.uiAmount)}</div>
-                    <ItemSub>{c.usdValue != null ? usd(c.usdValue, isPrivacyMode) : 'Sin precio'}</ItemSub>
+                    <ItemSub>{c.usdValue != null ? usd(c.usdValue, isPrivacyMode) : 'No price'}</ItemSub>
                   </ItemRight>
                 </Item>
               ))
@@ -337,14 +337,14 @@ export function VaultDetailModal({
 
           {tab === 'stakes' &&
             (stakes.length === 0 ? (
-              <Empty>Esta cuenta no tiene SOL en stake.</Empty>
+              <Empty>This account has no staked SOL.</Empty>
             ) : (
               stakes.map((st) => (
                 <Item key={st.address}>
                   <TokenIcon symbol="SOL" size={28} />
                   <ItemMain>
                     <ItemTitle>{short(st.address)}</ItemTitle>
-                    <ItemSub>{st.validator ? `Validador ${short(st.validator)}` : 'Sin delegar'}</ItemSub>
+                    <ItemSub>{st.validator ? `Validator ${short(st.validator)}` : 'Undelegated'}</ItemSub>
                   </ItemMain>
                   <StateBadge $tone={STAKE_STATE[st.state]?.tone ?? 'dim'}>{STAKE_STATE[st.state]?.label ?? st.state}</StateBadge>
                   <ItemRight>
@@ -357,7 +357,7 @@ export function VaultDetailModal({
 
           {tab === 'nfts' &&
             (nfts.length === 0 ? (
-              <Empty>Esta cuenta no tiene NFTs.</Empty>
+              <Empty>This account has no NFTs.</Empty>
             ) : (
               <NftGrid>
                 {nfts.map((n) => (

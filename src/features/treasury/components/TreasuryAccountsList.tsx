@@ -12,8 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { TokenIcon } from '@/components/ui/TokenIcon';
-import type { Vault } from '@/features/treasury/api/treasury-api';
-import { formatVaultLabel, helperShort, topAssetsOf } from './treasury-utils';
+import { formatVaultLabel, helperShort, topAssetsOf, isRooseveltAccount } from './treasury-utils';
 import {
   ActionPillButton,
   DesktopTableWrapper,
@@ -119,31 +118,33 @@ export function TreasuryAccountsList({
                             onClick={() => onSelect(acc)}
                             onKeyDown={(e) => e.key === 'Enter' && onSelect(acc)}
                             style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(96, 165, 250, 0.4)' }}
-                            title="Ver detalle de la cuenta"
+                            title="View vault details"
                           >
                             {formatVaultLabel(acc.label, idx === 0 || acc.index === 0 || acc.isDefault)}
                           </span>
-                          <EditIconButton
-                            type="button"
-                            onClick={() => onEdit(acc)}
-                            disabled={!connected}
-                            title={!connected ? 'Conecta tu wallet para realizar esta acción' : 'Editar nombre'}
-                          >
-                            <Pencil size={12} />
-                          </EditIconButton>
+                          {!isRooseveltAccount(acc, idx) && (
+                            <EditIconButton
+                              type="button"
+                              onClick={() => onEdit(acc)}
+                              disabled={!connected}
+                              title={!connected ? 'Connect your wallet to perform this action' : 'Edit name'}
+                            >
+                              <Pencil size={12} />
+                            </EditIconButton>
+                          )}
                         </AccountNameRow>
                         <AddressSubline>
                           {isAwaitingActivation(acc) ? (
                             <>
-                              <PendingBadge>⏳ En espera de activación Multisig</PendingBadge>
+                              <PendingBadge>⏳ Awaiting Multisig Activation</PendingBadge>
                               <ActivateInlineButton
                                 type="button"
                                 onClick={onActivate}
                                 disabled={isDeploying}
-                                title={connected ? 'Activar el multisig con el contrato de Luxor en Solana' : 'Conecta tu wallet para activar'}
+                                title={connected ? 'Activate multisig on Solana' : 'Connect wallet to activate'}
                               >
                                 {isDeploying ? <Loader2 size={11} className="animate-spin" /> : null}
-                                {connected ? 'Activar' : 'Conectar'}
+                                {connected ? 'Activate' : 'Connect'}
                               </ActivateInlineButton>
                             </>
                           ) : (
@@ -152,7 +153,7 @@ export function TreasuryAccountsList({
                               <EditIconButton
                                 type="button"
                                 onClick={() => onCopy(acc.address)}
-                                title="Copiar dirección"
+                                title="Copy address"
                               >
                                 <Copy size={11} />
                               </EditIconButton>
@@ -179,7 +180,7 @@ export function TreasuryAccountsList({
                           <WeightPercentageText>
                             {actualWeightOf(acc)}%
                             <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: 11 }}>
-                              {` · obj ${targetWeightOf(acc)}%${isPrivacyMode ? '' : ` ($${targetUsdOf(acc).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}${acc.index === 0 ? ' · resto' : ''}`}
+                              {` · target ${targetWeightOf(acc)}%${isPrivacyMode ? '' : ` ($${targetUsdOf(acc).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`}${acc.index === 0 ? ' · remainder' : ''}`}
                             </span>
                           </WeightPercentageText>
                           <WeightBarTrack>
@@ -194,7 +195,7 @@ export function TreasuryAccountsList({
                             type="button"
                             onClick={() => onSend(acc)}
                             disabled={!connected}
-                            title={!connected ? 'Conecta tu wallet para realizar esta acción' : 'Send'}
+                            title={!connected ? 'Connect your wallet to perform this action' : 'Send'}
                           >
                             <ArrowUp size={14} />
                           </TableRowActionButton>
@@ -210,7 +211,7 @@ export function TreasuryAccountsList({
                             type="button"
                             onClick={() => onTrade(acc)}
                             disabled={!connected}
-                            title={!connected ? 'Conecta tu wallet para realizar esta acción' : 'Trade'}
+                            title={!connected ? 'Connect your wallet to perform this action' : 'Trade'}
                           >
                             <ArrowLeftRight size={14} />
                           </TableRowActionButton>
@@ -218,7 +219,7 @@ export function TreasuryAccountsList({
                           <TableRowActionButton
                             type="button"
                             onClick={(e) => onToggleMenu(e, acc.id)}
-                            title="Opciones"
+                            title="Options"
                           >
                             <MoreHorizontal size={14} />
                           </TableRowActionButton>
@@ -263,15 +264,17 @@ export function TreasuryAccountsList({
                       >
                         {formatVaultLabel(acc.label, idx === 0 || acc.index === 0 || acc.isDefault)}
                       </span>
-                      <EditIconButton type="button" onClick={() => onEdit(acc)} disabled={!connected} title={!connected ? 'Conecta tu wallet para realizar esta acción' : 'Editar nombre'}>
-                        <Pencil size={12} />
-                      </EditIconButton>
+                      {!isRooseveltAccount(acc, idx) && (
+                        <EditIconButton type="button" onClick={() => onEdit(acc)} disabled={!connected} title={!connected ? 'Connect your wallet to perform this action' : 'Edit name'}>
+                          <Pencil size={12} />
+                        </EditIconButton>
+                      )}
                     </AccountNameRow>
 
                     <TableRowActionButton
                       type="button"
                       onClick={(e) => onToggleMenu(e, acc.id)}
-                      title="Opciones"
+                      title="Options"
                     >
                       <MoreHorizontal size={14} />
                     </TableRowActionButton>
@@ -280,14 +283,14 @@ export function TreasuryAccountsList({
                   <AddressSubline>
                     {isAwaitingActivation(acc) ? (
                       <>
-                        <PendingBadge>⏳ En espera de activación Multisig</PendingBadge>
+                        <PendingBadge>⏳ Awaiting Multisig Activation</PendingBadge>
                         <ActivateInlineButton
                           type="button"
                           onClick={onActivate}
                           disabled={isDeploying}
                         >
                           {isDeploying ? <Loader2 size={11} className="animate-spin" /> : null}
-                          {connected ? 'Activar' : 'Conectar'}
+                          {connected ? 'Activate' : 'Connect'}
                         </ActivateInlineButton>
                       </>
                     ) : (
@@ -296,7 +299,7 @@ export function TreasuryAccountsList({
                         <EditIconButton
                           type="button"
                           onClick={() => onCopy(acc.address)}
-                          title="Copiar dirección"
+                          title="Copy address"
                         >
                           <Copy size={11} />
                         </EditIconButton>
@@ -319,7 +322,7 @@ export function TreasuryAccountsList({
                     <WeightPercentageText style={{ fontSize: 13 }}>
                       {actualWeightOf(acc)}%
                       <span style={{ color: 'rgba(255, 255, 255, 0.45)', fontSize: 11 }}>
-                        {` · obj ${targetWeightOf(acc)}%`}
+                        {` · target ${targetWeightOf(acc)}%`}
                       </span>
                     </WeightPercentageText>
                   </div>
@@ -334,7 +337,7 @@ export function TreasuryAccountsList({
                       $variant="secondary"
                       onClick={() => onSend(acc)}
                       disabled={!connected}
-                      title={!connected ? 'Conecta tu wallet para realizar esta acción' : undefined}
+                      title={!connected ? 'Connect your wallet to perform this action' : undefined}
                       style={{ flex: 1, padding: '6px 12px', fontSize: 12 }}
                     >
                       <ArrowUp size={13} /> Send
@@ -352,7 +355,7 @@ export function TreasuryAccountsList({
                       $variant="secondary"
                       onClick={() => onTrade(acc)}
                       disabled={!connected}
-                      title={!connected ? 'Conecta tu wallet para realizar esta acción' : undefined}
+                      title={!connected ? 'Connect your wallet to perform this action' : undefined}
                       style={{ flex: 1, padding: '6px 12px', fontSize: 12 }}
                     >
                       <ArrowLeftRight size={13} /> Trade

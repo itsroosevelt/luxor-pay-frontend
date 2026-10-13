@@ -282,7 +282,7 @@ export function resolveMock(
   const allTreasuries: MultisigConfig[] = [
     {
       id: 'default-sterling-treasury',
-      name: 'Tesorería Sterling',
+      name: 'Sterling Treasury',
       address: '',
       threshold: 1,
       timeLock: 0,

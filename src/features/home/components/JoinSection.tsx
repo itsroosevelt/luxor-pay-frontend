@@ -11,10 +11,10 @@ export function JoinSection() {
 
             <div className="max-w-4xl mx-auto text-center relative z-10">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.85, y: 40 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+                    initial={{ opacity: 0, y: 35 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.15 }}
+                    transition={{ duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] }}
                     className="space-y-6"
                 >
                     <h2 className="text-3xl md:text-5xl font-normal text-white tracking-tight leading-tight">
@@ -22,16 +22,19 @@ export function JoinSection() {
                         <span className="text-zinc-500">Join Sterling, because Sterling is you.</span>
                     </h2>
                     
-                    <div className="pt-10">
+                    <div className="pt-10 flex flex-col items-center">
                         <motion.button
                             suppressHydrationWarning
                             onClick={() => window.open("https://phantom.app/tokens/solana/7Qm6qUCXGZfGBYYFzq2kTbwTDah5r3d9DcPJHRT8Wdth", "_blank")}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            className="bg-white text-black px-12 py-4 rounded-full text-sm font-medium hover:bg-zinc-200 transition-colors tracking-wide cursor-pointer"
+                            className="bg-white text-black px-10 py-4 rounded-full text-sm font-medium hover:bg-zinc-200 transition-colors tracking-wide cursor-pointer shadow-lg shadow-white/10"
                         >
-                            Join today
+                            Get Luxor ($LXR) on Phantom
                         </motion.button>
+                        <span className="text-[11px] text-zinc-500 font-mono mt-3">
+                            Solana Contract: 7Qm6...Wdth (Luxor)
+                        </span>
                     </div>
                 </motion.div>
             </div>

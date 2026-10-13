@@ -63,19 +63,20 @@ export function ShowcaseSection() {
                 {/* Header Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16 md:mb-32 items-start">
                     <motion.h2 
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 25 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
+                        viewport={{ once: false, amount: 0.2 }}
+                        transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
                         className="text-4xl md:text-5xl lg:text-6xl font-normal text-white tracking-tight leading-[1.05] max-w-xl"
                     >
                         Why is it vital to do this now?
                     </motion.h2>
                     <div className="flex justify-start lg:justify-end">
                         <motion.p 
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 25 }}
                             whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: 0.1 }}
+                            viewport={{ once: false, amount: 0.2 }}
+                            transition={{ duration: 0.6, delay: 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
                             className="text-zinc-500 text-base md:text-base leading-relaxed max-w-md lg:text-right font-light"
                         >
                             The world is at an inflection point. Technology is no longer an option; it's the language of survival. While other regions fragment, the American Hemisphere rises as a beacon of unexplored synergy. For years, the gap between capital and talent has limited our collective potential. Sterling is here to bridge that gap, creating a unified digital infrastructure from Salt Lake City to the farthest corners of the Americas.
@@ -83,21 +84,40 @@ export function ShowcaseSection() {
                     </div>
                 </div>
 
-                {/* Carousel Logic */}
-                <div className="relative">
-                    <div className="flex gap-8 transition-transform duration-700 ease-out" style={{ transform: `translateX(calc(-${activeIdx * (typeof window !== 'undefined' && window.innerWidth < 768 ? 85 : 50)}% - ${activeIdx * 16}px))` }}>
+                {/* Showcase Cards / Carousel */}
+                <motion.div 
+                    initial={{ opacity: 0, y: 35 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.15 }}
+                    transition={{ duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] }}
+                    className="relative overflow-hidden"
+                >
+                    <div 
+                        className="flex lg:grid lg:grid-cols-3 lg:!transform-none gap-6 lg:gap-8 transition-transform duration-700 ease-out" 
+                        style={{ 
+                            transform: `translateX(calc(-${activeIdx * 100}% - ${activeIdx * 1.5}rem))` 
+                        }}
+                    >
                         {items.map((item, idx) => (
-                            <div key={idx} className="min-w-[85%] md:min-w-[48%] space-y-8 group">
-                                <div className="aspect-video w-full rounded-[40px] bg-black border border-white/10 overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+                            <div 
+                                key={idx} 
+                                className="min-w-full lg:min-w-0 space-y-6 lg:space-y-8 group cursor-pointer"
+                                onClick={() => setActiveIdx(idx)}
+                            >
+                                <div className={`aspect-video w-full rounded-[40px] bg-black border overflow-hidden relative shadow-[0_0_50px_rgba(0,0,0,0.5)] transition-all duration-500 ${
+                                    idx === activeIdx ? 'border-white/25 shadow-blue-500/10' : 'border-white/10 group-hover:border-white/20'
+                                }`}>
                                     <ShowcaseVideo 
                                         src={item.videoSrc}
                                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-black/40 pointer-events-none" />
                                 </div>
-                                <div className={`space-y-4 px-2 transition-opacity duration-500 ${idx === activeIdx ? 'opacity-100' : 'opacity-40'}`}>
-                                    <h3 className="text-sm font-medium text-white tracking-wide">{item.title}</h3>
-                                    <p className="text-[10px] md:text-[11px] text-zinc-500 max-w-xs leading-relaxed">
+                                <div className={`space-y-3 px-2 transition-opacity duration-500 ${
+                                    idx === activeIdx ? 'opacity-100' : 'opacity-70 group-hover:opacity-100'
+                                }`}>
+                                    <h3 className="text-base font-medium text-white tracking-wide font-sans">{item.title}</h3>
+                                    <p className="text-xs text-zinc-400 max-w-sm leading-relaxed font-light font-sans">
                                         {item.desc}
                                     </p>
                                 </div>
@@ -106,28 +126,31 @@ export function ShowcaseSection() {
                     </div>
 
                     {/* Navigation Controls - Pill style */}
-                    <div className="flex justify-end mt-12 pr-4 md:pr-12">
+                    <div className="flex justify-end mt-8 lg:mt-12 pr-4 md:pr-12">
                          <div className="flex items-center bg-white/5 backdrop-blur-md border border-white/10 rounded-full p-1.5 gap-2">
                             <button 
                                 suppressHydrationWarning
                                 onClick={prevSlide}
-                                className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white"
+                                className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white cursor-pointer"
                                 aria-label="Previous slide"
                             >
                                 <ChevronLeft size={18} />
                             </button>
+                            <span className="text-xs text-zinc-400 font-mono px-2 select-none">
+                                {activeIdx + 1} / {items.length}
+                            </span>
                             <div className="w-px h-4 bg-white/10" />
                             <button 
                                 suppressHydrationWarning
                                 onClick={nextSlide}
-                                className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white"
+                                className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white cursor-pointer"
                                 aria-label="Next slide"
                             >
                                 <ChevronRight size={18} />
                             </button>
                          </div>
                     </div>
-                </div>
+                </motion.div>
             </div>
         </section>
     );

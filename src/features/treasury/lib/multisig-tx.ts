@@ -63,7 +63,7 @@ export async function signAndSendPending(
   connection: Connection,
 ): Promise<string> {
   if (!wallet.publicKey || !wallet.signTransaction) {
-    throw new Error('Conecta tu wallet (Phantom o Solflare) para firmar esta operación.');
+    throw new Error('Connect your wallet (Phantom or Solflare) to sign this transaction.');
   }
 
   const chain: PendingTransaction[] = [];
@@ -73,7 +73,7 @@ export async function signAndSendPending(
   for (const tx of abortTx ? [...txs, abortTx] : txs) {
     const payer = tx.message.staticAccountKeys[0];
     if (!payer.equals(wallet.publicKey)) {
-      throw new Error(`Esta operación debe firmarla la wallet ${payer.toBase58().slice(0, 4)}…${payer.toBase58().slice(-4)}.`);
+      throw new Error(`This operation must be signed by wallet ${payer.toBase58().slice(0, 4)}…${payer.toBase58().slice(-4)}.`);
     }
   }
 
@@ -95,7 +95,7 @@ export async function signAndSendPending(
       // proposal was created): close the buffer so the rent comes back.
       const bufferExists = i >= 1 && chain[i].action !== 'execute';
       if (pending.abort && abortTx && bufferExists && (await abortUpload(signed[chain.length], abortTx, pending.abort, wallet, connection))) {
-        throw new Error(`${err instanceof Error ? err.message : String(err)} La subida parcial se canceló y se devolvió su depósito.`);
+        throw new Error(`${err instanceof Error ? err.message : String(err)} Partial upload was cancelled and your rent deposit was refunded.`);
       }
       throw err;
     }
@@ -132,7 +132,7 @@ async function sendAndConfirm(
     // a stricter level (or on a node that has not seen it yet) answers "Blockhash not found".
     signature = await connection.sendRawTransaction(signed.serialize(), { maxRetries: 3, preflightCommitment: 'processed' });
   } catch (err) {
-    throw new Error(`No se pudo enviar la transacción a Solana (${friendlyRpcError(err)}). No se ha movido nada; inténtalo de nuevo.`);
+    throw new Error(`Failed to send transaction to Solana (${friendlyRpcError(err)}). Nothing was changed; please try again.`);
   }
 
   let result;
@@ -149,37 +149,37 @@ async function sendAndConfirm(
   }
   if (result.value.err) {
     const reason = programErrorMessage(JSON.stringify(result.value.err));
-    throw new Error(reason ? `La operación fue rechazada: ${reason}.` : `La transacción falló on-chain: ${JSON.stringify(result.value.err)}`);
+    throw new Error(reason ? `Operation was rejected: ${reason}.` : `Transaction failed on-chain: ${JSON.stringify(result.value.err)}`);
   }
   return signature;
 }
 
 /** Errors of the luxor_multisig program, by Anchor code (6000 + position in the program's error list). */
 const PROGRAM_ERRORS: Record<number, string> = {
-  6000: 'tu wallet no es miembro de este multisig',
-  6001: 'tu wallet no tiene el permiso necesario para esta acción',
-  6002: 'la lista de miembros no es válida (vacía, demasiado larga o con duplicados)',
-  6003: 'los permisos de un miembro no son válidos',
-  6004: 'el multisig debe conservar al menos un proponente (Proposer), un votante (Voter) y un ejecutor (Executor)',
-  6005: 'el umbral debe estar entre 1 y el número de votantes',
-  6006: 'otra propuesta se creó al mismo tiempo; vuelve a intentarlo',
-  6007: 'la propuesta está vacía o es demasiado grande',
-  6008: 'la propuesta quedó obsoleta: un cambio de configuración posterior la invalidó',
-  6009: 'la propuesta no está en el estado correcto para esta acción',
-  6010: 'tu wallet ya votó esta propuesta',
-  6011: 'todavía no pasó el tiempo de espera (time lock) de esta propuesta',
-  6012: 'esta propuesta no es del tipo que se está ejecutando',
-  6013: 'la propuesta pide una firma que no es la de la bóveda',
-  6014: 'la propuesta intenta tocar cuentas del propio multisig',
-  6015: 'faltan cuentas para ejecutar la propuesta',
-  6016: 'esa wallet ya es miembro',
-  6017: 'esa wallet no es miembro',
-  6018: 'desbordamiento aritmético',
-  6019: 'la propuesta sigue abierta: solo se pueden cerrar las ejecutadas, rechazadas, canceladas u obsoletas',
-  6020: 'el tamaño de la propuesta es cero o supera el máximo permitido (4000 bytes)',
-  6021: 'la propuesta todavía no se subió completa',
-  6022: 'lo subido no coincide con la propuesta que se firmó; vuelve a intentarlo',
-  6023: 'un trozo de la propuesta no cabe en el espacio reservado',
+  6000: 'your wallet is not a member of this multisig',
+  6001: 'your wallet does not have the required permission for this action',
+  6002: 'the member list is invalid (empty, too long, or contains duplicates)',
+  6003: 'member permissions are invalid',
+  6004: 'the multisig must retain at least one Proposer, one Voter, and one Executor',
+  6005: 'threshold must be between 1 and the number of voters',
+  6006: 'another proposal was created at the same time; please try again',
+  6007: 'the proposal is empty or too large',
+  6008: 'the proposal is obsolete: a subsequent configuration change invalidated it',
+  6009: 'the proposal is not in the correct state for this action',
+  6010: 'your wallet has already voted on this proposal',
+  6011: 'the time lock delay for this proposal has not elapsed yet',
+  6012: 'this proposal is not of the type being executed',
+  6013: 'the proposal requests a signature other than the vault signer',
+  6014: 'the proposal attempts to modify the multisig accounts themselves',
+  6015: 'missing required accounts to execute the proposal',
+  6016: 'that wallet is already a member',
+  6017: 'that wallet is not a member',
+  6018: 'arithmetic overflow',
+  6019: 'the proposal is still open: only executed, rejected, cancelled, or obsolete proposals can be closed',
+  6020: 'proposal size is zero or exceeds maximum allowed (4000 bytes)',
+  6021: 'proposal upload is not yet complete',
+  6022: 'uploaded data does not match the signed proposal; please try again',
+  6023: 'proposal chunk does not fit in reserved buffer space',
 };
 
 /** Reads `custom program error: 0x1771` or `{"Custom":6001}` and returns the plain-language reason. */
@@ -194,9 +194,9 @@ function friendlyRpcError(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
   const program = programErrorMessage(msg);
   if (program) return program;
-  if (/Blockhash not found/i.test(msg)) return 'la operación caducó antes de enviarse (pasó demasiado tiempo desde que se preparó); vuelve a intentarlo y firma enseguida';
-  if (/429|Too Many Requests|rate limit/i.test(msg)) return 'la red está saturada';
-  if (/fetch|network|Failed to fetch/i.test(msg)) return 'sin conexión con la red';
+  if (/Blockhash not found/i.test(msg)) return 'the transaction expired before being sent (too much time passed since preparation); please try again and sign promptly';
+  if (/429|Too Many Requests|rate limit/i.test(msg)) return 'the network is congested';
+  if (/fetch|network|Failed to fetch/i.test(msg)) return 'no connection to the network';
   return msg;
 }
 

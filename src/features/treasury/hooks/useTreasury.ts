@@ -149,7 +149,7 @@ export function useTreasury(): UseTreasuryReturn {
 
   const deployMultisig = async (): Promise<MultisigConfig> => {
     const address = walletAddress(wallet);
-    if (!address) throw new Error('Conecta tu wallet (Phantom o Solflare) para desplegar el multisig.');
+    if (!address) throw new Error('Connect your wallet (Phantom or Solflare) to deploy the multisig.');
     const headers = await signed();
     const res = await deployMultisigReq(address, headers);
     const signature = await signAndSendPending(res.pendingTransaction, wallet, connection);

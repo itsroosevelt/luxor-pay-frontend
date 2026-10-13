@@ -106,12 +106,12 @@ export const PROPOSAL_STATUS_META: Record<
   ProposalStatus,
   { label: string; tone: 'active' | 'positive' | 'negative' | 'neutral' }
 > = {
-  draft: { label: 'Borrador', tone: 'neutral' },
-  active: { label: 'En votación', tone: 'active' },
-  approved: { label: 'Aprobada', tone: 'positive' },
-  executed: { label: 'Ejecutada', tone: 'positive' },
-  rejected: { label: 'Rechazada', tone: 'negative' },
-  cancelled: { label: 'Cancelada', tone: 'neutral' },
+  draft: { label: 'Draft', tone: 'neutral' },
+  active: { label: 'Voting', tone: 'active' },
+  approved: { label: 'Approved', tone: 'positive' },
+  executed: { label: 'Executed', tone: 'positive' },
+  rejected: { label: 'Rejected', tone: 'negative' },
+  cancelled: { label: 'Cancelled', tone: 'neutral' },
 };
 
 async function authed<T>(path: string, init?: RequestInit): Promise<T> {

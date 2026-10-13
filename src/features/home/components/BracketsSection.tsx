@@ -340,10 +340,10 @@ export function BracketsSection() {
             <GlobalParticles activeShape={activeShape} mousePos={centerPos} isVisible={isVisible} />
 
             <motion.div 
-                initial={{ opacity: 0, scale: 0.85, y: 40 }}
-                whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.15 }}
+                transition={{ duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] }}
                 className="max-w-[1800px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-24 relative z-10 w-full"
             >
                 {categories.map((cat) => (

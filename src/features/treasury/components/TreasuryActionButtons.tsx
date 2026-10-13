@@ -40,14 +40,14 @@ export function TreasuryActionButtons({
   return (
     <ActionButtonsGroup>
       {showActivate && (
-        <ActionIconButton type="button" $variant="secondary" onClick={onActivate} disabled={isDeploying} title="Activar multisig">
+        <ActionIconButton type="button" $variant="secondary" onClick={onActivate} disabled={isDeploying} title="Activate multisig">
           {isDeploying ? <Loader2 size={18} className="animate-spin" /> : <Wallet size={18} />}
         </ActionIconButton>
       )}
       <ActionIconButton type="button" $variant="primary" onClick={onSend} disabled={!connected} title="Send">
         <ArrowUp size={18} />
       </ActionIconButton>
-      <ActionIconButton type="button" $variant="secondary" onClick={onRedistribute} disabled={isRedistributing || !connected} title="Redistribuir">
+      <ActionIconButton type="button" $variant="secondary" onClick={onRedistribute} disabled={isRedistributing || !connected} title="Rebalance">
         {isRedistributing ? <Loader2 size={18} className="animate-spin" /> : <Shuffle size={18} />}
       </ActionIconButton>
       <ActionIconButton type="button" $variant="secondary" onClick={onDeposit} title="Deposit">

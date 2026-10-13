@@ -16,7 +16,7 @@ export const GlassCard = styled(motion.div)<{ $variant?: "default" | "hero" }>`
 `;
 
 export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "glass" }>`
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-sans, 'Outfit', sans-serif);
   font-size: 13px;
   font-weight: 500;
   border-radius: 9999px;
@@ -86,7 +86,7 @@ export const ButtonBase = styled.button<{ $variant?: "primary" | "secondary" | "
 `;
 
 export const HeroTitle = styled.h1`
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-sans, 'Outfit', sans-serif);
   font-size: 24px;
   font-weight: 500;
   letter-spacing: -0.02em;
@@ -100,7 +100,7 @@ export const HeroTitle = styled.h1`
 `;
 
 export const EyebrowBadge = styled.span`
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-sans, 'Outfit', sans-serif);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.4em;

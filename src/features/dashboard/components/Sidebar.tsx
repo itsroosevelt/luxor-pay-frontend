@@ -38,6 +38,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { MerchantProfile } from '@sterling/contracts';
 import { PortalSwitcher } from '@/features/dashboard/components/PortalSwitcher';
 import { TreasurySwitcher } from '@/features/treasury/components/TreasurySwitcher';
@@ -47,7 +48,14 @@ const LOGO_SRC =
 
 /* ─────────────────────────── Nav model ─────────────────────────── */
 
-type NavLeaf = { href: string; label: string; tab?: string; external?: boolean };
+type NavLeaf = {
+  href: string;
+  label: string;
+  tab?: string;
+  external?: boolean;
+  icon?: typeof LayoutDashboard;
+  children?: NavLeaf[];
+};
 type NavNode =
   | {
     kind: 'link';
@@ -62,6 +70,8 @@ type NavNode =
 
 export type NavSection = {
   title?: string;
+  collapsible?: boolean;
+  defaultCollapsed?: boolean;
   items: NavNode[];
 };
 
@@ -88,6 +98,8 @@ export const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: 'Shortcuts',
+    collapsible: true,
+    defaultCollapsed: true,
     items: DEFAULT_PORTAL_SHORTCUTS,
   },
   {
@@ -111,20 +123,8 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: 'System & Devs',
+    title: 'Settings',
     items: [
-      { kind: 'link', href: '/dashboard/subscription', label: 'Subscription', icon: Sparkles },
-      {
-        kind: 'group',
-        id: 'developers',
-        label: 'Developers',
-        icon: Code2,
-        children: [
-          { href: '/dashboard/developers/token-manager', label: 'Token Manager' },
-          { href: '/dashboard/developers/tx-builder', label: 'Tx Builder' },
-          { href: '/dashboard/developers/programs', label: 'Programs' },
-        ],
-      },
       {
         kind: 'group',
         id: 'settings',
@@ -132,7 +132,18 @@ export const NAV_SECTIONS: NavSection[] = [
         icon: Settings,
         children: [
           { href: '/dashboard/settings', label: 'General', tab: 'general' },
-          { href: '/dashboard/settings?tab=developers', label: 'Developers & API', tab: 'developers' },
+          { href: '/dashboard/subscription', label: 'Subscription', icon: Sparkles },
+          {
+            href: '/dashboard/settings?tab=developers',
+            label: 'Developers',
+            icon: Code2,
+            children: [
+              { href: '/dashboard/settings?tab=developers', label: 'API Keys & Webhooks', tab: 'developers' },
+              { href: '/dashboard/developers/token-manager', label: 'Token Manager' },
+              { href: '/dashboard/developers/tx-builder', label: 'Tx Builder' },
+              { href: '/dashboard/developers/programs', label: 'Programs' },
+            ],
+          },
           { href: '/dashboard/settings?tab=pos', label: 'POS Devices', tab: 'pos' },
         ],
       },
@@ -315,8 +326,17 @@ function NavGroup({
   const isGroupActive = useMemo(() => {
     if (node.id === 'treasury') return pathname?.startsWith('/dashboard/treasury');
     if (node.id === 'developers') return pathname?.startsWith('/dashboard/developers');
-    if (node.id === 'settings') return pathname?.startsWith('/dashboard/settings');
-    return node.children.some((c) => isLeafActive(c));
+    if (node.id === 'settings') {
+      return (
+        pathname?.startsWith('/dashboard/settings') ||
+        pathname?.startsWith('/dashboard/subscription') ||
+        pathname?.startsWith('/dashboard/developers')
+      );
+    }
+    return node.children.some((c) => {
+      if (c.children?.some((gc) => isLeafActive(gc))) return true;
+      return isLeafActive(c);
+    });
   }, [node, pathname, isLeafActive]);
 
   const containsActive = isGroupActive;
@@ -387,8 +407,21 @@ function NavGroup({
       {open && (
         <div className="mt-1 ml-3.5 flex flex-col gap-1 border-l border-white/10 pl-2.5">
           {node.children.map((child, idx) => {
-            const active = isLeafActive(child);
             const childKey = `${child.href}-${child.label}-${idx}`;
+
+            if (child.children && child.children.length > 0) {
+              return (
+                <NavSubGroup
+                  key={childKey}
+                  child={child}
+                  onNavigate={onNavigate}
+                />
+              );
+            }
+
+            const active = isLeafActive(child);
+            const ChildIcon = child.icon;
+
             if (child.external) {
               return (
                 <a
@@ -400,7 +433,10 @@ function NavGroup({
                   title={`${child.label} (External Link)`}
                   className="rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors text-gray-400 hover:text-white hover:bg-white/[0.04] flex items-center justify-between"
                 >
-                  <span className="truncate">{child.label}</span>
+                  <div className="flex items-center gap-2 truncate">
+                    {ChildIcon && <ChildIcon size={13} className="shrink-0 text-gray-400" />}
+                    <span className="truncate">{child.label}</span>
+                  </div>
                   <ExternalLink size={12} className="text-gray-500 shrink-0 ml-1" />
                 </a>
               );
@@ -416,12 +452,95 @@ function NavGroup({
                   active ? 'bg-[#20232B] text-white font-semibold' : 'text-gray-400 hover:text-white hover:bg-white/[0.04]',
                 )}
               >
-                <span className="truncate">{child.label}</span>
+                <div className="flex items-center gap-2 truncate">
+                  {ChildIcon && <ChildIcon size={13} className="shrink-0 text-gray-400" />}
+                  <span className="truncate">{child.label}</span>
+                </div>
                 {(child as { balance?: string }).balance && (
                   <span className="text-[11px] font-mono text-gray-400 shrink-0 font-normal opacity-80">
                     {(child as { balance?: string }).balance}
                   </span>
                 )}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function NavSubGroup({
+  child,
+  onNavigate,
+}: {
+  child: NavLeaf;
+  onNavigate?: () => void;
+}) {
+  const pathname = usePathname();
+  const { isLeafActive } = useActiveMatcher();
+  const isSubActive = useMemo(() => {
+    if (isLeafActive(child)) return true;
+    return child.children?.some((c) => isLeafActive(c)) ?? false;
+  }, [child, isLeafActive]);
+
+  const [override, setOverride] = useState<boolean | null>(null);
+  const open = override ?? isSubActive;
+  const SubIcon = child.icon;
+
+  return (
+    <div className="flex flex-col">
+      <div
+        className={clsx(
+          'flex w-full items-center justify-between rounded-md px-2.5 py-1 text-[12px] font-medium transition-colors',
+          isSubActive && !open
+            ? 'text-white'
+            : 'text-gray-400 hover:text-white hover:bg-white/[0.04]',
+        )}
+      >
+        <Link
+          href={child.href}
+          onClick={onNavigate}
+          className="flex items-center gap-2 flex-1 min-w-0"
+        >
+          {SubIcon && <SubIcon size={13} className="shrink-0 text-gray-400" />}
+          <span className="truncate">{child.label}</span>
+        </Link>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setOverride(!open);
+          }}
+          aria-expanded={open}
+          aria-label={`Toggle ${child.label} sub-section`}
+          className="p-1 text-gray-500 hover:text-white transition-colors"
+        >
+          <ChevronDown
+            size={12}
+            className={clsx('shrink-0 transition-transform duration-200', open && 'rotate-180')}
+          />
+        </button>
+      </div>
+
+      {open && child.children && (
+        <div className="mt-0.5 ml-3 flex flex-col gap-0.5 border-l border-white/10 pl-2">
+          {child.children.map((subChild, idx) => {
+            const active = isLeafActive(subChild);
+            return (
+              <Link
+                key={`${subChild.href}-${idx}`}
+                href={subChild.href}
+                onClick={onNavigate}
+                aria-current={active ? 'page' : undefined}
+                className={clsx(
+                  'rounded-md px-2 py-0.5 text-[11.5px] font-medium transition-colors',
+                  active
+                    ? 'bg-[#20232B] text-white font-semibold'
+                    : 'text-gray-400 hover:text-white hover:bg-white/[0.04]',
+                )}
+              >
+                {subChild.label}
               </Link>
             );
           })}
@@ -457,6 +576,41 @@ function SidebarInner({
   const pathname = usePathname();
   const { isLeafActive } = useActiveMatcher();
   const [portalShortcuts, setPortalShortcuts] = useState<NavNode[]>(DEFAULT_PORTAL_SHORTCUTS);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({
+    Shortcuts: true,
+    'Accesos directos': true,
+    SHORTCUTS: true,
+  });
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('luxor_collapsed_nav_sections');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setCollapsedSections((prev) => ({
+          ...prev,
+          ...parsed,
+          Shortcuts: true,
+          'Accesos directos': true,
+          SHORTCUTS: true,
+        }));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const toggleSection = (sectionTitle: string) => {
+    setCollapsedSections((prev) => {
+      const next = { ...prev, [sectionTitle]: !prev[sectionTitle] };
+      try {
+        localStorage.setItem('luxor_collapsed_nav_sections', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   // Dynamic portal page history tracking
   useEffect(() => {
@@ -471,9 +625,9 @@ function SidebarInner({
         '/payment-portal/links': 'Payment Links',
         '/payment-portal/pos': 'POS Terminal',
         '/payment-portal/requests': 'Payment Requests',
-        '/payment-portal/treasury': 'Saldos POS',
-        '/payment-portal/transactions': 'Transacciones POS',
-        '/payment-portal/customers': 'Clientes POS',
+        '/payment-portal/treasury': 'POS Balances',
+        '/payment-portal/transactions': 'POS Transactions',
+        '/payment-portal/customers': 'POS Customers',
         '/payment-portal/contacts': 'Contacts & Directory',
         '/token-launcher': 'Token Launcher',
         '/token-launcher/explore': 'Explore DEX',
@@ -638,42 +792,97 @@ function SidebarInner({
             return null;
           }
 
+          const isCollapsible = Boolean(
+            section.collapsible ||
+            section.title === 'Shortcuts' ||
+            section.title === 'Accesos directos' ||
+            section.title?.toUpperCase() === 'SHORTCUTS'
+          );
+          const isDefaultCollapsed = Boolean(
+            section.defaultCollapsed ||
+            section.title === 'Shortcuts' ||
+            section.title === 'Accesos directos' ||
+            section.title?.toUpperCase() === 'SHORTCUTS'
+          );
+          const isSectionCollapsed = section.title && collapsedSections[section.title] !== undefined
+            ? collapsedSections[section.title]
+            : isDefaultCollapsed;
+
+          const renderItems = () =>
+            section.items.map((node) => {
+              if (node.kind === 'group') {
+                return (
+                  <NavGroup
+                    key={node.id}
+                    node={node}
+                    isCollapsed={isCollapsed}
+                    onNavigate={onNavigate}
+                  />
+                );
+              }
+              return (
+                <NavLinkRow
+                  key={`${node.href}-${node.label}`}
+                  href={node.href}
+                  label={node.label}
+                  icon={node.icon}
+                  active={isLeafActive(node)}
+                  external={node.external}
+                  isCollapsed={isCollapsed}
+                  onNavigate={onNavigate}
+                />
+              );
+            });
+
           return (
             <div key={section.title || idx} className="space-y-1">
               {!isCollapsed && section.title && (
-                <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                  {section.title}
-                </div>
+                isCollapsible ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(section.title!)}
+                    className="w-full flex items-center justify-between px-3 pt-2 pb-1 text-[11px] font-bold text-gray-400 hover:text-white uppercase tracking-widest transition-colors cursor-pointer select-none group"
+                    aria-expanded={!isSectionCollapsed}
+                    aria-label={`Toggle ${section.title} section`}
+                  >
+                    <span>{section.title}</span>
+                    <ChevronDown
+                      size={12}
+                      className={clsx(
+                        'text-gray-500 group-hover:text-gray-300 transition-transform duration-200 shrink-0',
+                        isSectionCollapsed ? '-rotate-90' : 'rotate-0'
+                      )}
+                    />
+                  </button>
+                ) : (
+                  <div className="px-3 pt-2 pb-1 text-[11px] font-bold text-gray-400 uppercase tracking-widest">
+                    {section.title}
+                  </div>
+                )
               )}
               {isCollapsed && idx > 0 && (
                 <div className="my-2 border-t border-white/[0.06] w-8 mx-auto" />
               )}
-              <div className="space-y-1">
-                {section.items.map((node) => {
-                  if (node.kind === 'group') {
-                    return (
-                      <NavGroup
-                        key={node.id}
-                        node={node}
-                        isCollapsed={isCollapsed}
-                        onNavigate={onNavigate}
-                      />
-                    );
-                  }
-                  return (
-                    <NavLinkRow
-                      key={`${node.href}-${node.label}`}
-                      href={node.href}
-                      label={node.label}
-                      icon={node.icon}
-                      active={isLeafActive(node)}
-                      external={node.external}
-                      isCollapsed={isCollapsed}
-                      onNavigate={onNavigate}
-                    />
-                  );
-                })}
-              </div>
+              {isCollapsible ? (
+                <AnimatePresence initial={false}>
+                  {!isSectionCollapsed && (
+                    <motion.div
+                      key={`content-${section.title || idx}`}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden space-y-1"
+                    >
+                      {renderItems()}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              ) : (
+                <div className="space-y-1">
+                  {renderItems()}
+                </div>
+              )}
             </div>
           );
         })}

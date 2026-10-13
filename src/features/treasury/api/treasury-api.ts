@@ -70,7 +70,7 @@ export interface Vault {
   isDefault: boolean;
   /** Principal (index 0): custodial reception vault; outflows need an approved proposal. */
   custodial?: boolean;
-  /** Target % of the Principal's balance this sub-vault receives on "Redistribuir". */
+  /** Target % of the Principal's balance this sub-vault receives on "Rebalance". */
   targetWeight?: number;
   usdValue: number;
   weight?: number;

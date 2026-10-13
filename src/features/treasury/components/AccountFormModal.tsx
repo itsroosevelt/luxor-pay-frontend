@@ -96,7 +96,7 @@ export function AccountFormModal({
             <form onSubmit={onSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
-                  NOMBRE DE LA CUENTA *
+                  ACCOUNT NAME *
                 </label>
                 <input
                   type="text"
@@ -122,7 +122,7 @@ export function AccountFormModal({
               {showWeight && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
-                    PESO OBJETIVO (%) *
+                    TARGET WEIGHT (%) *
                   </label>
                   <input
                     type="number"
@@ -168,7 +168,7 @@ export function AccountFormModal({
                     justifyContent: 'center',
                   }}
                 >
-                  Cancelar
+                  Cancel
                 </button>
                 <button
                   type="submit"
@@ -190,7 +190,7 @@ export function AccountFormModal({
                     justifyContent: 'center',
                   }}
                 >
-                  {isSaving ? 'Guardando...' : submitLabel}
+                  {isSaving ? 'Saving...' : submitLabel}
                 </button>
               </div>
             </form>

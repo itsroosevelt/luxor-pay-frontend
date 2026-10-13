@@ -44,7 +44,7 @@ export function AccountCoinsTable({ coins, isPrivacyMode }: AccountCoinsTablePro
           {coins.length === 0 && (
             <TableTr>
               <TableTd colSpan={5} style={{ textAlign: 'center', padding: '32px 16px', color: 'rgba(255, 255, 255, 0.45)' }}>
-                Esta cuenta no tiene tokens.
+                This account has no tokens.
               </TableTd>
             </TableTr>
           )}
@@ -58,7 +58,7 @@ export function AccountCoinsTable({ coins, isPrivacyMode }: AccountCoinsTablePro
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span>{c.symbol}</span>
                         {c.explorer && (
-                          <EditIconButton type="button" onClick={() => window.open(explorerAddressUrl(c.explorer), '_blank')} title="Ver en Explorer">
+                          <EditIconButton type="button" onClick={() => window.open(explorerAddressUrl(c.explorer), '_blank')} title="View on Explorer">
                             <ExternalLink size={12} />
                           </EditIconButton>
                         )}
@@ -76,7 +76,7 @@ export function AccountCoinsTable({ coins, isPrivacyMode }: AccountCoinsTablePro
                 </TableTd>
                 <TableTd>
                   <span style={{ fontFamily: 'Outfit', fontWeight: 500 }}>
-                    {isPrivacyMode ? '$ •••••' : c.usd != null ? formatUsd(c.usd) : 'Sin precio'}
+                    {isPrivacyMode ? '$ •••••' : c.usd != null ? formatUsd(c.usd) : 'No price'}
                   </span>
                 </TableTd>
                 <TableTd>

@@ -23,6 +23,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { TokenIcon } from '@/components/ui/TokenIcon';
+import { formatVaultLabel } from './treasury-utils';
 import {
   PROPOSAL_STATUS_META,
   type Proposal,
@@ -34,14 +35,14 @@ const TYPE_META: Record<ProposalType, { label: string; icon: typeof Repeat }> = 
   transfer: { label: 'Transfer', icon: ArrowUpRight },
   swap: { label: 'Swap', icon: Repeat },
   config: { label: 'Settings', icon: Settings2 },
-  redistribute: { label: 'Redistribución', icon: Shuffle },
+  redistribute: { label: 'Rebalance', icon: Shuffle },
 };
 
 const PAYOUT_LABEL: Record<string, string> = {
-  pending: 'Pendiente de ejecución',
-  signing: 'Enviando…',
-  sent: 'Pagado desde la Principal',
-  failed: 'Falló — revisar',
+  pending: 'Pending execution',
+  signing: 'Sending…',
+  sent: 'Paid from Roosevelt',
+  failed: 'Failed — review',
 };
 
 /** Native SOL (the backend also accepts the wSOL mint as native). */
@@ -132,7 +133,7 @@ export function ProposalsPanel({
   // Creating, voting and executing all require a connected wallet that signs.
   const requireWallet = (): boolean => {
     if (connected) return true;
-    toast.error('Conecta tu wallet (Phantom o Solflare) para realizar esta acción.');
+    toast.error('Connect your wallet (Phantom or Solflare) to perform this action.');
     openWalletModal(true);
     return false;
   };
@@ -219,7 +220,7 @@ export function ProposalsPanel({
     if (form.type === 'swap' && form.destination === effMint) { toast.error('Pick two different tokens'); return; }
     if (form.type !== 'config' && !form.amount.trim()) { toast.error('Amount is required'); return; }
     if (form.type !== 'config' && isInsufficientFunds) {
-      toast.error(`Fondos insuficientes: el saldo disponible en la bóveda es de ${availableBalance} ${selectedSymbol}`);
+      toast.error(`Insufficient funds: available balance in the vault is ${availableBalance} ${selectedSymbol}`);
       return;
     }
 
@@ -241,11 +242,11 @@ export function ProposalsPanel({
       setForm((f) => ({ ...f, title: '', destination: '', destinationLabel: '', amount: '', memo: '' }));
       // When the creator's vote already meets the threshold it executes in the same signature.
       const execMsg = form.type === 'transfer'
-        ? 'Transferencia confirmada y ejecutada exitosamente en Solana'
+        ? 'Transfer confirmed and executed on Solana'
         : form.type === 'swap'
-        ? 'Swap ejecutado exitosamente en Solana'
-        : 'Transacción confirmada y ejecutada exitosamente en la red';
-      toast.success(created?.status === 'executed' ? execMsg : 'Propuesta creada exitosamente · Pendiente de firmas en el multisig');
+        ? 'Swap executed on Solana'
+        : 'Transaction confirmed and executed on the network';
+      toast.success(created?.status === 'executed' ? execMsg : 'Proposal created successfully · Awaiting multisig signatures');
     } catch (err) { toast.error(err instanceof Error ? err.message : 'Could not create proposal'); }
     finally { setBusy(null); }
   };
@@ -265,10 +266,10 @@ export function ProposalsPanel({
     setReclaiming(true);
     try {
       const { count, remaining } = await reclaimRent();
-      toast.success(count === 0 ? 'No hay propuestas por cerrar.' : remaining > 0 ? `Se cerraron ${count} propuestas y recuperaste su rent. Quedan ${remaining}: pulsa de nuevo.` : `Se cerraron ${count} propuestas y recuperaste su rent.`);
+      toast.success(count === 0 ? 'No proposals to close.' : remaining > 0 ? `Closed ${count} proposals and reclaimed rent. ${remaining} remaining: click again.` : `Closed ${count} proposals and reclaimed rent.`);
       setReclaimable(remaining);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo recuperar el rent');
+      toast.error(err instanceof Error ? err.message : 'Could not reclaim rent');
     } finally {
       setReclaiming(false);
     }
@@ -285,13 +286,13 @@ export function ProposalsPanel({
         <div className="flex items-center gap-2">
         {reclaimable > 0 && (
           <button type="button" className="lx-btn" disabled={!connected || reclaiming}
-            title="Cierra las propuestas terminadas y devuelve a quien las creó el SOL que costaron sus cuentas"
+            title="Close finished proposals and refund rent SOL to creator"
             onClick={handleReclaim}>
-            {reclaiming ? <Loader2 size={14} className="animate-spin" /> : null} Recuperar rent ({reclaimable})
+            {reclaiming ? <Loader2 size={14} className="animate-spin" /> : null} Reclaim rent ({reclaimable})
           </button>
         )}
         <button type="button" className="lx-btn lx-btn-primary" disabled={!connected}
-          title={!connected ? 'Conecta tu wallet para crear propuestas' : undefined}
+          title={!connected ? 'Connect your wallet to create proposals' : undefined}
           onClick={() => { if (!requireWallet()) return; setCreateOpen(true); }}>
           <Plus size={15} /> New Proposal
         </button>
@@ -308,11 +309,11 @@ export function ProposalsPanel({
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl p-3 text-sm" style={{ background: 'var(--lx-danger-soft)', border: '1px solid var(--lx-danger)', color: 'var(--lx-danger)' }}>
           <span className="flex items-center gap-2">
             <AlertTriangle size={16} />
-            {proposals.length > 0 ? 'No se pudieron actualizar las propuestas. ' : ''}
+            {proposals.length > 0 ? 'Could not refresh proposals. ' : ''}
             {errorMessage || 'Error loading proposals'}
           </span>
           <button type="button" className="lx-btn lx-btn-secondary !py-1.5 text-[12px]" onClick={() => { void refetch(); }} disabled={isLoading}>
-            {isLoading ? <Loader2 size={13} className="animate-spin" /> : null} Reintentar
+            {isLoading ? <Loader2 size={13} className="animate-spin" /> : null} Retry
           </button>
         </div>
       )}
@@ -351,7 +352,7 @@ export function ProposalsPanel({
                         {p.title}
                       </p>
                       <p className="text-[12px] truncate" style={{ color: 'rgba(255, 255, 255, 0.4)', fontFamily: 'Montserrat, sans-serif' }}>
-                        #{p.index} · {p.vaultLabel} · {timeAgo(p.createdAt)}
+                        #{p.index} · {formatVaultLabel(p.vaultLabel)} · {timeAgo(p.createdAt)}
                       </p>
                     </div>
                   </div>
@@ -361,7 +362,7 @@ export function ProposalsPanel({
                     {p.type === 'config' ? (
                       <span className="flex items-center gap-2 font-medium" style={{ color: '#FFFFFF' }}>
                         <Settings2 size={16} style={{ color: '#60A5FA' }} />
-                        Umbral: <span className="font-bold" style={{ color: '#60A5FA' }}>{p.amount || p.threshold}</span>
+                        Threshold: <span className="font-bold" style={{ color: '#60A5FA' }}>{p.amount || p.threshold}</span>
                       </span>
                     ) : (
                       <>
@@ -421,7 +422,7 @@ export function ProposalsPanel({
               </div>
 
               <div className="grid gap-x-6 gap-y-2.5 rounded-xl p-4 sm:grid-cols-2" style={{ background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)' }}>
-                <Row label="Source Vault" value={detail.vaultLabel} />
+                <Row label="Source Vault" value={formatVaultLabel(detail.vaultLabel)} />
                 <Row label="Amount" value={detail.amount ? `${detail.amount} ${detail.symbol}` : '—'} />
                 {detail.type === 'transfer' && (
                   <Row label="Destination" value={detail.destinationLabel ? `${detail.destinationLabel} · ${short(detail.destination)}` : short(detail.destination)} mono />
@@ -468,11 +469,11 @@ export function ProposalsPanel({
               {/* actions */}
               <ProposalActions
                 p={detail} me={me} busy={busy} connected={connected}
-                onApprove={() => run('approve', () => approve(detail.id), (p) => (p?.status === 'executed' ? 'Voto registrado: Propuesta aprobada y ejecutada en la red Solana' : 'Voto de aprobación registrado exitosamente'))}
-                onReject={() => run('reject', () => reject(detail.id), 'Voto de rechazo registrado')}
-                onExecute={() => run('execute', () => execute(detail.id), 'Transacción ejecutada exitosamente en la red Solana')}
-                onActivate={() => run('activate', () => activate(detail.id), 'Propuesta abierta para votación del multisig')}
-                onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Propuesta cancelada exitosamente')}
+                onApprove={() => run('approve', () => approve(detail.id), (p) => (p?.status === 'executed' ? 'Vote recorded: Proposal approved and executed on Solana' : 'Approval vote recorded successfully'))}
+                onReject={() => run('reject', () => reject(detail.id), 'Rejection vote recorded')}
+                onExecute={() => run('execute', () => execute(detail.id), 'Transaction executed successfully on Solana')}
+                onActivate={() => run('activate', () => activate(detail.id), 'Proposal opened for multisig voting')}
+                onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Proposal cancelled successfully')}
               />
             </div>
           </Modal>
@@ -597,7 +598,7 @@ export function ProposalsPanel({
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <label style={{ fontFamily: 'Outfit, sans-serif', fontSize: 12, fontWeight: 600, letterSpacing: '0.05em', color: 'rgba(255, 255, 255, 0.85)', textTransform: 'uppercase' }}>
-                        RECIPIENT ADDRESS (BILLETERA PHANTOM / SOLFLARE) *
+                        RECIPIENT ADDRESS (PHANTOM / SOLFLARE WALLET) *
                       </label>
                       <input
                         style={{
@@ -614,7 +615,7 @@ export function ProposalsPanel({
                         }}
                         value={form.destination}
                         onChange={(e) => setForm((f) => ({ ...f, destination: e.target.value }))}
-                        placeholder="Pega la dirección base58 de tu billetera"
+                        placeholder="Paste base58 wallet address"
                         required
                       />
                     </div>
@@ -637,7 +638,7 @@ export function ProposalsPanel({
                         }}
                         value={form.destinationLabel}
                         onChange={(e) => setForm((f) => ({ ...f, destinationLabel: e.target.value }))}
-                        placeholder="e.g. Mi Phantom Personal"
+                        placeholder="e.g. My Personal Phantom"
                       />
                     </div>
                   </motion.div>
@@ -657,7 +658,7 @@ export function ProposalsPanel({
                       color: 'rgba(255, 255, 255, 0.8)',
                     }}
                   >
-                    Destino interno: <strong style={{ color: '#FFFFFF' }}>{form.destinationLabel || 'Bóveda Interna'}</strong>
+                    Internal destination: <strong style={{ color: '#FFFFFF' }}>{form.destinationLabel || 'Internal Vault'}</strong>
                     <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'rgba(255, 255, 255, 0.45)', marginTop: 4, wordBreak: 'break-all' }}>
                       {form.destination}
                     </div>
@@ -780,7 +781,7 @@ export function ProposalsPanel({
                 <button
                   type="submit"
                   disabled={busy === 'create' || !connected || isInsufficientFunds}
-                  title={!connected ? 'Conecta tu wallet para enviar la propuesta' : isInsufficientFunds ? `Fondos insuficientes (Disponible: ${availableBalance} ${selectedSymbol})` : undefined}
+                  title={!connected ? 'Connect your wallet to submit proposal' : isInsufficientFunds ? `Insufficient funds (Available: ${availableBalance} ${selectedSymbol})` : undefined}
                   style={{
                     flex: 1,
                     height: 44,
@@ -836,49 +837,49 @@ function ProposalActions({
     return p.executedSig ? (
       <a href={`https://explorer.solana.com/tx/${p.executedSig}${EXPLORER_CLUSTER}`} target="_blank" rel="noopener noreferrer"
         className="lx-btn lx-btn-secondary w-full justify-center">
-        Ver en Solana Explorer <ExternalLink size={13} />
+        View on Solana Explorer <ExternalLink size={13} />
       </a>
     ) : null;
   }
   if (p.status === 'rejected' || p.status === 'cancelled') {
-    return <p className="text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>Esta propuesta está cerrada.</p>;
+    return <p className="text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>This proposal is closed.</p>;
   }
 
   return (
     <div className="flex flex-wrap gap-2">
       {p.status === 'draft' && isOwner && (
-        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para abrir a votación' : undefined} onClick={onActivate}>
-          {busy === 'activate' ? spin : <><Play size={14} /> Abrir a votación</>}
+        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to open for voting' : undefined} onClick={onActivate}>
+          {busy === 'activate' ? spin : <><Play size={14} /> Open for voting</>}
         </button>
       )}
 
       {p.status === 'active' && me.roles.signer && !iVoted && (
         <>
-          <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para votar' : undefined} onClick={onApprove}>
-            {busy === 'approve' ? spin : <><ThumbsUp size={14} /> Aprobar</>}
+          <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to vote' : undefined} onClick={onApprove}>
+            {busy === 'approve' ? spin : <><ThumbsUp size={14} /> Approve</>}
           </button>
-          <button type="button" className="lx-btn lx-btn-secondary flex-1 justify-center" style={{ color: 'var(--lx-danger)' }} disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para votar' : undefined} onClick={onReject}>
-            {busy === 'reject' ? spin : <><ThumbsDown size={14} /> Rechazar</>}
+          <button type="button" className="lx-btn lx-btn-secondary flex-1 justify-center" style={{ color: 'var(--lx-danger)' }} disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to vote' : undefined} onClick={onReject}>
+            {busy === 'reject' ? spin : <><ThumbsDown size={14} /> Reject</>}
           </button>
         </>
       )}
 
       {p.status === 'active' && me.roles.signer && iVoted && (
-        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>Ya registraste tu voto.</p>
+        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>Your vote has been recorded.</p>
       )}
       {p.status === 'active' && !me.roles.signer && (
-        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>No tienes el rol de Voter para votar.</p>
+        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>You need the Voter role to vote.</p>
       )}
 
       {p.status === 'approved' && me.roles.executor && (
-        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para ejecutar' : undefined} onClick={onExecute}>
-          {busy === 'execute' ? spin : <><Play size={14} /> Ejecutar on-chain</>}
+        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to execute' : undefined} onClick={onExecute}>
+          {busy === 'execute' ? spin : <><Play size={14} /> Execute on-chain</>}
         </button>
       )}
 
       {(p.status === 'draft' || p.status === 'active') && isOwner && (
-        <button type="button" className="lx-btn lx-btn-secondary justify-center" disabled={!connected || !!busy} title={!connected ? 'Conecta tu wallet para cancelar' : undefined} onClick={onCancel}>
-          {busy === 'cancel' ? spin : <><Ban size={14} /> Cancelar</>}
+        <button type="button" className="lx-btn lx-btn-secondary justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to cancel' : undefined} onClick={onCancel}>
+          {busy === 'cancel' ? spin : <><Ban size={14} /> Cancel</>}
         </button>
       )}
     </div>
@@ -911,7 +912,7 @@ function Modal({
       >
         <div className="mb-6 flex items-center justify-between gap-4">
           <h2 className="flex items-center gap-2 font-['Outfit'] text-[24px] font-medium tracking-tight text-white">{icon} {title}</h2>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors">
+          <button type="button" onClick={onClose} aria-label="Close" className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors">
             <X size={16} />
           </button>
         </div>

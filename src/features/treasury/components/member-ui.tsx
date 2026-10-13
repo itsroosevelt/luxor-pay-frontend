@@ -21,7 +21,7 @@ export function RoleChip({
         onClick?.(e);
       }}
       disabled={disabled}
-      title={disabled ? meta.description : `${meta.description} — clic para cambiar`}
+      title={disabled ? meta.description : `${meta.description} — click to toggle`}
       className="inline-flex items-center gap-1.5 px-4 py-2 text-[12.5px] font-medium transition-all disabled:opacity-40"
       style={{
         fontFamily: "'Outfit', sans-serif",
@@ -84,7 +84,7 @@ export function ModalShell({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Cerrar"
+          aria-label="Close"
           className="absolute top-6 right-6 flex h-9 w-9 items-center justify-center rounded-full bg-white/5 border border-white/12 text-white/60 hover:text-white hover:bg-white/12 transition-all cursor-pointer z-20"
         >
           <X size={16} />

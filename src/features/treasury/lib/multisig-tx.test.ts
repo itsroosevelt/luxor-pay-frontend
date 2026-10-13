@@ -63,14 +63,14 @@ describe('signAndSendPending', () => {
         .mockResolvedValueOnce({ value: { err: null } })
         .mockResolvedValueOnce({ value: { err: { InstructionError: [0, { Custom: 6022 }] } } })
         .mockResolvedValue({ value: { err: null } });
-      await expect(signAndSendPending(upload(), walletFor() as never, conn as never)).rejects.toThrow(/depósito/);
+      await expect(signAndSendPending(upload(), walletFor() as never, conn as never)).rejects.toThrow(/deposit/);
       expect(conn.sendRawTransaction).toHaveBeenCalledTimes(3); // upload, failed upload, then the abort
     });
 
     it('does not try to close a buffer that was never created (first step failed)', async () => {
       const conn = connection();
       conn.confirmTransaction.mockResolvedValueOnce({ value: { err: { InstructionError: [0, { Custom: 6001 }] } } });
-      await expect(signAndSendPending(upload(), walletFor() as never, conn as never)).rejects.toThrow(/permiso/);
+      await expect(signAndSendPending(upload(), walletFor() as never, conn as never)).rejects.toThrow(/permission/);
       expect(conn.sendRawTransaction).toHaveBeenCalledTimes(1);
     });
   });
@@ -84,7 +84,7 @@ describe('signAndSendPending', () => {
 
   it('refuses a transaction meant for another wallet', async () => {
     const wallet = { publicKey: Keypair.generate().publicKey, signTransaction: vi.fn() };
-    await expect(signAndSendPending(pending('approve'), wallet as never, connection() as never)).rejects.toThrow(/debe firmarla/);
+    await expect(signAndSendPending(pending('approve'), wallet as never, connection() as never)).rejects.toThrow(/must be signed by/);
   });
 
   it('finalAction reports the execution at the end of the chain', () => {
@@ -95,13 +95,13 @@ describe('signAndSendPending', () => {
 
 describe('program errors', () => {
   it('turns the contract error code of a failed simulation into a reason', () => {
-    expect(programErrorMessage('Simulation failed. Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1774.')).toContain('al menos un proponente');
-    expect(programErrorMessage('custom program error: 0x1771')).toContain('permiso');
+    expect(programErrorMessage('Simulation failed. Message: Transaction simulation failed: Error processing Instruction 0: custom program error: 0x1774.')).toContain('at least one Proposer');
+    expect(programErrorMessage('custom program error: 0x1771')).toContain('permission');
   });
 
   it('reads the code of an on-chain failure too', () => {
-    expect(programErrorMessage(JSON.stringify({ InstructionError: [0, { Custom: 6008 }] }))).toContain('obsoleta');
-    expect(programErrorMessage(JSON.stringify({ InstructionError: [0, { Custom: 6010 }] }))).toContain('ya votó');
+    expect(programErrorMessage(JSON.stringify({ InstructionError: [0, { Custom: 6008 }] }))).toContain('obsolete');
+    expect(programErrorMessage(JSON.stringify({ InstructionError: [0, { Custom: 6010 }] }))).toContain('already voted');
   });
 
   it('ignores errors that are not from the contract', () => {
@@ -112,7 +112,7 @@ describe('program errors', () => {
   it('shows the reason instead of a raw code when sending fails', async () => {
     const conn = { sendRawTransaction: vi.fn(async () => { throw new Error('custom program error: 0x1772'); }), confirmTransaction: vi.fn() };
     const wallet = { publicKey: payer.publicKey, signTransaction: vi.fn(async (tx: VersionedTransaction) => tx) };
-    await expect(signAndSendPending(pending('create_proposal'), wallet as any, conn as any)).rejects.toThrow('lista de miembros');
+    await expect(signAndSendPending(pending('create_proposal'), wallet as any, conn as any)).rejects.toThrow('member list');
   });
 
   it('rejected on-chain: explains the reason', async () => {

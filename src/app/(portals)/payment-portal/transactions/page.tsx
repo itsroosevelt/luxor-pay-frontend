@@ -5,6 +5,7 @@ export default function PortalTransactionsPage() {
     <TransactionsPage
       title="Transactions"
       subtitle="History of transfers and settled payments from POS Terminals and Payment Links."
+      showMultisig={false}
     />
   );
 }

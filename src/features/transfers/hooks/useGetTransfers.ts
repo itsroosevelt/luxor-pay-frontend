@@ -53,7 +53,7 @@ export function useGetTransfers(initialLimit: number = 5): UseGetTransfersReturn
       // A session that is still restoring is not a load failure.
       const failed = !IS_MOCK_MODE && error?.message !== 'User not authenticated';
       setIsError(failed);
-      setErrorMessage(failed ? error?.message || 'No se pudieron cargar las transacciones' : null);
+      setErrorMessage(failed ? error?.message || 'Could not load transactions' : null);
     } finally {
       setIsLoading(false);
     }

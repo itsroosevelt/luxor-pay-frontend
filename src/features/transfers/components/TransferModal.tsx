@@ -380,7 +380,7 @@ export function TransferModal({
     e.preventDefault();
     
     if (isInsufficientFunds) {
-      toast.error(`Fondos insuficientes: el saldo disponible es de ${availableBalance} ${formData.token}`);
+      toast.error(`Insufficient funds: available balance is ${availableBalance} ${formData.token}`);
       return;
     }
     let toNickname: string | null = null;

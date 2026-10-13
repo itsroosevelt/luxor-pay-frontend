@@ -1,6 +1,7 @@
 'use client';
 import { useRef, useEffect } from 'react';
 import { Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { BlueParticles } from '@/components/ui/BlueParticles';
 
 const REVIEWS = [
@@ -20,7 +21,13 @@ export function ReviewsSection() {
     return (
         <section className="py-20 md:py-32 lg:py-48 bg-transparent border-t border-white/5 relative overflow-hidden">
             <BlueParticles variant="section" />
-            <div className="w-full max-w-[1800px] mx-auto px-6 md:px-12">
+            <motion.div 
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: false, amount: 0.15 }}
+                transition={{ duration: 0.7, ease: [0.21, 0.47, 0.32, 0.98] }}
+                className="w-full max-w-[1800px] mx-auto px-6 md:px-12"
+            >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 md:mb-24 gap-6">
                     <div>
                         <h2 className="text-2xl lg:text-4xl font-medium font-sans text-white mb-3 tracking-tight">
@@ -31,7 +38,7 @@ export function ReviewsSection() {
                         </p>
                     </div>
                 </div>
-            </div>
+            </motion.div>
 
             <div className="w-full relative group">
                 <style suppressHydrationWarning>{`

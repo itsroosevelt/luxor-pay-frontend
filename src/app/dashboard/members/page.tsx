@@ -38,9 +38,9 @@ const short = (a: string) => (a.length > 14 ? `${a.slice(0, 5)}…${a.slice(-5)}
 function MemberChainBadge({ member }: { member: Member }) {
   const pending = member.pendingChange;
   if (pending) {
-    const label = pending.op === 'add' ? 'Alta pendiente' : pending.op === 'remove' ? 'Baja pendiente' : 'Cambio pendiente';
+    const label = pending.op === 'add' ? 'Pending Addition' : pending.op === 'remove' ? 'Pending Removal' : 'Pending Change';
     return (
-      <span title="Propuesta de configuración esperando firmas / ejecución"
+      <span title="Configuration proposal awaiting signatures / execution"
         className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-amber-500/15 text-amber-300">
         {label} #{pending.proposalIndex}
       </span>
@@ -51,8 +51,8 @@ function MemberChainBadge({ member }: { member: Member }) {
   }
   if (member.onChain === false) {
     return (
-      <span title="No es miembro del multisig on-chain (solo figura en Luxor)"
-        className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-white/10 text-white/50">Fuera del multisig</span>
+      <span title="Not an on-chain multisig member (database only)"
+        className="rounded-full px-2 py-0.5 text-[10px] font-semibold bg-white/10 text-white/50">Off-chain only</span>
     );
   }
   return null;
@@ -89,7 +89,7 @@ export default function MembersPage() {
       return false;
     }
     if (!canManage) {
-      toast.error(previewReadOnly ? 'Read-only view active' : 'Necesitas el rol Proposer para proponer cambios de miembros');
+      toast.error(previewReadOnly ? 'Read-only view active' : 'Proposer role required to propose member changes');
       return false;
     }
     return true;
@@ -99,14 +99,14 @@ export default function MembersPage() {
     if (!guard()) return;
     const roles = { ...m.roles, [key]: !m.roles[key] };
     if (!roles.proposer && !roles.signer && !roles.executor) {
-      toast.error('Un miembro necesita al menos un rol; para quitarlo del todo usa Eliminar');
+      toast.error('A member must have at least one role; use Remove to delete completely');
       return;
     }
     try {
       const { proposalIndex } = await updateMember(m.id, { roles });
       if (proposalIndex) {
         // On-chain multisig: permissions change only when the proposal executes.
-        toast.success(`Propuesta #${proposalIndex} creada · los permisos de ${m.name} cambiarán cuando el multisig la apruebe y ejecute`);
+        toast.success(`Proposal #${proposalIndex} created · permissions for ${m.name} will update upon multisig execution`);
         return;
       }
       setDetail((d) => (d && d.id === m.id ? { ...d, roles } : d));
@@ -127,16 +127,16 @@ export default function MembersPage() {
     if (!deleting || !guard()) return;
     setBusy(true);
     try {
-      toast.info('Confirma la transacción en tu wallet (Phantom/Solflare) para eliminar al miembro en la blockchain...');
+      toast.info('Confirm the transaction in your wallet (Phantom/Solflare) to remove the member on-chain...');
       const { proposalIndex } = await removeMember(deleting.id);
       toast.success(
         proposalIndex
-          ? `Propuesta #${proposalIndex} enviada · ${deleting.name} desvinculado del multisig`
-          : `${deleting.name} fue eliminado del multisig`,
+          ? `Proposal #${proposalIndex} submitted · ${deleting.name} unlinked from multisig`
+          : `${deleting.name} was removed from multisig`,
       );
       if (detail?.id === deleting.id) setDetail(null);
       setDeleting(null);
-    } catch (err) { toast.error(err instanceof Error ? err.message : 'Error al eliminar el miembro'); }
+    } catch (err) { toast.error(err instanceof Error ? err.message : 'Failed to remove member'); }
     finally { setBusy(false); }
   };
 
@@ -161,10 +161,10 @@ export default function MembersPage() {
             Your role:
             {me
               ? ROLE_KEYS.filter((k) => me.roles[k]).map((k) => (
-                  <span key={k} className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-white/10 border border-white/15 text-white">
-                    {MEMBER_ROLE_META[k].label}
-                  </span>
-                ))
+                <span key={k} className="rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-white/10 border border-white/15 text-white">
+                  {MEMBER_ROLE_META[k].label}
+                </span>
+              ))
               : <span className="text-white/40">—</span>}
           </div>
           <button
@@ -179,23 +179,6 @@ export default function MembersPage() {
 
         <OffChainNotice config={config} />
 
-        {/* Disconnected wallet warning banner */}
-        {!connected && (
-          <div className="flex items-center gap-3 rounded-2xl p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm">
-            <AlertTriangle size={18} className="flex-shrink-0 text-amber-400" />
-            <div className="flex-1">
-              <span className="font-semibold text-amber-100">Billetera no conectada: </span>
-              Conecta tu billetera (Phantom o Solflare) para agregar miembros, modificar roles o firmar acciones en el Multisig.
-            </div>
-            <button
-              type="button"
-              onClick={() => openWalletModal(true)}
-              className="px-3 py-1.5 text-xs font-semibold rounded-full bg-amber-500 text-black hover:bg-amber-400 transition-colors flex-shrink-0"
-            >
-              Conectar Wallet
-            </button>
-          </div>
-        )}
 
         {/* Members list */}
         <section className="space-y-4 pt-4">
@@ -207,7 +190,7 @@ export default function MembersPage() {
               type="button"
               className="px-4 py-2 rounded-full bg-white text-black font-medium text-xs hover:bg-neutral-200 transition-colors inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
               disabled={!connected || !canManage}
-              title={!connected ? 'Conecta tu billetera para agregar miembros' : undefined}
+              title={!connected ? 'Connect your wallet to add members' : undefined}
               onClick={() => { if (guard()) setAddOpen(true); }}
             >
               <Plus size={15} /> Add member
@@ -257,7 +240,7 @@ export default function MembersPage() {
                         </div>
                       </div>
                       <button type="button" aria-label="Remove member" disabled={!canManage || !connected}
-                        title={!connected ? 'Conecta tu billetera para eliminar miembros' : undefined}
+                        title={!connected ? 'Connect your wallet to remove members' : undefined}
                         onClick={(e) => { e.stopPropagation(); if (guard()) setDeleting(m); }}
                         className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 border border-white/15 text-white/50 hover:text-white hover:bg-white/10 transition-colors disabled:opacity-25 disabled:cursor-not-allowed">
                         <Trash2 size={14} />
@@ -294,8 +277,8 @@ export default function MembersPage() {
             <div className="space-y-5">
               {!connected && (
                 <div className="rounded-2xl p-4 bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs flex items-center justify-between">
-                  <span>Conecta tu billetera para editar miembros</span>
-                  <button type="button" onClick={() => openWalletModal(true)} className="px-3.5 py-1 rounded-full bg-amber-500 text-black font-semibold">Conectar</button>
+                  <span>Connect your wallet to edit members</span>
+                  <button type="button" onClick={() => openWalletModal(true)} className="px-3.5 py-1 rounded-full bg-amber-500 text-black font-semibold">Connect</button>
                 </div>
               )}
 
@@ -326,7 +309,7 @@ export default function MembersPage() {
                 </div>
                 {detail.onChain && (
                   <p className="mt-2 text-[11px] text-white/40 leading-relaxed font-body">
-                    * Los cambios en permisos de miembros en-cadena generan una propuesta en el multisig que debe ser firmada por el umbral del multisig.
+                    * Changes to on-chain member permissions create a multisig proposal that must be approved by the signing threshold.
                   </p>
                 )}
               </div>
@@ -370,10 +353,10 @@ export default function MembersPage() {
                         setBusy(true);
                         try {
                           const { proposalIndex } = await updateMember(detail.id, { name: editingName.trim(), roles: editingRoles });
-                          toast.success(proposalIndex ? `Propuesta #${proposalIndex} creada · los permisos cambiarán cuando el multisig la apruebe` : 'Miembro actualizado correctamente');
+                          toast.success(proposalIndex ? `Proposal #${proposalIndex} created · permissions will update once approved` : 'Member updated successfully');
                           setDetail(null);
                         } catch (err) {
-                          toast.error(err instanceof Error ? err.message : 'Error al actualizar el miembro');
+                          toast.error(err instanceof Error ? err.message : 'Failed to update member');
                         } finally {
                           setBusy(false);
                         }

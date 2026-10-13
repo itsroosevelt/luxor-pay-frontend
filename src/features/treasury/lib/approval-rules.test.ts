@@ -9,9 +9,9 @@ describe('approval rules', () => {
   });
 
   it('describes the rule in plain words', () => {
-    expect(describeThreshold(1, 1)).toContain('un solo firmante');
-    expect(describeThreshold(1, 3)).toContain('Basta 1 de 3');
-    expect(describeThreshold(2, 3)).toContain('2 de 3 firmantes distintos');
+    expect(describeThreshold(1, 1)).toContain('only 1 signer');
+    expect(describeThreshold(1, 3)).toContain('1 of 3 signers is enough');
+    expect(describeThreshold(2, 3)).toContain('2 of 3 distinct signers are required');
   });
 
   it('says how many rejections end a proposal', () => {
@@ -23,18 +23,18 @@ describe('approval rules', () => {
 
   it('warns about the two risky extremes and approves the middle', () => {
     expect(thresholdAdvice(1, 3)).toMatchObject({ tone: 'warn' });
-    expect(thresholdAdvice(1, 3)?.text).toContain('por sí solo');
+    expect(thresholdAdvice(1, 3)?.text).toContain('alone');
     expect(thresholdAdvice(3, 3)).toMatchObject({ tone: 'warn' });
-    expect(thresholdAdvice(3, 3)?.text).toContain('pierde');
+    expect(thresholdAdvice(3, 3)?.text).toContain('loses access');
     expect(thresholdAdvice(2, 3)).toMatchObject({ tone: 'ok' });
     expect(thresholdAdvice(1, 1)).toBeNull();
   });
 
   it('formats the time lock', () => {
-    expect(formatTimeLock(0)).toContain('Sin espera');
-    expect(formatTimeLock(3600)).toBe('1 hora de espera tras la aprobación');
-    expect(formatTimeLock(7200)).toBe('2 horas de espera tras la aprobación');
-    expect(formatTimeLock(86_400)).toBe('1 día de espera tras la aprobación');
-    expect(formatTimeLock(90)).toBe('90 segundos de espera tras la aprobación');
+    expect(formatTimeLock(0)).toContain('No delay');
+    expect(formatTimeLock(3600)).toBe('1 hour delay after approval');
+    expect(formatTimeLock(7200)).toBe('2 hours delay after approval');
+    expect(formatTimeLock(86_400)).toBe('1 day delay after approval');
+    expect(formatTimeLock(90)).toBe('90 seconds delay after approval');
   });
 });

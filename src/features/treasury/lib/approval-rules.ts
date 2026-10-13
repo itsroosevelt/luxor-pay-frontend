@@ -14,9 +14,9 @@ export function thresholdOptions(voters: number): number[] {
 
 /** "2 of 3" in a sentence. */
 export function describeThreshold(threshold: number, voters: number): string {
-  if (voters <= 1) return 'Hay un solo firmante: aprueba y ejecuta por su cuenta.';
-  if (threshold === 1) return `Basta 1 de ${voters} firmantes para aprobar y ejecutar una transacción.`;
-  return `Hacen falta ${threshold} de ${voters} firmantes distintos para aprobar una transacción antes de ejecutarla.`;
+  if (voters <= 1) return 'There is only 1 signer: approves and executes independently.';
+  if (threshold === 1) return `1 of ${voters} signers is enough to approve and execute a transaction.`;
+  return `${threshold} of ${voters} distinct signers are required to approve a transaction before execution.`;
 }
 
 /** How many "no" votes end a proposal for good: once the threshold can no longer be reached. */
@@ -28,30 +28,30 @@ export function rejectionCutoff(threshold: number, voters: number): number {
 export function thresholdAdvice(threshold: number, voters: number): ThresholdAdvice | null {
   if (voters <= 1) return null;
   if (threshold === 1) {
-    return { tone: 'warn', text: 'Cualquier firmante puede mover los fondos por sí solo, sin que otro lo apruebe.' };
+    return { tone: 'warn', text: 'Any signer can move funds alone, without another member approving.' };
   }
   if (threshold === voters) {
     return {
       tone: 'warn',
-      text: 'Hacen falta TODOS los firmantes: si uno pierde el acceso a su wallet, nadie podrá aprobar nada. Deja al menos uno de margen.',
+      text: 'ALL signers are required: if one loses access to their wallet, no proposals can be approved. Leave at least one buffer.',
     };
   }
-  return { tone: 'ok', text: 'Buen equilibrio: ningún firmante mueve fondos solo y se puede operar si falta alguno.' };
+  return { tone: 'ok', text: 'Good balance: no single signer can move funds alone, and operations continue if one is away.' };
 }
 
 /** The time lock is stored in seconds. */
 export function formatTimeLock(seconds: number): string {
-  if (!seconds || seconds <= 0) return 'Sin espera: se ejecuta apenas se aprueba';
+  if (!seconds || seconds <= 0) return 'No delay: executes immediately upon approval';
   const units: [number, string, string][] = [
-    [86_400, 'día', 'días'],
-    [3_600, 'hora', 'horas'],
-    [60, 'minuto', 'minutos'],
+    [86_400, 'day', 'days'],
+    [3_600, 'hour', 'hours'],
+    [60, 'minute', 'minutes'],
   ];
   for (const [size, one, many] of units) {
     if (seconds >= size && seconds % size === 0) {
       const n = seconds / size;
-      return `${n} ${n === 1 ? one : many} de espera tras la aprobación`;
+      return `${n} ${n === 1 ? one : many} delay after approval`;
     }
   }
-  return `${seconds} segundos de espera tras la aprobación`;
+  return `${seconds} seconds delay after approval`;
 }

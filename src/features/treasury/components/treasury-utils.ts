@@ -10,6 +10,19 @@ export const formatVaultLabel = (label: string | undefined, isPrincipal?: boolea
   return clean;
 };
 
+/**
+ * Determines whether an account is the initial primary Roosevelt account.
+ * Only the Roosevelt initial account is protected from renaming/editing.
+ */
+export const isRooseveltAccount = (acc?: Vault | null, idx?: number): boolean => {
+  if (!acc) return false;
+  if (idx !== undefined && idx === 0) return true;
+  if (acc.index === 0 || acc.isDefault) return true;
+  const clean = (acc.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim().toLowerCase();
+  return clean === 'roosevelt' || clean === 'principal' || clean === 'bóveda principal' || clean === 'boveda principal';
+};
+
+
 export const helperShort = (a: string) => (a && a.length > 12 ? `${a.slice(0, 4)}…${a.slice(-4)}` : a);
 
 export const explorerAddressUrl = (addr: string) => {
@@ -132,7 +145,7 @@ export const buildAccountFlows = (
             id: `prop-${p.id}`,
             direction: 'out' as const,
             title: `To: ${p.destinationLabel || helperShort(p.destination)}`,
-            subtitle: `Propuesta #${p.index} · EJECUTADA`,
+            subtitle: `Proposal #${p.index} · EXECUTED`,
             amount: `${p.amount}`,
             symbol,
             counterparty: p.destination,
@@ -148,7 +161,7 @@ export const buildAccountFlows = (
             id: `prop-in-${p.id}`,
             direction: 'in' as const,
             title: `From: ${cleanVaultLabel}`,
-            subtitle: `Propuesta #${p.index} · EJECUTADA`,
+            subtitle: `Proposal #${p.index} · EXECUTED`,
             amount: `${p.amount}`,
             symbol,
             counterparty: cleanVaultLabel,
@@ -164,7 +177,7 @@ export const buildAccountFlows = (
           id: `prop-leg-${p.id}-${i}`,
           direction: (t.vaultId === v.id ? 'out' : 'in') as 'out' | 'in',
           title: t.vaultId === v.id ? `To: ${helperShort(t.destination)}` : `From: ${cleanVaultLabel}`,
-          subtitle: `Propuesta #${p.index} · EJECUTADA`,
+          subtitle: `Proposal #${p.index} · EXECUTED`,
           amount: `${t.amount}`,
           symbol: t.symbol || symbol,
           counterparty: t.vaultId === v.id ? t.destination : cleanVaultLabel,
@@ -184,7 +197,7 @@ export const buildAccountFlows = (
       [p.executedSig, ...(p.payoutSigs ?? [])].forEach((sig) => { if (sig) proposalBySig.set(sig, p); });
     });
     const labelOf = (addr: string | null) => {
-      if (!addr) return 'Desconocido';
+      if (!addr) return 'Unknown';
       const found = accountList.find((a) => a.address === addr);
       if (found) {
         const clean = (found.label || '').replace(/^bóveda\s+/i, '').replace(/^boveda\s+/i, '').trim();
@@ -194,13 +207,13 @@ export const buildAccountFlows = (
     };
     const chainFlows: AccountFlow[] = activityItems.map((a, i) => {
       const p = proposalBySig.get(a.signature);
-      const when = a.time ? new Date(a.time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Confirmada';
+      const when = a.time ? new Date(a.time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Confirmed';
       const chainTime = a.time ? new Date(a.time).getTime() : (p?.executedAt ? new Date(p.executedAt).getTime() : 0);
       return {
         id: `chain-${a.signature}-${a.mint}-${i}`,
         direction: a.direction,
         title: `${a.direction === 'in' ? 'From' : 'To'}: ${labelOf(a.counterparty)}`,
-        subtitle: p ? `Propuesta #${p.index} · ${when}` : when,
+        subtitle: p ? `Proposal #${p.index} · ${when}` : when,
         amount: a.amount,
         symbol: a.symbol,
         counterparty: a.counterparty ?? '',

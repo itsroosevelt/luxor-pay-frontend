@@ -39,7 +39,7 @@ let cached: StoredSession | null = null;
 export const WALLET_SESSION_EVENT = 'luxor_wallet_session';
 
 export class WalletRequiredError extends Error {
-  constructor(message = 'Conecta tu wallet (Phantom o Solflare) para realizar esta acción.') {
+  constructor(message = 'Connect your wallet (Phantom or Solflare) to perform this action.') {
     super(message);
     this.name = 'WalletRequiredError';
   }
@@ -49,10 +49,10 @@ export class WalletRequiredError extends Error {
 export async function getWalletAuthHeaders(wallet: WalletSigner): Promise<Record<string, string>> {
   if (!wallet.publicKey) throw new WalletRequiredError();
   if (!wallet.signMessage) {
-    throw new WalletRequiredError('Tu wallet no permite firmar mensajes. Usa Phantom o Solflare.');
+    throw new WalletRequiredError('Your wallet does not support message signing. Please use Phantom or Solflare.');
   }
   const merchantId = auth.currentUser?.uid;
-  if (!merchantId) throw new Error('Inicia sesión para continuar.');
+  if (!merchantId) throw new Error('Please sign in to continue.');
 
   const address = wallet.publicKey.toBase58();
   const existing = readSession();

@@ -4,9 +4,9 @@ import type { PendingTransaction } from '@/features/treasury/lib/multisig-tx';
 
 /**
  * Roles, exactly Squads' three permissions (there is no admin: what a proposal changes is decided by the vote):
- *   proposer — Initiate: crea propuestas (envíos, swaps y cambios de miembros / umbral)
- *   signer   — Vote ("Voter"): aprueba o rechaza; cuenta para el umbral M-de-N
- *   executor — Execute: ejecuta las propuestas ya aprobadas
+ *   proposer — Initiate: creates proposals (transfers, swaps, and member / threshold changes)
+ *   signer   — Vote ("Voter"): approves or rejects; counts towards the M-of-N threshold
+ *   executor — Execute: executes already approved proposals
  */
 export interface MemberRoles {
   proposer: boolean;

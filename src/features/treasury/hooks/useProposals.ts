@@ -88,7 +88,7 @@ export function useProposals(): UseProposalsReturn {
     notifyTreasuryChanged();
     if (synced.data.payoutStatus === 'failed') {
       replace(synced.data);
-      throw new Error(`Propuesta ejecutada, pero el pago desde la Bóveda Principal falló: ${synced.data.payoutError ?? 'error desconocido'}`);
+      throw new Error(`Proposal executed, but payment from Principal Vault failed: ${synced.data.payoutError ?? 'unknown error'}`);
     }
     return synced.data;
   };

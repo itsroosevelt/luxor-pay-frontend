@@ -38,7 +38,7 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
   const [busy, setBusy] = useState(false);
 
   const pending = useMemo(
-    () => proposals.find((p) => p.type === 'config' && p.title.startsWith('Cambiar umbral') && ['draft', 'active', 'approved'].includes(p.status)),
+    () => proposals.find((p) => p.type === 'config' && (p.title.startsWith('Cambiar umbral') || p.title.startsWith('Change threshold')) && ['draft', 'active', 'approved'].includes(p.status)),
     [proposals],
   );
 
@@ -56,11 +56,11 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
       setPicked(null);
       toast.success(
         executed
-          ? `Regla actualizada: ahora hacen falta ${next} de ${voters} firmantes.`
-          : `Propuesta #${proposalIndex} creada · la regla cambiará cuando se apruebe con la regla actual (${current} de ${voters}).`,
+          ? `Rule updated: ${next} of ${voters} signers are now required.`
+          : `Proposal #${proposalIndex} created · rule will change once approved under the current policy (${current} of ${voters}).`,
       );
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'No se pudo cambiar la regla');
+      toast.error(err instanceof Error ? err.message : 'Could not update approval rule');
     } finally {
       setBusy(false);
     }
@@ -71,19 +71,19 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight text-white">
-            <ShieldCheck size={18} className="text-white/70" /> Reglas de aprobación
+            <ShieldCheck size={18} className="text-white/70" /> Approval Rules
           </h2>
-          <p className="mt-1 text-[13px] text-white/55">Cuántos firmantes deben aprobar una transacción antes de que se ejecute.</p>
+          <p className="mt-1 text-[13px] text-white/55">How many signers must approve a transaction before it executes.</p>
         </div>
         <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-2 text-right">
-          <div className="text-[11px] uppercase tracking-[0.2em] text-white/45">Regla actual</div>
-          <div className="text-xl font-semibold text-white">{current} <span className="text-white/45">de {voters}</span></div>
+          <div className="text-[11px] uppercase tracking-[0.2em] text-white/45">Current Rule</div>
+          <div className="text-xl font-semibold text-white">{current} <span className="text-white/45">of {voters}</span></div>
         </div>
       </div>
 
       <div className="space-y-2">
-        <div className="text-[11px] font-bold tracking-[0.25em] uppercase text-white/50">Firmas necesarias</div>
-        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Firmas necesarias">
+        <div className="text-[11px] font-bold tracking-[0.25em] uppercase text-white/50">Required Signatures</div>
+        <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Required Signatures">
           {thresholdOptions(voters).map((n) => {
             const selected = n === next;
             return (
@@ -94,7 +94,7 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
                 aria-checked={selected}
                 disabled={!canEdit || busy || !!pending}
                 onClick={() => setNext(n)}
-                title={n === current ? 'Regla actual' : `Pedir ${n} de ${voters} firmas`}
+                title={n === current ? 'Current rule' : `Require ${n} of ${voters} signatures`}
                 className="min-w-[56px] rounded-full px-4 py-2 text-sm font-semibold transition-all disabled:opacity-40"
                 style={{
                   background: selected ? '#FFFFFF' : 'rgba(255,255,255,0.04)',
@@ -106,7 +106,7 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
               </button>
             );
           })}
-          <span className="self-center text-[13px] text-white/45">de {voters} firmantes</span>
+          <span className="self-center text-[13px] text-white/45">of {voters} signers</span>
         </div>
       </div>
 
@@ -114,7 +114,7 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
         <p>{describeThreshold(next, voters)}</p>
         {voters > 1 && (
           <p className="text-white/55">
-            Una propuesta se rechaza definitivamente con {rejectionCutoff(next, voters)} {rejectionCutoff(next, voters) === 1 ? 'voto en contra' : 'votos en contra'}.
+            A proposal is permanently rejected with {rejectionCutoff(next, voters)} {rejectionCutoff(next, voters) === 1 ? 'rejection vote' : 'rejection votes'}.
           </p>
         )}
         {advice && (
@@ -128,15 +128,15 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
       {pending && (
         <p className="flex items-start gap-2 rounded-xl bg-sky-500/10 px-3 py-2 text-[13px] text-sky-200">
           <Info size={15} className="mt-0.5 flex-shrink-0" />
-          <span>Hay un cambio de regla pendiente: propuesta #{pending.index} ({pending.title.replace('Cambiar umbral a ', 'pasar a ')}). Hasta que se ejecute no se puede proponer otro.</span>
+          <span>A rule change is currently pending: proposal #{pending.index} ({pending.title.replace('Cambiar umbral a ', 'change to ')}). Another change cannot be proposed until it executes.</span>
         </p>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-xl text-[12px] text-white/45">
           {needsProposal
-            ? 'Cualquier Proposer puede proponer el cambio, y se aprueba con la regla que está vigente ahora. Si la regla actual es 1 de N, se aplica al instante.'
-            : 'Este multisig aún no está activado: el cambio se guarda en Luxor y se aplicará al activarlo.'}
+            ? 'Any Proposer may submit the change, and it is approved under the current rule. If the current rule is 1 of N, it applies immediately.'
+            : 'This multisig is not yet active on-chain: changes are saved and will apply upon activation.'}
         </p>
         <button
           type="button"
@@ -145,16 +145,16 @@ export function ApprovalRulesCard({ members, canEdit, guard }: ApprovalRulesCard
           className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition-colors hover:bg-neutral-200 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {busy && <Loader2 size={15} className="animate-spin" />}
-          {needsProposal ? `Proponer ${next} de ${voters}` : `Guardar ${next} de ${voters}`}
+          {needsProposal ? `Propose ${next} of ${voters}` : `Save ${next} of ${voters}`}
         </button>
       </div>
 
       <div className="flex items-start gap-3 border-t border-white/10 pt-4 text-[13px] text-white/65">
         <Clock size={15} className="mt-0.5 flex-shrink-0 text-white/45" />
         <div>
-          <span className="font-semibold text-white/85">Tiempo de espera: </span>
+          <span className="font-semibold text-white/85">Time Lock Delay: </span>
           {formatTimeLock(config.timeLock)}
-          <p className="mt-0.5 text-[12px] text-white/40">Se fija al crear el multisig. Si hay espera, una propuesta aprobada solo puede ejecutarse pasado ese tiempo.</p>
+          <p className="mt-0.5 text-[12px] text-white/40">Configured at multisig creation. If set, an approved proposal can only execute after this delay has elapsed.</p>
         </div>
       </div>
     </section>
