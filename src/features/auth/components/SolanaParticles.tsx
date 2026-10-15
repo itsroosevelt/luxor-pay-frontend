@@ -52,7 +52,7 @@ export function SolanaParticles() {
         if (p.y > canvas.height) p.y = 0;
 
         const opacity = 0.08 + p.seed * 0.28;
-        const rgb = `37, 99, 235`; // Luxor Blue
+        const rgb = `37, 99, 235`; // Sterling Blue
 
         ctx.fillStyle = `rgba(${rgb}, ${opacity})`;
         ctx.beginPath();

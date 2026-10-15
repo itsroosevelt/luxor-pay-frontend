@@ -63,7 +63,7 @@ export default function PayByReferencePage() {
       <div className="max-w-md w-full glass-panel p-8 shadow-2xl">
         <header className="mb-6 text-center">
           <h1 className="text-2xl font-bold mb-1">
-            Luxor <span className="text-primary">Pay</span>
+            Sterling <span className="text-primary">Pay</span>
           </h1>
           <p className="text-gray-400 text-sm">{order.label ?? 'Checkout'}</p>
         </header>

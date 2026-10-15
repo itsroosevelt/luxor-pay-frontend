@@ -114,7 +114,7 @@ const FEED_ITEMS: BountyFeedItem[] = [
     type: 'bounty',
     status: 'OPEN',
     tokenBadge: { symbol: '$LXR', marketCap: '$14.2M' },
-    title: 'Create Viral TikTok & Reel Series for Luxor Pay Ecosystem',
+    title: 'Create Viral TikTok & Reel Series for Sterling Ecosystem',
     description: 'Produce high-energy short form video content highlighting instant Solana POS settlements and zero fees.',
     rewardUsd: '$5,000 USDC',
     timeLeft: '3 days left',

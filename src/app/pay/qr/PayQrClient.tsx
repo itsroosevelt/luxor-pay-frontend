@@ -353,7 +353,7 @@ export default function PayQrClient() {
     <PageWrapper>
       <HeaderNav>
         <BrandLogo>
-          Luxor <span>Pay</span>
+          Sterling <span>Pay</span>
         </BrandLogo>
         {!user ? (
           <HeaderButton onClick={() => router.push(loginRedirectUrl)}>
@@ -537,7 +537,7 @@ export default function PayQrClient() {
 
                 {user && (
                   <InfoRow>
-                    <InfoLabel>Luxor Account</InfoLabel>
+                    <InfoLabel>Sterling Account</InfoLabel>
                     <InfoValue>{user.email}</InfoValue>
                   </InfoRow>
                 )}

@@ -93,7 +93,7 @@ export default function CreateTokenPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Pepe Luxor"
+                    placeholder="e.g. Pepe Sterling"
                     value={tokenName}
                     onChange={(e) => setTokenName(e.target.value)}
                     className="w-full rounded-2xl px-4 py-2.5 text-sm bg-black/60 border border-white/15 text-white placeholder-gray-600 outline-none focus:border-white/40 transition-colors font-['Outfit']"

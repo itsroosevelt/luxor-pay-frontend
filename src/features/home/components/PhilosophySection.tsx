@@ -1,6 +1,7 @@
 'use client';
 import { motion } from 'framer-motion';
 import { InfoSection } from '@/features/home/components/InfoSection';
+import { LogoParticleVisual } from '@/features/home/components/HomeVisuals';
 
 export function PhilosophySection() {
     const items = [
@@ -29,8 +30,7 @@ export function PhilosophySection() {
                 title="Our Philosophy: The Hemisphere of Abundance"
                 subtitle="Born in Salt Lake City, Sterling aligns with the innovation values of the western tech corridor. We believe abundance is not awaited, it is created."
                 items={items}
-                imageSrc="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
-                imageClassName="object-contain p-12"
+                customMedia={<LogoParticleVisual />}
                 imageRight={false}
                 gradient="from-orange-500/20 via-red-500/10 to-transparent"
             />

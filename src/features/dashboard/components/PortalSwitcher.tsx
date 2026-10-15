@@ -3,7 +3,7 @@
 /**
  * PortalSwitcher — Meta Business Suite-style "apps grid" launcher.
  *
- * Lists all 3 Luxor Pay portals (main dashboard + the 2 satellites) and
+ * Lists all 3 Sterling portals (main dashboard + the 2 satellites) and
  * marks whichever one you're currently in as non-clickable. Every other
  * entry opens in a NEW TAB — never in-place navigation — so switching
  * portals never replaces the app you were just looking at. Rendered both

@@ -22,6 +22,7 @@ import {
   type NavSection,
 } from '@/features/dashboard/components/Sidebar';
 import { SupportCenterDrawer } from '@/features/dashboard/components/SupportCenterDrawer';
+import { PageTransition } from '@/features/dashboard/components/PageTransition';
 import { QrOperationsModal } from '@/features/dashboard/components/overview/QrOperationsModal';
 import { TransferModal } from '@/features/transfers/components/TransferModal';
 import { TransferSuccessModal } from '@/features/transfers/components/TransferSuccessModal';
@@ -125,7 +126,7 @@ export function DashboardShell({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (!currentUser) {
-        router.replace('/login');
+        router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         return;
       }
       setUser(currentUser);
@@ -181,7 +182,7 @@ export function DashboardShell({
       />
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative">
+      <main data-scroll-container className="flex-1 flex flex-col min-w-0 h-full overflow-y-auto overflow-x-hidden relative">
         {/* Mobile header */}
         <header
           className="md:hidden flex-shrink-0 flex items-center justify-between p-4"
@@ -259,7 +260,9 @@ export function DashboardShell({
               {renderAvatar(32)}
             </button>
           </div>
-          {children}
+          <PageTransition>
+            {children}
+          </PageTransition>
         </div>
       </main>
 
@@ -354,7 +357,7 @@ export function DashboardShell({
                   </button>
                 )}
 
-                {/* Google-Style "Manage your Luxor Account" Pill Button */}
+                {/* Google-Style "Manage your Sterling Account" Pill Button */}
                 <Link
                   href="/dashboard/profile"
                   onClick={() => setIsAccountMenuOpen(false)}

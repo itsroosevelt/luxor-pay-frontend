@@ -132,7 +132,7 @@ export default function LxrTokenPage() {
             <Coins size={28} className="text-white shrink-0" /> $LXR Ecosystem Token
           </h1>
           <p className="lx-page-subtitle">
-            The native utility and governance token powering the Luxor Pay Web3 ecosystem.
+            The native utility and governance token powering the Sterling Web3 ecosystem.
           </p>
 
           <div className="flex flex-wrap items-center gap-2.5 mt-3 pt-3 border-t border-white/10">
@@ -200,7 +200,7 @@ export default function LxrTokenPage() {
               <ShieldCheck size={18} className="text-white" /> About $LXR & Immutable Security
             </h2>
             <p className="text-xs text-gray-300 leading-relaxed font-sans">
-              $LXR is the native utility token of the Luxor Pay ecosystem. Holding or staking $LXR drastically reduces merchant payment gateway fees, unlocks higher multisig treasury thresholds, and provides governance rights over protocol parameters.
+              $LXR is the native utility token of the Sterling ecosystem. Holding or staking $LXR drastically reduces merchant payment gateway fees, unlocks higher multisig treasury thresholds, and provides governance rights over protocol parameters.
             </p>
             <p className="text-xs text-gray-300 leading-relaxed font-sans">
               Deployed on Solana with <strong>Mint Authority Revoked</strong> and <strong>Freeze Authority Revoked</strong> — total supply is permanently fixed and unmintable.

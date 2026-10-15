@@ -24,7 +24,7 @@ const PrivacyContainer = styled.main`
     left: -10%;
     width: 700px;
     height: 700px;
-    background: rgba(37, 99, 235, 0.18);
+    background: rgba(255, 255, 255, 0.05);
     filter: blur(140px);
     border-radius: 50%;
     z-index: 0;
@@ -38,7 +38,7 @@ const PrivacyContainer = styled.main`
     right: -10%;
     width: 700px;
     height: 700px;
-    background: rgba(249, 115, 22, 0.1);
+    background: rgba(255, 255, 255, 0.03);
     filter: blur(140px);
     border-radius: 50%;
     z-index: 0;
@@ -74,12 +74,12 @@ const BackButton = styled(Link)`
   &:hover {
     color: #ffffff;
     background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(96, 165, 250, 0.4);
+    border-color: rgba(255, 255, 255, 0.3);
     transform: translateX(-2px);
   }
 
   &:focus-visible {
-    outline: 2px solid #60a5fa;
+    outline: 2px solid #ffffff;
     outline-offset: 2px;
   }
 `;
@@ -132,11 +132,11 @@ const LastUpdated = styled.div`
   margin-top: 20px;
   padding: 6px 16px;
   border-radius: 9999px;
-  background: rgba(96, 165, 250, 0.1);
-  border: 1px solid rgba(96, 165, 250, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   font-family: monospace;
   font-size: 12px;
-  color: #60a5fa;
+  color: rgba(255, 255, 255, 0.7);
 `;
 
 const GlassCard = styled.div`
@@ -164,12 +164,12 @@ const IconWrapper = styled.div`
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: rgba(37, 99, 235, 0.15);
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #60a5fa;
+  color: rgba(255, 255, 255, 0.7);
   flex-shrink: 0;
 `;
 
@@ -209,9 +209,7 @@ const Paragraph = styled.p`
 `;
 
 const HighlightText = styled.span`
-  background: linear-gradient(to right, #60a5fa, #2563eb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
   font-weight: 500;
 `;
 
@@ -221,7 +219,7 @@ const CodeTag = styled.code`
   background: rgba(255, 255, 255, 0.08);
   padding: 2px 8px;
   border-radius: 6px;
-  color: #60a5fa;
+  color: #ffffff;
 `;
 
 const List = styled.ul`
@@ -247,7 +245,7 @@ const ListItem = styled.li`
 `;
 
 const CalloutBox = styled.div`
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(255, 255, 255, 0.04);
   border-left: 3px solid #2563eb;
   padding: 20px 24px;
   border-radius: 0 16px 16px 0;
@@ -447,7 +445,7 @@ export const PrivacyView = () => {
               <strong>Legal & Compliance Desk:</strong> <CodeTag>legal@sterlingpay.app</CodeTag>
             </ListItem>
             <ListItem>
-              <strong>Official Ecosystem Portal:</strong> <a href="https://sterlingpay.app" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>https://sterlingpay.app</a>
+              <strong>Official Ecosystem Portal:</strong> <a href="https://sterlingpay.app" target="_blank" rel="noopener noreferrer" style={{ color: "#ffffff", textDecoration: "underline" }}>https://sterlingpay.app</a>
             </ListItem>
           </List>
         </GlassCard>

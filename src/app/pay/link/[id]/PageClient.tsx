@@ -409,7 +409,7 @@ export default function PayLinkPage() {
   return (
     <PageWrapper>
       <HeaderNav>
-        <BrandLogo>Luxor <span>Pay</span></BrandLogo>
+        <BrandLogo>Sterling <span>Pay</span></BrandLogo>
         {!user ? (
           <HeaderButton onClick={() => router.push(`/login?redirect=/pay/link/${id}`)}>
             Login / Create Account

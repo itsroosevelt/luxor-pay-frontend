@@ -8,24 +8,25 @@ function ShowcaseVideo({ src, className }: { src: string, className: string }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const isInView = useInView(containerRef, { amount: 0.3 });
+    // The file is only requested the first time the clip scrolls into view (they weigh up to ~25 MB each).
+    const armed = useInView(containerRef, { amount: 0.3, once: true });
 
     useEffect(() => {
-        if (videoRef.current) {
-            if (isInView) videoRef.current.play().catch(() => {});
-            else videoRef.current.pause();
-        }
-    }, [isInView]);
+        const video = videoRef.current;
+        if (!video || !armed) return;
+        if (isInView) video.play().catch(() => {});
+        else video.pause();
+    }, [isInView, armed]);
 
     return (
         <div ref={containerRef} className="w-full h-full">
-            <video 
+            <video
                 ref={videoRef}
-                src={src}
-                autoPlay
+                src={armed ? src : undefined}
                 loop
                 muted
                 playsInline
-                preload="metadata"
+                preload="none"
                 className={className}
             />
         </div>

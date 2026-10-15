@@ -202,7 +202,7 @@ function XTwitterIcon({ size = 16 }: { size?: number }) {
 export function SupportCenterDrawer({ isOpen, onClose }: SupportCenterDrawerProps) {
   const handleOpenTicket = (e: React.MouseEvent) => {
     e.preventDefault();
-    window.location.href = 'mailto:support@luxorpay.app?subject=Support%20Request%20-%20Luxor%20Pay';
+    window.location.href = 'mailto:support@luxorpay.app?subject=Support%20Request%20-%20Sterling';
     toast.success('Opening support email client');
   };
 

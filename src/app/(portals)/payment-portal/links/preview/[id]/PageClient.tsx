@@ -418,7 +418,7 @@ export default function PreviewPaymentLinkPage() {
                     </BrowserNavButtons>
                     <BrowserAddressBar>
                       <Lock size={10} />
-                      <span>pay.luxor.com/pay/link/{id.slice(0, 8)}...</span>
+                      <span>itssterling.com/pay/link/{id.slice(0, 8)}...</span>
                     </BrowserAddressBar>
                     <div style={{ width: 14 }} />
                   </BrowserAddressBarRow>

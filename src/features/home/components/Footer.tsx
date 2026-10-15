@@ -41,7 +41,7 @@ const LUXOR_FOOTER_SECTIONS: FooterSectionItem[] = [
         title: "Assets",
         type: "assets",
         assets: [
-            { name: "$LXR | Luxor Utility Asset", href: "https://luxorstandard.com/", target: "_blank" },
+            { name: "$LXR | Utility Asset", href: "https://luxorstandard.com/", target: "_blank" },
             { name: "$XLS | Real world Asset", href: "https://excelsiorstandard.com/", target: "_blank" },
             { name: "$USDX | Stable Asset", href: "https://occidentstandard.com/", target: "_blank" },
         ],
@@ -137,54 +137,48 @@ const STERLING_SECTIONS: RegularSection[] = [
         title: "Products",
         hasExpandLimit: true,
         links: [
-            { name: "Pricing", href: "/dashboard/developers/programs" },
-            { name: "Web Gateway (eCommerce)", href: "#features" },
-            { name: "Point of Sale (POS)", href: "#features" },
-            { name: "Recurring Payments", href: "#features" },
-            { name: "Ecosystem & Tokenization", href: "#features" },
-            { name: "Payments Engine", href: "#features" },
-            { name: "Checkout", href: "#" },
-            { name: "Invoicing", href: "#" },
-            { name: "Crypto Onramp", href: "#" },
-            { name: "Global Payouts", href: "#" },
-            { name: "Radar Fraud Protection", href: "#" },
-            { name: "Sterling Sigma Analytics", href: "#" }
+            { name: "Web Gateway (eCommerce)", href: "/#innovation" },
+            { name: "Point of Sale (POS)", href: "/#architecture" },
+            { name: "Recurring Payments", href: "/#innovation" },
+            { name: "Ecosystem & Tokenization", href: "/#philosophy" },
+            { name: "Payments Engine", href: "/#architecture" },
+            { name: "Checkout", href: "/#innovation" },
+            { name: "Invoicing", href: "/login?redirect=%2Fdashboard%2Frequests" },
+            { name: "Crypto Onramp", href: "/login?redirect=%2Fdashboard" }
         ]
     },
     {
         title: "Solutions",
         hasExpandLimit: true,
         links: [
-            { name: "Enterprises", href: "#" },
-            { name: "Startups", href: "#" },
-            { name: "SMBs", href: "#" },
-            { name: "Retail & Physical Stores", href: "#" },
-            { name: "eCommerce & Digital", href: "#" },
-            { name: "Marketplaces", href: "#" },
-            { name: "Local Businesses", href: "#" },
-            { name: "Platforms", href: "#" }
+            { name: "Enterprises", href: "/#solutions" },
+            { name: "Startups", href: "/#solutions" },
+            { name: "SMBs", href: "/#solutions" },
+            { name: "Retail & Physical Stores", href: "/#showcase" },
+            { name: "eCommerce & Digital", href: "/#showcase" },
+            { name: "Marketplaces", href: "/#showcase" },
+            { name: "Local Businesses", href: "/#showcase" },
+            { name: "Platforms", href: "/#solutions" }
         ]
     },
     {
         title: "Developers",
         hasExpandLimit: true,
         links: [
-            { name: "Documentation", href: "/dashboard/developers/programs" },
-            { name: "API Reference", href: "/dashboard/developers/programs" },
-            { name: "Libraries & SDKs", href: "/dashboard/developers/programs" },
-            { name: "Sandbox / Testnet", href: "/dashboard/developers/tx-builder" },
-            { name: "Token Manager", href: "/dashboard/developers/token-manager" }
+            { name: "Documentation", href: "https://github.com/admluxorsys/luxor/blob/main/Whitepaper.md", target: "_blank" },
+            { name: "API Reference", href: "https://github.com/admluxorsys/luxor/blob/main/Whitepaper.md", target: "_blank" },
+            { name: "Libraries & SDKs", href: "https://github.com/admluxorsys/luxor", target: "_blank" },
+            { name: "Sandbox / Testnet", href: "/login?redirect=%2Fdashboard%2Fdevelopers%2Ftx-builder" },
+            { name: "Token Manager", href: "/login?redirect=%2Fdashboard%2Fdevelopers%2Ftoken-manager" }
         ]
     },
     {
         title: "Resources",
         hasExpandLimit: true,
         links: [
-            { name: "Blog", href: "#" },
-            { name: "Help Center", href: "#" },
-            { name: "Governance / DAO", href: "#" },
-            { name: "Guides", href: "#" },
-            { name: "Community Forum", href: "#" }
+            { name: "Blog", href: "https://luxorintelligence.com", target: "_blank" },
+            { name: "Help Center", href: "https://mail.google.com/mail/?view=cm&fs=1&to=support@luxorintelligence.com", target: "_blank" },
+            { name: "Governance / DAO", href: "/#pillars" }
         ]
     }
 ];
@@ -262,7 +256,7 @@ export default function Footer() {
                     {/* Left Side: Slogan */}
                     <div className="lg:w-1/4">
                         <h2 className="text-2xl md:text-3xl font-sans font-medium tracking-tight leading-tight sticky top-24 text-white">
-                            Making <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Luxor</span> <br />
+                            Making <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Sterling</span> <br />
                             helpful for <br />
                             everyone
                         </h2>
@@ -277,7 +271,7 @@ export default function Footer() {
                                         : 'text-white/40 hover:text-white bg-white/5 hover:bg-white/10'
                                 }`}
                             >
-                                Luxor Ecosystem
+                                Sterling Ecosystem
                             </button>
                             <button
                                 onClick={() => setActiveTab('platform')}
@@ -472,11 +466,11 @@ export default function Footer() {
                     {/* Logo Area */}
                     <div className="flex items-center gap-3 group cursor-default">
                         <img
-                            src="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
+                            src="/brand/sterling-logo.png"
                             alt="Logo"
                             className="w-8 h-8 object-contain brightness-125 filter group-hover:rotate-12 transition-transform duration-500"
                         />
-                        <span className="text-lg font-sans font-medium tracking-tighter">Luxor Intelligence &bull; Sterling</span>
+                        <span className="text-lg font-sans font-medium tracking-tighter">Sterling</span>
                     </div>
 
                     {/* Secondary Navigation */}
@@ -486,7 +480,7 @@ export default function Footer() {
                         <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
                         <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
                         <span className="md:ml-4 flex items-center gap-1">
-                            © 2026 Luxor Intelligence LLC &bull; Sterling <Heart className="w-3 h-3 text-red-500 fill-current inline" />
+                            © 2026 Sterling <Heart className="w-3 h-3 text-red-500 fill-current inline" />
                         </span>
                     </div>
 

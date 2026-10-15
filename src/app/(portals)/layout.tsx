@@ -25,7 +25,7 @@ export default function PortalsLayout({ children }: { children: React.ReactNode 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser) {
-        router.replace('/login');
+        router.replace(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
         return;
       }
       setUser(currentUser);

@@ -24,8 +24,7 @@ html, body {
   min-height: 100%;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* No overflow here: html/body as scroll containers break position: sticky (the pinned scroll sections). */
   margin: 0;
   padding: 0;
   background: #060709;
@@ -351,3 +350,9 @@ html, body {
   background: transparent;
 }
 
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}

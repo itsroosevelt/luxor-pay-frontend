@@ -430,7 +430,7 @@ export default function TokenManagerPage() {
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Luxor Pay"
+                    placeholder="e.g. Sterling"
                     value={addForm.name}
                     onChange={(e) => setAddForm((prev) => ({ ...prev, name: e.target.value }))}
                     className="w-full bg-white/5 border border-white/10 rounded-xl px-3.5 py-2.5 text-white outline-none focus:border-blue-400"

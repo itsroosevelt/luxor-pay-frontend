@@ -1,5 +1,6 @@
 'use client';
 import { InfoSection } from '@/features/home/components/InfoSection';
+import { PaymentFlowVisual } from '@/features/home/components/HomeVisuals';
 
 export function InnovationSection() {
     const items = [
@@ -9,7 +10,7 @@ export function InnovationSection() {
         },
         { 
             title: "Access to Advanced Tools", 
-            desc: "Your Luxor ($LXR) balance unlocks priority liquidity, merchant POS tools, and premium ecosystem features." 
+            desc: "Your $LXR balance unlocks priority liquidity, merchant POS tools, and premium ecosystem features." 
         },
         { 
             title: "Savings on Consumption", 
@@ -24,11 +25,10 @@ export function InnovationSection() {
     return (
         <InfoSection 
             title="What is Sterling Payment Gateway?"
-            subtitle="Sterling is the high-performance payment gateway powered natively by the Luxor utility asset ($LXR) on Solana. It's not a passive asset; it's an active tool designed for those who build, entrepreneur, and transact in the new digital economy."
-            description="By using the Sterling gateway and holding Luxor ($LXR), you don't just hold an asset on Solana; you gain superpowers within our network:"
+            subtitle="Sterling is the high-performance payment gateway powered natively by the $LXR utility asset on Solana. It's not a passive asset; it's an active tool designed for those who build, entrepreneur, and transact in the new digital economy."
+            description="By using the Sterling gateway and holding $LXR, you don't just hold an asset on Solana; you gain superpowers within our network:"
             items={items}
-            imageSrc="https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b"
-            imageClassName="object-contain p-12"
+            customMedia={<PaymentFlowVisual />}
             showButton={true}
             buttonText="Explore Ecosystem"
             imageRight={true}

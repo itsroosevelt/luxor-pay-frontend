@@ -4,8 +4,7 @@ import dynamic from "next/dynamic";
 import { Fragment } from "react";
 import "./globals.css";
 import StyledComponentsRegistry from '@/lib/registry';
-import { SolanaProvider } from '@/web3/providers/SolanaProvider';
-import { TokenRegistryProvider } from '@/context/TokenRegistryContext';
+import { AppProviders } from '@/components/AppProviders';
 import { IS_MOCK_MODE } from '@/lib/mock/mock-config';
 
 /**
@@ -35,7 +34,7 @@ export const metadata: Metadata = {
   title: "Sterling | Solana Network",
   description: "Sterling: Payment Gateway on Solana Network",
   icons: {
-    icon: "https://firebasestorage.googleapis.com/v0/b/landluxor.firebasestorage.app/o/Luxor%20Pay%2Fwithout-lxr-pay-logo.png?alt=media&token=3591236e-a31e-4e94-b9dd-42394b415a1b",
+    icon: "/brand/sterling-logo.png",
   },
 };
 
@@ -99,11 +98,9 @@ export default function RootLayout({
       >
         <StyledComponentsRegistry>
           <MockModeProvider>
-            <TokenRegistryProvider>
-              <SolanaProvider>
-                {children}
-              </SolanaProvider>
-            </TokenRegistryProvider>
+            <AppProviders>
+              {children}
+            </AppProviders>
           </MockModeProvider>
         </StyledComponentsRegistry>
       </body>

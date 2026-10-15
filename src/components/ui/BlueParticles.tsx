@@ -95,14 +95,36 @@ export function BlueParticles({ variant = 'fixed', className = '' }: BlueParticl
       animationFrame.current = requestAnimationFrame(animate);
     };
 
-    animate();
+    // Only animate while the canvas is on screen: eight of these live on the landing page.
+    let visible = variant === 'fixed';
+    const start = () => {
+      if (visible && animationFrame.current === undefined) animate();
+    };
+    const stop = () => {
+      if (animationFrame.current !== undefined) cancelAnimationFrame(animationFrame.current);
+      animationFrame.current = undefined;
+    };
+    const io =
+      variant === 'section' && typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(([entry]) => {
+            visible = entry.isIntersecting;
+            if (visible) start();
+            else stop();
+          })
+        : null;
+    if (io) io.observe(canvas);
+    else {
+      visible = true;
+      start();
+    }
 
     return () => {
+      io?.disconnect();
       if (variant === 'fixed') {
         window.removeEventListener('resize', resize);
       }
       resizeObserver?.disconnect();
-      if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
+      stop();
     };
   }, [variant]);
 

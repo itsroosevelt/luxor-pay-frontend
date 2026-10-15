@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 import { BlueParticles } from '@/components/ui/BlueParticles';
@@ -287,7 +288,8 @@ export function BracketsSection() {
             badge: "Global Customers",
             title: "Premium Access",
             subtitle: "Access to abundance and the premium treatment you deserve.",
-            btn: "Join the elite"
+            btn: "Join the elite",
+            href: "/login?register=true"
         },
         { 
             key: 'builders', 
@@ -296,7 +298,8 @@ export function BracketsSection() {
             badge: "Builders and Freelancers",
             title: "Elite Infrastructure",
             subtitle: "Your talent deserves an infrastructure at its level.",
-            btn: "Start building"
+            btn: "Start building",
+            href: "/login?redirect=%2Fdashboard%2Fdevelopers%2Ftx-builder"
         },
         { 
             key: 'merchants', 
@@ -305,7 +308,8 @@ export function BracketsSection() {
             badge: "Merchants and Corporations",
             title: "Global Market",
             subtitle: "Transform how your company interacts with the global market.",
-            btn: "Scale now"
+            btn: "Scale now",
+            href: "/login?register=true"
         }
     ];
 
@@ -363,11 +367,12 @@ export function BracketsSection() {
                                 {cat.subtitle}
                             </p>
                             <div className="pt-4">
-                                <button 
-                                    suppressHydrationWarning
-                                    className={`${cat.style} px-7 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 hover:scale-105 active:scale-95 font-sans pointer-events-auto`}>
+                                <Link
+                                    href={cat.href}
+                                    className={`${cat.style} inline-block px-7 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 hover:scale-105 active:scale-95 font-sans pointer-events-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#60A5FA]`}
+                                >
                                     {cat.btn}
-                                </button>
+                                </Link>
                             </div>
                         </div>
                     </div>

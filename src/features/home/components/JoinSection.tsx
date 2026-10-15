@@ -30,10 +30,10 @@ export function JoinSection() {
                             whileTap={{ scale: 0.95 }}
                             className="bg-white text-black px-10 py-4 rounded-full text-sm font-medium hover:bg-zinc-200 transition-colors tracking-wide cursor-pointer shadow-lg shadow-white/10"
                         >
-                            Get Luxor ($LXR) on Phantom
+                            Get $LXR on Phantom
                         </motion.button>
                         <span className="text-[11px] text-zinc-500 font-mono mt-3">
-                            Solana Contract: 7Qm6...Wdth (Luxor)
+                            Solana Contract: 7Qm6...Wdth ($LXR)
                         </span>
                     </div>
                 </motion.div>

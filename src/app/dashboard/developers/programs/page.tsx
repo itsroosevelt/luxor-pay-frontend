@@ -20,7 +20,7 @@ export interface ProgramItem {
 const PROGRAMS: ProgramItem[] = [
   {
     id: 'prog-1',
-    name: 'Luxor Treasury Multisig v2',
+    name: 'Sterling Treasury Multisig v2',
     programId: 'SQDS2n2Vthf9s9tK2L4X6N3M7P1v9K2L4X6N3M7P1v9',
     authority: 'Multisig Vault (3/7 Threshold)',
     version: 'v2.4.0',
@@ -29,7 +29,7 @@ const PROGRAMS: ProgramItem[] = [
   },
   {
     id: 'prog-2',
-    name: 'Luxor Payment Gateway & POS',
+    name: 'Sterling Payment Gateway & POS',
     programId: 'LXRPAY1111111111111111111111111111111111111',
     authority: 'Upgrade Authority Locked',
     version: 'v1.8.2',
@@ -38,7 +38,7 @@ const PROGRAMS: ProgramItem[] = [
   },
   {
     id: 'prog-3',
-    name: 'Luxor Token Launchpad Engine',
+    name: 'Sterling Token Launchpad Engine',
     programId: 'LXRLAUNCH111111111111111111111111111111111',
     authority: 'Time-lock DAO Multisig',
     version: 'v3.1.0',

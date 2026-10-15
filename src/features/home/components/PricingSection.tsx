@@ -38,7 +38,7 @@ export function PricingSection() {
     ];
 
     return (
-        <section id="pricing" className="py-24 md:py-36 px-6 md:px-12 bg-transparent border-t border-white/5 relative overflow-hidden">
+        <section id="pricing" className="scroll-mt-20 py-24 md:py-36 px-6 md:px-12 bg-transparent border-t border-white/5 relative overflow-hidden">
             {/* Ambient background glow */}
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[350px] bg-blue-600/10 blur-[150px] pointer-events-none rounded-full" />
 

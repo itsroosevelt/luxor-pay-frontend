@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * PortalNav — left-hand navigation rail for satellite portals in Luxor Pay.
+ * PortalNav — left-hand navigation rail for satellite portals in Sterling.
  * Features workspace selector, section groupings, shortcut badges, and
- * collapsible product groups matching the enterprise Stripe/Luxor design.
+ * collapsible product groups matching the enterprise Stripe/Sterling design.
  */
 
 import Link from 'next/link';
