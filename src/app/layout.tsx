@@ -19,14 +19,12 @@ const MockModeProvider = IS_MOCK_MODE
 const montserrat = Montserrat({
   subsets: ['latin'],
   variable: '--font-montserrat',
-  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
 });
 
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
-  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
 });
 
