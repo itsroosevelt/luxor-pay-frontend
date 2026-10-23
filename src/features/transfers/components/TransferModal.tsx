@@ -302,6 +302,21 @@ export function TransferModal({
   const [destinationMode, setDestinationMode] = useState<'vault' | 'contact' | 'address'>('address');
   const [selectedVaultId, setSelectedVaultId] = useState<string>('');
   const [selectedDestVaultId, setSelectedDestVaultId] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
 
   const [formData, setFormData] = useState({
     walletAddress: initialRecipientAddress || '',
@@ -373,8 +388,6 @@ export function TransferModal({
       setFormData((prev) => ({ ...prev, walletAddress: destVault.address }));
     }
   };
-
-  if (!isOpen) return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -451,21 +464,6 @@ export function TransferModal({
     (destVaultObj ? formatVaultLabel(destVaultObj.label, destVaultObj.index === 0 || destVaultObj.isDefault) : null) ||
     destContactObj?.nickname ||
     (formData.walletAddress ? `${formData.walletAddress.slice(0, 6)}...${formData.walletAddress.slice(-4)}` : 'Recipient');
-
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isOpen]);
 
   if (!isOpen) return null;
   if (!mounted || typeof document === 'undefined') return null;
