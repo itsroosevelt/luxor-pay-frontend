@@ -1,6 +1,6 @@
 'use client';
 import { InfoSection } from '@/features/home/components/InfoSection';
-import { PaymentFlowVisual } from '@/features/home/components/HomeVisuals';
+import { PaymentPhoneAnimation } from '@/features/home/components/PaymentPhoneAnimation';
 
 export function InnovationSection() {
     const items = [
@@ -28,7 +28,8 @@ export function InnovationSection() {
             subtitle="Sterling is the high-performance payment gateway powered natively by the $LXR utility asset on Solana. It's not a passive asset; it's an active tool designed for those who build, entrepreneur, and transact in the new digital economy."
             description="By using the Sterling gateway and holding $LXR, you don't just hold an asset on Solana; you gain superpowers within our network:"
             items={items}
-            customMedia={<PaymentFlowVisual />}
+            customMedia={<PaymentPhoneAnimation brandName="Sterling" />}
+            bareMedia={true}
             showButton={true}
             buttonText="Explore Ecosystem"
             imageRight={true}

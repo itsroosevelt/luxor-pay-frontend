@@ -29,6 +29,8 @@ interface CommonSectionProps {
     showButton?: boolean;
     buttonText?: string;
     gradient?: string;
+    aspectClassName?: string;
+    bareMedia?: boolean;
 }
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -37,17 +39,26 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
     "Acceso a Experiencias": Sparkles,
     "Ahorro en Consumo": Coins,
     "Gobernanza Activa": Users,
+    "Exclusive Fee Discounts": Zap,
+    "Access to Advanced Tools": Sparkles,
+    "Savings on Consumption": Coins,
+    "Active Governance": Users,
     // Philosophy items
     "Sin Fronteras": Globe,
     "Respaldo y Estabilidad": ShieldCheck,
     "Para Todas las Generaciones": Activity,
+    "Borderless": Globe,
+    "Backing and Stability": ShieldCheck,
+    "For All Generations": Activity,
     // Architecture items
     "Capacidad de Red Definida": Activity,
     "Autonomía Programada": ShieldCheck,
-    "Economía Circular": RefreshCw, // Wait, RefreshCw is not imported
+    "Economía Circular": RefreshCw,
+    "Defined Network Capacity": Activity,
+    "Programmed Autonomy": ShieldCheck,
+    "Circular Economy": RefreshCw,
 };
 
-// I'll import RefreshCw too
 import Image from 'next/image';
 import { RefreshCw } from 'lucide-react';
 import { BlueParticles } from '@/components/ui/BlueParticles';
@@ -63,7 +74,9 @@ export function InfoSection({
     imageRight = true, 
     showButton = false,
     buttonText,
-    gradient = "from-blue-500/20 via-purple-500/10 to-transparent"
+    gradient = "from-blue-500/20 via-purple-500/10 to-transparent",
+    aspectClassName,
+    bareMedia = false
 }: CommonSectionProps) {
     
     return (
@@ -142,29 +155,36 @@ export function InfoSection({
                     transition={{ duration: 0.75, ease: [0.21, 0.47, 0.32, 0.98] }}
                     className="flex-1 w-full"
                 >
-                    <div className="relative group">
-                        {/* Dynamic colorful glow background - matches the provided mockup */}
-                        <div className="absolute -inset-10 bg-gradient-to-tr from-blue-500/20 via-purple-500/20 to-orange-500/20 rounded-[60px] blur-[80px] opacity-40 group-hover:opacity-60 transition-opacity duration-1000" />
-                        
-                        {/* The Glass Container */}
-                        <div className="relative aspect-[16/10] lg:aspect-[4/3] rounded-[40px] overflow-hidden border border-white/20 bg-black backdrop-blur-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]">
-                            {customMedia ? customMedia : (
-                                imageSrc && (
-                                    <Image 
-                                        src={imageSrc} 
-                                        alt={title} 
-                                        fill
-                                        className={`object-contain p-6 bg-black transition-transform duration-[2000ms] ease-out ${imageClassName}`}
-                                    />
-                                )
-                            )}
-                            {/* Inner border highlight */}
-                            <div className="absolute inset-0 rounded-[40px] border border-white/10 pointer-events-none" />
-                            {/* Glass shine overlay */}
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50" />
+                    {bareMedia ? (
+                        <div className="relative flex items-center justify-center w-full">
+                            <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] bg-gradient-to-br from-blue-600/20 via-cyan-500/15 to-transparent blur-[120px] opacity-50" />
+                            {customMedia}
                         </div>
+                    ) : (
+                        <div className="relative group w-full">
+                            {/* Dynamic colorful glow background - matches the provided mockup */}
+                            <div className="absolute -inset-10 bg-gradient-to-tr from-blue-500/20 via-purple-500/20 to-orange-500/20 rounded-[60px] blur-[80px] opacity-40 group-hover:opacity-60 transition-opacity duration-1000" />
+                            
+                            {/* The Glass Container */}
+                            <div className={`relative ${aspectClassName || 'aspect-[16/10] lg:aspect-[4/3]'} w-full rounded-[40px] overflow-hidden border border-white/20 bg-black backdrop-blur-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)]`}>
+                                {customMedia ? customMedia : (
+                                    imageSrc && (
+                                        <Image 
+                                            src={imageSrc} 
+                                            alt={title} 
+                                            fill
+                                            className={`object-contain p-6 bg-black transition-transform duration-[2000ms] ease-out ${imageClassName}`}
+                                        />
+                                    )
+                                )}
+                                {/* Inner border highlight */}
+                                <div className="absolute inset-0 rounded-[40px] border border-white/10 pointer-events-none" />
+                                {/* Glass shine overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-50" />
+                            </div>
 
-                    </div>
+                        </div>
+                    )}
                 </motion.div>
             </div>
         </section>
