@@ -50,15 +50,6 @@ const nextConfig: NextConfig = {
   ...(isCapacitorBuild
     ? {}
     : {
-        async redirects() {
-          return [
-            {
-              source: '/',
-              destination: '/dashboard',
-              permanent: false,
-            },
-          ];
-        },
         async headers() {
           return [{ source: '/:path*', headers: securityHeaders }];
         },
