@@ -125,11 +125,7 @@ export function ContactsView({
   };
 
   return (
-    <PageContainer
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
-    >
+    <PageContainer>
       {/* Header Row */}
       <HeaderRow>
         <Title>Contacts</Title>

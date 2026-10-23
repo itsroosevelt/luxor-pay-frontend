@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 export const spin = keyframes`to { transform: rotate(360deg); }`;
 
-export const PageContainer = styled(motion.div)`
+export const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;

@@ -250,7 +250,9 @@ function TreasuryContainerInner() {
     setProposalsKey((k) => k + 1);
     // The proposals panel only exists in the overview; leave an account page first.
     if (activeAccount) router.push('/dashboard/treasury');
-    setTimeout(() => proposalsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), activeAccount ? 350 : 0);
+    if (!openForm) {
+      setTimeout(() => proposalsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), activeAccount ? 350 : 0);
+    }
   };
 
   const startSend = (vault?: Vault) => {
@@ -518,11 +520,7 @@ function TreasuryContainerInner() {
   }
 
   return (
-    <PageContainer
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
-    >
+    <PageContainer>
       <BreadcrumbNav style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
         {activeAccount ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

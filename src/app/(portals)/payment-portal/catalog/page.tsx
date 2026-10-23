@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -82,7 +83,6 @@ export default function ProductCatalogDarkPage() {
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
 
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<CatalogProductItem | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -93,6 +93,20 @@ export default function ProductCatalogDarkPage() {
     currency: 'USDC',
     sku: '',
   });
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isModalOpen]);
 
   const mapLinksToProducts = (linksList: any[]): CatalogProductItem[] => {
     return linksList.map((link: any) => {
@@ -395,9 +409,10 @@ export default function ProductCatalogDarkPage() {
       </MainContent>
 
       {/* Modal: Create / Edit Product */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <ModalOverlay
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {isModalOpen && (
+            <ModalOverlay
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -500,7 +515,9 @@ export default function ProductCatalogDarkPage() {
             </ModalBox>
           </ModalOverlay>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+    )}
     </PageContainer>
   );
 }

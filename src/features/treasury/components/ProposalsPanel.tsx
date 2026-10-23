@@ -10,6 +10,7 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, X, Loader2, ArrowUpRight, Repeat, Settings2, ShieldCheck, Shuffle,
@@ -164,6 +165,12 @@ export function ProposalsPanel({
   // Opened from Send/Trade only after the caller checked the wallet; re-checked on submit.
   const [createOpen, setCreateOpen] = useState(!!openCreateOnMount);
   const [busy, setBusy] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (openCreateOnMount) {
+      setCreateOpen(true);
+    }
+  }, [openCreateOnMount]);
 
   const [form, setForm] = useState<{ type: ProposalType; vaultId: string; title: string; destination: string; destinationLabel: string; amount: string; mint: string; memo: string }>({
     type: defaultType ?? 'transfer', vaultId: defaultVaultId ?? '', title: '', destination: '', destinationLabel: '', amount: '', mint: '', memo: '',
@@ -414,14 +421,27 @@ export function ProposalsPanel({
       {/* detail modal */}
       <AnimatePresence>
         {detail && (
-          <Modal onClose={() => setDetailId(null)} title={detail.title} icon={(() => { const I = TYPE_META[detail.type].icon; return <I size={18} style={{ color: 'var(--lx-text-muted)' }} />; })()} maxWidth={560}>
-            <div className="space-y-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusChip status={detail.status} />
-                <span className="text-[12px]" style={{ color: 'var(--lx-text-dim)' }}>#{detail.index} · {TYPE_META[detail.type].label}</span>
+          <Modal onClose={() => setDetailId(null)} title={detail.title} icon={(() => { const I = TYPE_META[detail.type].icon; return <I size={18} style={{ color: 'var(--lx-text-muted)' }} />; })()} maxWidth={540}>
+            <div className="space-y-6">
+              {/* Proposal Header Badges */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-white/5 border border-white/10 text-white/90">
+                    <StatusChip status={detail.status} />
+                  </span>
+                  <span className="text-[12px] font-mono text-white/40">
+                    #{detail.index} · {TYPE_META[detail.type].label}
+                  </span>
+                </div>
+                {detail.createdAt && (
+                  <span className="text-xs text-white/40 font-mono">
+                    {timeAgo(detail.createdAt)}
+                  </span>
+                )}
               </div>
 
-              <div className="grid gap-x-6 gap-y-2.5 rounded-xl p-4 sm:grid-cols-2" style={{ background: 'var(--lx-surface-2)', border: '1px solid var(--lx-border)' }}>
+              {/* Data Grid directly rendered without inner cards/boxes */}
+              <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 pt-1">
                 <Row label="Source Vault" value={formatVaultLabel(detail.vaultLabel)} />
                 <Row label="Amount" value={detail.amount ? `${detail.amount} ${detail.symbol}` : '—'} />
                 {detail.type === 'transfer' && (
@@ -443,22 +463,52 @@ export function ProposalsPanel({
                 <Row label="Created by" value={nameOf(detail.createdBy)} />
                 <Row label="Threshold" value={`${detail.threshold} of ${signers.length}`} />
                 {detail.memo && <Row label="Note" value={detail.memo} full />}
-                {detail.executedSig && <Row label="Signature" value={short(detail.executedSig)} mono full />}
+                {detail.executedSig && (
+                  <div className="sm:col-span-2 pt-2 border-t border-white/5">
+                    <Row label="Execution Signature" value={detail.executedSig} mono full />
+                  </div>
+                )}
               </div>
 
-              {/* vote roster */}
-              <div>
-                <p className="lx-eyebrow" style={{ marginBottom: 8 }}>Votes ({detail.approvals.length}/{detail.threshold} required to execute)</p>
+              {/* Vote Roster directly integrated */}
+              <div className="pt-4 border-t border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-['Outfit'] text-[11px] font-semibold uppercase tracking-[0.08em] text-white/60 m-0">
+                    Multisig Approvals ({detail.approvals.length}/{detail.threshold} Required)
+                  </p>
+                  <span className="text-xs font-mono font-medium text-white/50">
+                    {Math.min(100, Math.round((detail.approvals.length / Math.max(1, detail.threshold)) * 100))}%
+                  </span>
+                </div>
                 <VoteBar have={detail.approvals.length} need={detail.threshold} />
-                <div className="mt-3 space-y-1.5">
+                <div className="space-y-1.5 pt-1">
                   {signers.map((s) => {
                     const approved = detail.approvals.includes(s.id);
                     const rejected = detail.rejections.includes(s.id);
                     return (
-                      <div key={s.id} className="flex items-center justify-between text-[13px]">
-                        <span style={{ color: 'var(--lx-text-muted)' }}>{s.name}{s.isCurrentUser ? ' · you' : ''}</span>
-                        <span className="inline-flex items-center gap-1 text-[12px] font-medium" style={{ color: approved ? '#FFFFFF' : rejected ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.4)' }}>
-                          {approved ? <><ThumbsUp size={12} /> Approved</> : rejected ? <><ThumbsDown size={12} /> Rejected</> : 'Pending'}
+                      <div
+                        key={s.id}
+                        className="flex items-center justify-between py-1.5 text-[13px]"
+                      >
+                        <span className="text-white/80 font-medium">
+                          {s.name}{s.isCurrentUser ? ' (you)' : ''}
+                        </span>
+                        <span
+                          className={`inline-flex items-center gap-1.5 text-[12px] font-medium px-2.5 py-0.5 rounded-full ${
+                            approved
+                              ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30'
+                              : rejected
+                              ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30'
+                              : 'bg-white/5 text-white/40 border border-white/10'
+                          }`}
+                        >
+                          {approved ? (
+                            <><ThumbsUp size={11} /> Approved</>
+                          ) : rejected ? (
+                            <><ThumbsDown size={11} /> Rejected</>
+                          ) : (
+                            'Pending'
+                          )}
                         </span>
                       </div>
                     );
@@ -466,15 +516,17 @@ export function ProposalsPanel({
                 </div>
               </div>
 
-              {/* actions */}
-              <ProposalActions
-                p={detail} me={me} busy={busy} connected={connected}
-                onApprove={() => run('approve', () => approve(detail.id), (p) => (p?.status === 'executed' ? 'Vote recorded: Proposal approved and executed on Solana' : 'Approval vote recorded successfully'))}
-                onReject={() => run('reject', () => reject(detail.id), 'Rejection vote recorded')}
-                onExecute={() => run('execute', () => execute(detail.id), 'Transaction executed successfully on Solana')}
-                onActivate={() => run('activate', () => activate(detail.id), 'Proposal opened for multisig voting')}
-                onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Proposal cancelled successfully')}
-              />
+              {/* Actions & On-chain Explorer */}
+              <div className="pt-3 border-t border-white/10">
+                <ProposalActions
+                  p={detail} me={me} busy={busy} connected={connected}
+                  onApprove={() => run('approve', () => approve(detail.id), (p) => (p?.status === 'executed' ? 'Vote recorded: Proposal approved and executed on Solana' : 'Approval vote recorded successfully'))}
+                  onReject={() => run('reject', () => reject(detail.id), 'Rejection vote recorded')}
+                  onExecute={() => run('execute', () => execute(detail.id), 'Transaction executed successfully on Solana')}
+                  onActivate={() => run('activate', () => activate(detail.id), 'Proposal opened for multisig voting')}
+                  onCancel={() => run('cancel', async () => { await cancel(detail.id); }, 'Proposal cancelled successfully')}
+                />
+              </div>
             </div>
           </Modal>
         )}
@@ -816,8 +868,12 @@ export function ProposalsPanel({
 function Row({ label, value, mono, full }: { label: string; value: string; mono?: boolean; full?: boolean }) {
   return (
     <div className={full ? 'sm:col-span-2' : ''}>
-      <p className="lx-eyebrow" style={{ marginBottom: 2 }}>{label}</p>
-      <p className={`text-[13px] ${mono ? 'font-mono break-all' : ''}`} style={{ color: 'var(--lx-text)' }}>{value}</p>
+      <p className="font-['Outfit'] text-[10.5px] font-semibold uppercase tracking-[0.08em] text-white/50 mb-1">
+        {label}
+      </p>
+      <p className={`text-[13.5px] font-medium ${mono ? 'font-mono break-all text-white/90 text-[12.5px]' : 'text-white'}`}>
+        {value}
+      </p>
     </div>
   );
 }
@@ -835,50 +891,84 @@ function ProposalActions({
 
   if (p.status === 'executed') {
     return p.executedSig ? (
-      <a href={`https://explorer.solana.com/tx/${p.executedSig}${EXPLORER_CLUSTER}`} target="_blank" rel="noopener noreferrer"
-        className="lx-btn lx-btn-secondary w-full justify-center">
-        View on Solana Explorer <ExternalLink size={13} />
+      <a
+        href={`https://explorer.solana.com/tx/${p.executedSig}${EXPLORER_CLUSTER}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="w-full flex items-center justify-center gap-2 py-3 px-5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-white text-xs font-semibold uppercase tracking-wider transition-all"
+      >
+        View on Solana Explorer <ExternalLink size={14} className="text-blue-400" />
       </a>
     ) : null;
   }
   if (p.status === 'rejected' || p.status === 'cancelled') {
-    return <p className="text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>This proposal is closed.</p>;
+    return <p className="text-center text-[13px] text-white/40">This proposal is closed.</p>;
   }
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-2.5">
       {p.status === 'draft' && isOwner && (
-        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to open for voting' : undefined} onClick={onActivate}>
+        <button
+          type="button"
+          className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-white text-black font-semibold text-xs uppercase tracking-wider hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
+          disabled={!connected || !!busy}
+          title={!connected ? 'Connect your wallet to open for voting' : undefined}
+          onClick={onActivate}
+        >
           {busy === 'activate' ? spin : <><Play size={14} /> Open for voting</>}
         </button>
       )}
 
       {p.status === 'active' && me.roles.signer && !iVoted && (
         <>
-          <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to vote' : undefined} onClick={onApprove}>
+          <button
+            type="button"
+            className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 font-semibold text-xs uppercase tracking-wider transition-all disabled:opacity-50"
+            disabled={!connected || !!busy}
+            title={!connected ? 'Connect your wallet to vote' : undefined}
+            onClick={onApprove}
+          >
             {busy === 'approve' ? spin : <><ThumbsUp size={14} /> Approve</>}
           </button>
-          <button type="button" className="lx-btn lx-btn-secondary flex-1 justify-center" style={{ color: 'var(--lx-danger)' }} disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to vote' : undefined} onClick={onReject}>
+          <button
+            type="button"
+            className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-300 font-semibold text-xs uppercase tracking-wider transition-all disabled:opacity-50"
+            disabled={!connected || !!busy}
+            title={!connected ? 'Connect your wallet to vote' : undefined}
+            onClick={onReject}
+          >
             {busy === 'reject' ? spin : <><ThumbsDown size={14} /> Reject</>}
           </button>
         </>
       )}
 
       {p.status === 'active' && me.roles.signer && iVoted && (
-        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>Your vote has been recorded.</p>
+        <p className="flex-1 text-center text-[13px] text-white/50">Your vote has been recorded.</p>
       )}
       {p.status === 'active' && !me.roles.signer && (
-        <p className="flex-1 text-center text-[13px]" style={{ color: 'var(--lx-text-dim)' }}>You need the Voter role to vote.</p>
+        <p className="flex-1 text-center text-[13px] text-white/50">You need the Voter role to vote.</p>
       )}
 
       {p.status === 'approved' && me.roles.executor && (
-        <button type="button" className="lx-btn lx-btn-primary flex-1 justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to execute' : undefined} onClick={onExecute}>
+        <button
+          type="button"
+          className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-semibold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 hover:brightness-110 transition-all disabled:opacity-50"
+          disabled={!connected || !!busy}
+          title={!connected ? 'Connect your wallet to execute' : undefined}
+          onClick={onExecute}
+        >
           {busy === 'execute' ? spin : <><Play size={14} /> Execute on-chain</>}
         </button>
       )}
 
       {(p.status === 'draft' || p.status === 'active') && isOwner && (
-        <button type="button" className="lx-btn lx-btn-secondary justify-center" disabled={!connected || !!busy} title={!connected ? 'Connect your wallet to cancel' : undefined} onClick={onCancel}>
+        <button
+          type="button"
+          className="inline-flex items-center justify-center gap-1.5 h-11 px-5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 text-white/60 hover:text-white font-semibold text-xs uppercase tracking-wider transition-all disabled:opacity-50"
+          disabled={!connected || !!busy}
+          title={!connected ? 'Connect your wallet to cancel' : undefined}
+          onClick={onCancel}
+        >
           {busy === 'cancel' ? spin : <><Ban size={14} /> Cancel</>}
         </button>
       )}
@@ -887,37 +977,81 @@ function ProposalActions({
 }
 
 function Modal({
-  title, icon, onClose, children, maxWidth = 520,
+  title, icon, onClose, children, maxWidth = 540,
 }: { title: string; icon: React.ReactNode; onClose: () => void; children: React.ReactNode; maxWidth?: number }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
+
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <motion.div
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}
-      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 99999,
+        background: 'rgba(0, 0, 0, 0.85)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        boxSizing: 'border-box',
+      }}
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}
-        initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        transition={{ type: 'spring', bounce: 0.35, duration: 0.6 }}
+        initial={{ opacity: 0, scale: 0.94, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.94, y: 16 }}
+        transition={{ type: 'spring', bounce: 0.22, duration: 0.45 }}
+        className="w-full relative overflow-hidden"
         style={{
-          width: '100%',
           maxWidth,
-          maxHeight: '88vh',
+          maxHeight: '90vh',
           overflowY: 'auto',
-          background: 'rgba(10, 10, 10, 0.95)',
-          border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: 40,
-          padding: '36px 40px',
-          boxShadow: '0 32px 64px -16px rgba(0, 0, 0, 0.9)',
+          background: 'rgba(12, 12, 14, 0.96)',
+          border: '1px solid rgba(255, 255, 255, 0.14)',
+          borderRadius: 36,
+          padding: '32px 36px',
+          boxShadow: '0 32px 80px -16px rgba(0, 0, 0, 0.95), 0 0 40px rgba(37, 99, 235, 0.08)',
+          boxSizing: 'border-box',
         }}
       >
         <div className="mb-6 flex items-center justify-between gap-4">
-          <h2 className="flex items-center gap-2 font-['Outfit'] text-[24px] font-medium tracking-tight text-white">{icon} {title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white transition-colors">
+          <h2 className="flex items-center gap-3 font-['Outfit'] text-[22px] sm:text-[24px] font-medium tracking-tight text-white">
+            {icon && (
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-white/5 border border-white/10 text-white/80">
+                {icon}
+              </span>
+            )}
+            {title}
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-white/5 border border-white/12 text-gray-400 hover:text-white hover:bg-white/10 transition-all cursor-pointer"
+          >
             <X size={16} />
           </button>
         </div>
         {children}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -19,13 +20,14 @@ const Overlay = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 24px 16px;
 `;
 
 const ModalContent = styled(motion.div)`
@@ -133,9 +135,24 @@ export function DeleteConfirmationModal({
   title = "Remove Contact?",
   message = "Are you sure you want to remove this contact from your network? This action cannot be undone."
 }: DeleteConfirmationModalProps) {
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       <Overlay
         initial={{ opacity: 0 }}
@@ -174,6 +191,7 @@ export function DeleteConfirmationModal({
           </ButtonGroup>
         </ModalContent>
       </Overlay>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

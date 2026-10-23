@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { auth } from '@/lib/firebase';
 import { PaymentRequest, updatePaymentRequest } from '@/features/payment-requests/api/payment-requests-api';
 import { XCircle, Ban, ArrowRight, X, Loader2, CalendarDays } from 'lucide-react';
@@ -63,7 +64,19 @@ export function UpdateModal({
 
   const isBusy = step === 'loading';
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       <motion.div
         key="update-backdrop"
@@ -72,9 +85,10 @@ export function UpdateModal({
         exit={{ opacity: 0 }}
         onClick={isBusy ? undefined : onClose}
         style={{
-          position: 'fixed', inset: 0, zIndex: 999,
-          background: 'rgba(0,0,0,0.75)',
-          backdropFilter: 'blur(6px)',
+          position: 'fixed', inset: 0, zIndex: 99999,
+          background: 'rgba(0,0,0,0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: '16px',
         }}
@@ -277,6 +291,7 @@ export function UpdateModal({
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

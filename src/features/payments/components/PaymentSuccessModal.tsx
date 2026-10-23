@@ -1,6 +1,7 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ExternalLink, CheckCircle } from 'lucide-react';
@@ -29,9 +30,10 @@ const Overlay = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,9 +165,25 @@ export function PaymentSuccessModal({
   subtitle = 'Your funds have been sent to the network.',
   doneLabel = 'Done',
 }: PaymentSuccessModalProps) {
-  if (!isOpen || !data) return null;
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
+  useEffect(() => {
+    if (isOpen && data) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen, data]);
+
+  if (!isOpen || !data) return null;
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       <Overlay
         initial={{ opacity: 0 }}
@@ -227,6 +245,7 @@ export function PaymentSuccessModal({
           <Button onClick={onClose}>{doneLabel}</Button>
         </ModalContent>
       </Overlay>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

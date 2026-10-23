@@ -5,7 +5,8 @@
  * read on-chain by the backend. Account view of a vault.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { X, Copy, ExternalLink, ArrowUp, ArrowDown, ArrowLeftRight } from 'lucide-react';
@@ -229,7 +230,18 @@ interface VaultDetailModalProps {
 export function VaultDetailModal({
   vault, actualWeight, isPrivacyMode, explorerUrl, onClose, onCopy, onSend, onDeposit, onTrade, connected = false,
 }: VaultDetailModalProps) {
+  const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>('coins');
+
+  useEffect(() => {
+    setMounted(true);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
   const stakes = vault.stakes ?? [];
   const nfts = vault.nfts ?? [];
   const solPrice = vault.solUsdPrice ?? 0;
@@ -242,7 +254,9 @@ export function VaultDetailModal({
     ...vault.tokens,
   ].sort((a, b) => (b.usdValue ?? 0) - (a.usdValue ?? 0));
 
-  return (
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -251,13 +265,14 @@ export function VaultDetailModal({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 200,
+        zIndex: 99999,
         background: 'rgba(0, 0, 0, 0.85)',
         backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        padding: '24px 16px',
       }}
     >
       <motion.div
@@ -372,6 +387,7 @@ export function VaultDetailModal({
             ))}
         </List>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

@@ -2,7 +2,8 @@
 
 /** Building blocks shared by the Members page and the Treasury page (modal shell, role chips, form field style). */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Check, X } from 'lucide-react';
 import { MEMBER_ROLE_META, type MemberRoleKey } from '@/features/treasury/api/members-api';
@@ -45,7 +46,20 @@ export function ModalShell({
   title: string; subtitle?: string; icon?: React.ReactNode; onClose: () => void;
   children: React.ReactNode; maxWidth?: number;
 }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -54,7 +68,7 @@ export function ModalShell({
       style={{
         position: 'fixed',
         inset: 0,
-        zIndex: 200,
+        zIndex: 99999,
         background: 'rgba(0, 0, 0, 0.82)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
@@ -70,14 +84,15 @@ export function ModalShell({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.94, y: 16 }}
         transition={{ type: 'spring', bounce: 0.22, duration: 0.4 }}
-        className="w-full relative overflow-hidden"
+        className="w-full relative overflow-hidden p-6 sm:p-9 rounded-[28px] sm:rounded-[36px]"
         style={{
           maxWidth,
+          maxHeight: '90vh',
+          overflowY: 'auto',
           background: '#0B0C10',
           border: '1px solid rgba(255, 255, 255, 0.12)',
-          borderRadius: '36px',
-          padding: '36px 32px 32px 32px',
           boxShadow: '0 32px 80px -16px rgba(0, 0, 0, 0.95), 0 0 50px rgba(0, 0, 0, 0.8)',
+          boxSizing: 'border-box',
         }}
       >
         {/* Close button X top right */}
@@ -109,7 +124,8 @@ export function ModalShell({
 
         <div className="relative z-10">{children}</div>
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }
 

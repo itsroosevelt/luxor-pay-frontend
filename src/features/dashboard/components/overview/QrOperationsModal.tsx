@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from 'next/navigation';
@@ -23,6 +24,7 @@ import {
 import { useTokenPrice } from '@/features/wallet/hooks/useTokenPrice';
 import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { useTreasury } from '@/features/treasury/hooks/useTreasury';
+import { formatVaultLabel } from '@/features/treasury/components/treasury-utils';
 import {
   Overlay,
   ModalContent,
@@ -116,14 +118,17 @@ export function QrOperationsModal({
     const list: Array<{ label: string; address: string }> = [];
 
     if (vaults && vaults.length > 0) {
-      vaults.forEach((v) => {
-        list.push({ label: v.label, address: v.address });
+      vaults.forEach((v, idx) => {
+        const isPrincipal = idx === 0 || v.index === 0 || v.isDefault;
+        const cleanName = formatVaultLabel(v.label, isPrincipal);
+        list.push({ label: cleanName, address: v.address });
       });
     }
 
     if (merchantWallet?.trim() && !list.some((item) => item.address === merchantWallet.trim())) {
       const rawLabel = recipientLabel?.trim();
-      const label = rawLabel && rawLabel.toLowerCase() !== 'mey' && rawLabel.toLowerCase() !== 'luxor' ? rawLabel : 'Primary Wallet';
+      let label = rawLabel && rawLabel.toLowerCase() !== 'mey' && rawLabel.toLowerCase() !== 'luxor' ? rawLabel : 'Primary Wallet';
+      label = formatVaultLabel(label);
       list.unshift({
         label,
         address: merchantWallet.trim(),
@@ -170,7 +175,7 @@ export function QrOperationsModal({
     if (raw.toLowerCase() === 'mey' || raw.toLowerCase() === 'luxor') {
       return 'Sterling Enterprise';
     }
-    return raw;
+    return formatVaultLabel(raw);
   }, [selectedAccountObj, recipientLabel]);
 
   const exitScanMode = () => {
@@ -271,7 +276,22 @@ export function QrOperationsModal({
     }
   }, [effectiveRecipientWallet, amount, currency, effectiveRecipientLabel, chargeNote, chargeRef, getMintForSymbol]);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
   function handleScannedResult(result: string): void {
     const route = routeScannedPaymentContent(result, getTokenSymbol);
@@ -333,7 +353,7 @@ export function QrOperationsModal({
     window.open(receiveCheckoutPath, '_blank', 'noopener,noreferrer');
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <Overlay
         initial={{ opacity: 0 }}
@@ -640,6 +660,7 @@ export function QrOperationsModal({
 
         </ModalContent>
       </Overlay>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

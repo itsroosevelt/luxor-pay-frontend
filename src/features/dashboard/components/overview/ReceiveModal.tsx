@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
@@ -25,13 +26,14 @@ const Overlay = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: 24px 16px;
 `;
 
 const ModalContent = styled(motion.div)`
@@ -43,6 +45,13 @@ const ModalContent = styled(motion.div)`
   max-width: 440px;
   padding: 40px;
   position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+
+  @media (max-width: 640px) {
+    padding: 24px 20px;
+    border-radius: 28px;
+  }
 `;
 
 const Title = styled.h2`
@@ -190,7 +199,22 @@ export function ReceiveModal({
   const router = useRouter();
   const [copied, setCopied] = useState(false);
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
   const solanaPayUri = qrValue ?? (merchantWallet ? buildOpenAmountQrUrl(merchantWallet, title) : null);
 
@@ -212,7 +236,7 @@ export function ReceiveModal({
     onAskForPayment?.();
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <Overlay
         initial={{ opacity: 0 }}
@@ -277,6 +301,7 @@ export function ReceiveModal({
           </ButtonGroup>
         </ModalContent>
       </Overlay>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

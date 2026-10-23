@@ -373,7 +373,8 @@ export const ModalOverlay = styled(motion.div)`
   inset: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
-  z-index: 200;
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -387,6 +388,9 @@ export const KeypadModalBox = styled(motion.div)`
   box-shadow: 0 32px 64px -16px rgba(0, 0, 0, 0.9);
   width: 100%;
   max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-sizing: border-box;
   padding: 28px;
   display: flex;
   flex-direction: column;

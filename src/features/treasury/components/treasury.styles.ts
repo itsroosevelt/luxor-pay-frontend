@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 // ── Styled Components (Clean, Fluid & Mobile-First — Rule 10) ─────────────────────────────
 
-export const PageContainer = styled(motion.div)`
+export const PageContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 28px;

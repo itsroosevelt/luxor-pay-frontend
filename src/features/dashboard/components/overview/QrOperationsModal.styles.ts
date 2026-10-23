@@ -9,7 +9,8 @@ export const Overlay = styled(motion.div)`
   bottom: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
-  z-index: 100;
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;

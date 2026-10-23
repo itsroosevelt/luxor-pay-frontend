@@ -9,8 +9,6 @@ import {
 export function TreasuryLoadingSkeleton() {
   return (
     <PageContainer
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
       style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -36,7 +34,7 @@ interface TreasuryLoadErrorProps {
 /** First load failed and there is nothing real to show: explain and offer a retry. */
 export function TreasuryLoadError({ message, onRetry }: TreasuryLoadErrorProps) {
   return (
-    <PageContainer initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: 32 }}>
+    <PageContainer style={{ padding: 32 }}>
       <div
         style={{
           display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 14, padding: 24, borderRadius: 20,

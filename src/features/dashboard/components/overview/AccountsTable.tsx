@@ -294,61 +294,104 @@ export function AccountsTable({
   const { data: solPriceData } = useTokenPrice('SOL');
   const solPrice = solPriceData ?? 168.42;
 
-  // Parse REAL SOL balance
-  const numSol = balanceData?.solBalance
-    ? parseFloat(balanceData.solBalance)
-    : solBalance
-    ? parseFloat(solBalance)
-    : 0;
-  const solUsdValue = numSol * solPrice;
+  // Collect and aggregate ALL assets across vaults AND wallet balanceData
+  const { coinsList, totalPortfolioUsd } = React.useMemo(() => {
+    // 1. SOL Aggregation
+    let totalSolAmount = 0;
+    if (vaults && vaults.length > 0) {
+      totalSolAmount = vaults.reduce((acc, v) => acc + (parseFloat(v.solBalance || '0') || 0), 0);
+    } else if (balanceData?.solBalance) {
+      totalSolAmount = parseFloat(balanceData.solBalance);
+    } else if (solBalance) {
+      totalSolAmount = parseFloat(solBalance);
+    }
+    const solUsd = totalSolAmount * solPrice;
 
-  // Parse REAL SPL Token balances from balanceData
-  const tokenList = (balanceData?.tokens || []).map((t) => {
-    const amount = parseFloat(t.uiAmount || '0');
-    const symbol = t.symbol || 'SPL';
-    const upperSymbol = symbol.trim().toUpperCase();
-    
-    let price = 0;
-    if (['USDC', 'USDT', 'EURC', 'PYUSD', 'LXR'].includes(upperSymbol)) {
-      price = 1.0;
-    } else {
-      price = tokenPrices[t.mint] ?? 0;
+    // 2. Token Aggregation by mint
+    const tokenMap = new Map<string, { symbol: string; amount: number; usdVal: number; mint: string }>();
+
+    // Add tokens from vaults
+    if (vaults && vaults.length > 0) {
+      vaults.forEach((v) => {
+        (v.tokens || []).forEach((t) => {
+          const amount = parseFloat(t.uiAmount || '0');
+          if (amount <= 0) return;
+          const symbol = t.symbol || 'SPL';
+          const upperSymbol = symbol.trim().toUpperCase();
+          let price = t.usdValue && amount > 0 ? t.usdValue / amount : 0;
+          if (!price) {
+            if (['USDC', 'USDT', 'PYUSD'].includes(upperSymbol)) price = 1.0;
+            else if (upperSymbol === 'EURC') price = 1.08;
+            else price = tokenPrices[t.mint] ?? 0;
+          }
+          const prev = tokenMap.get(t.mint);
+          if (prev) {
+            prev.amount += amount;
+            prev.usdVal += amount * price;
+          } else {
+            tokenMap.set(t.mint, {
+              mint: t.mint,
+              symbol,
+              amount,
+              usdVal: amount * price,
+            });
+          }
+        });
+      });
     }
 
-    const usdVal = amount * price;
-    return {
-      mint: t.mint,
-      symbol,
-      balanceText: `${t.uiAmount} ${symbol}`,
-      usdVal,
-      bg: 'var(--lx-fill, rgba(255,255,255,0.06))',
-    };
-  });
+    // Also include tokens from wallet balanceData if not already counted or if vaults are empty
+    (balanceData?.tokens || []).forEach((t) => {
+      const amount = parseFloat(t.uiAmount || '0');
+      if (amount <= 0) return;
+      if (!tokenMap.has(t.mint)) {
+        const symbol = t.symbol || 'SPL';
+        const upperSymbol = symbol.trim().toUpperCase();
+        let price = 0;
+        if (['USDC', 'USDT', 'PYUSD'].includes(upperSymbol)) price = 1.0;
+        else if (upperSymbol === 'EURC') price = 1.08;
+        else price = tokenPrices[t.mint] ?? 0;
 
-  const totalTokensUsd = tokenList.reduce((sum, item) => sum + item.usdVal, 0);
-  const totalPortfolioUsd = solUsdValue + totalTokensUsd;
+        tokenMap.set(t.mint, {
+          mint: t.mint,
+          symbol,
+          amount,
+          usdVal: amount * price,
+        });
+      }
+    });
 
-  // Build REAL Coins array
-  const coinsList = [
-    {
-      id: 'sol-native',
-      symbol: 'SOL',
-      name: 'Solana',
-      balance: `${numSol.toFixed(6)} SOL`,
-      valueUsd: `$${solUsdValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      weight: totalPortfolioUsd > 0 ? Number(((solUsdValue / totalPortfolioUsd) * 100).toFixed(2)) : 0,
-      bg: 'var(--lx-fill, rgba(255,255,255,0.06))',
-    },
-    ...tokenList.map((t) => ({
-      id: t.mint,
-      symbol: t.symbol,
-      name: t.symbol,
-      balance: t.balanceText,
-      valueUsd: `$${t.usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
-      weight: totalPortfolioUsd > 0 ? Number(((t.usdVal / totalPortfolioUsd) * 100).toFixed(2)) : 0,
-      bg: t.bg,
-    })),
-  ];
+    const tokenItems = Array.from(tokenMap.values());
+    const totalTokensUsd = tokenItems.reduce((sum, item) => sum + item.usdVal, 0);
+    const totalUsd = solUsd + totalTokensUsd;
+
+    const list = [];
+    if (totalSolAmount > 0 || list.length === 0) {
+      list.push({
+        id: 'sol-native',
+        symbol: 'SOL',
+        name: 'Solana',
+        balance: `${totalSolAmount.toFixed(6)} SOL`,
+        valueUsd: `$${solUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        weight: totalUsd > 0 ? Number(((solUsd / totalUsd) * 100).toFixed(2)) : 0,
+        bg: 'var(--lx-fill, rgba(255,255,255,0.06))',
+      });
+    }
+
+    tokenItems.forEach((t) => {
+      list.push({
+        id: t.mint,
+        symbol: t.symbol,
+        name: t.symbol,
+        balance: `${t.amount.toLocaleString('en-US', { maximumFractionDigits: 6 })} ${t.symbol}`,
+        valueUsd: `$${t.usdVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+        weight: totalUsd > 0 ? Number(((t.usdVal / totalUsd) * 100).toFixed(2)) : 0,
+        bg: 'var(--lx-fill, rgba(255,255,255,0.06))',
+      });
+    });
+
+    return { coinsList: list, totalPortfolioUsd: totalUsd };
+  }, [vaults, balanceData, solBalance, solPrice, tokenPrices]);
 
   // Build REAL Accounts array (synced with Treasury vaults)
   const accountsList = React.useMemo(() => {

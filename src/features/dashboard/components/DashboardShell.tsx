@@ -155,7 +155,7 @@ export function DashboardShell({
     sessionStorage.removeItem('sterling_merchant_profile');
     sessionStorage.removeItem('sterling_active_portal_sections');
     await signOut(auth);
-    router.push('/');
+    router.push('/login');
   };
 
   if (loading) {

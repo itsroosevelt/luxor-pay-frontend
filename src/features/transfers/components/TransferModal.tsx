@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Landmark, Send, ArrowRight, UserCheck, Wallet, Check, Building2, User, Globe, AlertCircle } from 'lucide-react';
@@ -8,6 +9,7 @@ import { useTokenRegistry } from '@/context/TokenRegistryContext';
 import { useGetContacts } from '@/features/contacts/hooks/useGetContacts';
 import { useSendTransfer } from '@/features/transfers/hooks/useSendTransfer';
 import { useTreasury } from '@/features/treasury/hooks/useTreasury';
+import { formatVaultLabel } from '@/features/treasury/components/treasury-utils';
 import { toast } from 'sonner';
 import { Transfer, SendTransferPayload } from '@/features/transfers/api/transfers-api';
 
@@ -27,7 +29,8 @@ const Overlay = styled(motion.div)`
   bottom: 0;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(12px);
-  z-index: 100;
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -45,6 +48,11 @@ const ModalContent = styled(motion.div)`
   position: relative;
   max-height: 90vh;
   overflow-y: auto;
+
+  @media (max-width: 640px) {
+    padding: 24px 20px;
+    border-radius: 28px;
+  }
 `;
 
 const Title = styled.h2`
@@ -440,11 +448,29 @@ export function TransferModal({
   const destVaultObj = vaults?.find((v) => v.address === formData.walletAddress);
   const destContactObj = contactsData?.data.find((c) => c.walletAddress === formData.walletAddress);
   const destinationLabel =
-    destVaultObj?.label ||
+    (destVaultObj ? formatVaultLabel(destVaultObj.label, destVaultObj.index === 0 || destVaultObj.isDefault) : null) ||
     destContactObj?.nickname ||
     (formData.walletAddress ? `${formData.walletAddress.slice(0, 6)}...${formData.walletAddress.slice(-4)}` : 'Recipient');
 
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+  if (!mounted || typeof document === 'undefined') return null;
+
+  return createPortal(
     <AnimatePresence>
       <Overlay
         initial={{ opacity: 0 }}
@@ -479,15 +505,15 @@ export function TransferModal({
                 onChange={(e) => setSelectedVaultId(e.target.value)}
               >
                 {isLoadingVaults ? (
-                  <option disabled>Loading treasury vaults...</option>
+                  <option disabled>Loading treasury accounts...</option>
                 ) : vaults && vaults.length > 0 ? (
-                  vaults.map((vault) => (
+                  vaults.map((vault, idx) => (
                     <option key={vault.id} value={vault.id}>
-                      {vault.label || `Vault #${vault.index}`} {vault.isDefault ? '(Main Treasury)' : ''} — ${vault.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+                      {formatVaultLabel(vault.label, idx === 0 || vault.index === 0 || vault.isDefault)} {vault.isDefault ? '(Main Treasury)' : ''} — ${vault.usdValue.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
                     </option>
                   ))
                 ) : (
-                  <option value="main">Main Wallet / Treasury Vault</option>
+                  <option value="main">Roosevelt</option>
                 )}
               </Select>
 
@@ -677,7 +703,8 @@ export function TransferModal({
           </Form>
         </ModalContent>
       </Overlay>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
 

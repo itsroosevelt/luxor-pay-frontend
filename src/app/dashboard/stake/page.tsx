@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Droplet, Box, Sparkles, Search, X, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -206,8 +207,8 @@ const VALIDATORS: ValidatorNode[] = [
     stakedAmount: 0,
   },
   {
-    id: 'luxor_validator',
-    name: 'Luxor Enterprise Validator',
+    id: 'sterling_validator',
+    name: 'Sterling Enterprise Validator',
     apy: 6.20,
     totalStakedSol: 1500000.00,
     commission: 0,
@@ -248,6 +249,21 @@ export default function SquadsStakePage() {
   } | null>(null);
   const [stakeAmount, setStakeAmount] = useState('1.5');
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (activeStakeItem) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [activeStakeItem]);
 
   // User Staked Totals
   const totalLiquidStaked = useMemo(
@@ -535,98 +551,101 @@ export default function SquadsStakePage() {
       </ContentLayout>
 
       {/* Staking Action Modal */}
-      <AnimatePresence>
-        {activeStakeItem && (
-          <ModalOverlay
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setActiveStakeItem(null)}
-          >
-            <ModalBox
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
+      {mounted && typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {activeStakeItem && (
+            <ModalOverlay
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveStakeItem(null)}
             >
-              <ModalHeader>
-                <h2>Stake SOL into {activeStakeItem.name}</h2>
-                <ModalCloseButton type="button" onClick={() => setActiveStakeItem(null)}>
-                  <X size={16} />
-                </ModalCloseButton>
-              </ModalHeader>
+              <ModalBox
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ModalHeader>
+                  <h2>Stake SOL into {activeStakeItem.name}</h2>
+                  <ModalCloseButton type="button" onClick={() => setActiveStakeItem(null)}>
+                    <X size={16} />
+                  </ModalCloseButton>
+                </ModalHeader>
 
-              <form onSubmit={handleConfirmStake} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <InputGroup>
-                  <div className="top-label">
-                    <span>Deposit Amount</span>
-                    <span>Available: 14.85 SOL</span>
-                  </div>
-                  <AmountInputWrapper>
-                    <input
-                      type="number"
-                      step="0.1"
-                      required
-                      value={stakeAmount}
-                      onChange={(e) => setStakeAmount(e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className="max-btn"
-                      onClick={() => setStakeAmount('14.85')}
-                    >
-                      MAX
-                    </button>
-                  </AmountInputWrapper>
-                </InputGroup>
+                <form onSubmit={handleConfirmStake} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <InputGroup>
+                    <div className="top-label">
+                      <span>Deposit Amount</span>
+                      <span>Available: 14.85 SOL</span>
+                    </div>
+                    <AmountInputWrapper>
+                      <input
+                        type="number"
+                        step="0.1"
+                        required
+                        value={stakeAmount}
+                        onChange={(e) => setStakeAmount(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="max-btn"
+                        onClick={() => setStakeAmount('14.85')}
+                      >
+                        MAX
+                      </button>
+                    </AmountInputWrapper>
+                  </InputGroup>
 
-                <div
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '16px',
-                    padding: '16px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px',
-                    fontSize: '13px',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)' }}>
-                    <span>Estimated APY</span>
-                    <strong style={{ color: '#34D399' }}>{activeStakeItem.apy.toFixed(2)}% APY</strong>
+                  <div
+                    style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: '16px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                      fontSize: '13px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)' }}>
+                      <span>Estimated APY</span>
+                      <strong style={{ color: '#34D399' }}>{activeStakeItem.apy.toFixed(2)}% APY</strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)' }}>
+                      <span>Est. Annual Earnings</span>
+                      <strong style={{ color: '#FFFFFF', fontFamily: 'monospace' }}>
+                        +{(parseFloat(stakeAmount || '0') * (activeStakeItem.apy / 100)).toFixed(3)} SOL
+                      </strong>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)' }}>
+                      <span>Lockup Period</span>
+                      <strong style={{ color: '#FFFFFF' }}>None (Liquid Withdrawal)</strong>
+                    </div>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)' }}>
-                    <span>Est. Annual Earnings</span>
-                    <strong style={{ color: '#FFFFFF', fontFamily: 'monospace' }}>
-                      +{(parseFloat(stakeAmount || '0') * (activeStakeItem.apy / 100)).toFixed(3)} SOL
-                    </strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)' }}>
-                    <span>Lockup Period</span>
-                    <strong style={{ color: '#FFFFFF' }}>None (Liquid Withdrawal)</strong>
-                  </div>
-                </div>
 
-                <ActionButton
-                  type="submit"
-                  $variant="primary"
-                  disabled={isProcessing}
-                  style={{ height: '48px', fontSize: '15px', marginTop: '8px' }}
-                >
-                  {isProcessing ? (
-                    <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <RefreshCw size={16} className="animate-spin" /> Confirming Transaction...
-                    </span>
-                  ) : (
-                    `Confirm Stake ${stakeAmount} SOL`
-                  )}
-                </ActionButton>
-              </form>
-            </ModalBox>
-          </ModalOverlay>
-        )}
-      </AnimatePresence>
+                  <ActionButton
+                    type="submit"
+                    $variant="primary"
+                    disabled={isProcessing}
+                    style={{ height: '48px', fontSize: '15px', marginTop: '8px' }}
+                  >
+                    {isProcessing ? (
+                      <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <RefreshCw size={16} className="animate-spin" /> Confirming Transaction...
+                      </span>
+                    ) : (
+                      `Confirm Stake ${stakeAmount} SOL`
+                    )}
+                  </ActionButton>
+                </form>
+              </ModalBox>
+            </ModalOverlay>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </PageContainer>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCreateContact } from '@/features/contacts/hooks/useCreateContact';
@@ -23,9 +24,10 @@ const Overlay = styled(motion.div)`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(10px);
-  z-index: 100;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -391,7 +393,22 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
   const env = getLuxorEnv();
   const isDev = env === 'development';
 
-  if (!isOpen) return null;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
+  if (!isOpen || !mounted || typeof document === 'undefined') return null;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -420,7 +437,7 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
   const title = initialData ? 'Update Ecosystem Contact' : 'Add Ecosystem Contact';
   const subtitle = initialData ? 'Modify your network partner details.' : 'Expand your network for seamless on-chain liquidity routing.';
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <Overlay
         initial={{ opacity: 0 }}
@@ -558,6 +575,7 @@ export function ContactFormModal({ isOpen, onClose, onSuccess, initialData }: Co
           </Form>
         </ModalContent>
       </Overlay>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
