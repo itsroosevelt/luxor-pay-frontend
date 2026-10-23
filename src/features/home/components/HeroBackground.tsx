@@ -17,6 +17,7 @@ function shouldSkipVideo(): boolean {
   );
 }
 
+
 export function HeroBackground() {
   const [load, setLoad] = useState(false);
   const [playing, setPlaying] = useState(false);
@@ -38,6 +39,8 @@ export function HeroBackground() {
 
   return (
     <div className="absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+      {/* Soft blue glow behind everything: gives the hero depth before (or without) the video */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_72%_28%,rgba(37,99,235,0.20),transparent_55%),radial-gradient(ellipse_at_18%_82%,rgba(96,165,250,0.10),transparent_50%)]" />
       {load && (
         <video
           autoPlay

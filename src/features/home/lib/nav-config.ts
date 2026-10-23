@@ -113,6 +113,7 @@ export const NAV_GROUPS: NavGroup[] = [
           { name: 'Help Center', desc: '24/7 customer support and docs.', href: SUPPORT_MAIL, external: true },
           { name: 'Privacy Policy', desc: 'How we handle your data.', href: '/privacy' },
           { name: 'Terms of Use', desc: 'The rules of using Sterling.', href: '/terms' },
+          { name: 'Data Deletion', desc: 'How to request deletion of your data.', href: '/data-deletion' },
           { name: 'Governance / DAO', desc: 'Active proposal voting and tokenomics.', href: `/#${SECTION_IDS.pillars}` },
         ],
       },

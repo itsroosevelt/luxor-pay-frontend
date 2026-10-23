@@ -86,7 +86,7 @@ const LUXOR_FOOTER_SECTIONS: FooterSectionItem[] = [
             { name: "Transparency of Funds", href: "#" },
             { name: "Privacy Policy", href: "/privacy" },
             { name: "Terms of Use", href: "/terms" },
-            { name: "Data Deletion", href: "https://luxorintelligence.com/data-deletion", target: "_blank" },
+            { name: "Data Deletion", href: "/data-deletion" },
             { name: "Disclaimer", href: "#" },
             { name: "AML / KYC Policy", href: "#" },
         ]
